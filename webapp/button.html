@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sample Page</title>
+</head>
+<body>
+<button id="btn">Click me</button>
+
+<script>
+    document.getElementById('btn').addEventListener('click', function () {
+        fetch('/button-clicked', {method: 'POST'});
+    });
+</script>
+</body>
+</html>
