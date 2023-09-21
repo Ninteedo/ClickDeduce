@@ -2,7 +2,7 @@ package languages
 
 import languages.LArith.*
 import org.scalatest.GivenWhenThen
-import org.scalatest.matchers.should.Matchers._
+import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor1, TableFor3}
 import org.scalatest.propspec.AnyPropSpec
 
@@ -33,11 +33,7 @@ class LArithTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWh
   def testExpression(table: TableFor3[Expr, Value, Type], expressionName: String): Unit = {
     property(s"$expressionName type-checks correctly") {
       forAll(table) { (expr, _, typ) => {
-        Given(s"the expression $expr")
-        When("type-checking the expression")
-        val typResult = typeOf(expr, Map())
-        Then(s"the type-check result should be $typ")
-        typResult should be(typ)
+        typeOf(expr, Map()) should be(typ)
       }
       }
     }
@@ -52,6 +48,7 @@ class LArithTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWh
   def createExprTable(expressions: Iterable[Expr], results: Iterable[Value], types: Iterable[Type]): TableFor3[Expr, Value, Type] = {
     val zipped = List(expressions, results, types).transpose.map {
       case List(a: Expr, b: Value, c: Type) => (a, b, c)
+      case _ => throw new Exception("Should not happen")
     }
     Table(("expressions", "results", "types"), zipped: _*)
   }
@@ -71,8 +68,8 @@ class LArithTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWh
     testExpression(table, op.toString)
   }
 
-  arithmeticOperationTests(Plus, _ + _)
-  arithmeticOperationTests(Times, _ * _)
+  arithmeticOperationTests(Plus.apply, _ + _)
+  arithmeticOperationTests(Times.apply, _ * _)
 
   private def generateExpression(depth: Int): (Expr, BigInt) = {
     if (depth == 0) {
@@ -84,7 +81,7 @@ class LArithTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWh
       Random.nextInt(3) match {
         case 0 => (Plus(left_expr, right_expr), left_total + right_total)
         case 1 => (Times(left_expr, right_expr), left_total * right_total)
-        case 2 => {
+        case 2 =>
           val (other_expr, other_total) = generateExpression(0)
           if (Random.nextBoolean()) {
             left_expr = other_expr
@@ -98,7 +95,6 @@ class LArithTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWh
           } else {
             (Times(left_expr, right_expr), left_total * right_total)
           }
-        }
       }
     }
   }
@@ -137,5 +133,19 @@ class LArithTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWh
         case (e, res, _) => eval(Times(e, Num(1)), Map()) should be(res)
       }
     }
+  }
+
+  property("Arithmetic expressions should print appropriately") {
+    prettyPrint(Num(15)) should be("15")
+    prettyPrint(Plus(Num(15), Num(20))) should be("(15 + 20)")
+    prettyPrint(Times(Num(15), Num(20))) should be("(15 * 20)")
+    prettyPrint(Plus(Num(15), Times(Num(20), Num(25)))) should be("(15 + (20 * 25))")
+    prettyPrint(Times(Plus(Num(15), Num(20)), Num(25))) should be("((15 + 20) * 25)")
+    prettyPrint(Times(Plus(Num(15), Num(20)), Plus(Num(25), Num(30)))) should be("((15 + 20) * (25 + 30))")
+  }
+
+  property("NumV should print appropriately") {
+    prettyPrint(NumV(15)) should be("15")
+    prettyPrint(NumV(-15)) should be("-15")
   }
 }
