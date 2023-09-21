@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple Example Inference Rule Tree</title>
+    <style>
+        .rule p {
+            border-top: black solid 1px;
+            display: inline;
+        }
+    </style>
+    <script>
+        function pressButton() {
+            fetch('/button-clicked', {method: 'POST'});
+        }
+    </script>
+</head>
+<body>
+<h1>Inference Tree for Simple Addition</h1>
+<svg width="300" height="200" xmlns="http://www.w3.org/2000/svg">
+    <style>
+        text {
+            font-family: "Calibri", sans-serif;
+            font-size: 20px;
+            text-anchor: middle;
+            dominant-baseline: hanging;
+        }
+
+        line {
+            stroke: black;
+            stroke-width: 1px;
+        }
+    </style>
+    <g transform="translate(150 150)">
+        <g transform="translate(0 -20)">
+            <g transform="translate(-30 0)">
+                <line x1="-25" y1="0" x2="25" y2="0"/>
+                <text>
+                    1 &DoubleDownArrow; 1
+                </text>
+            </g>
+            <g transform="translate(30 0)">
+                <line x1="-25" y1="0" x2="25" y2="0"/>
+                <text>
+                    2 &DoubleDownArrow; 2
+                </text>
+            </g>
+        </g>
+        <g>
+            <line x1="-55" y1="0" x2="55" y2="0"/>
+            <text>
+                <a href="javascript:pressButton()">1</a> + 2 &DoubleDownArrow; 3
+            </text>
+        </g>
+    </g>
+</svg>
+</body>
+</html>
