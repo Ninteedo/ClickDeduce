@@ -1,4 +1,4 @@
-package language
+package languages
 
 /**
  * Parent trait for all languages designed to be loaded in ClickDeduce.
@@ -98,7 +98,7 @@ trait ClickDeduceLanguage {
    * @param e The `Expr` to be pretty printed.
    * @return A `String` representing the pretty printed expression.
    */
-  def pretty_print(e: Expr): String
+  def prettyPrint(e: Expr): String
 
   /**
    * Function to create a human-readable string representation of a `Type`.
@@ -106,7 +106,7 @@ trait ClickDeduceLanguage {
    * @param t The `Type` to be pretty printed.
    * @return A `String` representing the pretty printed type.
    */
-  def pretty_print(t: Type): String
+  def prettyPrint(t: Type): String
 
   /**
    * Function to create a human-readable string representation of a `Value`.
@@ -114,5 +114,5 @@ trait ClickDeduceLanguage {
    * @param v The `Value` to be pretty printed.
    * @return A `String` representing the pretty printed value.
    */
-  def pretty_print(v: Value): String
+  def prettyPrint(v: Value): String
 }
