@@ -148,4 +148,13 @@ class LArithTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWh
     prettyPrint(NumV(15)) should be("15")
     prettyPrint(NumV(-15)) should be("-15")
   }
+
+  property("Children of arithmetic expressions is accurate") {
+    childrenOf(Num(15)) should be(Nil)
+    childrenOf(Plus(Num(15), Num(20))) should be(List(Num(15), Num(20)))
+    childrenOf(Times(Num(15), Num(20))) should be(List(Num(15), Num(20)))
+    childrenOf(Plus(Num(15), Times(Num(20), Num(25)))) should be(List(Num(15), Times(Num(20), Num(25))))
+    childrenOf(Times(Plus(Num(15), Num(20)), Num(25))) should be(List(Plus(Num(15), Num(20)), Num(25)))
+    childrenOf(Times(Plus(Num(15), Num(20)), Plus(Num(25), Num(30)))) should be(List(Plus(Num(15), Num(20)), Plus(Num(25), Num(30))))
+  }
 }

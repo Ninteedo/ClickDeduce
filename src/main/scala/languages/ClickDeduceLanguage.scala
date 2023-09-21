@@ -53,7 +53,7 @@ trait ClickDeduceLanguage {
   /**
    * Function which evaluates an `Expr` to a `Value`, given an environment.
    *
-   * @param e The `Expr` to evaluate.
+   * @param e   The `Expr` to evaluate.
    * @param env The environment to evaluate the `Expr` in.
    * @return The `Value` resulting from evaluating the `Expr`.
    */
@@ -90,6 +90,25 @@ trait ClickDeduceLanguage {
    */
   def typeOf(e: Expr): Type = {
     typeOf(e, Map())
+  }
+
+  /**
+   * Function to get the children of an `Expr` in the given environment.
+   *
+   * @param e   The `Expr` whose children are to be returned.
+   * @param env The environment in which the `Expr` is to be evaluated.
+   * @return The `Expr`s which are the children of `e`.
+   */
+  def childrenOf(e: Expr, env: Env): List[Expr]
+
+  /**
+   * Overloaded function to get the children of an `Expr` in an empty environment.
+   *
+   * @param e The `Expr` whose children are to be returned.
+   * @return The `Expr`s which are the children of `e`.
+   */
+  def childrenOf(e: Expr): List[Expr] = {
+    childrenOf(e, Map())
   }
 
   /**

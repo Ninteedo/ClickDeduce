@@ -34,18 +34,21 @@ class LArith extends ClickDeduceLanguage {
   /**
    * A numeric value.
    * Can be any integer.
+   *
    * @param x The integer value of the number.
    */
   case class NumV(x: BigInt) extends Value
 
   /**
    * An error that occurs due to an incorrect argument type.
+   *
    * @param message The error message.
    */
   case class UnexpectedArgValue(message: String) extends EvalError
 
   /**
    * An error that occurs due to attempting to process an unknown `Expr`.
+   *
    * @param message The error message.
    */
   case class UnexpectedExpr(message: String) extends EvalError
@@ -59,12 +62,14 @@ class LArith extends ClickDeduceLanguage {
 
   /**
    * An error that occurs due to an incorrect argument type.
+   *
    * @param message The error message.
    */
   case class UnexpectedArgType(message: String) extends TypeError
 
   /**
    * An error that occurs due to attempting to process an unknown `Expr`.
+   *
    * @param message The error message.
    */
   case class UnexpectedExprType(message: String) extends TypeError
@@ -94,6 +99,13 @@ class LArith extends ClickDeduceLanguage {
       case (t1, t2) => UnexpectedArgType(s"Times can only accept (IntType, IntType), not ($t1, $t2)")
     }
     case _ => UnexpectedExprType(s"Unexpected expression: $e")
+  }
+
+  override def childrenOf(e: Expr, env: Env): List[Expr] = e match {
+    case Num(_) => Nil
+    case Plus(e1, e2) => List(e1, e2)
+    case Times(e1, e2) => List(e1, e2)
+    case _ => Nil
   }
 
   override def prettyPrint(e: Expr): String = e match {
