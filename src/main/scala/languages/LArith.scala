@@ -83,13 +83,13 @@ class LArith extends ClickDeduceLanguage {
     case _ => UnexpectedExpr(s"Unexpected expression: $e")
   }
 
-  override def typeCheck(e: Expr, tenv: TypeEnv): Type = e match {
+  override def typeOf(e: Expr, tenv: TypeEnv): Type = e match {
     case Num(x) => IntType()
-    case Plus(e1, e2) => (typeCheck(e1, tenv), typeCheck(e2, tenv)) match {
+    case Plus(e1, e2) => (typeOf(e1, tenv), typeOf(e2, tenv)) match {
       case (IntType(), IntType()) => IntType()
       case (t1, t2) => UnexpectedArgType(s"Plus can only accept (IntType, IntType), not ($t1, $t2)")
     }
-    case Times(e1, e2) => (typeCheck(e1, tenv), typeCheck(e2, tenv)) match {
+    case Times(e1, e2) => (typeOf(e1, tenv), typeOf(e2, tenv)) match {
       case (IntType(), IntType()) => IntType()
       case (t1, t2) => UnexpectedArgType(s"Times can only accept (IntType, IntType), not ($t1, $t2)")
     }

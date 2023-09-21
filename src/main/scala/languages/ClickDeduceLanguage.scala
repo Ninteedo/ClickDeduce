@@ -78,7 +78,7 @@ trait ClickDeduceLanguage {
    * @param tenv The type environment in which type checking is done.
    * @return The `Type` of the expression after type checking.
    */
-  def typeCheck(e: Expr, tenv: TypeEnv): Type
+  def typeOf(e: Expr, tenv: TypeEnv): Type
 
   /**
    * Overloaded type checking function that performs type checking on an `Expr` in an empty type environment.
@@ -88,8 +88,8 @@ trait ClickDeduceLanguage {
    * @param e The `Expr` on which type checking needs to be performed.
    * @return The `Type` of the expression after type checking.
    */
-  def typeCheck(e: Expr): Type = {
-    typeCheck(e, Map())
+  def typeOf(e: Expr): Type = {
+    typeOf(e, Map())
   }
 
   /**
