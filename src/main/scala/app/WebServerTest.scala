@@ -1,3 +1,5 @@
+package app
+
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes
@@ -5,12 +7,13 @@ import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.settings.ServerSettings
 
+import scala.concurrent.ExecutionContextExecutor
 import scala.io.StdIn
 
 object WebServerTest {
-  def main(args: Array[String]) = {
+  def main(args: Array[String]): Unit = {
     implicit val system: ActorSystem = ActorSystem("my-system")
-    implicit val executionContext = system.dispatcher
+    implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
     val route: Route =
       post {
