@@ -1,4 +1,6 @@
-import languages.LArith._
+package languages
+
+import languages.LArith.*
 import org.scalatest.GivenWhenThen
 import org.scalatest.matchers.should.Matchers._
 import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor1, TableFor3}
