@@ -10,8 +10,13 @@
         }
     </style>
     <script>
-        function pressButton() {
-            fetch('/button-clicked', {method: 'POST'});
+        async function pressButton(caller) {
+            let response = await fetch('/button-clicked', {method: 'POST'});
+            let text = await response.text();
+            console.log(caller);
+            console.log(caller.innerText);
+            caller.innerHTML = text;
+            document.getElementById('result').innerHTML = (parseInt(text) + 2).toString();
         }
     </script>
 </head>
@@ -49,7 +54,7 @@
         <g>
             <line x1="-55" y1="0" x2="55" y2="0"/>
             <text>
-                <a href="javascript:pressButton()">1</a> + 2 &DoubleDownArrow; 3
+                <a href="#" onclick="pressButton(this)">1</a> + 2 &DoubleDownArrow; <a id="result">3</a>
             </text>
         </g>
     </g>

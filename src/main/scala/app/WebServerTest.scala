@@ -7,10 +7,13 @@ import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.settings.ServerSettings
 
+import java.util.concurrent.atomic.AtomicInteger
 import scala.concurrent.ExecutionContextExecutor
 import scala.io.StdIn
 
 object WebServerTest {
+  val buttonClickCount: AtomicInteger = new AtomicInteger(0)
+
   def main(args: Array[String]): Unit = {
     implicit val system: ActorSystem = ActorSystem("my-system")
     implicit val executionContext: ExecutionContextExecutor = system.dispatcher
@@ -18,8 +21,9 @@ object WebServerTest {
     val route: Route =
       post {
         path("button-clicked") {
-          println("Button was clicked.")
-          complete(StatusCodes.OK)
+          val newCount = buttonClickCount.incrementAndGet()
+          println(s"Button was clicked. Current click count: $newCount")
+          complete(newCount.toString)
         }
       } ~
         get {
