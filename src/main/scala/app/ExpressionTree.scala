@@ -4,18 +4,31 @@ import languages.LArith.{Expr, Type, Value, prettyPrint}  // TODO: this should i
 
 class ExpressionTree(val expr: Expr, val value: Option[Value], val typ: Option[Type], val children: List[ExpressionTree]) {
 
+  private val XMLNS = "http://www.w3.org/2000/svg"
+  private val style = "line: {stroke: black; stroke-width: 2;}, text: {font-family: sans-serif; font-size: 12px;}"
 
   /**
-   * Convert this expression tree to an SVG object.
-   *
-   * Does not include the `svg` or `style` tags.
+   * Convert this expression tree to a full SVG.
+   * @return the SVG string
    */
   def toSvg: String = {
-    def createGroup(content: String, translateAmount: (Int, Int) = (0, 0)) = {
+    val svg = new StringBuilder()
+    svg.append(s"""<svg xmlns="$XMLNS" width="${size._1}" height="${size._2}">""")
+    svg.append(s"""<style type="text/css">$style</style>""")
+    svg.append(toSvgGroup)
+    svg.append("</svg>")
+    svg.toString
+  }
+
+  /**
+   * Convert this expression tree to an SVG group.
+   */
+  def toSvgGroup: String = {
+    def createGroup(content: String, translateAmount: (Float, Float) = (0, 0)) = {
       s"""<g transform="translate$translateAmount">$content</g>"""
     }
 
-    val totalWidth = 100
+    val totalWidth = size._1
     val halfWidth = totalWidth / 2
 
     val turnstile = "&#x22a2;"
@@ -38,12 +51,23 @@ class ExpressionTree(val expr: Expr, val value: Option[Value], val typ: Option[T
     if (children.nonEmpty) {
       val childGroups = for {i <- children.indices} yield {
         val child = children(i)
-        val childSvg = child.toSvg
+        val childSvg = child.toSvgGroup
         createGroup(childSvg, (totalWidth * (i - children.length / 2), 20))
       }
       val childGroup = createGroup(childGroups.mkString(""), (0, -20))
       svg.append(childGroup)
     }
     svg.toString()
+  }
+
+  /**
+   * Calculate the total size of the SVG for this expression tree.
+   * @return the size of the SVG in pixels, (width, height)
+   */
+  def size: (Float, Float) = {
+    // TODO: calculate SVG size using font metrics
+    val width = 100
+    val height = 100
+    (width, height)
   }
 }
