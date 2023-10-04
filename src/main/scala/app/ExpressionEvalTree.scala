@@ -1,8 +1,8 @@
 package app
 
-import languages.LArith.{Expr, Type, Value, prettyPrint}  // TODO: this should import from ClickDeduceLanguage
+import languages.LArith.*  // TODO: this should import from ClickDeduceLanguage
 
-class ExpressionTree(val expr: Expr, val value: Option[Value], val typ: Option[Type], val children: List[ExpressionTree]) {
+class ExpressionEvalTree(val expr: Expr, val value: Option[Value], val env: Option[Env], val children: List[ExpressionEvalTree]) {
 
   private val XMLNS = "http://www.w3.org/2000/svg"
   private val style = "line: {stroke: black; stroke-width: 2;}, text: {font-family: sans-serif; font-size: 12px;}"
@@ -36,12 +36,13 @@ class ExpressionTree(val expr: Expr, val value: Option[Value], val typ: Option[T
 
     val line = s"""<line x1="-$halfWidth" x2="$halfWidth" y1="0" y2="0" />"""
     val exprText = new StringBuilder()
+    if (env.isDefined) {
+      val envText = env.get.map({ case (name, value): (Variable, Value) => s"$name := ${prettyPrint(value)}" }).mkString(", ")
+      exprText.append(s"[$envText], ")
+    }
     exprText.append(prettyPrint(expr))
     if (value.isDefined) {
       exprText.append(s" $arrow ${prettyPrint(value.get)}")
-    }
-    if (typ.isDefined) {
-      exprText.append(s" $turnstile ${prettyPrint(typ.get)}")
     }
     val textBlock = s"""<text>${exprText.toString()}</text>"""
 
