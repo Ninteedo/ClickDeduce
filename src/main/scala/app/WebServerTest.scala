@@ -35,10 +35,11 @@ object WebServerTest {
 
     val defaultSettings = ServerSettings(system)
     val customSettings = defaultSettings.withTransparentHeadRequests(true)
+    val portNumber = 27015
 
-    val bindingFuture = Http().newServerAt("localhost", 8080).withSettings(customSettings).bind(route)
+    val bindingFuture = Http().newServerAt("0.0.0.0", portNumber).withSettings(customSettings).bind(route)
 
-    println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
+    println(s"Server online at http://localhost:$portNumber/\nPress RETURN to stop...")
     StdIn.readLine()
 
     bindingFuture
