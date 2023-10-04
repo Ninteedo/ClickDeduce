@@ -1,14 +1,16 @@
 package app
 
-import languages.LArith.*  // TODO: this should import from ClickDeduceLanguage
+import languages.ClickDeduceLanguage
+import languages.LArith.* // TODO: this should import from ClickDeduceLanguage
 
-class ExpressionEvalTree(val expr: Expr, val value: Option[Value], val env: Option[Env], val children: List[ExpressionEvalTree]) {
+class ExpressionEvalTree[L <: ClickDeduceLanguage](val language: L, val expr: language.Expr, val value: Option[language.Value], val env: Option[language.Env], val children: List[ExpressionEvalTree[L]]) {
 
   private val XMLNS = "http://www.w3.org/2000/svg"
   private val style = "line: {stroke: black; stroke-width: 2;}, text: {font-family: sans-serif; font-size: 12px;}"
 
   /**
    * Convert this expression tree to a full SVG.
+   *
    * @return the SVG string
    */
   def toSvg: String = {
@@ -40,9 +42,9 @@ class ExpressionEvalTree(val expr: Expr, val value: Option[Value], val env: Opti
       val envText = env.get.map({ case (name, value): (Variable, Value) => s"$name := ${prettyPrint(value)}" }).mkString(", ")
       exprText.append(s"[$envText], ")
     }
-    exprText.append(prettyPrint(expr))
+    exprText.append(language.prettyPrint(expr))
     if (value.isDefined) {
-      exprText.append(s" $arrow ${prettyPrint(value.get)}")
+      exprText.append(s" $arrow ${language.prettyPrint(value.get)}")
     }
     val textBlock = s"""<text>${exprText.toString()}</text>"""
 
@@ -63,6 +65,7 @@ class ExpressionEvalTree(val expr: Expr, val value: Option[Value], val env: Opti
 
   /**
    * Calculate the total size of the SVG for this expression tree.
+   *
    * @return the size of the SVG in pixels, (width, height)
    */
   def size: (Float, Float) = {
