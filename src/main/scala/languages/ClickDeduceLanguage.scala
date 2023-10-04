@@ -1,5 +1,7 @@
 package languages
 
+import scala.util.parsing.combinator.*
+
 /**
  * Parent trait for all languages designed to be loaded in ClickDeduce.
  */
@@ -138,6 +140,7 @@ trait ClickDeduceLanguage {
   /**
    * Function to load an `Expr` from a string.
    * Input must be in the format produced by `Expr.toString`
+   *
    * @param s The string to be parsed.
    * @return The `Expr` represented by the string, if successful.
    */
@@ -146,6 +149,7 @@ trait ClickDeduceLanguage {
 
     /**
      * Create an `Expr` given its name and a list of arguments.
+     *
      * @param name The name of the `Expr` to be created. Must match the name of a class extending `Expr` in the language.
      * @param args The arguments to be passed to the constructor of the `Expr`.
      * @return The `Expr` created, if successful.
@@ -155,119 +159,33 @@ trait ClickDeduceLanguage {
       exprClass match
         case Some(value) => {
           val constructor = value.getConstructors()(0)
-          val arguments = List(LArith) ++ args
+          val arguments = this +: args.map {
+            case Some(e) => e
+            case None => return None
+            case x => x
+          }
           Some(constructor.newInstance(arguments: _*).asInstanceOf[Expr])
         }
         case None => None
     }
 
-    /**
-     * Read the name of an `Expr` from the string.
-     * @return The name of the `Expr` read.
-     */
-    def readExprName(): String = {
-      val exprName = new StringBuilder()
-      while (s(parseIndex) != '(') {
-        exprName += s(parseIndex)
-        parseIndex += 1
+    object ExprParser extends JavaTokenParsers {
+      def expr: Parser[Option[Expr]] = name ~ "(" ~ repsep(arg, "\\s*,\\s*".r) ~ ")" ^^ {
+        case name ~ "(" ~ args ~ ")" => makeExpr(name, args)
+        case _ => None
       }
-      parseIndex += 1
-      exprName.toString
+
+      def name: Parser[String] = "[A-Za-z]\\w*".r
+
+      def arg: Parser[Any] = expr | stringLiteral | wholeNumber ^^ (BigInt(_)) | "true" ^^ (_ => true) | "false" ^^ (_ => false)
+
+      def parseExpr(s: String): ParseResult[Option[Expr]] = parseAll(expr, s.strip())
     }
 
-    /**
-     * Read the next `Expr` from the string.
-     * If an argument which is a sub-expression fails to be read, the whole expression fails to be read.
-     * @return The `Expr` read, if successful.
-     */
-    def readSubExpr(): Option[Expr] = {
-      val name = readExprName()
-      val children = new scala.collection.mutable.ListBuffer[Any]()
-      while (s(parseIndex) != ')') {
-        if (s(parseIndex) == ',' || s(parseIndex) == ' ') {
-          parseIndex += 1
-        }
-        readArgument() match
-          case Some(value) => children += value
-          case None => return None
-      }
-      parseIndex += 1
-      makeExpr(name, children.toList)
+    val result = ExprParser.parseExpr(s)
+    result match {
+      case ExprParser.Success(matched, _) => matched
+      case _ => None
     }
-
-    /**
-     * Read the next argument from the string.
-     * Can be either a literal or another `Expr`.
-     * @return The argument read, if successful.
-     */
-    def readArgument(): Option[Any] = {
-      if (s(parseIndex) == '\"') {
-        Some(readStringLiteral())
-      } else if (s(parseIndex).isDigit) {
-        Some(readNumberLiteral())
-      } else if (checkArgumentMatchLiteral("true")) {
-        Some(true)
-      } else if (checkArgumentMatchLiteral("false")) {
-        Some(false)
-      } else {
-        readSubExpr()
-      }
-    }
-
-    /**
-     * Read a string literal from the string.
-     * Respects escape characters.
-     * @return The string literal read.
-     */
-    def readStringLiteral(): String = {
-      parseIndex += 1
-      val literal = new StringBuilder()
-      var escaped: Boolean = false
-      while (s(parseIndex) != '\"' || escaped) {
-        if (s(parseIndex) == '\\' && !escaped) {
-          escaped = true
-        } else {
-          escaped = false
-          literal += s(parseIndex)
-        }
-        parseIndex += 1
-      }
-      parseIndex += 1
-      literal.toString
-    }
-
-    /**
-     * Read a number literal from the string.
-     * @return The number literal read.
-     */
-    def readNumberLiteral(): BigInt = {
-      val literal = new StringBuilder()
-      while (s(parseIndex).isDigit) {
-        literal += s(parseIndex)
-        parseIndex += 1
-      }
-      BigInt(literal.toString)
-    }
-
-    /**
-     * Check if the next argument exactly matches a given literal.
-     * If it does, advance the parse index past the literal.
-     * Used for parsing booleans.
-     * @param literal The literal to check against.
-     * @return True if the next argument matches the literal, false otherwise.
-     */
-    def checkArgumentMatchLiteral(literal: String): Boolean = {
-      if (s.length >= parseIndex + literal.length && s.startsWith(literal, parseIndex)) {
-        val result = s(parseIndex + literal.length) != '('
-        if (result) {
-          parseIndex += literal.length
-        }
-        result
-      } else {
-        false
-      }
-    }
-
-    readSubExpr()
   }
 }

@@ -16,4 +16,10 @@ class ReadExprTest extends AnyFunSuite {
     val expr = LArith.readExpr(originalExpression.toString)
     expr.get should be (originalExpression)
   }
+
+  test("can load an LArith expression with a very large integer literal") {
+    val originalExpression = Num(BigInt("12345678901234567890"))
+    val expr = LArith.readExpr(originalExpression.toString)
+    expr.get should be (originalExpression)
+  }
 }
