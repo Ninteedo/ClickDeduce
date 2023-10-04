@@ -145,7 +145,7 @@ trait ClickDeduceLanguage {
    * @return The `Expr` represented by the string, if successful.
    */
   def readExpr(s: String): Option[Expr] = {
-    var parseIndex = 0
+    val exprClassList = getClass.getClasses.filter(c => classOf[Expr].isAssignableFrom(c))
 
     /**
      * Create an `Expr` given its name and a list of arguments.
@@ -155,13 +155,12 @@ trait ClickDeduceLanguage {
      * @return The `Expr` created, if successful.
      */
     def makeExpr(name: String, args: List[Any]): Option[Expr] = {
-      val exprClass = getClass.getClasses.find(c => classOf[Expr].isAssignableFrom(c) && c.getSimpleName == name)
+      val exprClass = exprClassList.find(_.getSimpleName == name)
       exprClass match
         case Some(value) => {
           val constructor = value.getConstructors()(0)
           val arguments = this +: args.map {
             case Some(e) => e
-            case None => return None
             case x => x
           }
           Some(constructor.newInstance(arguments: _*).asInstanceOf[Expr])
@@ -182,8 +181,7 @@ trait ClickDeduceLanguage {
       def parseExpr(s: String): ParseResult[Option[Expr]] = parseAll(expr, s.strip())
     }
 
-    val result = ExprParser.parseExpr(s)
-    result match {
+    ExprParser.parseExpr(s) match {
       case ExprParser.Success(matched, _) => matched
       case _ => None
     }
