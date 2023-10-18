@@ -1,5 +1,8 @@
 package languages
 
+import app.FontWidthCalculator
+
+import java.awt.Font
 import scala.reflect.runtime.universe as ru
 import scala.util.parsing.combinator.*
 
@@ -190,11 +193,12 @@ trait ClickDeduceLanguage {
     }
   }
 
-  class ExpressionEvalTree(val language: ClickDeduceLanguage, val expr: language.Expr, val value: Option[language.Value], val env: Option[language.Env], val children: List[ExpressionEvalTree]) {
+  class ExpressionEvalTree(val expr: Expr, val value: Option[Value], val env: Option[Env], val children: List[ExpressionEvalTree]) {
 
     private val XMLNS = "http://www.w3.org/2000/svg"
-    private val style = "line {stroke: black; stroke-width: 2; transform: translate(0px, -5px);}" +
-      " text {font-family: sans-serif; font-size: 12px; dominant-baseline: hanging}"
+    private val FONT_NAME = "Courier New"
+    private val style = s"""line {stroke: black; stroke-width: 2; transform: translate(0px, -5px);}
+      text {font-family: $FONT_NAME; font-size: 12px; dominant-baseline: hanging}"""
 
     /**
      * Convert this expression tree to a full SVG.
@@ -203,7 +207,7 @@ trait ClickDeduceLanguage {
      */
     def toSvg: String = {
       val svg = new StringBuilder()
-      svg.append(s"""<svg xmlns="$XMLNS" width="${size._1}" height="${size._2}" transform="translate(0 50)">""")
+      svg.append(s"""<svg xmlns="$XMLNS" width="${size._1}" height="${size._2}">""")
       svg.append(s"""<style type="text/css">$style</style>""")
       svg.append(toSvgGroup)
       svg.append("</svg>")
@@ -218,37 +222,40 @@ trait ClickDeduceLanguage {
         s"""<g transform="translate$translateAmount">$content</g>"""
       }
 
-      val totalWidth = size._1
-      val halfWidth = totalWidth / 2
-
       val turnstile = "&#x22a2;"
       val arrow = "&DoubleDownArrow;"
 
-      val line = s"""<line x1="-$halfWidth" x2="$halfWidth" y1="0" y2="0" />"""
       val exprText = new StringBuilder()
       if (env.isDefined) {
         val envText = env.get.map({ case (name, value): (Variable, Value) => s"$name := ${prettyPrint(value)}" }).mkString(", ")
         exprText.append(s"[$envText], ")
       }
-      exprText.append(language.prettyPrint(expr))
+      exprText.append(lang.prettyPrint(expr))
       if (value.isDefined) {
-        exprText.append(s" $arrow ${language.prettyPrint(value.get)}")
+        exprText.append(s" $arrow ${lang.prettyPrint(value.get)}")
       }
-      val textBlock = s"""<text>${exprText.toString()}</text>"""
 
-      val thisGroup = createGroup(line + textBlock)
-      val svg = new StringBuilder()
-      svg.append(thisGroup)
-      println(children)
-      if (children.nonEmpty) {
+      val totalWidth = FontWidthCalculator.calculateWidth(exprText.toString(), new Font(FONT_NAME, Font.PLAIN, 12))
+      val halfWidth = totalWidth / 2
+
+      val childGroup = if (children.nonEmpty) {
         val childGroups = for {i <- children.indices} yield {
           val child = children(i)
           val childSvg = child.toSvgGroup
-          createGroup(childSvg, (totalWidth * (i - children.length / 2), 20))
+          createGroup(childSvg, (totalWidth * (i - children.length / 2), -20))
         }
-        val childGroup = createGroup(childGroups.mkString(""), (0, -20))
-        svg.append(childGroup)
+        createGroup(childGroups.mkString(""), (0, 0))
+      } else {
+        ""
       }
+
+      val textBlock = s"""<text>${exprText.toString()}</text>"""
+      val line = s"""<line x1="-$halfWidth" x2="$halfWidth" y1="0" y2="0" />"""
+
+      val thisGroup = createGroup(line + textBlock, (0, 80))
+      val svg = new StringBuilder()
+      svg.append(thisGroup)
+      svg.append(childGroup)
       svg.toString()
     }
 
@@ -259,8 +266,8 @@ trait ClickDeduceLanguage {
      */
     def size: (Float, Float) = {
       // TODO: calculate SVG size using font metrics
-      val width = 100
-      val height = 100
+      val width = 400
+      val height = 200
       (width, height)
     }
   }
@@ -276,11 +283,9 @@ trait ClickDeduceLanguage {
         }
       }
 
-
-      val childExprs = getExprFields(e0)
-      val childTrees = childExprs.map(exprToTree)
-      val valueResult: Option[Value] = None
-      ExpressionEvalTree(lang, e0, Some(lang.eval(e0)), None, childTrees)
+      val childTrees = getExprFields(e0).map(exprToTree)
+      val valueResult: Option[Value] = Some(lang.eval(e0))
+      ExpressionEvalTree(e0, valueResult, None, childTrees)
     }
   }
 }
