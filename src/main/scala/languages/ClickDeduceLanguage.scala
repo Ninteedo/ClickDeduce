@@ -36,7 +36,19 @@ trait ClickDeduceLanguage {
   /**
    * An unevaluated expression.
    */
-  abstract class Expr
+  abstract class Expr {
+    def children: List[Expr] = {
+      def getExprFields(e: Expr): List[Expr] = {
+        e match {
+          case e0: Product =>
+            val values = e0.productIterator.toList
+            values.collect({ case e: Expr => e })
+          case _ => Nil
+        }
+      }
+      getExprFields(this)
+    }
+  }
 
   /**
    * A value resulting from an expression being evaluated.
@@ -309,16 +321,7 @@ trait ClickDeduceLanguage {
 
   object ExpressionEvalTree {
     def exprToTree(e0: Expr): ExpressionEvalTree = {
-      def getExprFields(e: Expr): List[Expr] = {
-        e match {
-          case e0: Product =>
-            val values = e0.productIterator.toList
-            values.collect({ case e: Expr => e })
-          case _ => Nil
-        }
-      }
-
-      val childTrees = getExprFields(e0).map(exprToTree)
+      val childTrees = e0.children.map(exprToTree)
       val valueResult: Option[Value] = Some(lang.eval(e0))
       ExpressionEvalTree(e0, valueResult, None, childTrees)
     }
