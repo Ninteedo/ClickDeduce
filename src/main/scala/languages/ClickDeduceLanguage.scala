@@ -201,9 +201,9 @@ trait ClickDeduceLanguage {
     private val style = s"""line {stroke: black; stroke-width: 2; transform: translate(0px, -5px);}
       text {font-family: $FONT_NAME; font-size: ${FONT_SIZE}px; dominant-baseline: hanging}"""
 
-    private val HEIGHT_PER_ROW = 20
-    private val FONT = new Font(FONT_NAME, Font.PLAIN, FONT_SIZE)
-    private val GROUP_X_GAP = 20
+    val HEIGHT_PER_ROW = 20
+    val FONT = new Font(FONT_NAME, Font.PLAIN, FONT_SIZE)
+    val GROUP_X_GAP = 20
 
     /**
      * Convert this expression tree to a full SVG.

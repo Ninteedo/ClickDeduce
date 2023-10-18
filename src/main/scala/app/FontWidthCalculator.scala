@@ -8,6 +8,16 @@ object FontWidthCalculator {
   def calculateWidth(text: String, font: Font): Float = {
     val toolkit = Toolkit.getDefaultToolkit
     val metrics = toolkit.getFontMetrics(font)
-    metrics.stringWidth(text)
+    metrics.stringWidth(replaceHtmlCharacterCodes(text))
+  }
+
+  def replaceHtmlCharacterCodes(text: String): String = {
+    val mapping = Map(
+      "&DoubleDownArrow;" -> "⇓",
+      "&#x22a2;" -> "⊢"
+    )
+    mapping.foldLeft(text) { case (s, (code, replacement)) =>
+      s.replace(code, replacement)
+    }
   }
 }

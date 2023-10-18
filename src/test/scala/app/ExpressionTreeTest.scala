@@ -17,7 +17,8 @@ class ExpressionTreeTest extends AnyFunSuite {
   }
 
   test("ExpressionTree with an expression and value can be converted to correct SVG") {
-    val tree = ExpressionEvalTree(Plus(Num(1), Num(2)), Some(NumV(3)), None, Nil)
+    val children = List(ExpressionEvalTree(Num(1), Some(NumV(1)), None, Nil), ExpressionEvalTree(Num(2), Some(NumV(2)), None, Nil))
+    val tree = ExpressionEvalTree(Plus(Num(1), Num(2)), Some(NumV(3)), None, children)
     println(tree.toSvg)
   }
 
@@ -32,5 +33,22 @@ class ExpressionTreeTest extends AnyFunSuite {
     val children = tree.children
     val expressions = children.map(_.expr)
     expressions should be (List(Num(1), Num(2)))
+  }
+
+  test("ExpressionTree width matches expected text width when it has no children") {
+    val expr = Plus(Num(1), Num(2))
+    val tree = ExpressionEvalTree(Plus(Num(1), Num(2)), None, None, Nil)
+    val width = tree.size._1
+    width should be (FontWidthCalculator.calculateWidth(prettyPrint(expr), tree.FONT))
+  }
+
+  test("ExpressionTree width does not exceed expected text width when it has children") {
+    val expr = Plus(Num(1), Num(2))
+    val children = List(ExpressionEvalTree(Num(1), Some(NumV(1)), None, Nil), ExpressionEvalTree(Num(2), Some(NumV(2)), None, Nil))
+    val tree = ExpressionEvalTree(Plus(Num(1), Num(2)), Some(NumV(3)), None, children)
+    val wholeWidth = tree.size._1
+    val childrenWidth = children.map(_.size._1).sum + tree.GROUP_X_GAP
+
+    wholeWidth should be <= childrenWidth
   }
 }
