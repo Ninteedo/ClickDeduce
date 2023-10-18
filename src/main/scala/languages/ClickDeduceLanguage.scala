@@ -197,8 +197,13 @@ trait ClickDeduceLanguage {
 
     private val XMLNS = "http://www.w3.org/2000/svg"
     private val FONT_NAME = "Courier New"
+    private val FONT_SIZE = 16
     private val style = s"""line {stroke: black; stroke-width: 2; transform: translate(0px, -5px);}
-      text {font-family: $FONT_NAME; font-size: 12px; dominant-baseline: hanging}"""
+      text {font-family: $FONT_NAME; font-size: ${FONT_SIZE}px; dominant-baseline: hanging}"""
+
+    private val HEIGHT_PER_ROW = 20
+    private val FONT = new Font(FONT_NAME, Font.PLAIN, FONT_SIZE)
+    private val GROUP_X_GAP = 20
 
     /**
      * Convert this expression tree to a full SVG.
@@ -209,7 +214,9 @@ trait ClickDeduceLanguage {
       val svg = new StringBuilder()
       svg.append(s"""<svg xmlns="$XMLNS" width="${size._1}" height="${size._2}">""")
       svg.append(s"""<style type="text/css">$style</style>""")
+      svg.append(s"""<g transform="translate(0, ${size._2 - HEIGHT_PER_ROW})">""")
       svg.append(toSvgGroup)
+      svg.append("</g>")
       svg.append("</svg>")
       svg.toString
     }
@@ -222,41 +229,51 @@ trait ClickDeduceLanguage {
         s"""<g transform="translate$translateAmount">$content</g>"""
       }
 
-      val turnstile = "&#x22a2;"
-      val arrow = "&DoubleDownArrow;"
-
-      val exprText = new StringBuilder()
-      if (env.isDefined) {
-        val envText = env.get.map({ case (name, value): (Variable, Value) => s"$name := ${prettyPrint(value)}" }).mkString(", ")
-        exprText.append(s"[$envText], ")
-      }
-      exprText.append(lang.prettyPrint(expr))
-      if (value.isDefined) {
-        exprText.append(s" $arrow ${lang.prettyPrint(value.get)}")
-      }
-
-      val totalWidth = FontWidthCalculator.calculateWidth(exprText.toString(), new Font(FONT_NAME, Font.PLAIN, 12))
+      val totalWidth = exprTextWidth
       val halfWidth = totalWidth / 2
 
       val childGroup = if (children.nonEmpty) {
+        var currWidth = 0f
         val childGroups = for {i <- children.indices} yield {
           val child = children(i)
           val childSvg = child.toSvgGroup
-          createGroup(childSvg, (totalWidth * (i - children.length / 2), -20))
+          val x_translate = currWidth
+          currWidth += child.size._1 + GROUP_X_GAP
+          createGroup(childSvg, (x_translate, 0))
         }
-        createGroup(childGroups.mkString(""), (0, 0))
+        createGroup(childGroups.mkString(""), (0, -HEIGHT_PER_ROW))
       } else {
         ""
       }
 
-      val textBlock = s"""<text>${exprText.toString()}</text>"""
-      val line = s"""<line x1="-$halfWidth" x2="$halfWidth" y1="0" y2="0" />"""
+      val textBlock = s"""<text>$exprText</text>"""
+      val line = s"""<line x1="0" x2="$totalWidth" y1="0" y2="0" />"""
 
-      val thisGroup = createGroup(line + textBlock, (0, 80))
+      val thisGroup = createGroup(line + textBlock + childGroup)
       val svg = new StringBuilder()
       svg.append(thisGroup)
-      svg.append(childGroup)
+//      svg.append(childGroup)
       svg.toString()
+    }
+
+    def exprText: String = {
+      val turnstile = "&#x22a2;"
+      val arrow = "&DoubleDownArrow;"
+
+      val sb = new StringBuilder()
+      if (env.isDefined) {
+        val envText = env.get.map({ case (name, value): (Variable, Value) => s"$name := ${prettyPrint(value)}" }).mkString(", ")
+        sb.append(s"[$envText], ")
+      }
+      sb.append(lang.prettyPrint(expr))
+      if (value.isDefined) {
+        sb.append(s" $arrow ${lang.prettyPrint(value.get)}")
+      }
+      sb.toString
+    }
+
+    def exprTextWidth: Float = {
+      FontWidthCalculator.calculateWidth(exprText, FONT)
     }
 
     /**
@@ -265,10 +282,28 @@ trait ClickDeduceLanguage {
      * @return the size of the SVG in pixels, (width, height)
      */
     def size: (Float, Float) = {
-      // TODO: calculate SVG size using font metrics
-      val width = 400
-      val height = 200
+      val groupedChildren = groupChildrenByLevel
+      val height = HEIGHT_PER_ROW * groupedChildren.length
+      val width = groupedChildren.map(group => group.map(_.exprTextWidth).sum + (group.length - 1) * GROUP_X_GAP).max
       (width, height)
+    }
+
+    /**
+     * Group the children of this expression tree by level.
+     * @return a list of lists of expression trees, where each list contains all the expression trees at a particular level
+     */
+    def groupChildrenByLevel: List[List[ExpressionEvalTree]] = {
+      var childrenLevels: Map[ExpressionEvalTree, Int] = Map()
+      def visit(tree: ExpressionEvalTree, level: Int): Unit = {
+        childrenLevels += tree -> level
+        tree.children.foreach(visit(_, level + 1))
+      }
+      visit(this, 0)
+      val maxLevel = childrenLevels.values.max
+      val groupedChildren = for {i <- 0 to maxLevel} yield {
+        childrenLevels.filter({ case (_, level) => level == i }).keys.toList
+      }
+      groupedChildren.toList
     }
   }
 
