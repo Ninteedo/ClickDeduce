@@ -1,6 +1,5 @@
 package app
 
-import app.ExpressionEvalTree
 import languages.LArith
 import languages.LArith.*
 import org.scalatest.GivenWhenThen
@@ -25,5 +24,12 @@ class ExpressionTreeTest extends AnyFunSuite {
   test("ExpressionTree with an expression and type can be converted to correct SVG") {
     val tree = ExpressionEvalTree(LArith, Plus(Num(1), Num(2)), None, Some(Map("x" -> NumV(5))), Nil)
     println(tree.toSvg)
+  }
+
+  test("ExpressionTree can find child expressions") {
+    val expr = Plus(Num(1), Num(2))
+    val tree = LArith.ExpressionEvalTree.exprToTree(expr)
+    val children = tree.children
+    children should be (List(Num(1), Num(2)))
   }
 }

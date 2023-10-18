@@ -7,7 +7,6 @@ import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.settings.ServerSettings
-import app.ExpressionEvalTree
 import languages.LArith
 import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
@@ -35,7 +34,7 @@ object WebServerTest extends JsonSupport {
       post {
         path("expr-to-tree") {
           entity(as[EvalRequest]) { request =>
-            val expr = ExpressionEvalTree.exprToTree(LArith.readExpr(request.text).get)
+            val expr = LArith.ExpressionEvalTree.exprToTree(LArith.readExpr(request.text).get)
             complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, expr.toSvg))
           }
         }
