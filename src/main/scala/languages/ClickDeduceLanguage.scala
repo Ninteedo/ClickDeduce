@@ -113,25 +113,6 @@ trait ClickDeduceLanguage {
   }
 
   /**
-   * Function to get the children of an `Expr` in the given environment.
-   *
-   * @param e   The `Expr` whose children are to be returned.
-   * @param env The environment in which the `Expr` is to be evaluated.
-   * @return The `Expr`s which are the children of `e`.
-   */
-  def childrenOf(e: Expr, env: Env): List[Expr]
-
-  /**
-   * Overloaded function to get the children of an `Expr` in an empty environment.
-   *
-   * @param e The `Expr` whose children are to be returned.
-   * @return The `Expr`s which are the children of `e`.
-   */
-  def childrenOf(e: Expr): List[Expr] = {
-    childrenOf(e, Map())
-  }
-
-  /**
    * Function to create a human-readable string representation of an `Expr`.
    *
    * @param e The `Expr` to be pretty printed.

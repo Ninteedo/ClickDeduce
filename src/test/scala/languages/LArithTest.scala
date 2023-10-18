@@ -138,10 +138,10 @@ class LArithTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWh
   property("Arithmetic expressions should print appropriately") {
     prettyPrint(Num(15)) should be("15")
     prettyPrint(Plus(Num(15), Num(20))) should be("(15 + 20)")
-    prettyPrint(Times(Num(15), Num(20))) should be("(15 * 20)")
-    prettyPrint(Plus(Num(15), Times(Num(20), Num(25)))) should be("(15 + (20 * 25))")
-    prettyPrint(Times(Plus(Num(15), Num(20)), Num(25))) should be("((15 + 20) * 25)")
-    prettyPrint(Times(Plus(Num(15), Num(20)), Plus(Num(25), Num(30)))) should be("((15 + 20) * (25 + 30))")
+    prettyPrint(Times(Num(15), Num(20))) should be("(15 × 20)")
+    prettyPrint(Plus(Num(15), Times(Num(20), Num(25)))) should be("(15 + (20 × 25))")
+    prettyPrint(Times(Plus(Num(15), Num(20)), Num(25))) should be("((15 + 20) × 25)")
+    prettyPrint(Times(Plus(Num(15), Num(20)), Plus(Num(25), Num(30)))) should be("((15 + 20) × (25 + 30))")
   }
 
   property("NumV should print appropriately") {
@@ -150,11 +150,11 @@ class LArithTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWh
   }
 
   property("Children of arithmetic expressions is accurate") {
-    childrenOf(Num(15)) should be(Nil)
-    childrenOf(Plus(Num(15), Num(20))) should be(List(Num(15), Num(20)))
-    childrenOf(Times(Num(15), Num(20))) should be(List(Num(15), Num(20)))
-    childrenOf(Plus(Num(15), Times(Num(20), Num(25)))) should be(List(Num(15), Times(Num(20), Num(25))))
-    childrenOf(Times(Plus(Num(15), Num(20)), Num(25))) should be(List(Plus(Num(15), Num(20)), Num(25)))
-    childrenOf(Times(Plus(Num(15), Num(20)), Plus(Num(25), Num(30)))) should be(List(Plus(Num(15), Num(20)), Plus(Num(25), Num(30))))
+    Num(15).children should be(Nil)
+    Plus(Num(15), Num(20)).children should be(List(Num(15), Num(20)))
+    Times(Num(15), Num(20)).children should be(List(Num(15), Num(20)))
+    Plus(Num(15), Times(Num(20), Num(25))).children should be(List(Num(15), Times(Num(20), Num(25))))
+    Times(Plus(Num(15), Num(20)), Num(25)).children should be(List(Plus(Num(15), Num(20)), Num(25)))
+    Times(Plus(Num(15), Num(20)), Plus(Num(25), Num(30))).children should be(List(Plus(Num(15), Num(20)), Plus(Num(25), Num(30))))
   }
 }

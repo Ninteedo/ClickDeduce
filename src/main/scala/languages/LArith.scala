@@ -101,13 +101,6 @@ class LArith extends ClickDeduceLanguage {
     case _ => UnexpectedExprType(s"Unexpected expression: $e")
   }
 
-  override def childrenOf(e: Expr, env: Env): List[Expr] = e match {
-    case Num(_) => Nil
-    case Plus(e1, e2) => List(e1, e2)
-    case Times(e1, e2) => List(e1, e2)
-    case _ => Nil
-  }
-
   override def prettyPrint(e: Expr): String = e match {
     case Num(x) => x.toString
     case Plus(e1, e2) => s"(${prettyPrint(e1)} + ${prettyPrint(e2)})"
