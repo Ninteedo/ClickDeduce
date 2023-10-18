@@ -1,9 +1,10 @@
 package app
 
-import languages.ClickDeduceLanguage
-import languages.LArith.* // TODO: this should import from ClickDeduceLanguage
+import languages.LArith.*
+import languages.{ClickDeduceLanguage, LArith} // TODO: this should import from ClickDeduceLanguage
 
-class ExpressionEvalTree[L <: ClickDeduceLanguage](val language: L, val expr: language.Expr, val value: Option[language.Value], val env: Option[language.Env], val children: List[ExpressionEvalTree[L]]) {
+
+class ExpressionEvalTree(val language: ClickDeduceLanguage, val expr: language.Expr, val value: Option[language.Value], val env: Option[language.Env], val children: List[ExpressionEvalTree]) {
 
   private val XMLNS = "http://www.w3.org/2000/svg"
   private val style = "line: {stroke: black; stroke-width: 2;}, text: {font-family: sans-serif; font-size: 12px;}"
@@ -73,5 +74,28 @@ class ExpressionEvalTree[L <: ClickDeduceLanguage](val language: L, val expr: la
     val width = 100
     val height = 100
     (width, height)
+  }
+}
+
+
+object ExpressionEvalTree {
+  def exprToTree(e0: Expr): ExpressionEvalTree = {
+//    def getExprFields(e: Expr): List[Expr] = {
+//      val mirror = ru.runtimeMirror(e.getClass.getClassLoader)
+//      val instanceMirror = mirror.reflect(e)
+//      val fields = instanceMirror.symbol.typeSignature.members.filter(_.isTerm).toList
+//      val exprFields = fields.map(field => {
+//        val fieldMirror = instanceMirror.reflectField(field.asTerm)
+//        fieldMirror.get match {
+//          case e: Expr => Some(e)
+//          case _ => None
+//        }
+//      })
+//      exprFields.flatten
+//    }
+
+    val childExprs = Nil // getExprFields(e0)
+    val childTrees = childExprs.map(exprToTree)
+    ExpressionEvalTree(LArith, e0, Some(eval(e0)), None, childTrees)
   }
 }
