@@ -186,6 +186,14 @@ trait ClickDeduceLanguage {
     }
   }
 
+  /**
+   * Tree node representing an expression in this language.
+   * Can be converted to an SVG.
+   * @param expr the expression
+   * @param value the value of the expression (optional)
+   * @param env the environment in which the expression was evaluated (optional)
+   * @param children the child nodes of the expression
+   */
   class ExpressionEvalTree(val expr: Expr, val value: Option[Value], val env: Option[Env], val children: List[ExpressionEvalTree]) {
 
     private val XMLNS = "http://www.w3.org/2000/svg"
@@ -245,10 +253,14 @@ trait ClickDeduceLanguage {
       val thisGroup = createGroup(line + textBlock + childGroup)
       val svg = new StringBuilder()
       svg.append(thisGroup)
-//      svg.append(childGroup)
       svg.toString()
     }
 
+    /**
+     * Convert the base of this expression tree to a string.
+     * Includes HTML entities for certain Unicode characters.
+     * @return the string representation of the expression
+     */
     def exprText: String = {
       val turnstile = "&#x22a2;"
       val arrow = "&DoubleDownArrow;"
@@ -265,6 +277,10 @@ trait ClickDeduceLanguage {
       sb.toString
     }
 
+    /**
+     * Calculate the width of the text representation of the text of this expression.
+     * @return the width of the text in pixels
+     */
     def exprTextWidth: Float = {
       FontWidthCalculator.calculateWidth(exprText, FONT)
     }
