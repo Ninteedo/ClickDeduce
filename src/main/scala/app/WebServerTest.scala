@@ -2,16 +2,28 @@ package app
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.settings.ServerSettings
+import languages.LArith
+import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 import java.util.concurrent.atomic.AtomicInteger
 import scala.concurrent.ExecutionContextExecutor
 import scala.io.StdIn
 
-object WebServerTest {
+case class EvalRequest(text: String)
+case class EvalResponse(svg: String)
+
+trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
+  implicit val evalRequestFormat: RootJsonFormat[EvalRequest] = jsonFormat1(EvalRequest)
+  implicit val evalResponseFormat: RootJsonFormat[EvalResponse] = jsonFormat1(EvalResponse)
+}
+
+
+object WebServerTest extends JsonSupport {
   val buttonClickCount: AtomicInteger = new AtomicInteger(0)
 
   def main(args: Array[String]): Unit = {
@@ -19,6 +31,14 @@ object WebServerTest {
     implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
     val route: Route =
+      post {
+        path("expr-to-tree") {
+          entity(as[EvalRequest]) { request =>
+            val expr = LArith.ExpressionEvalTree.exprToTree(LArith.readExpr(request.text).get)
+            complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, expr.toSvg))
+          }
+        }
+      } ~
       post {
         path("button-clicked") {
           val newCount = buttonClickCount.incrementAndGet()
