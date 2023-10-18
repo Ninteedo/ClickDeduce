@@ -212,9 +212,9 @@ trait ClickDeduceLanguage {
      */
     def toSvg: String = {
       val svg = new StringBuilder()
-      svg.append(s"""<svg xmlns="$XMLNS" width="${size._1}" height="${size._2}">""")
+      svg.append(s"""<svg xmlns="$XMLNS" width="${size._1 + 15}" height="${size._2 + 20}">""")
       svg.append(s"""<style type="text/css">$style</style>""")
-      svg.append(s"""<g transform="translate(0, ${size._2 - HEIGHT_PER_ROW})">""")
+      svg.append(s"""<g transform="translate(5, ${size._2 - HEIGHT_PER_ROW + 8})">""")
       svg.append(toSvgGroup)
       svg.append("</g>")
       svg.append("</svg>")
