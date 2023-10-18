@@ -30,6 +30,7 @@ class ExpressionTreeTest extends AnyFunSuite {
     val expr = Plus(Num(1), Num(2))
     val tree = LArith.ExpressionEvalTree.exprToTree(expr)
     val children = tree.children
-    children should be (List(Num(1), Num(2)))
+    val expressions = children.map(_.expr)
+    expressions should be (List(Num(1), Num(2)))
   }
 }

@@ -268,18 +268,14 @@ trait ClickDeduceLanguage {
   object ExpressionEvalTree {
     def exprToTree(e0: Expr): ExpressionEvalTree = {
       def getExprFields(e: Expr): List[Expr] = {
-        val mirror = ru.runtimeMirror(e.getClass.getClassLoader)
-        val instanceMirror = mirror.reflect(e)
-        val fields = instanceMirror.symbol.typeSignature.members.filter(_.isTerm).filter(_.isMethod).toList
-        val exprFields = fields.map(field => {
-          val fieldMirror = instanceMirror.reflectField(field.asTerm)
-          fieldMirror.get match {
-            case e: Expr => Some(e)
-            case _ => None
-          }
-        })
-        exprFields.flatten
+        e match {
+          case e0: Product =>
+            val values = e0.productIterator.toList
+            values.collect({ case e: Expr => e })
+          case _ => Nil
+        }
       }
+
 
       val childExprs = getExprFields(e0)
       val childTrees = childExprs.map(exprToTree)
