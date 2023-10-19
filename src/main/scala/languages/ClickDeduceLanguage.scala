@@ -292,28 +292,30 @@ trait ClickDeduceLanguage {
      */
     lazy val size: (Float, Float) = {
       val groupedChildren = groupChildrenByLevel
-      val height = HEIGHT_PER_ROW * groupedChildren.length
-      val width = groupedChildren.map(group => group.map(_.exprTextWidth).sum + (group.length - 1) * GROUP_X_GAP).max
+      val height = HEIGHT_PER_ROW * groupedChildren.size
+      val width = groupedChildren.values.map(group => group.map(_.exprTextWidth).sum + (group.length - 1) * GROUP_X_GAP).max
       (width, height)
     }
 
     /**
      * Group the children of this expression tree by level.
-     * @return a list of lists of expression trees, where each list contains all the expression trees at a particular level
+     * @return a map where keys are levels (integers) and values are lists of expression trees at that particular level
      */
-    lazy val groupChildrenByLevel: List[List[ExpressionEvalTree]] = {
-      var childrenLevels: Map[ExpressionEvalTree, Int] = Map()
-      def visit(tree: ExpressionEvalTree, level: Int): Unit = {
-        childrenLevels += tree -> level
-        tree.children.foreach(visit(_, level + 1))
+    lazy val groupChildrenByLevel: Map[Int, List[ExpressionEvalTree]] = {
+      def mergeMaps(offset: Int, maps: Map[Int, List[ExpressionEvalTree]]*): Map[Int, List[ExpressionEvalTree]] = {
+        maps.foldLeft(Map[Int, List[ExpressionEvalTree]]()) { (acc, m) =>
+          m.foldLeft(acc) { case (a, (level, trees)) =>
+            a.updated(level + offset, a.getOrElse(level + offset, List()) ++ trees)
+          }
+        }
       }
-      visit(this, 0)
-      val maxLevel = childrenLevels.values.max
-      val groupedChildren = for {i <- 0 to maxLevel} yield {
-        childrenLevels.filter({ case (_, level) => level == i }).keys.toList
-      }
-      groupedChildren.toList
+
+      val currentLevelMap: Map[Int, List[ExpressionEvalTree]] = Map(0 -> List(this))
+      val childrenMaps: Map[Int, List[ExpressionEvalTree]] = children.flatMap(child => child.groupChildrenByLevel).toMap
+
+      mergeMaps(1, currentLevelMap, childrenMaps)
     }
+
   }
 
   object ExpressionEvalTree {
