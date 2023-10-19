@@ -46,6 +46,7 @@ trait ClickDeduceLanguage {
           case _ => Nil
         }
       }
+
       getExprFields(this)
     }
   }
@@ -189,9 +190,10 @@ trait ClickDeduceLanguage {
   /**
    * Tree node representing an expression in this language.
    * Can be converted to an SVG.
-   * @param expr the expression
-   * @param value the value of the expression (optional)
-   * @param env the environment in which the expression was evaluated (optional)
+   *
+   * @param expr     the expression
+   * @param value    the value of the expression (optional)
+   * @param env      the environment in which the expression was evaluated (optional)
    * @param children the child nodes of the expression
    */
   class ExpressionEvalTree(val expr: Expr, val value: Option[Value], val env: Option[Env], val children: List[ExpressionEvalTree]) {
@@ -199,7 +201,8 @@ trait ClickDeduceLanguage {
     private val XMLNS = "http://www.w3.org/2000/svg"
     private val FONT_NAME = "Courier New"
     private val FONT_SIZE = 16
-    private val style = s"""line {stroke: black; stroke-width: 2; transform: translate(0px, -5px);}
+    private val style =
+      s"""line {stroke: black; stroke-width: 2; transform: translate(0px, -5px);}
       text {font-family: $FONT_NAME; font-size: ${FONT_SIZE}px; dominant-baseline: hanging}"""
 
     val HEIGHT_PER_ROW = 20
@@ -213,9 +216,9 @@ trait ClickDeduceLanguage {
      */
     lazy val toSvg: String = {
       val svg = new StringBuilder()
-      svg.append(s"""<svg xmlns="$XMLNS" width="${size._1 + 15}" height="${size._2 + 20}">""")
+      svg.append(s"""<svg xmlns="$XMLNS" width="${treeSize._1 + 15}" height="${treeSize._2 + 20}">""")
       svg.append(s"""<style type="text/css">$style</style>""")
-      svg.append(s"""<g transform="translate(5, ${size._2 - HEIGHT_PER_ROW + 8})">""")
+      svg.append(s"""<g transform="translate(5, ${treeSize._2 - HEIGHT_PER_ROW + 8})">""")
       svg.append(toSvgGroup)
       svg.append("</g>")
       svg.append("</svg>")
@@ -230,8 +233,8 @@ trait ClickDeduceLanguage {
         s"""<g transform="translate$translateAmount">$content</g>"""
       }
 
-      val totalWidth = exprTextWidth
-      val halfWidth = totalWidth / 2
+      val totalWidth = exprTextWidth + exprNameWidth
+      val lineWidth = treeSize._1 - exprNameWidth
 
       val childGroup = if (children.nonEmpty) {
         var currWidth = 0f
@@ -239,7 +242,7 @@ trait ClickDeduceLanguage {
           val child = children(i)
           val childSvg = child.toSvgGroup
           val x_translate = currWidth
-          currWidth += child.size._1 + GROUP_X_GAP
+          currWidth += child.treeSize._1 + GROUP_X_GAP
           createGroup(childSvg, (x_translate, 0))
         }
         createGroup(childGroups.mkString(""), (0, -HEIGHT_PER_ROW))
@@ -247,10 +250,13 @@ trait ClickDeduceLanguage {
         ""
       }
 
-      val textBlock = s"""<text>$exprText</text>"""
-      val line = s"""<line x1="0" x2="$totalWidth" y1="0" y2="0" />"""
+      val xOffset = (treeSize._1 - localSize._1 - exprNameWidth) / 2
 
-      val thisGroup = createGroup(line + textBlock + childGroup)
+      val textBlock = s"""<text x="$xOffset">$exprText</text>"""
+      val line = s"""<line x1="0" x2="${lineWidth}" y1="0" y2="0" />"""
+      val exprNameBlock = s"""<text x="${lineWidth + 2}" y="${FONT_SIZE / -2}">$exprName</text>"""
+
+      val thisGroup = createGroup(line + textBlock + childGroup + exprNameBlock)
       val svg = new StringBuilder()
       svg.append(thisGroup)
       svg.toString()
@@ -259,6 +265,7 @@ trait ClickDeduceLanguage {
     /**
      * Convert the base of this expression tree to a string.
      * Includes HTML entities for certain Unicode characters.
+     *
      * @return the string representation of the expression
      */
     lazy val exprText: String = {
@@ -279,10 +286,19 @@ trait ClickDeduceLanguage {
 
     /**
      * Calculate the width of the text representation of the text of this expression.
+     *
      * @return the width of the text in pixels
      */
     lazy val exprTextWidth: Float = {
       FontWidthCalculator.calculateWidth(exprText, FONT)
+    }
+
+    lazy val exprName: String = {
+      s"""(${expr.getClass.getSimpleName})"""
+    }
+
+    lazy val exprNameWidth: Float = {
+      FontWidthCalculator.calculateWidth(exprName, FONT)
     }
 
     /**
@@ -290,15 +306,28 @@ trait ClickDeduceLanguage {
      *
      * @return the size of the SVG in pixels, (width, height)
      */
-    lazy val size: (Float, Float) = {
+    lazy val treeSize: (Float, Float) = {
       val groupedChildren = groupChildrenByLevel
-      val height = HEIGHT_PER_ROW * groupedChildren.size
-      val width = groupedChildren.values.map(group => group.map(_.exprTextWidth).sum + (group.length - 1) * GROUP_X_GAP).max
+      val height = HEIGHT_PER_ROW * (groupedChildren.size + 1)
+      val width = {
+        val childWidths = groupedChildren.values.map(group => group.map(_.treeSize._1).sum + (group.length - 1) * GROUP_X_GAP)
+        math.max(
+          childWidths.maxOption.getOrElse(0f),
+          localSize._1 + exprNameWidth
+        )
+      }
+      (width, height)
+    }
+
+    lazy val localSize: (Float, Float) = {
+      val height = HEIGHT_PER_ROW
+      val width = exprTextWidth
       (width, height)
     }
 
     /**
      * Group the children of this expression tree by level.
+     *
      * @return a map where keys are levels (integers) and values are lists of expression trees at that particular level
      */
     lazy val groupChildrenByLevel: Map[Int, List[ExpressionEvalTree]] = {
@@ -310,10 +339,10 @@ trait ClickDeduceLanguage {
         }
       }
 
-      val currentLevelMap: Map[Int, List[ExpressionEvalTree]] = Map(0 -> List(this))
+      val currentLevelMap: Map[Int, List[ExpressionEvalTree]] = Map(0 -> children)
       val childrenMaps: Map[Int, List[ExpressionEvalTree]] = children.flatMap(child => child.groupChildrenByLevel).toMap
 
-      mergeMaps(1, currentLevelMap, childrenMaps)
+      mergeMaps(1, currentLevelMap, childrenMaps).filter(_._2.nonEmpty)
     }
 
   }

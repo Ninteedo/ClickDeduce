@@ -38,7 +38,7 @@ class ExpressionTreeTest extends AnyFunSuite {
   test("ExpressionTree width matches expected text width when it has no children") {
     val expr = Plus(Num(1), Num(2))
     val tree = ExpressionEvalTree(Plus(Num(1), Num(2)), None, None, Nil)
-    val width = tree.size._1
+    val width = tree.treeSize._1
     width should be (FontWidthCalculator.calculateWidth(prettyPrint(expr), tree.FONT))
   }
 
@@ -46,8 +46,8 @@ class ExpressionTreeTest extends AnyFunSuite {
     val expr = Plus(Num(1), Num(2))
     val children = List(ExpressionEvalTree(Num(1), Some(NumV(1)), None, Nil), ExpressionEvalTree(Num(2), Some(NumV(2)), None, Nil))
     val tree = ExpressionEvalTree(Plus(Num(1), Num(2)), Some(NumV(3)), None, children)
-    val wholeWidth = tree.size._1
-    val childrenWidth = children.map(_.size._1).sum + tree.GROUP_X_GAP
+    val wholeWidth = tree.treeSize._1
+    val childrenWidth = children.map(_.treeSize._1).sum + tree.GROUP_X_GAP
 
     wholeWidth should be <= childrenWidth
   }
