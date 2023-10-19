@@ -211,7 +211,7 @@ trait ClickDeduceLanguage {
      *
      * @return the SVG string
      */
-    def toSvg: String = {
+    lazy val toSvg: String = {
       val svg = new StringBuilder()
       svg.append(s"""<svg xmlns="$XMLNS" width="${size._1 + 15}" height="${size._2 + 20}">""")
       svg.append(s"""<style type="text/css">$style</style>""")
@@ -225,7 +225,7 @@ trait ClickDeduceLanguage {
     /**
      * Convert this expression tree to an SVG group.
      */
-    def toSvgGroup: String = {
+    lazy val toSvgGroup: String = {
       def createGroup(content: String, translateAmount: (Float, Float) = (0, 0)) = {
         s"""<g transform="translate$translateAmount">$content</g>"""
       }
@@ -261,7 +261,7 @@ trait ClickDeduceLanguage {
      * Includes HTML entities for certain Unicode characters.
      * @return the string representation of the expression
      */
-    def exprText: String = {
+    lazy val exprText: String = {
       val turnstile = "&#x22a2;"
       val arrow = "&DoubleDownArrow;"
 
@@ -281,7 +281,7 @@ trait ClickDeduceLanguage {
      * Calculate the width of the text representation of the text of this expression.
      * @return the width of the text in pixels
      */
-    def exprTextWidth: Float = {
+    lazy val exprTextWidth: Float = {
       FontWidthCalculator.calculateWidth(exprText, FONT)
     }
 
@@ -290,7 +290,7 @@ trait ClickDeduceLanguage {
      *
      * @return the size of the SVG in pixels, (width, height)
      */
-    def size: (Float, Float) = {
+    lazy val size: (Float, Float) = {
       val groupedChildren = groupChildrenByLevel
       val height = HEIGHT_PER_ROW * groupedChildren.length
       val width = groupedChildren.map(group => group.map(_.exprTextWidth).sum + (group.length - 1) * GROUP_X_GAP).max
@@ -301,7 +301,7 @@ trait ClickDeduceLanguage {
      * Group the children of this expression tree by level.
      * @return a list of lists of expression trees, where each list contains all the expression trees at a particular level
      */
-    def groupChildrenByLevel: List[List[ExpressionEvalTree]] = {
+    lazy val groupChildrenByLevel: List[List[ExpressionEvalTree]] = {
       var childrenLevels: Map[ExpressionEvalTree, Int] = Map()
       def visit(tree: ExpressionEvalTree, level: Int): Unit = {
         childrenLevels += tree -> level
