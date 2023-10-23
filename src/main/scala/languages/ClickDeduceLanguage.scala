@@ -264,6 +264,33 @@ trait ClickDeduceLanguage {
       svg.toString()
     }
 
+    lazy val toHtml: String = {
+      def toHtmlAux(tree: ExpressionEvalTree): String = {
+        if (tree.children.isEmpty) {
+            s"""
+            <div class="axiom">
+              <div class="expr">${tree.exprText}</div>
+              <div class="annotation-axiom">${tree.exprName}</div>
+            </div>
+            """
+          } else
+          s"""
+           <div class="subtree">
+             <div class="node">
+               <div class="expr">${tree.exprText}</div>
+             </div>
+
+             <div class="args">
+               ${tree.children.map(toHtmlAux).mkString("\n")}
+
+               <div class="annotation-new">${tree.exprName}</div>
+             </div>
+           </div>
+          """
+      }
+      toHtmlAux(this)
+    }
+
     /**
      * Convert the base of this expression tree to a string.
      * Includes HTML entities for certain Unicode characters.
