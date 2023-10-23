@@ -33,10 +33,12 @@ trait ClickDeduceLanguage {
    */
   type TypeEnv = Map[Variable, Type]
 
+  abstract class Term
+
   /**
    * An unevaluated expression.
    */
-  abstract class Expr {
+  abstract class Expr extends Term {
     def children: List[Expr] = {
       def getExprFields(e: Expr): List[Expr] = {
         e match {
@@ -54,7 +56,7 @@ trait ClickDeduceLanguage {
   /**
    * A value resulting from an expression being evaluated.
    */
-  abstract class Value
+  abstract class Value extends Term
 
   /**
    * An error resulting from an expression being evaluated.
@@ -64,7 +66,7 @@ trait ClickDeduceLanguage {
   /**
    * The type of a value.
    */
-  abstract class Type
+  abstract class Type extends Term
 
   /**
    * An error resulting from an expression being type checked.
