@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expression Tree</title>
+    <style>
+        .tree {
+            margin-top: 30px;
+            max-width: fit-content;
+        }
+
+        .tree, .subtree {
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            position: relative;
+        }
+
+        .args {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+        }
+
+        .expr {
+            padding: 5px 5px;
+            margin-bottom: 0px;
+            margin-top: 15px;
+        }
+
+        .node {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: -20px;
+        }
+
+        .annotation {
+            margin-left: 10px;
+            margin-bottom: 35px;
+            margin-top: 0px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .subtree:not(:last-child) {
+            margin-right: 20px;
+        }
+
+        .tree::before {
+            content: '';
+            height: 2px;
+            background: black;
+            width: 100%;
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .subtree::before {
+            content: '';
+            height: 2px;
+            background: black;
+            width: 100%;
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="tree">
+    <div class="node">
+        <div class="expr">((1 × 2) + 3) ⇓ 5</div>
+        <div class="annotation">(Plus)</div>
+    </div>
+
+    <div class="args">
+        <div class="subtree">
+            <div class="node">
+                <div class="expr">(1 × 2) ⇓ 2</div>
+                <div class="annotation">(Times)</div>
+            </div>
+
+            <div class="args">
+                <div class="subtree">
+                    <div class="node">
+                        <div class="expr">1 ⇓ 1</div>
+                        <div class="annotation">(Num)</div>
+                    </div>
+                </div>
+
+                <div class="subtree">
+                    <div class="node">
+                        <div class="expr">2 ⇓ 2</div>
+                        <div class="annotation">(Num)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="subtree">
+            <div class="node">
+                <div class="expr">3 ⇓ 3</div>
+                <div class="annotation">(Num)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+
+</html>
