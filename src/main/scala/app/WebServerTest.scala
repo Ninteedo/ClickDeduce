@@ -40,6 +40,14 @@ object WebServerTest extends JsonSupport {
         }
       } ~
       post {
+        path("expr-to-html-tree") {
+          entity(as[EvalRequest]) { request =>
+            val expr = LArith.ExpressionEvalTree.exprToTree(LArith.readExpr(request.text).get)
+            complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, expr.toHtml))
+          }
+        }
+      } ~
+      post {
         path("button-clicked") {
           val newCount = buttonClickCount.incrementAndGet()
           println(s"Button was clicked. Current click count: $newCount")

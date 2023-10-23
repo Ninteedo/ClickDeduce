@@ -264,11 +264,14 @@ trait ClickDeduceLanguage {
       svg.toString()
     }
 
+    /**
+     * Convert this expression tree to an HTML representation.
+     */
     lazy val toHtml: String = {
       def toHtmlAux(tree: ExpressionEvalTree): String = {
         if (tree.children.isEmpty) {
             s"""
-            <div class="axiom">
+            <div class="subtree axiom">
               <div class="expr">${tree.exprText}</div>
               <div class="annotation-axiom">${tree.exprName}</div>
             </div>

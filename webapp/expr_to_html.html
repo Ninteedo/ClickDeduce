@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    #tree {
+      margin-top: 30px;
+      max-width: fit-content;
+    }
+
+    #tree, .subtree {
+      display: flex;
+      flex-direction: column-reverse;
+      align-items: center;
+      position: relative;
+    }
+
+    .args {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+    }
+
+    .expr {
+      padding: 5px 5px;
+      margin-bottom: 0px;
+      margin-top: 15px;
+    }
+
+    .node {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: -20px;
+    }
+
+    .annotation-axiom {
+      align-self: end;
+      margin-bottom: -15px;
+      font-size: 12px;
+      color: #666;
+    }
+
+    .annotation-new {
+      margin-left: 0px;
+      margin-bottom: 5px;
+      margin-top: 0px;
+      font-size: 12px;
+      color: #666;
+      align-self: flex-end;
+    }
+
+    .axiom {
+      display: flex;
+      flex-direction: column-reverse;
+    }
+
+    .subtree:not(:last-child) {
+      margin-right: 20px;
+    }
+
+    #tree::before {
+      content: '';
+      height: 2px;
+      background: black;
+      width: 100%;
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .subtree::before {
+      content: '';
+      height: 2px;
+      background: black;
+      width: 100%;
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+  </style>
+</head>
+
+<body>
+
+<h2>Expression to HTML Conversion</h2>
+
+<form onsubmit="handleSubmit(event)">
+  <input type="text" id="userInput" placeholder="Enter Expression">
+  <input type="submit" value="Evaluate">
+</form>
+<br>
+
+<div id="tree"></div>
+
+<script>
+  async function handleSubmit(event) {
+    // prevent the form from submitting the old-fashioned way
+    event.preventDefault();
+
+    // get the user's input
+    let userInput = document.getElementById('userInput').value;
+
+    // send a POST request to the server
+    let response = await fetch('/expr-to-html-tree', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        text: userInput
+      })
+    });
+
+    // read the response as text
+    let htmlText = await response.text();
+
+    // the svgText is the SVG string directly without the JSON structure:
+    let container = document.getElementById('tree');
+    container.innerHTML = htmlText;
+  }
+</script>
+
+</body>
+</html>
