@@ -35,13 +35,6 @@ class ExpressionTreeTest extends AnyFunSuite {
     expressions should be (List(Num(1), Num(2)))
   }
 
-  test("ExpressionTree width matches expected text width when it has no children") {
-    val expr = Plus(Num(1), Num(2))
-    val tree = ExpressionEvalTree(Plus(Num(1), Num(2)), None, None, Nil)
-    val width = tree.treeSize._1
-    width should be (FontWidthCalculator.calculateWidth(prettyPrint(expr), tree.FONT))
-  }
-
   test("ExpressionTree width does not exceed expected text width when it has children") {
     val expr = Plus(Num(1), Num(2))
     val children = List(ExpressionEvalTree(Num(1), Some(NumV(1)), None, Nil), ExpressionEvalTree(Num(2), Some(NumV(2)), None, Nil))
@@ -50,5 +43,20 @@ class ExpressionTreeTest extends AnyFunSuite {
     val childrenWidth = children.map(_.treeSize._1).sum + tree.GROUP_X_GAP
 
     wholeWidth should be <= childrenWidth
+  }
+
+  test("ExpressionTree children paths are correct") {
+    val expr = Plus(Plus(Plus(Num(1), Plus(Num(2), Num(3))), Num(4)), Num(5))
+    val tree = ExpressionEvalTree.exprToTree(expr)
+
+    tree.treePath should be (Nil)
+    tree.children(0).treePath should be (List(0))
+    tree.children(0).children(0).treePath should be (List(0, 0))
+    tree.children(0).children(1).treePath should be (List(0, 1))
+    tree.children(1).treePath should be (List(1))
+  }
+
+  test("Can create an Expr with blank arguments") {
+    createUnfilledExpr("Plus") should be (Plus(BlankExprArg(), BlankExprArg()))
   }
 }

@@ -15,11 +15,13 @@ import scala.concurrent.ExecutionContextExecutor
 import scala.io.StdIn
 
 case class EvalRequest(text: String)
-case class EvalResponse(svg: String)
+case class EvalResponse(rawExpr: String, html: String)
+case class ChangeRequest(rawExpr: String, blankId: String, selectedValue: String)
 
 trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val evalRequestFormat: RootJsonFormat[EvalRequest] = jsonFormat1(EvalRequest)
-  implicit val evalResponseFormat: RootJsonFormat[EvalResponse] = jsonFormat1(EvalResponse)
+  implicit val evalResponseFormat: RootJsonFormat[EvalResponse] = jsonFormat2(EvalResponse)
+  implicit val changeRequestFormat: RootJsonFormat[ChangeRequest] = jsonFormat3(ChangeRequest)
 }
 
 
@@ -30,7 +32,7 @@ object WebServerTest extends JsonSupport {
     implicit val system: ActorSystem = ActorSystem("my-system")
     implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
-    val route: Route =
+    val route: Route = {
       post {
         path("expr-to-tree") {
           entity(as[EvalRequest]) { request =>
@@ -56,7 +58,21 @@ object WebServerTest extends JsonSupport {
               LArith.ExpressionEvalTree(LArith.BlankExprDropDown(), None, None, Nil)
             )
             val exprTree = LArith.ExpressionEvalTree(expr, Some(LArith.eval(expr)), None, children)
-            complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, exprTree.toHtml))
+            children.foreach(_.parent = Some(exprTree))
+            val response = EvalResponse(expr.toString, exprTree.toHtml)
+            complete(response)
+          }
+        }
+      } ~
+      post {
+        path("update-expr") {
+          entity(as[ChangeRequest]) { request =>
+            val expr = LArith.createUnfilledExpr(request.selectedValue)
+
+            val tree = LArith.ExpressionEvalTree.exprToTree(expr)
+            val response = EvalResponse(expr.toString, tree.toHtml)
+            println(request.toString + " -> " + response.toString)
+            complete(response)
           }
         }
       } ~
@@ -67,12 +83,14 @@ object WebServerTest extends JsonSupport {
           complete(newCount.toString)
         }
       } ~
-        get {
-          pathEndOrSingleSlash {
-            getFromDirectory("webapp/index.html")
-          } ~
-            getFromDirectory("webapp")
-        }
+      get {
+        pathEndOrSingleSlash {
+          getFromDirectory("webapp/index.html")
+        } ~
+          getFromDirectory("webapp")
+      }
+    }
+
 
     val defaultSettings = ServerSettings(system)
     val customSettings = defaultSettings.withTransparentHeadRequests(true)

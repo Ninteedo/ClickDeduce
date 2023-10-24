@@ -105,17 +105,17 @@ class LArith extends ClickDeduceLanguage {
     case Num(x) => x.toString
     case Plus(e1, e2) => s"(${prettyPrint(e1)} + ${prettyPrint(e2)})"
     case Times(e1, e2) => s"(${prettyPrint(e1)} × ${prettyPrint(e2)})"
-    case _ => "ERROR: UnexpectedExpr"
+    case _ => e.toHtml
   }
 
   override def prettyPrint(v: Value): String = v match {
     case NumV(x) => x.toString
-    case _ => "ERROR: UnexpectedValue"
+    case _ => v.toHtml
   }
 
   override def prettyPrint(t: Type): String = t match {
     case IntType() => "Int"
-    case _ => "ERROR: UnexpectedType"
+    case _ => t.toHtml
   }
 }
 

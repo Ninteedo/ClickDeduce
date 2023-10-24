@@ -3,6 +3,8 @@ package languages
 import app.FontWidthCalculator
 
 import java.awt.Font
+import java.util.concurrent.atomic.AtomicInteger
+import scala.annotation.tailrec
 import scala.reflect.runtime.universe as ru
 import scala.util.parsing.combinator.*
 
@@ -33,7 +35,7 @@ trait ClickDeduceLanguage {
    */
   type TypeEnv = Map[Variable, Type]
 
-  abstract class Term {
+  trait Term {
     lazy val toHtml: String = prettyPrint(this)
   }
 
@@ -55,6 +57,8 @@ trait ClickDeduceLanguage {
     }
   }
 
+  case class MissingExpr() extends Expr
+
   /**
    * A value resulting from an expression being evaluated.
    */
@@ -75,17 +79,27 @@ trait ClickDeduceLanguage {
    */
   abstract class TypeError extends Type
 
-  abstract class BlankSpace extends Term
+  val blankIdCount: AtomicInteger = new AtomicInteger(0)
 
-  case class BlankExprDropDown(id: Int) extends BlankSpace {
+  trait BlankSpace extends Term {
+    lazy val id: Int = blankIdCount.incrementAndGet()
+  }
+
+  case class BlankExprDropDown() extends BlankSpace {
     override lazy val toHtml: String = {
-      exprClassListDropdownHtml.replace("select", s"select name='blank$id")
+      exprClassListDropdownHtml.replace("select", s"select name='$id'")
     }
   }
 
-  case class BlankValueInput(id: Int) extends BlankSpace {
+  case class BlankValueInput() extends BlankSpace {
     override lazy val toHtml: String = {
-      s"<input name='blank$id' type='text' placeholder='Term'/>"
+      s"<input name='$id' type='text' placeholder='Term'/>"
+    }
+  }
+
+  case class BlankExprArg() extends Expr, BlankSpace {
+    override lazy val toHtml: String = {
+      s"<input name='$id' type='text' placeholder='Term'/>"
     }
   }
 
@@ -172,7 +186,11 @@ trait ClickDeduceLanguage {
     val exprClassListHtml = exprClassList.map(e => {
       s"""<option value="${e.getSimpleName}">${e.getSimpleName}</option>"""
     }).mkString("\n")
-    s"""<select class="expr-dropdown">$exprClassListHtml</select>"""
+    s"""<select class="expr-dropdown" onchange="handleDropdownChange(this)">$exprClassListHtml</select>"""
+  }
+
+  private lazy val blankClassList: List[Class[BlankSpace]] = {
+    getClass.getClasses.filter(c => classOf[BlankSpace].isAssignableFrom(c)).map(_.asInstanceOf[Class[BlankSpace]]).toList
   }
 
   /**
@@ -190,6 +208,7 @@ trait ClickDeduceLanguage {
      * @param args The arguments to be passed to the constructor of the `Expr`.
      * @return The `Expr` created, if successful.
      */
+    @tailrec
     def makeExpr(name: String, args: List[Any]): Option[Expr] = {
       val exprClass = exprClassList.find(_.getSimpleName == name)
       exprClass match
@@ -201,7 +220,13 @@ trait ClickDeduceLanguage {
           }
           Some(constructor.newInstance(arguments: _*).asInstanceOf[Expr])
         }
-        case None => None
+        case None => {
+          val blankClass = blankClassList.find(_.getSimpleName == name)
+          blankClass match {
+            case Some(value) => makeExpr("MissingExpr", Nil)
+            case None => None
+          }
+        }
     }
 
     object ExprParser extends JavaTokenParsers {
@@ -223,6 +248,98 @@ trait ClickDeduceLanguage {
     }
   }
 
+  def replaceBlank(s: String, blankId: Int, replacement: String): Option[String] = {
+    def doBlankReplace(exprName: String, args: List[String]): String = {
+      val existingString = s"$exprName(${args.mkString(", ")})"
+      if (args.length == 1 && args.head.forall(_.isDigit) && args.head == blankId.toString) {
+        val blankClass = blankClassList.find(_.getSimpleName == exprName)
+        blankClass match {
+          case Some(value) => {
+            val exprClass = exprClassList.find(_.getSimpleName == replacement)
+            exprClass match {
+              case Some(value) => {
+                val constructor = value.getConstructors()(0)
+                // find number of arguments required for constructor
+                val numArgs = constructor.getParameterCount
+                val arguments = for {i <- 0 until numArgs} yield {
+                  BlankExprArg()
+                }
+                val expr = constructor.newInstance(arguments: _*).asInstanceOf[Expr]
+                expr.toString
+              }
+              case None => existingString
+            }
+          }
+          case None => existingString
+        }
+      } else {
+        existingString
+      }
+    }
+
+    object ExprParser extends JavaTokenParsers {
+      def expr: Parser[String] = name ~ "(" ~ repsep(arg, "\\s*,\\s*".r) ~ ")" ^^ {
+        case name ~ "(" ~ args ~ ")" => doBlankReplace(name, args.map(_.toString))
+        case _ => "Parse Error"
+      }
+
+      def name: Parser[String] = "[A-Za-z]\\w*".r
+
+      def arg: Parser[Any] = expr | stringLiteral | wholeNumber ^^ (BigInt(_).toString()) | "true" ^^ (_ => "true") | "false" ^^ (_ => "false")
+
+      def parseExpr(s: String): ParseResult[String] = parseAll(expr, s.strip())
+    }
+
+    ExprParser.parseExpr(s) match {
+      case ExprParser.Success(matched, _) => {
+        Some(matched)
+      }
+      case _ => None
+    }
+  }
+
+  def exprNameToClass(name: String): Option[Class[Expr]] = {
+    exprClassList.find(_.getSimpleName == name)
+  }
+
+  def createTerm(name: String, args: List[Term]) = {
+    val exprClass = exprNameToClass(name)
+    exprClass match {
+      case Some(value) => {
+        val constructor = value.getConstructors()(0)
+        constructor.newInstance(args: _*).asInstanceOf[Expr]
+      }
+      case None => {
+        val blankClass = blankClassList.find(_.getSimpleName == name)
+        blankClass match {
+          case Some(value) => MissingExpr()
+          case None => MissingExpr()
+        }
+      }
+    }
+  }
+
+  def createUnfilledExpr(name: String) = {
+    val exprClass = exprNameToClass(name)
+    exprClass match {
+      case Some(value) => {
+        val constructor = value.getConstructors()(0)
+        val numArgs = constructor.getParameterCount - 1
+        val arguments = List(lang) ++ (for {i <- 0 until numArgs} yield {
+          BlankExprArg()
+        })
+        constructor.newInstance(arguments: _*).asInstanceOf[Expr]
+      }
+      case None => {
+        val blankClass = blankClassList.find(_.getSimpleName == name)
+        blankClass match {
+          case Some(value) => MissingExpr()
+          case None => MissingExpr()
+        }
+      }
+    }
+  }
+
   /**
    * Tree node representing an expression in this language.
    * Can be converted to an SVG.
@@ -232,7 +349,13 @@ trait ClickDeduceLanguage {
    * @param env      the environment in which the expression was evaluated (optional)
    * @param children the child nodes of the expression
    */
-  class ExpressionEvalTree(val term: Term, val value: Option[Value], val env: Option[Env], val children: List[ExpressionEvalTree]) {
+  case class ExpressionEvalTree(term: Term, value: Option[Value], env: Option[Env], children: List[ExpressionEvalTree]) {
+//    def this(term: Term, value: Option[Value], env: Option[Env], children: List[ExpressionEvalTree], parent: ExpressionEvalTree) = {
+//      this(term, value, env, children)
+//      this.parent = Some(parent)
+//    }
+//
+//    def this(term: Term, value: Option[Value], env: Option[Env], parent: ExpressionEvalTree) = this(term, value, env, Nil, parent)
 
     private val XMLNS = "http://www.w3.org/2000/svg"
     private val FONT_NAME = "Courier New"
@@ -244,6 +367,8 @@ trait ClickDeduceLanguage {
     val HEIGHT_PER_ROW = 20
     val FONT = new Font(FONT_NAME, Font.PLAIN, FONT_SIZE)
     val GROUP_X_GAP = 20
+
+    var parent: Option[ExpressionEvalTree] = None
 
     /**
      * Convert this expression tree to a full SVG.
@@ -302,16 +427,17 @@ trait ClickDeduceLanguage {
      * Convert this expression tree to an HTML representation.
      */
     lazy val toHtml: String = {
+      val mainAttributes = s"""data-tree-path="$treePathString" data-term="${term.toString}""""
       if (children.isEmpty) {
         s"""
-          <div class="subtree axiom">
+          <div class="subtree axiom" $mainAttributes>
             <div class="expr">$exprText</div>
             <div class="annotation-axiom">$exprName</div>
           </div>
           """
       } else
         s"""
-         <div class="subtree">
+         <div class="subtree" $mainAttributes>
            <div class="node">
              <div class="expr">$exprText</div>
            </div>
@@ -408,13 +534,35 @@ trait ClickDeduceLanguage {
       mergeMaps(1, currentLevelMap, childrenMaps).filter(_._2.nonEmpty)
     }
 
+    def treePath: List[Int] = parent match {
+      case Some(value) => value.treePath :+ value.children.indexOf(this)
+      case None => Nil
+    }
+
+    def treePathString: String = treePath.mkString(".")
+
+    /**
+     * Find the child of this expression tree at the given path.
+     *
+     * @param path the path to the child
+     * @return the child at the given path, if it exists
+     */
+    def findChild(path: List[Int]): Option[ExpressionEvalTree] = path match {
+      case Nil => Some(this)
+      case head :: tail => children.lift(head).flatMap(_.findChild(tail))
+    }
   }
 
   object ExpressionEvalTree {
     def exprToTree(e0: Expr): ExpressionEvalTree = {
       val childTrees = e0.children.map(exprToTree)
-      val valueResult: Option[Value] = Some(lang.eval(e0))
-      ExpressionEvalTree(e0, valueResult, None, childTrees)
+      val valueResult: Option[Value] = lang.eval(e0) match {
+        case e: EvalError => None
+        case v => Some(v)
+      }
+      val result = ExpressionEvalTree(e0, valueResult, None, childTrees)
+      childTrees.foreach(_.parent = Some(result))
+      result
     }
   }
 }

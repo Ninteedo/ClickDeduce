@@ -1,90 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <style>
-    form {
-      display: inline;
-    }
-
-    #tree {
-      margin-top: 30px;
-      max-width: fit-content;
-    }
-
-    #tree, .subtree {
-      display: flex;
-      flex-direction: column-reverse;
-      align-items: center;
-      position: relative;
-    }
-
-    .args {
-      display: flex;
-      flex-direction: row;
-      justify-content: center;
-    }
-
-    .expr {
-      padding: 5px 5px;
-      margin-bottom: 0px;
-      margin-top: 15px;
-    }
-
-    .node {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: -20px;
-    }
-
-    .annotation-axiom {
-      align-self: end;
-      margin-bottom: -15px;
-      font-size: 12px;
-      color: #666;
-    }
-
-    .annotation-new {
-      margin-left: 0px;
-      margin-bottom: 5px;
-      margin-top: 0px;
-      font-size: 12px;
-      color: #666;
-      align-self: flex-end;
-    }
-
-    .axiom {
-      display: flex;
-      flex-direction: column-reverse;
-    }
-
-    .subtree:not(:last-child) {
-      margin-right: 20px;
-    }
-
-    #tree::before {
-      content: '';
-      height: 2px;
-      background: black;
-      width: 100%;
-      position: absolute;
-      bottom: 30px;
-      left: 50%;
-      transform: translate(-50%, -50%);
-    }
-
-    .subtree::before {
-      content: '';
-      height: 2px;
-      background: black;
-      width: 100%;
-      position: absolute;
-      bottom: 30px;
-      left: 50%;
-      transform: translate(-50%, -50%);
-    }
-
-  </style>
+  <link rel="stylesheet" href="stylesheet.css">
+  <title>Expr2HTML</title>
 </head>
 
 <body>
@@ -123,11 +41,34 @@
     });
 
     // read the response as text
-    let htmlText = await response.text();
+    let jsonResponse = await response.json();
 
     // the svgText is the SVG string directly without the JSON structure:
     let container = document.getElementById('tree');
-    container.innerHTML = htmlText;
+    container.innerHTML = jsonResponse.html;
+  }
+
+  function handleDropdownChange(dropdown) {
+    const dropdownId = dropdown.name;
+    const selectedValue = dropdown.value;
+    const subtree = dropdown.parentElement.parentElement;
+    const rawExpr = subtree.getAttribute("data-term");
+
+    console.log(subtree);
+
+    fetch("/update-expr", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        rawExpr,
+        blankId: dropdownId,
+        selectedValue
+      })
+    })
+        .then(response => response.json())
+        .then(updatedTree => {
+          subtree.innerHTML = updatedTree.html;
+        });
   }
 </script>
 
