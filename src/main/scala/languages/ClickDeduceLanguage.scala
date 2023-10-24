@@ -248,56 +248,6 @@ trait ClickDeduceLanguage {
     }
   }
 
-  def replaceBlank(s: String, blankId: Int, replacement: String): Option[String] = {
-    def doBlankReplace(exprName: String, args: List[String]): String = {
-      val existingString = s"$exprName(${args.mkString(", ")})"
-      if (args.length == 1 && args.head.forall(_.isDigit) && args.head == blankId.toString) {
-        val blankClass = blankClassList.find(_.getSimpleName == exprName)
-        blankClass match {
-          case Some(value) => {
-            val exprClass = exprClassList.find(_.getSimpleName == replacement)
-            exprClass match {
-              case Some(value) => {
-                val constructor = value.getConstructors()(0)
-                // find number of arguments required for constructor
-                val numArgs = constructor.getParameterCount
-                val arguments = for {i <- 0 until numArgs} yield {
-                  BlankExprArg()
-                }
-                val expr = constructor.newInstance(arguments: _*).asInstanceOf[Expr]
-                expr.toString
-              }
-              case None => existingString
-            }
-          }
-          case None => existingString
-        }
-      } else {
-        existingString
-      }
-    }
-
-    object ExprParser extends JavaTokenParsers {
-      def expr: Parser[String] = name ~ "(" ~ repsep(arg, "\\s*,\\s*".r) ~ ")" ^^ {
-        case name ~ "(" ~ args ~ ")" => doBlankReplace(name, args.map(_.toString))
-        case _ => "Parse Error"
-      }
-
-      def name: Parser[String] = "[A-Za-z]\\w*".r
-
-      def arg: Parser[Any] = expr | stringLiteral | wholeNumber ^^ (BigInt(_).toString()) | "true" ^^ (_ => "true") | "false" ^^ (_ => "false")
-
-      def parseExpr(s: String): ParseResult[String] = parseAll(expr, s.strip())
-    }
-
-    ExprParser.parseExpr(s) match {
-      case ExprParser.Success(matched, _) => {
-        Some(matched)
-      }
-      case _ => None
-    }
-  }
-
   def exprNameToClass(name: String): Option[Class[Expr]] = {
     exprClassList.find(_.getSimpleName == name)
   }
