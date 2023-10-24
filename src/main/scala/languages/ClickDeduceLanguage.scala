@@ -33,7 +33,9 @@ trait ClickDeduceLanguage {
    */
   type TypeEnv = Map[Variable, Type]
 
-  abstract class Term
+  abstract class Term {
+    lazy val toHtml: String = prettyPrint(this)
+  }
 
   /**
    * An unevaluated expression.
@@ -72,6 +74,20 @@ trait ClickDeduceLanguage {
    * An error resulting from an expression being type checked.
    */
   abstract class TypeError extends Type
+
+  abstract class BlankSpace extends Term
+
+  case class BlankExprDropDown(id: Int) extends BlankSpace {
+    override lazy val toHtml: String = {
+      exprClassListDropdownHtml.replace("select", s"select name='blank$id")
+    }
+  }
+
+  case class BlankValueInput(id: Int) extends BlankSpace {
+    override lazy val toHtml: String = {
+      s"<input name='blank$id' type='text' placeholder='Term'/>"
+    }
+  }
 
   /**
    * Function which evaluates an `Expr` to a `Value`, given an environment.
@@ -139,6 +155,26 @@ trait ClickDeduceLanguage {
    */
   def prettyPrint(v: Value): String
 
+  def prettyPrint(term: Term): String = {
+    term match {
+      case e: Expr => prettyPrint(e)
+      case t: Type => prettyPrint(t)
+      case v: Value => prettyPrint(v)
+      case _ => "Unknown Term"
+    }
+  }
+
+  private lazy val exprClassList: List[Class[Expr]] = {
+    getClass.getClasses.filter(c => classOf[Expr].isAssignableFrom(c)).map(_.asInstanceOf[Class[Expr]]).toList
+  }
+
+  private lazy val exprClassListDropdownHtml: String = {
+    val exprClassListHtml = exprClassList.map(e => {
+      s"""<option value="${e.getSimpleName}">${e.getSimpleName}</option>"""
+    }).mkString("\n")
+    s"""<select class="expr-dropdown">$exprClassListHtml</select>"""
+  }
+
   /**
    * Function to load an `Expr` from a string.
    * Input must be in the format produced by `Expr.toString`
@@ -147,8 +183,6 @@ trait ClickDeduceLanguage {
    * @return The `Expr` represented by the string, if successful.
    */
   def readExpr(s: String): Option[Expr] = {
-    val exprClassList = getClass.getClasses.filter(c => classOf[Expr].isAssignableFrom(c))
-
     /**
      * Create an `Expr` given its name and a list of arguments.
      *
@@ -193,12 +227,12 @@ trait ClickDeduceLanguage {
    * Tree node representing an expression in this language.
    * Can be converted to an SVG.
    *
-   * @param expr     the expression
+   * @param term     the expression
    * @param value    the value of the expression (optional)
    * @param env      the environment in which the expression was evaluated (optional)
    * @param children the child nodes of the expression
    */
-  class ExpressionEvalTree(val expr: Expr, val value: Option[Value], val env: Option[Env], val children: List[ExpressionEvalTree]) {
+  class ExpressionEvalTree(val term: Term, val value: Option[Value], val env: Option[Env], val children: List[ExpressionEvalTree]) {
 
     private val XMLNS = "http://www.w3.org/2000/svg"
     private val FONT_NAME = "Courier New"
@@ -268,30 +302,27 @@ trait ClickDeduceLanguage {
      * Convert this expression tree to an HTML representation.
      */
     lazy val toHtml: String = {
-      def toHtmlAux(tree: ExpressionEvalTree): String = {
-        if (tree.children.isEmpty) {
-            s"""
-            <div class="subtree axiom">
-              <div class="expr">${tree.exprText}</div>
-              <div class="annotation-axiom">${tree.exprName}</div>
-            </div>
-            """
-          } else
-          s"""
-           <div class="subtree">
-             <div class="node">
-               <div class="expr">${tree.exprText}</div>
-             </div>
-
-             <div class="args">
-               ${tree.children.map(toHtmlAux).mkString("\n")}
-
-               <div class="annotation-new">${tree.exprName}</div>
-             </div>
-           </div>
+      if (children.isEmpty) {
+        s"""
+          <div class="subtree axiom">
+            <div class="expr">$exprText</div>
+            <div class="annotation-axiom">$exprName</div>
+          </div>
           """
-      }
-      toHtmlAux(this)
+      } else
+        s"""
+         <div class="subtree">
+           <div class="node">
+             <div class="expr">$exprText</div>
+           </div>
+
+           <div class="args">
+             ${children.map(_.toHtml).mkString("\n")}
+
+             <div class="annotation-new">$exprName</div>
+           </div>
+         </div>
+        """
     }
 
     /**
@@ -306,12 +337,12 @@ trait ClickDeduceLanguage {
 
       val sb = new StringBuilder()
       if (env.isDefined) {
-        val envText = env.get.map({ case (name, value): (Variable, Value) => s"$name := ${prettyPrint(value)}" }).mkString(", ")
+        val envText = env.get.map({ case (name, value): (Variable, Value) => s"$name := ${value.toHtml}" }).mkString(", ")
         sb.append(s"[$envText], ")
       }
-      sb.append(lang.prettyPrint(expr))
+      sb.append(term.toHtml)
       if (value.isDefined) {
-        sb.append(s" $arrow ${lang.prettyPrint(value.get)}")
+        sb.append(s" $arrow ${value.get.toHtml}")
       }
       sb.toString
     }
@@ -326,7 +357,7 @@ trait ClickDeduceLanguage {
     }
 
     lazy val exprName: String = {
-      s"""(${expr.getClass.getSimpleName})"""
+      s"""(${term.getClass.getSimpleName})"""
     }
 
     lazy val exprNameWidth: Float = {

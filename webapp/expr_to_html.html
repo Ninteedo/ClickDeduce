@@ -2,6 +2,10 @@
 <html>
 <head>
   <style>
+    form {
+      display: inline;
+    }
+
     #tree {
       margin-top: 30px;
       max-width: fit-content;
@@ -87,16 +91,20 @@
 
 <h2>Expression to HTML Conversion</h2>
 
-<form onsubmit="handleSubmit(event)">
+<form onsubmit="handleSubmit(event, '/expr-to-html-tree')">
   <input type="text" id="userInput" placeholder="Enter Expression">
   <input type="submit" value="Evaluate">
+</form>
+<form onsubmit="handleSubmit(event, '/expr-to-html-tree-blank')">
+  <input type="hidden" id="blankUserInput" value="">
+  <input type="submit" value="Evaluate Blank">
 </form>
 <br>
 
 <div id="tree"></div>
 
 <script>
-  async function handleSubmit(event) {
+  async function handleSubmit(event, url) {
     // prevent the form from submitting the old-fashioned way
     event.preventDefault();
 
@@ -104,7 +112,7 @@
     let userInput = document.getElementById('userInput').value;
 
     // send a POST request to the server
-    let response = await fetch('/expr-to-html-tree', {
+    let response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

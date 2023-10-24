@@ -31,7 +31,7 @@ class ExpressionTreeTest extends AnyFunSuite {
     val expr = Plus(Num(1), Num(2))
     val tree = ExpressionEvalTree.exprToTree(expr)
     val children = tree.children
-    val expressions = children.map(_.expr)
+    val expressions = children.map(_.term)
     expressions should be (List(Num(1), Num(2)))
   }
 
