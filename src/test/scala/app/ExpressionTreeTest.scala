@@ -31,8 +31,13 @@ class ExpressionTreeTest extends AnyFunSuite {
     val expr = Plus(Num(1), Num(2))
     val tree = ExpressionEvalTree.exprToTree(expr)
     val children = tree.children
-    val expressions = children.map(_.term)
-    expressions should be (List(Num(1), Num(2)))
+    children should have size 2
+    // children should all be of type ExpressionEvalTree
+    children(0) shouldBe a [ExpressionEvalTree]
+    children(1) shouldBe a [ExpressionEvalTree]
+    // children should have correct expressions
+    children(0).asInstanceOf[ExpressionEvalTree].expr should be (Num(1))
+    children(1).asInstanceOf[ExpressionEvalTree].expr should be (Num(2))
   }
 
   test("ExpressionTree width does not exceed expected text width when it has children") {

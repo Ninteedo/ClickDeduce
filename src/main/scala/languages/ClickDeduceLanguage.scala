@@ -11,75 +11,8 @@ import scala.util.parsing.combinator.*
 /**
  * Parent trait for all languages designed to be loaded in ClickDeduce.
  */
-trait ClickDeduceLanguage {
+trait ClickDeduceLanguage extends AbstractLanguage {
   lang =>
-
-  /**
-   * A variable name.
-   *
-   * Case sensitive.
-   */
-  type Variable = String
-
-  /**
-   * The evaluation environment at a particular point.
-   *
-   * Contains variables with bound values.
-   */
-  type Env = Map[Variable, Value]
-
-  /**
-   * The type environment at a particular point.
-   *
-   * Contains variables with bound types.
-   */
-  type TypeEnv = Map[Variable, Type]
-
-  trait Term {
-    lazy val toHtml: String = prettyPrint(this)
-  }
-
-  /**
-   * An unevaluated expression.
-   */
-  abstract class Expr extends Term {
-    def children: List[Expr] = {
-      def getExprFields(e: Expr): List[Expr] = {
-        e match {
-          case e0: Product =>
-            val values = e0.productIterator.toList
-            values.collect({ case e: Expr => e.childVersion })
-          case _ => Nil
-        }
-      }
-
-      getExprFields(this)
-    }
-
-    lazy val childVersion = this
-  }
-
-  case class MissingExpr() extends Expr
-
-  /**
-   * A value resulting from an expression being evaluated.
-   */
-  abstract class Value extends Term
-
-  /**
-   * An error resulting from an expression being evaluated.
-   */
-  abstract class EvalError extends Value
-
-  /**
-   * The type of a value.
-   */
-  abstract class Type extends Term
-
-  /**
-   * An error resulting from an expression being type checked.
-   */
-  abstract class TypeError extends Type
 
   val blankIdCount: AtomicInteger = new AtomicInteger(0)
 
@@ -113,101 +46,12 @@ trait ClickDeduceLanguage {
     }
   }
 
-  abstract class Literal extends Term {
-    val value: Any
-
-    override lazy val toHtml: String = value.toString
-
-    override lazy val toString: String = value.toString
-  }
-
-  case class LiteralInt(value: BigInt) extends Literal
-
-  case class LiteralBool(value: Boolean) extends Literal
-
-  case class LiteralString(value: String) extends Literal
-
   case class BlankLiteral() extends Literal, BlankSpace {
     override lazy val toHtml: String = {
       s"<input name='$id' type='text' placeholder='Term'/>"
     }
 
     val value: Any = ""
-  }
-
-  /**
-   * Function which evaluates an `Expr` to a `Value`, given an environment.
-   *
-   * @param e   The `Expr` to evaluate.
-   * @param env The environment to evaluate the `Expr` in.
-   * @return The `Value` resulting from evaluating the `Expr`.
-   */
-  def eval(e: Expr, env: Env): Value
-
-  /**
-   * Function which evaluates an `Expr` to a `Value`, given an empty environment.
-   *
-   * Equivalent to calling <code>eval(e, Map()).</code>
-   *
-   * @param e The `Expr` to evaluate.
-   * @return The `Value` resulting from evaluating the `Expr`.
-   */
-  def eval(e: Expr): Value = {
-    eval(e, Map())
-  }
-
-  /**
-   * Function to perform type checking on an `Expr` in the given type environment.
-   *
-   * @param e    The `Expr` on which type checking needs to be performed.
-   * @param tenv The type environment in which type checking is done.
-   * @return The `Type` of the expression after type checking.
-   */
-  def typeOf(e: Expr, tenv: TypeEnv): Type
-
-  /**
-   * Overloaded type checking function that performs type checking on an `Expr` in an empty type environment.
-   *
-   * Equivalent to calling <code>typeCheck(e, Map()).</code>
-   *
-   * @param e The `Expr` on which type checking needs to be performed.
-   * @return The `Type` of the expression after type checking.
-   */
-  def typeOf(e: Expr): Type = {
-    typeOf(e, Map())
-  }
-
-  /**
-   * Function to create a human-readable string representation of an `Expr`.
-   *
-   * @param e The `Expr` to be pretty printed.
-   * @return A `String` representing the pretty printed expression.
-   */
-  def prettyPrint(e: Expr): String
-
-  /**
-   * Function to create a human-readable string representation of a `Type`.
-   *
-   * @param t The `Type` to be pretty printed.
-   * @return A `String` representing the pretty printed type.
-   */
-  def prettyPrint(t: Type): String
-
-  /**
-   * Function to create a human-readable string representation of a `Value`.
-   *
-   * @param v The `Value` to be pretty printed.
-   * @return A `String` representing the pretty printed value.
-   */
-  def prettyPrint(v: Value): String
-
-  def prettyPrint(term: Term): String = {
-    term match {
-      case e: Expr => prettyPrint(e)
-      case t: Type => prettyPrint(t)
-      case v: Value => prettyPrint(v)
-      case _ => "Unknown Term"
-    }
   }
 
   private lazy val exprClassList: List[Class[Expr]] = {
@@ -384,12 +228,12 @@ trait ClickDeduceLanguage {
    * Tree node representing an expression in this language.
    * Can be converted to an SVG.
    *
-   * @param term     the expression
+   * @param expr     the expression
    * @param value    the value of the expression (optional)
    * @param env      the environment in which the expression was evaluated (optional)
    * @param children the child nodes of the expression
    */
-  case class ExpressionEvalTree(term: Term, value: Option[Value], env: Option[Env], children: List[EvalTreeNode]) extends EvalTreeNode {
+  case class ExpressionEvalTree(expr: Expr, value: Option[Value], env: Option[Env], children: List[EvalTreeNode]) extends EvalTreeNode {
     private val XMLNS = "http://www.w3.org/2000/svg"
     private val FONT_NAME = "Courier New"
     private val FONT_SIZE = 16
@@ -458,7 +302,7 @@ trait ClickDeduceLanguage {
      * Convert this expression tree to an HTML representation.
      */
     override lazy val toHtml: String = {
-      val mainAttributes = s"""data-tree-path="$treePathString" data-term="${term.toString}""""
+      val mainAttributes = s"""data-tree-path="$treePathString" data-term="${expr.toString}""""
       if (children.isEmpty) {
         s"""
           <div class="subtree axiom" $mainAttributes>
@@ -497,7 +341,7 @@ trait ClickDeduceLanguage {
         val envText = env.get.map({ case (name, value): (Variable, Value) => s"$name := ${value.toHtml}" }).mkString(", ")
         sb.append(s"[$envText], ")
       }
-      sb.append(term.toHtml)
+      sb.append(expr.toHtml)
       if (value.isDefined) {
         sb.append(s" $arrow ${value.get.toHtml}")
       }
@@ -514,7 +358,7 @@ trait ClickDeduceLanguage {
     }
 
     lazy val exprName: String = {
-      s"""(${term.getClass.getSimpleName})"""
+      s"""(${expr.getClass.getSimpleName})"""
     }
 
     lazy val exprNameWidth: Float = {
@@ -554,7 +398,11 @@ trait ClickDeduceLanguage {
     }
   }
 
-  case class FillableExprNode()
+//  case class FillableExprNode(exprClass: Class[Expr], args: List[Expr | Literal], override val children: List[EvalTreeNode]) extends EvalTreeNode {
+//    override lazy val toHtml: String = {
+//
+//    }
+//  }
 
   object ExpressionEvalTree {
     def exprToTree(e0: Expr): ExpressionEvalTree = {
