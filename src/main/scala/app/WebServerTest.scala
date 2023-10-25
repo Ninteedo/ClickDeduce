@@ -16,7 +16,7 @@ import scala.io.StdIn
 
 case class EvalRequest(text: String)
 case class EvalResponse(rawExpr: String, html: String)
-case class ChangeRequest(rawExpr: String, blankId: String, selectedValue: String)
+case class ChangeRequest(rawExpr: String, blankTreePath: String, selectedValue: String)
 
 trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val evalRequestFormat: RootJsonFormat[EvalRequest] = jsonFormat1(EvalRequest)
@@ -44,8 +44,9 @@ object WebServerTest extends JsonSupport {
       post {
         path("expr-to-html-tree") {
           entity(as[EvalRequest]) { request =>
-            val expr = LArith.ExpressionEvalTree.exprToTree(LArith.readExpr(request.text).get)
-            complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, expr.toHtml))
+            val expr = LArith.readExpr(request.text).get
+            val tree = LArith.ExpressionEvalTree.exprToTree(expr)
+            complete(EvalResponse(expr.toString, tree.toHtml))
           }
         }
       } ~
@@ -68,10 +69,11 @@ object WebServerTest extends JsonSupport {
         path("update-expr") {
           entity(as[ChangeRequest]) { request =>
             val expr = LArith.createUnfilledExpr(request.selectedValue)
-
+            val treePath = request.blankTreePath.split("-").map(_.toInt).toList
             val tree = LArith.ExpressionEvalTree.exprToTree(expr)
+            tree.initialTreePath = treePath
             val response = EvalResponse(expr.toString, tree.toHtml)
-            println(request.toString + " -> " + response.toString)
+//            println(request.toString + " -> " + response.toString)
             complete(response)
           }
         }

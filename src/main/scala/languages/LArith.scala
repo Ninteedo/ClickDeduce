@@ -9,7 +9,16 @@ class LArith extends ClickDeduceLanguage {
    *
    * @param x The integer value of the number.
    */
-  case class Num(x: BigInt) extends Expr
+  case class Num(x: Literal) extends Expr {
+//    def this(x: BigInt) = this(LiteralInt(x))
+//
+//    def this(x: Int) = this(BigInt(x))
+  }
+
+  object Num {
+    def apply(x: BigInt): Num = new Num(LiteralInt(x))
+    def apply(x: Int): Num = new Num(LiteralInt(BigInt(x)))
+  }
 
   /**
    * A plus expression.
@@ -76,7 +85,7 @@ class LArith extends ClickDeduceLanguage {
 
 
   override def eval(e: Expr, env: Env): Value = e match {
-    case Num(x) => NumV(x)
+    case Num(LiteralInt(x)) => NumV(x)
     case Plus(e1, e2) => (eval(e1, env), eval(e2, env)) match {
       case (NumV(x), NumV(y)) => NumV(x + y)
       case (v1, v2) => UnexpectedArgValue(s"Plus can only accept (NumV, NumV), not ($v1, $v2)")

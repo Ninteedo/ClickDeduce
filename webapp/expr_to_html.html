@@ -53,6 +53,7 @@
     const selectedValue = dropdown.value;
     const subtree = dropdown.parentElement.parentElement;
     const rawExpr = subtree.getAttribute("data-term");
+    const dataTreePath = subtree.getAttribute("data-tree-path")
 
     console.log(subtree);
 
@@ -61,7 +62,7 @@
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         rawExpr,
-        blankId: dropdownId,
+        blankTreePath: dataTreePath,
         selectedValue
       })
     })

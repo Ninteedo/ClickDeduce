@@ -48,13 +48,15 @@ trait ClickDeduceLanguage {
         e match {
           case e0: Product =>
             val values = e0.productIterator.toList
-            values.collect({ case e: Expr => e })
+            values.collect({ case e: Expr => e.childVersion })
           case _ => Nil
         }
       }
 
       getExprFields(this)
     }
+
+    lazy val childVersion = this
   }
 
   case class MissingExpr() extends Expr
@@ -85,10 +87,18 @@ trait ClickDeduceLanguage {
     lazy val id: Int = blankIdCount.incrementAndGet()
   }
 
-  case class BlankExprDropDown() extends BlankSpace {
+  case class BlankExprDropDown() extends Expr, BlankSpace {
     override lazy val toHtml: String = {
       exprClassListDropdownHtml.replace("select", s"select name='$id'")
     }
+  }
+
+  case class BlankChildPlaceholder() extends Expr, BlankSpace {
+    override lazy val toHtml: String = {
+      s"<span class='blank-child-placeholder' data-blank-id='$id'>?</span>"
+    }
+
+    override lazy val childVersion = BlankExprDropDown()
   }
 
   case class BlankValueInput() extends BlankSpace {
@@ -101,6 +111,28 @@ trait ClickDeduceLanguage {
     override lazy val toHtml: String = {
       s"<input name='$id' type='text' placeholder='Term'/>"
     }
+  }
+
+  abstract class Literal extends Term {
+    val value: Any
+
+    override lazy val toHtml: String = value.toString
+
+    override lazy val toString: String = value.toString
+  }
+
+  case class LiteralInt(value: BigInt) extends Literal
+
+  case class LiteralBool(value: Boolean) extends Literal
+
+  case class LiteralString(value: String) extends Literal
+
+  case class BlankLiteral() extends Literal, BlankSpace {
+    override lazy val toHtml: String = {
+      s"<input name='$id' type='text' placeholder='Term'/>"
+    }
+
+    val value: Any = ""
   }
 
   /**
@@ -183,7 +215,7 @@ trait ClickDeduceLanguage {
   }
 
   private lazy val exprClassListDropdownHtml: String = {
-    val exprClassListHtml = exprClassList.map(e => {
+    val exprClassListHtml = "<option value=\"\">Select Expr...</option>" ++ exprClassList.map(e => {
       s"""<option value="${e.getSimpleName}">${e.getSimpleName}</option>"""
     }).mkString("\n")
     s"""<select class="expr-dropdown" onchange="handleDropdownChange(this)">$exprClassListHtml</select>"""
@@ -237,7 +269,7 @@ trait ClickDeduceLanguage {
 
       def name: Parser[String] = "[A-Za-z]\\w*".r
 
-      def arg: Parser[Any] = expr | stringLiteral | wholeNumber ^^ (BigInt(_)) | "true" ^^ (_ => true) | "false" ^^ (_ => false)
+      def arg: Parser[Any] = expr | stringLiteral ^^ (s => LiteralString(s)) | wholeNumber ^^ (n => LiteralInt(BigInt(n))) | "true" ^^ (_ => LiteralBool(true)) | "false" ^^ (_ => LiteralBool(false))
 
       def parseExpr(s: String): ParseResult[Option[Expr]] = parseAll(expr, s.strip())
     }
@@ -274,10 +306,15 @@ trait ClickDeduceLanguage {
     exprClass match {
       case Some(value) => {
         val constructor = value.getConstructors()(0)
-        val numArgs = constructor.getParameterCount - 1
-        val arguments = List(lang) ++ (for {i <- 0 until numArgs} yield {
-          BlankExprArg()
-        })
+        val arguments = constructor.getParameterTypes.map {
+          case c if classOf[ClickDeduceLanguage].isAssignableFrom(c) => lang
+          case c if classOf[Expr].isAssignableFrom(c) => BlankChildPlaceholder()
+          case _ => BlankLiteral()
+        }
+//        val numArgs = constructor.getParameterCount - 1
+//        val arguments = List(lang) ++ (for {i <- 0 until numArgs} yield {
+//          BlankExprArg()
+//        })
         constructor.newInstance(arguments: _*).asInstanceOf[Expr]
       }
       case None => {
@@ -290,6 +327,59 @@ trait ClickDeduceLanguage {
     }
   }
 
+  abstract class EvalTreeNode {
+    val children: List[EvalTreeNode]
+    var parent: Option[EvalTreeNode] = None
+
+    lazy val toHtml: String
+
+    lazy val toSvg: String = "<svg><text>Unfinished</text></svg>"
+
+    lazy val toSvgGroup: String = "<g><text>Unfinished</text></g>"
+
+    lazy val treeSvgSize: (Float, Float) = (0, 0)
+
+    /**
+     * Group the children of this expression tree by level.
+     *
+     * @return a map where keys are levels (integers) and values are lists of expression trees at that particular level
+     */
+    lazy val groupChildrenByLevel: Map[Int, List[EvalTreeNode]] = {
+      def mergeMaps(offset: Int, maps: Map[Int, List[EvalTreeNode]]*): Map[Int, List[EvalTreeNode]] = {
+        maps.foldLeft(Map[Int, List[EvalTreeNode]]()) { (acc, m) =>
+          m.foldLeft(acc) { case (a, (level, trees)) =>
+            a.updated(level + offset, a.getOrElse(level + offset, List()) ++ trees)
+          }
+        }
+      }
+
+      val currentLevelMap: Map[Int, List[EvalTreeNode]] = Map(0 -> children)
+      val childrenMaps: Map[Int, List[EvalTreeNode]] = children.flatMap(child => child.groupChildrenByLevel).toMap
+
+      mergeMaps(1, currentLevelMap, childrenMaps).filter(_._2.nonEmpty)
+    }
+
+    var initialTreePath: List[Int] = Nil
+
+    def treePath: List[Int] = parent match {
+      case Some(value) => value.treePath :+ value.children.indexWhere(_ eq this)
+      case None => initialTreePath
+    }
+
+    def treePathString: String = treePath.mkString("-")
+
+    /**
+     * Find the child of this expression tree at the given path.
+     *
+     * @param path the path to the child
+     * @return the child at the given path, if it exists
+     */
+    def findChild(path: List[Int]): Option[EvalTreeNode] = path match {
+      case Nil => Some(this)
+      case head :: tail => children.lift(head).flatMap(_.findChild(tail))
+    }
+  }
+
   /**
    * Tree node representing an expression in this language.
    * Can be converted to an SVG.
@@ -299,14 +389,7 @@ trait ClickDeduceLanguage {
    * @param env      the environment in which the expression was evaluated (optional)
    * @param children the child nodes of the expression
    */
-  case class ExpressionEvalTree(term: Term, value: Option[Value], env: Option[Env], children: List[ExpressionEvalTree]) {
-//    def this(term: Term, value: Option[Value], env: Option[Env], children: List[ExpressionEvalTree], parent: ExpressionEvalTree) = {
-//      this(term, value, env, children)
-//      this.parent = Some(parent)
-//    }
-//
-//    def this(term: Term, value: Option[Value], env: Option[Env], parent: ExpressionEvalTree) = this(term, value, env, Nil, parent)
-
+  case class ExpressionEvalTree(term: Term, value: Option[Value], env: Option[Env], children: List[EvalTreeNode]) extends EvalTreeNode {
     private val XMLNS = "http://www.w3.org/2000/svg"
     private val FONT_NAME = "Courier New"
     private val FONT_SIZE = 16
@@ -318,18 +401,16 @@ trait ClickDeduceLanguage {
     val FONT = new Font(FONT_NAME, Font.PLAIN, FONT_SIZE)
     val GROUP_X_GAP = 20
 
-    var parent: Option[ExpressionEvalTree] = None
-
     /**
      * Convert this expression tree to a full SVG.
      *
      * @return the SVG string
      */
-    lazy val toSvg: String = {
+    override lazy val toSvg: String = {
       val svg = new StringBuilder()
-      svg.append(s"""<svg xmlns="$XMLNS" width="${treeSize._1 + 15}" height="${treeSize._2 + 20}">""")
+      svg.append(s"""<svg xmlns="$XMLNS" width="${treeSvgSize._1 + 15}" height="${treeSvgSize._2 + 20}">""")
       svg.append(s"""<style type="text/css">$style</style>""")
-      svg.append(s"""<g transform="translate(5, ${treeSize._2 - HEIGHT_PER_ROW + 8})">""")
+      svg.append(s"""<g transform="translate(5, ${treeSvgSize._2 - HEIGHT_PER_ROW + 8})">""")
       svg.append(toSvgGroup)
       svg.append("</g>")
       svg.append("</svg>")
@@ -339,13 +420,13 @@ trait ClickDeduceLanguage {
     /**
      * Convert this expression tree to an SVG group.
      */
-    lazy val toSvgGroup: String = {
+    override lazy val toSvgGroup: String = {
       def createGroup(content: String, translateAmount: (Float, Float) = (0, 0)) = {
         s"""<g transform="translate$translateAmount">$content</g>"""
       }
 
       val totalWidth = exprTextWidth + exprNameWidth
-      val lineWidth = treeSize._1 - exprNameWidth
+      val lineWidth = treeSvgSize._1 - exprNameWidth
 
       val childGroup = if (children.nonEmpty) {
         var currWidth = 0f
@@ -353,7 +434,7 @@ trait ClickDeduceLanguage {
           val child = children(i)
           val childSvg = child.toSvgGroup
           val x_translate = currWidth
-          currWidth += child.treeSize._1 + GROUP_X_GAP
+          currWidth += child.treeSvgSize._1 + GROUP_X_GAP
           createGroup(childSvg, (x_translate, 0))
         }
         createGroup(childGroups.mkString(""), (0, -HEIGHT_PER_ROW))
@@ -361,7 +442,7 @@ trait ClickDeduceLanguage {
         ""
       }
 
-      val xOffset = (treeSize._1 - localSize._1 - exprNameWidth) / 2
+      val xOffset = (treeSvgSize._1 - localSize._1 - exprNameWidth) / 2
 
       val textBlock = s"""<text x="$xOffset">$exprText</text>"""
       val line = s"""<line x1="0" x2="${lineWidth}" y1="0" y2="0" />"""
@@ -376,7 +457,7 @@ trait ClickDeduceLanguage {
     /**
      * Convert this expression tree to an HTML representation.
      */
-    lazy val toHtml: String = {
+    override lazy val toHtml: String = {
       val mainAttributes = s"""data-tree-path="$treePathString" data-term="${term.toString}""""
       if (children.isEmpty) {
         s"""
@@ -445,11 +526,11 @@ trait ClickDeduceLanguage {
      *
      * @return the size of the SVG in pixels, (width, height)
      */
-    lazy val treeSize: (Float, Float) = {
+    override lazy val treeSvgSize: (Float, Float) = {
       val groupedChildren = groupChildrenByLevel
       val height = HEIGHT_PER_ROW * (groupedChildren.size + 1)
       val width = {
-        val childWidths = groupedChildren.values.map(group => group.map(_.treeSize._1).sum + (group.length - 1) * GROUP_X_GAP)
+        val childWidths = groupedChildren.values.map(group => group.map(_.treeSvgSize._1).sum + (group.length - 1) * GROUP_X_GAP)
         math.max(
           childWidths.maxOption.getOrElse(0f),
           localSize._1 + exprNameWidth
@@ -463,45 +544,17 @@ trait ClickDeduceLanguage {
       val width = exprTextWidth
       (width, height)
     }
+  }
 
-    /**
-     * Group the children of this expression tree by level.
-     *
-     * @return a map where keys are levels (integers) and values are lists of expression trees at that particular level
-     */
-    lazy val groupChildrenByLevel: Map[Int, List[ExpressionEvalTree]] = {
-      def mergeMaps(offset: Int, maps: Map[Int, List[ExpressionEvalTree]]*): Map[Int, List[ExpressionEvalTree]] = {
-        maps.foldLeft(Map[Int, List[ExpressionEvalTree]]()) { (acc, m) =>
-          m.foldLeft(acc) { case (a, (level, trees)) =>
-            a.updated(level + offset, a.getOrElse(level + offset, List()) ++ trees)
-          }
-        }
-      }
+  case class ExprSelectNode() extends EvalTreeNode {
+    override val children: List[EvalTreeNode] = Nil
 
-      val currentLevelMap: Map[Int, List[ExpressionEvalTree]] = Map(0 -> children)
-      val childrenMaps: Map[Int, List[ExpressionEvalTree]] = children.flatMap(child => child.groupChildrenByLevel).toMap
-
-      mergeMaps(1, currentLevelMap, childrenMaps).filter(_._2.nonEmpty)
-    }
-
-    def treePath: List[Int] = parent match {
-      case Some(value) => value.treePath :+ value.children.indexOf(this)
-      case None => Nil
-    }
-
-    def treePathString: String = treePath.mkString(".")
-
-    /**
-     * Find the child of this expression tree at the given path.
-     *
-     * @param path the path to the child
-     * @return the child at the given path, if it exists
-     */
-    def findChild(path: List[Int]): Option[ExpressionEvalTree] = path match {
-      case Nil => Some(this)
-      case head :: tail => children.lift(head).flatMap(_.findChild(tail))
+    override lazy val toHtml: String = {
+      BlankExprDropDown().toHtml
     }
   }
+
+  case class FillableExprNode()
 
   object ExpressionEvalTree {
     def exprToTree(e0: Expr): ExpressionEvalTree = {

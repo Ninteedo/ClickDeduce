@@ -39,8 +39,8 @@ class ExpressionTreeTest extends AnyFunSuite {
     val expr = Plus(Num(1), Num(2))
     val children = List(ExpressionEvalTree(Num(1), Some(NumV(1)), None, Nil), ExpressionEvalTree(Num(2), Some(NumV(2)), None, Nil))
     val tree = ExpressionEvalTree(Plus(Num(1), Num(2)), Some(NumV(3)), None, children)
-    val wholeWidth = tree.treeSize._1
-    val childrenWidth = children.map(_.treeSize._1).sum + tree.GROUP_X_GAP
+    val wholeWidth = tree.treeSvgSize._1
+    val childrenWidth = children.map(_.treeSvgSize._1).sum + tree.GROUP_X_GAP
 
     wholeWidth should be <= childrenWidth
   }
@@ -57,6 +57,7 @@ class ExpressionTreeTest extends AnyFunSuite {
   }
 
   test("Can create an Expr with blank arguments") {
-    createUnfilledExpr("Plus") should be (Plus(BlankExprArg(), BlankExprArg()))
+    createUnfilledExpr("Plus") should be (Plus(BlankChildPlaceholder(), BlankChildPlaceholder()))
+    createUnfilledExpr("Num") should be (Num(BlankLiteral()))
   }
 }
