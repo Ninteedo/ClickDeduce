@@ -1,6 +1,6 @@
 package languages
 
-import app.FontWidthCalculator
+import app.{FontWidthCalculator, UtilityFunctions}
 
 import java.awt.Font
 import java.util.concurrent.atomic.AtomicInteger
@@ -54,8 +54,24 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     val value: Any = ""
   }
 
-  private lazy val exprClassList: List[Class[Expr]] = {
-    getClass.getClasses.filter(c => classOf[Expr].isAssignableFrom(c)).map(_.asInstanceOf[Class[Expr]]).toList
+//  def getSubclassesOf[T <: Class[Any]](parentClass: Class[T]): List[T] = {
+//    val runtimeMirror = ru.runtimeMirror(getClass.getClassLoader)
+//    val classSymbol = runtimeMirror.classSymbol(parentClass)
+//    val subclasses = classSymbol.knownDirectSubclasses
+//    subclasses.map(_.asClass).toList.asInstanceOf[List[T]]
+//  }
+
+  def getSubclassesOf(parentClass: Class[_]): List[ru.ClassSymbol] = {
+    val runtimeMirror = ru.runtimeMirror(getClass.getClassLoader)
+    val classSymbol = runtimeMirror.classSymbol(parentClass)
+    val subclasses = classSymbol.knownDirectSubclasses
+    subclasses.map(_.asClass).toList
+  }
+
+  protected lazy val exprClassList: List[Class[Expr]] = {
+//    getClass.getClasses.filter(c => classOf[Expr].isAssignableFrom(c)).map(_.asInstanceOf[Class[Expr]]).toList
+//    getSubclassesOf(classOf[Expr]).map(_.asInstanceOf[Class[Expr]])
+    Nil
   }
 
   private lazy val exprClassListDropdownHtml: String = {
@@ -65,8 +81,16 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     s"""<select class="expr-dropdown" onchange="handleDropdownChange(this)">$exprClassListHtml</select>"""
   }
 
-  private lazy val blankClassList: List[Class[BlankSpace]] = {
-    getClass.getClasses.filter(c => classOf[BlankSpace].isAssignableFrom(c)).map(_.asInstanceOf[Class[BlankSpace]]).toList
+  protected lazy val blankClassList: List[Class[BlankSpace]] = {
+//    getClass.getClasses.filter(c => classOf[BlankSpace].isAssignableFrom(c)).map(_.asInstanceOf[Class[BlankSpace]]).toList
+//    getSubclassesOf(classOf[BlankSpace]).map(_.asInstanceOf[Class[BlankSpace]])
+    List(classOf[BlankExprDropDown], classOf[BlankChildPlaceholder], classOf[BlankValueInput], classOf[BlankExprArg], classOf[BlankLiteral]).map(_.asInstanceOf[Class[BlankSpace]])
+  }
+
+  protected lazy val nodeClassList: List[Class[Node]] = {
+//    getClass.getClasses.filter(c => classOf[Node].isAssignableFrom(c)).map(_.asInstanceOf[Class[Node]]).toList
+//    getSubclassesOf(classOf[Node]).map(_.asInstanceOf[Class[Node]])
+    List(classOf[ConcreteNode], classOf[VariableNode], classOf[ExprChoiceNode], classOf[SubExprNode], classOf[LiteralNode]).map(_.asInstanceOf[Class[Node]])
   }
 
   /**
@@ -232,37 +256,95 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     def toHtmlLineReadOnly: String
   }
 
+  object Node {
+    def read(s: String): Option[Node] = {
+      def makeNode(name: String, args: List[Any]): Option[Node] = {
+        val nodeClass = nodeClassList.find(_.getSimpleName == name)
+        nodeClass match
+          case Some(value) => {
+            val constructor = value.getConstructors()(0)
+            val arguments = ClickDeduceLanguage.this +: args.map {
+              case LiteralString(s) => s.stripPrefix("\"").stripSuffix("\"")
+              case Some(e) => e
+              case x => x
+            }
+            Some(constructor.newInstance(arguments: _*).asInstanceOf[Node])
+          }
+          case None => None
+      }
+
+      object NodeParser extends JavaTokenParsers {
+        def node: Parser[Option[Node | Expr]] = name ~ "(" ~ repsep(arg, "\\s*,\\s*".r) ~ ")" ^^ {
+          case name ~ "(" ~ args ~ ")" => {
+            if (name.endsWith("Node")) {
+              makeNode(name, args)
+            } else {
+              readExpr(s"$name(${args.mkString(", ")})")
+            }
+          }
+          case _ => None
+        }
+
+        def name: Parser[String] = "[A-Za-z]\\w*".r
+
+        def listParse: Parser[List[Any]] = "Nil" ^^ {_ => Nil} | "List(" ~ repsep(arg, "\\s*,\\s*".r) ~ ")" ^^ {
+          case _ ~ args ~ _ => args.filter(_ != None).map{
+            case Some(e) => e
+            case x => x
+          }
+        }
+
+        def arg: Parser[Any] = listParse | node | stringLiteral ^^ (s => LiteralString(s))
+
+        def parseNode(s: String): ParseResult[Option[Node | Expr]] = parseAll(node, s.strip())
+      }
+
+      NodeParser.parseNode(s) match {
+        case NodeParser.Success(Some(matched: Node), _) => Some(matched)
+        case _ => None
+      }
+    }
+  }
+
   abstract class OuterNode extends Node {
     var parent: Option[OuterNode] = None
 
     def attributes: Map[String, String] = Map("data-tree-path" -> treePathString)
 
-    lazy val toHtml: String = {
+    def toHtml: String = {
       val mainAttributes = s"""${attributes.map({ case (k, v) => s"$k='$v'" }).mkString(" ")}}"""
       if (children.isEmpty) {
-        s"""
-          <div class="subtree axiom" $mainAttributes>
-            <div class="expr">$toHtmlLine</div>
-            <div class="annotation-axiom">$exprName</div>
-          </div>
-          """
+        toHtmlAxiom(mainAttributes)
       } else
-        s"""
-         <div class="subtree" $mainAttributes>
-           <div class="node">
-             <div class="expr">$toHtmlLineReadOnly</div>
-           </div>
-
-           <div class="args">
-             ${children.map(_.toHtml).mkString("\n")}
-
-             <div class="annotation-new">$exprName</div>
-           </div>
-         </div>
-        """
+        toHtmlSubtree(mainAttributes)
     }
 
-    lazy val exprName: String
+    def toHtmlAxiom(mainAttributes: String): String = {
+      s"""
+      <div class="subtree axiom" $mainAttributes>
+        <div class="expr">$toHtmlLine</div>
+        <div class="annotation-axiom">$exprName</div>
+      </div>
+      """
+    }
+
+    def toHtmlSubtree(mainAttributes: String): String = {
+      s"""
+       <div class="subtree" $mainAttributes>
+         <div class="node">
+           <div class="expr">$toHtmlLineReadOnly</div>
+         </div>
+
+         <div class="args">
+           ${children.map(_.toHtml).mkString("\n")}
+
+           <div class="annotation-new">$exprName</div>
+         </div>
+       </div>
+      """
+    }
+
+    val exprName: String
 
     var initialTreePath: List[Int] = Nil
 
@@ -285,39 +367,50 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     }
   }
 
-  case class ConcreteNode(expr: Expr, children: List[OuterNode] = Nil) extends OuterNode {
+  case class ConcreteNode(exprString: String, children: List[OuterNode] = Nil) extends OuterNode {
+    lazy val expr = readExpr(exprString).get
+
     override def toHtmlLine: String = expr.toHtml
 
     override def toHtmlLineReadOnly: String = toHtmlLine
 
     override def attributes: Map[String, String] = super.attributes + ("data-term" -> expr.toString)
 
-    override lazy val exprName: String = expr.getClass.getSimpleName
+    override val exprName: String = expr.getClass.getSimpleName
+
+    override def toString: String = {
+      s"ConcreteNode(${UtilityFunctions.quote(exprString)}, $children)"
+    }
   }
 
-  case class VariableNode(exprClass: Class[Expr], args: List[InnerNode] = Nil) extends OuterNode {
-    override def toHtmlLine: String = BlankExprDropDown().toHtml
+  case class VariableNode(exprName: String, args: List[InnerNode] = Nil) extends OuterNode {
+//        override def toHtmlLine: String = BlankExprDropDown().toHtml
+    override def toHtmlLine: String = s"""${args.map(_.toHtmlLineReadOnly).mkString(" ")}"""
 
     override def toHtmlLineReadOnly: String = toHtmlLine.replace("select", "select readonly disabled")
 
     override val children: List[OuterNode] = args.flatMap(_.children)
 
-    override lazy val exprName: String = exprClass.getSimpleName
+    lazy val exprClass: Class[Expr] = exprNameToClass(exprName).get
+
+    override def toString: String = {
+      s"VariableNode(${UtilityFunctions.quote(exprName)}, $args)"
+    }
   }
 
-  case class ExprChoice() extends OuterNode {
+  case class ExprChoiceNode() extends OuterNode {
     override val children: List[OuterNode] = Nil
 
     override def toHtmlLine: String = BlankExprDropDown().toHtml
 
     override def toHtmlLineReadOnly: String = toHtmlLine.replace("select", "select readonly disabled")
 
-    override lazy val exprName: String = "ExprChoice"
+    override val exprName: String = "ExprChoice"
   }
 
   abstract class InnerNode extends Node
 
-  case class SubExpr(node: OuterNode) extends InnerNode {
+  case class SubExprNode(node: OuterNode) extends InnerNode {
     override def toHtmlLine: String = node.toHtmlLineReadOnly
 
     override def toHtmlLineReadOnly: String = toHtmlLine
@@ -327,14 +420,18 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
   case class LiteralNode(literalText: String) extends InnerNode {
     override def toHtmlLine: String = {
-      s"<input type='text'>$literalText<input/>"
+      s"""<input type='text' value="$literalText" />"""
     }
 
     override def toHtmlLineReadOnly: String = {
-      s"<input type='text' readonly>$literalText<input/>"
+      s"""<input type='text' readonly disabled value="$literalText" />"""
     }
 
     override val children: List[OuterNode] = Nil
+
+    override def toString: String = {
+      s"LiteralNode(${UtilityFunctions.quote(literalText)})"
+    }
   }
 
   /**

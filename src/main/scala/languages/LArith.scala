@@ -126,6 +126,8 @@ class LArith extends ClickDeduceLanguage {
     case IntType() => "Int"
     case _ => t.toHtml
   }
+
+  override lazy val exprClassList: List[Class[Expr]] = List(classOf[Num], classOf[Plus], classOf[Times]).map(_.asInstanceOf[Class[Expr]])
 }
 
 object LArith extends LArith {
