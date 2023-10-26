@@ -224,6 +224,119 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     }
   }
 
+  abstract class Node {
+    val children: List[OuterNode]
+
+    def toHtmlLine: String
+
+    def toHtmlLineReadOnly: String
+  }
+
+  abstract class OuterNode extends Node {
+    var parent: Option[OuterNode] = None
+
+    def attributes: Map[String, String] = Map("data-tree-path" -> treePathString)
+
+    lazy val toHtml: String = {
+      val mainAttributes = s"""${attributes.map({ case (k, v) => s"$k='$v'" }).mkString(" ")}}"""
+      if (children.isEmpty) {
+        s"""
+          <div class="subtree axiom" $mainAttributes>
+            <div class="expr">$toHtmlLine</div>
+            <div class="annotation-axiom">$exprName</div>
+          </div>
+          """
+      } else
+        s"""
+         <div class="subtree" $mainAttributes>
+           <div class="node">
+             <div class="expr">$toHtmlLineReadOnly</div>
+           </div>
+
+           <div class="args">
+             ${children.map(_.toHtml).mkString("\n")}
+
+             <div class="annotation-new">$exprName</div>
+           </div>
+         </div>
+        """
+    }
+
+    lazy val exprName: String
+
+    var initialTreePath: List[Int] = Nil
+
+    lazy val treePath: List[Int] = parent match {
+      case Some(value) => value.treePath :+ value.children.indexWhere(_ eq this)
+      case None => initialTreePath
+    }
+
+    lazy val treePathString: String = treePath.mkString("-")
+
+    /**
+     * Find the child of this expression tree at the given path.
+     *
+     * @param path the path to the child
+     * @return the child at the given path, if it exists
+     */
+    def findChild(path: List[Int]): Option[OuterNode] = path match {
+      case Nil => Some(this)
+      case head :: tail => children.lift(head).flatMap(_.findChild(tail))
+    }
+  }
+
+  case class ConcreteNode(expr: Expr, children: List[OuterNode] = Nil) extends OuterNode {
+    override def toHtmlLine: String = expr.toHtml
+
+    override def toHtmlLineReadOnly: String = toHtmlLine
+
+    override def attributes: Map[String, String] = super.attributes + ("data-term" -> expr.toString)
+
+    override lazy val exprName: String = expr.getClass.getSimpleName
+  }
+
+  case class VariableNode(exprClass: Class[Expr], args: List[InnerNode] = Nil) extends OuterNode {
+    override def toHtmlLine: String = BlankExprDropDown().toHtml
+
+    override def toHtmlLineReadOnly: String = toHtmlLine.replace("select", "select readonly disabled")
+
+    override val children: List[OuterNode] = args.flatMap(_.children)
+
+    override lazy val exprName: String = exprClass.getSimpleName
+  }
+
+  case class ExprChoice() extends OuterNode {
+    override val children: List[OuterNode] = Nil
+
+    override def toHtmlLine: String = BlankExprDropDown().toHtml
+
+    override def toHtmlLineReadOnly: String = toHtmlLine.replace("select", "select readonly disabled")
+
+    override lazy val exprName: String = "ExprChoice"
+  }
+
+  abstract class InnerNode extends Node
+
+  case class SubExpr(node: OuterNode) extends InnerNode {
+    override def toHtmlLine: String = node.toHtmlLineReadOnly
+
+    override def toHtmlLineReadOnly: String = toHtmlLine
+
+    override val children: List[OuterNode] = List(node)
+  }
+
+  case class LiteralNode(literalText: String) extends InnerNode {
+    override def toHtmlLine: String = {
+      s"<input type='text'>$literalText<input/>"
+    }
+
+    override def toHtmlLineReadOnly: String = {
+      s"<input type='text' readonly>$literalText<input/>"
+    }
+
+    override val children: List[OuterNode] = Nil
+  }
+
   /**
    * Tree node representing an expression in this language.
    * Can be converted to an SVG.
