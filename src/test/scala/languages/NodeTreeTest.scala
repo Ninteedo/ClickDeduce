@@ -102,12 +102,37 @@ class NodeTreeTest extends AnyFunSuite {
     val nodeRead = Node.read(nodeString).get
     nodeRead shouldEqual node
 
-    def checkParents(original: Node, read: Node): Unit = {
+    def checkParents(original: Node, read: Node, isRoot: Boolean): Unit = {
       read.parent shouldEqual original.parent
+      if (!isRoot) {
+        read.parent shouldNot be(None)
+      }
       read.children.zip(original.children).foreach { case (readChild, originalChild) =>
-        checkParents(originalChild, readChild)
+        checkParents(originalChild, readChild, isRoot = false)
       }
     }
+
+    checkParents(node, nodeRead, isRoot = true)
+  }
+
+  def checkAllChildrenHaveCorrectParent(n: Node): Unit = {
+    n.children.foreach { child =>
+      child.parent shouldEqual Some(n)
+      checkAllChildrenHaveCorrectParent(child)
+    }
+  }
+
+  test("Created Node trees have correct parents") {
+    val tree = VariableNode(
+      "Plus",
+      List(
+        SubExprNode(ConcreteNode(Num(1).toString)),
+        SubExprNode(VariableNode("Times", List(
+          SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode())
+        )))
+      )
+    )
+    checkAllChildrenHaveCorrectParent(tree)
   }
 
   test("Can correctly read the parents of a Node tree") {
@@ -131,6 +156,48 @@ class NodeTreeTest extends AnyFunSuite {
       )
     )
     correctReadParentsCheck(tree)
+  }
+
+  test("Can correctly replace a ExprChoiceNode") {
+    val originalTree = VariableNode(
+      "Plus",
+      List(
+        SubExprNode(ConcreteNode(Num(1).toString)),
+        SubExprNode(VariableNode("Times", List(
+          SubExprNode(ExprChoiceNode()),
+          SubExprNode(VariableNode(
+            "Plus",
+            List(
+              SubExprNode(ExprChoiceNode()),
+              SubExprNode(VariableNode("Num", List(LiteralNode("2"))))
+            )
+          )
+          )
+        )
+        )
+        )
+      )
+    )
+    val updated = originalTree.insertExpr("Num", List(1, 1, 0))
+    updated shouldEqual VariableNode(
+      "Plus",
+      List(
+        SubExprNode(ConcreteNode(Num(1).toString)),
+        SubExprNode(VariableNode("Times", List(
+          SubExprNode(ExprChoiceNode()),
+          SubExprNode(VariableNode(
+            "Plus",
+            List(
+              SubExprNode(VariableNode("Num", List(LiteralNode("")))),
+              SubExprNode(VariableNode("Num", List(LiteralNode("2"))))
+            )
+          )
+          )
+        )
+        )
+        )
+      )
+    )
   }
 
   // TODO: test that a tree with a string literal works

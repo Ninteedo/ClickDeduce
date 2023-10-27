@@ -17,11 +17,18 @@
   <input type="hidden" id="blankUserInput" value="">
   <input type="submit" value="Evaluate Blank">
 </form>
+<form onsubmit="handleSubmit(event, '/start-node-blank')">
+  <input type="hidden" id="nodeUserInput" value="">
+  <input type="submit" value="Start Node Blank">
+</form>
 <br>
 
 <div id="tree"></div>
 
 <script>
+  var lastNodeString = "";
+  let treeContainer = document.getElementById('tree');
+
   async function handleSubmit(event, url) {
     // prevent the form from submitting the old-fashioned way
     event.preventDefault();
@@ -44,8 +51,8 @@
     let jsonResponse = await response.json();
 
     // the svgText is the SVG string directly without the JSON structure:
-    let container = document.getElementById('tree');
-    container.innerHTML = jsonResponse.html;
+    treeContainer.innerHTML = jsonResponse.html;
+    lastNodeString = jsonResponse.nodeString;
   }
 
   function handleDropdownChange(dropdown) {
@@ -57,19 +64,50 @@
 
     console.log(subtree);
 
-    fetch("/update-expr", {
+    // fetch("/update-expr", {
+    //   method: "POST",
+    //   headers: {"Content-Type": "application/json"},
+    //   body: JSON.stringify({
+    //     rawExpr,
+    //     blankTreePath: dataTreePath,
+    //     selectedValue
+    //   })
+    // })
+    //     .then(response => response.json())
+    //     .then(updatedTree => {
+    //       subtree.innerHTML = updatedTree.html;
+    //     });
+
+    fetch("/node-expr-choice-made", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
-        rawExpr,
-        blankTreePath: dataTreePath,
+        nodeString: lastNodeString,
+        treePath: dataTreePath,
         selectedValue
       })
+    }).then(response => response.json()).then(updatedTree => {
+      treeContainer.innerHTML = updatedTree.html;
+      lastNodeString = updatedTree.nodeString;
     })
-        .then(response => response.json())
-        .then(updatedTree => {
-          subtree.innerHTML = updatedTree.html;
-        });
+  }
+
+  function handleLiteralChanged(textInput) {
+    const literalValue = textInput.value;
+    const treePath = textInput.getAttribute("data-tree-path")
+
+    fetch("/node-expr-literal-changed", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        nodeString: lastNodeString,
+        treePath,
+        literalValue
+      })
+    }).then(response => response.json()).then(updatedTree => {
+      treeContainer.innerHTML = updatedTree.html;
+      lastNodeString = updatedTree.nodeString;
+    })
   }
 </script>
 

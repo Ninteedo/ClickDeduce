@@ -89,6 +89,7 @@ object WebServerTest extends JsonSupport {
           entity(as[EvalRequest]) { request =>
             val tree = LArith.ExprChoiceNode()
             val response = NodeResponse(tree.toString, tree.toHtml)
+//            println(response)
             complete(response)
           }
         }
@@ -97,13 +98,18 @@ object WebServerTest extends JsonSupport {
         path("node-expr-choice-made") {
           entity(as[NodeExprChoiceRequest]) { request =>
             LArith.Node.read(request.nodeString) match
-              case Some(node: LArith.OuterNode) => {
-                val newVariableNode = LArith.VariableNode.createFromExpr(request.selectedValue)
-                val newNode = node.replace(LArith.Node.readPathString(request.treePath), newVariableNode)
+              case Some(node: LArith.VariableNode) => {
+                val updated = node.insertExpr(request.selectedValue, LArith.Node.readPathString(request.treePath))
+                val response = NodeResponse(updated.toString, updated.toHtml)
+//                println(newNode.toString)
+                complete(response)
+              }
+              case Some(node: LArith.ExprChoiceNode) => {
+                val newNode = LArith.VariableNode.createFromExpr(request.selectedValue)
                 val response = NodeResponse(newNode.toString, newNode.toHtml)
                 complete(response)
               }
-              case _ => ???
+              case other => throw new Exception(s"Expected VariableNode, got $other")
           }
         }
       } ~
@@ -111,15 +117,16 @@ object WebServerTest extends JsonSupport {
         path("node-expr-literal-changed") {
           entity(as[NodeLiteralValueRequest]) { request =>
             LArith.Node.read(request.nodeString) match
-              case Some(node: LArith.OuterNode) => {
+              case Some(node: LArith.VariableNode) => {
                 val newNode = node.replaceInner(LArith.Node.readPathString(request.treePath), LArith.LiteralNode(request.literalValue))
                 val response = NodeResponse(newNode.toString, newNode.toHtml)
+                println(newNode.toString)
                 complete(response)
               }
               case _ => ???
           }
         }
-      }
+      } ~
       post {
         path("button-clicked") {
           val newCount = buttonClickCount.incrementAndGet()
