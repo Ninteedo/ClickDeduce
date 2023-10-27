@@ -17,11 +17,17 @@ import scala.io.StdIn
 case class EvalRequest(text: String)
 case class EvalResponse(rawExpr: String, html: String)
 case class ChangeRequest(rawExpr: String, blankTreePath: String, selectedValue: String)
+case class NodeExprChoiceRequest(nodeString: String, treePath: String, selectedValue: String)
+case class NodeLiteralValueRequest(nodeString: String, treePath: String, literalValue: String)
+case class NodeResponse(nodeString: String, html: String)
 
 trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val evalRequestFormat: RootJsonFormat[EvalRequest] = jsonFormat1(EvalRequest)
   implicit val evalResponseFormat: RootJsonFormat[EvalResponse] = jsonFormat2(EvalResponse)
   implicit val changeRequestFormat: RootJsonFormat[ChangeRequest] = jsonFormat3(ChangeRequest)
+  implicit val nodeExprChoiceRequestFormat: RootJsonFormat[NodeExprChoiceRequest] = jsonFormat3(NodeExprChoiceRequest)
+  implicit val nodeLiteralValueRequestFormat: RootJsonFormat[NodeLiteralValueRequest] = jsonFormat3(NodeLiteralValueRequest)
+  implicit val nodeResponseFormat: RootJsonFormat[NodeResponse] = jsonFormat2(NodeResponse)
 }
 
 
@@ -78,6 +84,42 @@ object WebServerTest extends JsonSupport {
           }
         }
       } ~
+      post {
+        path("start-node-blank") {
+          entity(as[EvalRequest]) { request =>
+            val tree = LArith.ExprChoiceNode()
+            val response = NodeResponse(tree.toString, tree.toHtml)
+            complete(response)
+          }
+        }
+      } ~
+      post {
+        path("node-expr-choice-made") {
+          entity(as[NodeExprChoiceRequest]) { request =>
+            LArith.Node.read(request.nodeString) match
+              case Some(node: LArith.OuterNode) => {
+                val newVariableNode = LArith.VariableNode.createFromExpr(request.selectedValue)
+                val newNode = node.replace(LArith.Node.readPathString(request.treePath), newVariableNode)
+                val response = NodeResponse(newNode.toString, newNode.toHtml)
+                complete(response)
+              }
+              case _ => ???
+          }
+        }
+      } ~
+      post {
+        path("node-expr-literal-changed") {
+          entity(as[NodeLiteralValueRequest]) { request =>
+            LArith.Node.read(request.nodeString) match
+              case Some(node: LArith.OuterNode) => {
+                val newNode = node.replaceInner(LArith.Node.readPathString(request.treePath), LArith.LiteralNode(request.literalValue))
+                val response = NodeResponse(newNode.toString, newNode.toHtml)
+                complete(response)
+              }
+              case _ => ???
+          }
+        }
+      }
       post {
         path("button-clicked") {
           val newCount = buttonClickCount.incrementAndGet()

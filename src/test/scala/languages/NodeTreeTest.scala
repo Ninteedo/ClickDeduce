@@ -58,14 +58,18 @@ class NodeTreeTest extends AnyFunSuite {
     println(tree.toHtml)
   }
 
+  def correctNodeRead(node: Node): Unit = {
+    val nodeString = node.toString
+    val nodeRead = Node.read(nodeString).get
+    nodeRead shouldEqual node
+  }
+
   test("Can correctly read a VariableNode with 2 ConcreteNode children from a String") {
     val tree = VariableNode("Plus", List(
       SubExprNode(ConcreteNode(Num(1).toString)),
       SubExprNode(ConcreteNode(Num(2).toString))
     ))
-    val treeString = tree.toString
-    val treeRead = Node.read(treeString).get
-    treeRead shouldEqual tree
+    correctNodeRead(tree)
   }
 
   test("Can correctly read a VariableNode with a ConcreteNode and a VariableNode with a ExprChoiceNode child from a String") {
@@ -75,9 +79,58 @@ class NodeTreeTest extends AnyFunSuite {
         SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode())
       )))
     ))
-    val treeString = tree.toString
-    val treeRead = Node.read(treeString).get
-    treeRead shouldEqual tree
+    correctNodeRead(tree)
+  }
+
+  test("Can correctly read a VariableNode with a ExprChoiceNode") {
+    val tree = VariableNode("Plus", List(
+      SubExprNode(ExprChoiceNode()),
+      SubExprNode(ExprChoiceNode())
+    ))
+    correctNodeRead(tree)
+  }
+
+  test("Can correctly read a VariableNode with a LiteralNode") {
+    val tree1 = VariableNode("Num", List(LiteralNode("")))
+    correctNodeRead(tree1)
+    val tree2 = VariableNode("Num", List(LiteralNode("1")))
+    correctNodeRead(tree2)
+  }
+
+  def correctReadParentsCheck(node: Node): Unit = {
+    val nodeString = node.toString
+    val nodeRead = Node.read(nodeString).get
+    nodeRead shouldEqual node
+
+    def checkParents(original: Node, read: Node): Unit = {
+      read.parent shouldEqual original.parent
+      read.children.zip(original.children).foreach { case (readChild, originalChild) =>
+        checkParents(originalChild, readChild)
+      }
+    }
+  }
+
+  test("Can correctly read the parents of a Node tree") {
+    val tree = VariableNode(
+      "Plus",
+      List(
+        SubExprNode(ConcreteNode(Num(1).toString)),
+        SubExprNode(VariableNode("Times", List(
+          SubExprNode(ExprChoiceNode()),
+          SubExprNode(VariableNode(
+            "Plus",
+            List(
+              SubExprNode(ExprChoiceNode()),
+              SubExprNode(VariableNode("Num", List(LiteralNode("2"))))
+            )
+          )
+          )
+        )
+        )
+        )
+      )
+    )
+    correctReadParentsCheck(tree)
   }
 
   // TODO: test that a tree with a string literal works
