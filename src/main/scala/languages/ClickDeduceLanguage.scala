@@ -24,17 +24,16 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
   case class BlankExprDropDown() extends Expr, BlankSpace {
     override lazy val toHtml: TypedTag[String] = {
-//      exprClassListDropdownHtml.replace("select", s"select name='$id'")
-//      select(name := id.toString, exprClassList.map(e => {
-//        option(value := e.getSimpleName, e.getSimpleName)
-//      }))
+      //      exprClassListDropdownHtml.replace("select", s"select name='$id'")
+      //      select(name := id.toString, exprClassList.map(e => {
+      //        option(value := e.getSimpleName, e.getSimpleName)
+      //      }))
       exprClassListDropdownHtml(name := id.toString)
     }
   }
 
   case class BlankChildPlaceholder() extends Expr, BlankSpace {
     override lazy val toHtml: TypedTag[String] = {
-//      s"<span class='blank-child-placeholder' data-blank-id='$id'>?</span>"
       span(cls := "blank-child-placeholder", data("blank-id") := id.toString, "?")
     }
 
@@ -43,21 +42,18 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
   case class BlankValueInput() extends BlankSpace {
     override lazy val toHtml: TypedTag[String] = {
-//      s"<input name='$id' type='text' placeholder='Term'/>"
       input(name := id.toString, `type` := "text", placeholder := "Term")
     }
   }
 
   case class BlankExprArg() extends Expr, BlankSpace {
     override lazy val toHtml: TypedTag[String] = {
-//      s"<input name='$id' type='text' placeholder='Term'/>"
       input(name := id.toString, `type` := "text", placeholder := "Term")
     }
   }
 
   case class BlankLiteral() extends Literal, BlankSpace {
     override lazy val toHtml: TypedTag[String] = {
-//      s"<input name='$id' type='text' placeholder='Term'/>"
       input(name := id.toString, `type` := "text", placeholder := "Term")
     }
 
@@ -384,12 +380,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
   }
 
   abstract class OuterNode extends Node {
-    def toHtml: TypedTag[String] = {
-      if (children.isEmpty) {
-        toHtmlAxiom
-      } else
-        toHtmlSubtree
-    }
+    def toHtml: TypedTag[String] = if (children.isEmpty) toHtmlAxiom else toHtmlSubtree
 
     def toHtmlAxiom: TypedTag[String] = {
       div(cls := "subtree axiom", data("tree-path") := treePathString,
@@ -440,7 +431,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
     override val children: List[OuterNode]
 
-//    children.foreach(_.parent = Some(this))
+    // children.foreach(_.parent = Some(this))
   }
 
   case class ConcreteNode(exprString: String, override val children: List[OuterNode] = Nil) extends OuterNode {
@@ -450,13 +441,9 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
     override def toHtmlLineReadOnly: TypedTag[String] = toHtmlLine
 
-//    override def attributes: Map[String, String] = super.attributes + ("data-term" -> expr.toString)
-
     override val exprName: String = expr.getClass.getSimpleName
 
-    override def toString: String = {
-      s"ConcreteNode(${UtilityFunctions.quote(exprString)}, $children)"
-    }
+    override def toString: String = s"ConcreteNode(${UtilityFunctions.quote(exprString)}, $children)"
 
     override def toHtml: TypedTag[String] = super.toHtml(data("term") := expr.toString)
 
@@ -464,26 +451,26 @@ trait ClickDeduceLanguage extends AbstractLanguage {
   }
 
   case class VariableNode(exprName: String, args: List[InnerNode] = Nil) extends OuterNode {
-    //        override def toHtmlLine: String = BlankExprDropDown().toHtml
-    override def toHtmlLine: TypedTag[String] = div(args.map({
-      case a@SubExprNode(n) => a.toHtmlLineReadOnly
-      case a@LiteralNode(l) => a.toHtmlLine
-    })
+    override def toHtmlLine: TypedTag[String] = div(
+      args.map({
+        case a: SubExprNode => a.toHtmlLineReadOnly
+        case a: LiteralNode => a.toHtmlLine
+      })
     )
 
-    override def toHtmlLineReadOnly: TypedTag[String] = div(display := "inline",
+    override def toHtmlLineReadOnly: TypedTag[String] = div(
+      display := "inline",
       args.map({
-      case a@SubExprNode(n) => a.toHtmlLineReadOnly
-      case a@LiteralNode(l) => a.toHtmlLineReadOnly
-    }))
+        case a: SubExprNode => a.toHtmlLineReadOnly
+        case a: LiteralNode => a.toHtmlLineReadOnly
+      })
+    )
 
     override val children: List[OuterNode] = args.flatMap(_.children)
 
     lazy val exprClass: Class[Expr] = exprNameToClass(exprName).get
 
-    override def toString: String = {
-      s"VariableNode(${UtilityFunctions.quote(exprName)}, $args)"
-    }
+    override def toString: String = s"VariableNode(${UtilityFunctions.quote(exprName)}, $args)"
 
     def replaceInner(path: List[Int], replacement: InnerNode): OuterNode = {
       path match {
@@ -545,13 +532,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
     override def toHtmlLine: TypedTag[String] = BlankExprDropDown().toHtml
 
-    override def toHtmlLineReadOnly: TypedTag[String] = {
-//      toHtmlLine.replace("select", "select readonly disabled")
-//      select(readonly, disabled, exprClassList.map(e => {
-//        option(value := e.getSimpleName, e.getSimpleName)
-//      }))
-      toHtmlLine(readonly, disabled)
-    }
+    override def toHtmlLineReadOnly: TypedTag[String] = toHtmlLine(readonly, disabled)
 
     override val exprName: String = "ExprChoice"
   }
@@ -572,12 +553,10 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
   case class LiteralNode(literalText: String) extends InnerNode {
     override def toHtmlLine: TypedTag[String] = {
-//      s"""<input type='text' onChange="handleLiteralChanged(this)" data-tree-path="$treePathString" value="$literalText" />"""
       input(`type` := "text", onchange := "handleLiteralChanged(this)", data("tree-path") := treePathString, value := literalText)
     }
 
     override def toHtmlLineReadOnly: TypedTag[String] = {
-//      s"""<input type='text' readonly disabled data-tree-path="$treePathString" value="$literalText" />"""
       input(`type` := "text", readonly, disabled, data("tree-path") := treePathString, value := literalText)
     }
 
