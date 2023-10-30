@@ -78,7 +78,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     val exprClassListHtml = "<option value=\"\">Select Expr...</option>" ++ exprClassList.map(e => {
       s"""<option value="${e.getSimpleName}">${e.getSimpleName}</option>"""
     }).mkString("\n")
-    s"""<select class="expr-dropdown" onchange="handleDropdownChange(this)">$exprClassListHtml</select>"""
+    s"""<select class="expr-dropdown" onChange="handleDropdownChange(this)">$exprClassListHtml</select>"""
   }
 
   protected lazy val blankClassList: List[Class[BlankSpace]] = {
@@ -460,9 +460,15 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
   case class VariableNode(exprName: String, args: List[InnerNode] = Nil) extends OuterNode {
     //        override def toHtmlLine: String = BlankExprDropDown().toHtml
-    override def toHtmlLine: String = s"""${args.map(_.toHtmlLineReadOnly).mkString(" ")}"""
+    override def toHtmlLine: String = args.map({
+      case a@SubExprNode(n) => a.toHtmlLineReadOnly
+      case a@LiteralNode(l) => a.toHtmlLine
+    }).mkString(" ")
 
-    override def toHtmlLineReadOnly: String = toHtmlLine.replace("select", "select readonly disabled")
+    override def toHtmlLineReadOnly: String = args.map({
+      case a@SubExprNode(n) => a.toHtmlLineReadOnly
+      case a@LiteralNode(l) => a.toHtmlLineReadOnly
+    }).mkString(" ")
 
     override val children: List[OuterNode] = args.flatMap(_.children)
 
@@ -471,17 +477,6 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     override def toString: String = {
       s"VariableNode(${UtilityFunctions.quote(exprName)}, $args)"
     }
-//
-//    def replaceInner(path: List[Int], replacement: InnerNode): OuterNode = {
-//      findChild(path.init).get match
-//        case VariableNode(exprName, args) => {
-//          val newArgs = args.updated(path.last, replacement)
-//          val newNode = VariableNode(exprName, newArgs)
-//          newArgs.foreach(_.parent = Some(newNode))
-//
-//        }
-//        case _ => throw new Exception("Path in replaceInner ended up with wrong type of Node")
-//    }
 
     def replaceInner(path: List[Int], replacement: InnerNode): OuterNode = {
       path match {
@@ -511,12 +506,15 @@ trait ClickDeduceLanguage extends AbstractLanguage {
         case x: ExprChoiceNode => {
           replaceInner(newTreePath, SubExprNode(newNode)) match {
             case v: VariableNode => v
+            case x => throw new Exception(s"Unexpected node kind after replaceInner in insertExpr: $x")
           }
         }
+        case x => throw new Exception(s"Unexpected node kind in insertExpr: $x")
       }
     }
 
     children.foreach(_.parent = Some(this))
+    args.foreach(_.parent = Some(this))
   }
 
   object VariableNode {
@@ -565,13 +563,18 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     }
 
     override def toHtmlLineReadOnly: String = {
-      s"""<input type='text' readonly disabled value="$literalText" />"""
+      s"""<input type='text' readonly disabled data-tree-path="$treePathString" value="$literalText" />"""
     }
 
     override val children: List[OuterNode] = Nil
 
     override def toString: String = {
       s"LiteralNode(${UtilityFunctions.quote(literalText)})"
+    }
+
+    override def treePath: List[Int] = parent match {
+      case Some(value: VariableNode) => value.treePath :+ value.args.indexWhere(_ eq this)
+      case _ => Nil
     }
 
     children.foreach(_.parent = this.parent)
