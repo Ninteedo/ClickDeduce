@@ -88,7 +88,7 @@ object WebServerTest extends JsonSupport {
         path("start-node-blank") {
           entity(as[EvalRequest]) { request =>
             val tree = LArith.ExprChoiceNode()
-            val response = NodeResponse(tree.toString, tree.toHtml)
+            val response = NodeResponse(tree.toString, tree.toHtml.toString)
 //            println(response)
             complete(response)
           }
@@ -100,13 +100,13 @@ object WebServerTest extends JsonSupport {
             LArith.Node.read(request.nodeString) match
               case Some(node: LArith.VariableNode) => {
                 val updated = node.insertExpr(request.selectedValue, LArith.Node.readPathString(request.treePath))
-                val response = NodeResponse(updated.toString, updated.toHtml)
+                val response = NodeResponse(updated.toString, updated.toHtml.toString)
 //                println(newNode.toString)
                 complete(response)
               }
               case Some(node: LArith.ExprChoiceNode) => {
                 val newNode = LArith.VariableNode.createFromExpr(request.selectedValue)
-                val response = NodeResponse(newNode.toString, newNode.toHtml)
+                val response = NodeResponse(newNode.toString, newNode.toHtml.toString)
                 complete(response)
               }
               case other => throw new Exception(s"Expected VariableNode, got $other")
@@ -119,7 +119,7 @@ object WebServerTest extends JsonSupport {
             LArith.Node.read(request.nodeString) match
               case Some(node: LArith.VariableNode) => {
                 val newNode = node.replaceInner(LArith.Node.readPathString(request.treePath), LArith.LiteralNode(request.literalValue))
-                val response = NodeResponse(newNode.toString, newNode.toHtml)
+                val response = NodeResponse(newNode.toString, newNode.toHtml.toString)
                 println(newNode.toString)
                 complete(response)
               }

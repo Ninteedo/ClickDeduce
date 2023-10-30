@@ -11,6 +11,7 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.17" % "test"
 libraryDependencies += "com.typesafe.akka" %% "akka-http" % "10.5.0"
 libraryDependencies += "com.typesafe.akka" %% "akka-stream" % "2.8.0"
 libraryDependencies += "com.typesafe.akka" %% "akka-http-spray-json" % "10.5.0"
+libraryDependencies += "com.lihaoyi" %% "scalatags" % "0.11.1"
 
 lazy val root = (project in file("."))
   .settings(

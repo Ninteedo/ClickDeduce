@@ -114,17 +114,17 @@ class LArith extends ClickDeduceLanguage {
     case Num(x) => x.toString
     case Plus(e1, e2) => s"(${prettyPrint(e1)} + ${prettyPrint(e2)})"
     case Times(e1, e2) => s"(${prettyPrint(e1)} × ${prettyPrint(e2)})"
-    case _ => e.toHtml
+    case _ => e.toHtml.toString
   }
 
   override def prettyPrint(v: Value): String = v match {
     case NumV(x) => x.toString
-    case _ => v.toHtml
+    case _ => v.toHtml.toString
   }
 
   override def prettyPrint(t: Type): String = t match {
     case IntType() => "Int"
-    case _ => t.toHtml
+    case _ => t.toHtml.toString
   }
 
   override lazy val exprClassList: List[Class[Expr]] = List(classOf[Num], classOf[Plus], classOf[Times]).map(_.asInstanceOf[Class[Expr]])

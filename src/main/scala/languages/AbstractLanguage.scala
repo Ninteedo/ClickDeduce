@@ -1,5 +1,8 @@
 package languages
 
+import scalatags.Text.TypedTag
+import scalatags.Text.all.*
+
 import scala.collection.immutable.List
 
 trait AbstractLanguage {
@@ -25,7 +28,7 @@ trait AbstractLanguage {
   type TypeEnv = Map[Variable, Type]
 
   trait Term {
-    lazy val toHtml: String = prettyPrint(this)
+    lazy val toHtml: TypedTag[String] = p(prettyPrint(this))
   }
 
   /**
@@ -73,7 +76,7 @@ trait AbstractLanguage {
   abstract class Literal extends Term {
     val value: Any
 
-    override lazy val toHtml: String = value.toString
+    override lazy val toHtml: TypedTag[String] = p(value.toString)
 
     override lazy val toString: String = value.toString
   }
