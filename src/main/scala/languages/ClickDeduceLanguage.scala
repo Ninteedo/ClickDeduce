@@ -443,20 +443,22 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       path match {
         case Nil => replacement
         case head :: tail => {
-          val newArgs: List[InnerNode] = args.updated(head, args(head) match
-            case SubExprNode(node: OuterNode) => SubExprNode(node.replace(tail, replacement))
-            case _ => ???)
+          val newArgs: List[InnerNode] = args.updated(
+            head, args(head) match
+              case SubExprNode(node: OuterNode) => SubExprNode(node.replace(tail, replacement))
+              case _ => ???
+          )
           val node = this match {
             case ConcreteNode(s, _) => ConcreteNode(s, newArgs)
             case VariableNode(s, _) => VariableNode(s, newArgs)
           }
-//          newChildren.foreach(_.parent = Some(node))
+          //          newChildren.foreach(_.parent = Some(node))
           node
         }
       }
     }
 
-//    override val children: List[OuterNode] = args.flatMap(_.children)
+    //    override val children: List[OuterNode] = args.flatMap(_.children)
 
     def replaceInner(path: List[Int], replacement: InnerNode): OuterNode = {
       path match {
@@ -608,6 +610,49 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     }
 
     children.foreach(_.parent = this.parent)
+  }
+
+  abstract class Action(val originalTree: OuterNode, val treePath: List[Int]) {
+    val newTree: OuterNode
+  }
+
+  case class SelectExprAction(
+    override val originalTree: OuterNode,
+    override val treePath: List[Int],
+    exprChoiceName: String
+  ) extends Action(originalTree, treePath) {
+    override val newTree: OuterNode = originalTree.insertExpr(exprChoiceName, treePath)
+  }
+
+  case class EditLiteralAction(
+    override val originalTree: OuterNode,
+    override val treePath: List[Int],
+    newLiteralText: String
+  ) extends Action(originalTree, treePath) {
+    override val newTree: OuterNode = originalTree.replaceInner(treePath, LiteralNode(newLiteralText))
+  }
+
+  //  case class CompleteEvaluationAction(override val originalTree: OuterNode, override val treePath: List[Int])
+  //    extends Action(originalTree, treePath) {
+  //    override val newTree: OuterNode = {
+  //      originalTree match {
+  //        case ConcreteNode(exprString, args) => {
+  //          val expr = readExpr(exprString).get
+  //          ???
+  //          ConcreteNode(exprString, newArgs)
+  //        }
+  //      }
+  //    }
+  //  }
+
+  case class DeleteAction(override val originalTree: OuterNode, override val treePath: List[Int])
+    extends Action(originalTree, treePath) {
+    override val newTree: OuterNode = originalTree.replace(treePath, ExprChoiceNode())
+  }
+
+  case class InsertAction(override val originalTree: OuterNode, override val treePath: List[Int], insertTree: OuterNode)
+    extends Action(originalTree, treePath) {
+    override val newTree: OuterNode = originalTree.replace(treePath, insertTree)
   }
 
   /**
