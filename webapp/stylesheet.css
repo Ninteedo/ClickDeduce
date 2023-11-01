@@ -1,3 +1,48 @@
+:root {
+    /*darcula colour scheme*/
+    --background: #282a36;
+    --current-line: #44475a;
+    --foreground: #f8f8f2;
+    --comment: #6272a4;
+    --cyan: #8be9fd;
+    --green: #50fa7b;
+    --orange: #ffb86c;
+    --pink: #ff79c6;
+    --purple: #bd93f9;
+    --red: #ff5555;
+    --yellow: #f1fa8c;
+    --context-menu-background: #44475a;
+    --highlighted-tree: #52566c;
+    --input-outline: #282934;
+}
+
+body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: 'Roboto', sans-serif;
+    font-size: 12px;
+}
+
+input {
+    background-color: var(--current-line);
+    color: var(--foreground);
+    border: var(--input-outline) solid 1px;
+    border-radius: 3px;
+    padding: 2px;
+    font-family: 'Roboto', sans-serif;
+    /*margin: 5px;*/
+}
+
+select {
+    background-color: var(--current-line);
+    color: var(--foreground);
+    border: var(--input-outline) solid 1px;
+    border-radius: 3px;
+    padding: 2px;
+    font-family: 'Roboto', sans-serif;
+    /*margin: 5px;*/
+}
+
 form {
     display: inline;
 }
@@ -15,8 +60,8 @@ form {
     /*padding-bottom: 10px;*/
 }
 
-.subtree:hover {
-    background-color: #eee;
+.highlight {
+    background-color: var(--highlighted-tree);
 }
 
 .args {
@@ -42,7 +87,7 @@ form {
     align-self: end;
     margin-bottom: 4px;
     font-size: 12px;
-    color: #666;
+    color: var(--comment);
 }
 
 .annotation-new {
@@ -50,7 +95,7 @@ form {
     /*margin-bottom: 5px;*/
     margin-top: 0px;
     font-size: 12px;
-    color: #666;
+    color: var(--comment);
     align-self: flex-end;
 }
 
@@ -66,10 +111,20 @@ form {
 .subtree::before {
     content: '';
     height: 2px;
-    background: black;
+    background: var(--foreground);
     width: 100%;
     position: absolute;
     bottom: 25px;
     left: 50%;
     transform: translate(-50%, -50%);
+}
+
+.custom-menu {
+    display: none;
+    position: absolute;
+    box-shadow: 1px 1px 2px #888;
+    border: solid 1px #ccc;
+    background-color: var(--context-menu-background);
+    padding: 10px;
+    z-index: 1000;
 }
