@@ -12,7 +12,8 @@ class NodeTreeTest extends AnyFunSuite {
   test("Can correctly represent a complete simple addition tree") {
     val expr = Plus(Num(1), Num(2))
     val children = List(ConcreteNode(Num(1).toString), ConcreteNode(Num(2).toString))
-    val tree = ConcreteNode(expr.toString, children)
+    val args = children.map(SubExprNode(_))
+    val tree = ConcreteNode(expr.toString, args)
     children.foreach(_.parent = Some(tree))
     tree.exprName shouldEqual "Plus"
     children(0).exprName shouldEqual "Num"
@@ -201,4 +202,56 @@ class NodeTreeTest extends AnyFunSuite {
   }
 
   // TODO: test that a tree with a string literal works
+
+  test("Can create Actions using createAction") {
+    val tree1 = VariableNode(
+      "Plus",
+      List(
+        SubExprNode(ConcreteNode(Num(1).toString)),
+        SubExprNode(VariableNode("Times", List(
+          SubExprNode(ExprChoiceNode()),
+          SubExprNode(VariableNode(
+            "Plus",
+            List(
+              SubExprNode(ExprChoiceNode()),
+              SubExprNode(VariableNode("Num", List(LiteralNode("2"))))
+            )
+          )
+          )
+        )
+        )
+        )
+      )
+    )
+    val action1 = createAction("SelectExprAction", tree1.toString, tree1.children(1).children(0).treePathString, List("Num"))
+    action1.newTree shouldEqual VariableNode(
+      "Plus",
+      List(
+        SubExprNode(ConcreteNode(Num(1).toString)),
+        SubExprNode(VariableNode("Times", List(
+          SubExprNode(VariableNode("Num", List(LiteralNode("")))),
+          SubExprNode(VariableNode(
+            "Plus",
+            List(
+              SubExprNode(ExprChoiceNode()),
+              SubExprNode(VariableNode("Num", List(LiteralNode("2"))))
+            )
+          )
+          )
+        )
+        )
+        )
+      )
+    )
+
+    val tree2 = ExprChoiceNode()
+    val action2 = createAction("SelectExprAction", tree2.toString, "", List("Plus"))
+    action2.newTree shouldEqual VariableNode(
+      "Plus",
+      List(
+        SubExprNode(ExprChoiceNode()),
+        SubExprNode(ExprChoiceNode())
+      )
+    )
+  }
 }

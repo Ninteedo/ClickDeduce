@@ -56,53 +56,29 @@
   }
 
   function handleDropdownChange(dropdown) {
-    const dropdownId = dropdown.name;
     const selectedValue = dropdown.value;
     const subtree = dropdown.parentElement.parentElement;
-    const rawExpr = subtree.getAttribute("data-term");
     const dataTreePath = subtree.getAttribute("data-tree-path")
 
-    console.log(subtree);
-
-    // fetch("/update-expr", {
-    //   method: "POST",
-    //   headers: {"Content-Type": "application/json"},
-    //   body: JSON.stringify({
-    //     rawExpr,
-    //     blankTreePath: dataTreePath,
-    //     selectedValue
-    //   })
-    // })
-    //     .then(response => response.json())
-    //     .then(updatedTree => {
-    //       subtree.innerHTML = updatedTree.html;
-    //     });
-
-    fetch("/node-expr-choice-made", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({
-        nodeString: lastNodeString,
-        treePath: dataTreePath,
-        selectedValue
-      })
-    }).then(response => response.json()).then(updatedTree => {
-      treeContainer.innerHTML = updatedTree.html;
-      lastNodeString = updatedTree.nodeString;
-    })
+    runAction("SelectExprAction", dataTreePath, [selectedValue])
   }
 
   function handleLiteralChanged(textInput) {
     const literalValue = textInput.value;
     const treePath = textInput.getAttribute("data-tree-path")
 
-    fetch("/node-expr-literal-changed", {
+    runAction("EditLiteralAction", treePath, [literalValue])
+  }
+
+  function runAction(actionName, treePath, extraArgs) {
+    fetch("/process-action", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
+        actionName,
         nodeString: lastNodeString,
         treePath,
-        literalValue
+        extraArgs
       })
     }).then(response => response.json()).then(updatedTree => {
       treeContainer.innerHTML = updatedTree.html;

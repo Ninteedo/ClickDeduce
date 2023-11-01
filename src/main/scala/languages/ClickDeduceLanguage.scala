@@ -462,7 +462,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
     def replaceInner(path: List[Int], replacement: InnerNode): OuterNode = {
       path match {
-        case Nil => throw new Exception("Path in replaceInner ended up with empty list")
+        case Nil => this
         case head :: Nil => {
           val newArgs = args.updated(head, replacement)
           VariableNode(exprName, newArgs)
@@ -486,7 +486,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       val oldNode = findChild(newTreePath).get
       oldNode match {
         case x: ExprChoiceNode => {
-          replaceInner(newTreePath, SubExprNode(newNode)) match {
+          replace(newTreePath, newNode) match {
             case v: VariableNode => v
             case x => throw new Exception(s"Unexpected node kind after replaceInner in insertExpr: $x")
           }
@@ -612,6 +612,40 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     children.foreach(_.parent = this.parent)
   }
 
+  def getActionClass(actionName: String): Class[Action] = (actionName match {
+    case "SelectExprAction" => classOf[SelectExprAction]
+    case "EditLiteralAction" => classOf[EditLiteralAction]
+    case "DeleteAction" => classOf[DeleteAction]
+    case "InsertAction" => classOf[InsertAction]
+  }).asInstanceOf[Class[Action]]
+
+  def createAction(
+    actionName: String,
+    nodeString: String,
+    treePathString: String,
+    extraArgs: List[String]
+  ): Action = {
+    val node = Node.read(nodeString).get
+    val treePath = Node.readPathString(treePathString)
+    val actionClass = getActionClass(actionName)
+    val constructor = actionClass.getConstructors()(0)
+    var remainingExtraArgs = extraArgs
+    val arguments = constructor.getParameterTypes.map {
+      case c if classOf[ClickDeduceLanguage] isAssignableFrom c => this
+      case c if classOf[Node] isAssignableFrom c => node
+      case c if classOf[List[Int]] isAssignableFrom c => treePath
+      case c if classOf[String] isAssignableFrom c => {
+        val arg = remainingExtraArgs.head
+        remainingExtraArgs = remainingExtraArgs.tail
+        arg
+      }
+      case c => throw new Exception(s"Unexpected parameter type in createAction: $c")
+    }
+    println(arguments.mkString(", "))
+    val result = constructor.newInstance(arguments: _*)
+    result.asInstanceOf[Action]
+  }
+
   abstract class Action(val originalTree: OuterNode, val treePath: List[Int]) {
     val newTree: OuterNode
   }
@@ -621,7 +655,8 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     override val treePath: List[Int],
     exprChoiceName: String
   ) extends Action(originalTree, treePath) {
-    override val newTree: OuterNode = originalTree.insertExpr(exprChoiceName, treePath)
+    override val newTree: OuterNode =
+      originalTree.insertExpr(exprChoiceName, treePath)
   }
 
   case class EditLiteralAction(

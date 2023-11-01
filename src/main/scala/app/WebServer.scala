@@ -20,6 +20,7 @@ case class ChangeRequest(rawExpr: String, blankTreePath: String, selectedValue: 
 case class NodeExprChoiceRequest(nodeString: String, treePath: String, selectedValue: String)
 case class NodeLiteralValueRequest(nodeString: String, treePath: String, literalValue: String)
 case class NodeResponse(nodeString: String, html: String)
+case class ActionRequest(actionName: String, nodeString: String, treePath: String, extraArgs: List[String])
 
 trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val evalRequestFormat: RootJsonFormat[EvalRequest] = jsonFormat1(EvalRequest)
@@ -28,6 +29,7 @@ trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val nodeExprChoiceRequestFormat: RootJsonFormat[NodeExprChoiceRequest] = jsonFormat3(NodeExprChoiceRequest)
   implicit val nodeLiteralValueRequestFormat: RootJsonFormat[NodeLiteralValueRequest] = jsonFormat3(NodeLiteralValueRequest)
   implicit val nodeResponseFormat: RootJsonFormat[NodeResponse] = jsonFormat2(NodeResponse)
+  implicit val actionRequestFormat: RootJsonFormat[ActionRequest] = jsonFormat4(ActionRequest)
 }
 
 
@@ -95,35 +97,12 @@ object WebServerTest extends JsonSupport {
         }
       } ~
       post {
-        path("node-expr-choice-made") {
-          entity(as[NodeExprChoiceRequest]) { request =>
-            LArith.Node.read(request.nodeString) match
-              case Some(node: LArith.VariableNode) => {
-                val updated = node.insertExpr(request.selectedValue, LArith.Node.readPathString(request.treePath))
-                val response = NodeResponse(updated.toString, updated.toHtml.toString)
-//                println(newNode.toString)
-                complete(response)
-              }
-              case Some(node: LArith.ExprChoiceNode) => {
-                val newNode = LArith.VariableNode.createFromExpr(request.selectedValue)
-                val response = NodeResponse(newNode.toString, newNode.toHtml.toString)
-                complete(response)
-              }
-              case other => throw new Exception(s"Expected VariableNode, got $other")
-          }
-        }
-      } ~
-      post {
-        path("node-expr-literal-changed") {
-          entity(as[NodeLiteralValueRequest]) { request =>
-            LArith.Node.read(request.nodeString) match
-              case Some(node: LArith.VariableNode) => {
-                val newNode = node.replaceInner(LArith.Node.readPathString(request.treePath), LArith.LiteralNode(request.literalValue))
-                val response = NodeResponse(newNode.toString, newNode.toHtml.toString)
-                println(newNode.toString)
-                complete(response)
-              }
-              case _ => ???
+        path("process-action") {
+          entity(as[ActionRequest]) { request =>
+            val action = LArith.createAction(request.actionName, request.nodeString, request.treePath, request.extraArgs)
+            val updatedTree = action.newTree
+            val response = NodeResponse(updatedTree.toString, updatedTree.toHtml.toString)
+            complete(response)
           }
         }
       } ~
