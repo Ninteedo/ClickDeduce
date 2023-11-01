@@ -81,7 +81,6 @@ object WebServerTest extends JsonSupport {
             val tree = LArith.ExpressionEvalTree.exprToTree(expr)
             tree.initialTreePath = treePath
             val response = EvalResponse(expr.toString, tree.toHtml)
-//            println(request.toString + " -> " + response.toString)
             complete(response)
           }
         }
@@ -91,7 +90,6 @@ object WebServerTest extends JsonSupport {
           entity(as[EvalRequest]) { request =>
             val tree = LArith.ExprChoiceNode()
             val response = NodeResponse(tree.toString, tree.toHtml.toString)
-//            println(response)
             complete(response)
           }
         }

@@ -47,13 +47,17 @@ class NodeTreeTest extends AnyFunSuite {
 
   test("Can correctly represent an arithmetic tree with an unselected sub-expression") {
     // Unselected + (Times(Num(2), Unselected))
-    val tree = VariableNode("Plus", List(
-      SubExprNode(ExprChoiceNode()),
-      SubExprNode(VariableNode("Times", List(
-        SubExprNode(ConcreteNode(Num(2).toString)),
-        SubExprNode(ExprChoiceNode())
-      )))
-    )
+    val tree = VariableNode(
+      "Plus", List(
+        SubExprNode(ExprChoiceNode()),
+        SubExprNode(VariableNode(
+          "Times", List(
+            SubExprNode(ConcreteNode(Num(2).toString)),
+            SubExprNode(ExprChoiceNode())
+          )
+        )
+        )
+      )
     )
     //    tree.exprName shouldEqual "Plus"
     println(tree.toHtml)
@@ -66,28 +70,39 @@ class NodeTreeTest extends AnyFunSuite {
   }
 
   test("Can correctly read a VariableNode with 2 ConcreteNode children from a String") {
-    val tree = VariableNode("Plus", List(
-      SubExprNode(ConcreteNode(Num(1).toString)),
-      SubExprNode(ConcreteNode(Num(2).toString))
-    ))
+    val tree = VariableNode(
+      "Plus", List(
+        SubExprNode(ConcreteNode(Num(1).toString)),
+        SubExprNode(ConcreteNode(Num(2).toString))
+      )
+    )
     correctNodeRead(tree)
   }
 
-  test("Can correctly read a VariableNode with a ConcreteNode and a VariableNode with a ExprChoiceNode child from a String") {
-    val tree = VariableNode("Plus", List(
-      SubExprNode(ConcreteNode(Num(1).toString)),
-      SubExprNode(VariableNode("Times", List(
-        SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode())
-      )))
-    ))
+  test(
+    "Can correctly read a VariableNode with a ConcreteNode and a VariableNode with a ExprChoiceNode child from a String"
+  ) {
+    val tree = VariableNode(
+      "Plus", List(
+        SubExprNode(ConcreteNode(Num(1).toString)),
+        SubExprNode(VariableNode(
+          "Times", List(
+            SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode())
+          )
+        )
+        )
+      )
+    )
     correctNodeRead(tree)
   }
 
   test("Can correctly read a VariableNode with a ExprChoiceNode") {
-    val tree = VariableNode("Plus", List(
-      SubExprNode(ExprChoiceNode()),
-      SubExprNode(ExprChoiceNode())
-    ))
+    val tree = VariableNode(
+      "Plus", List(
+        SubExprNode(ExprChoiceNode()),
+        SubExprNode(ExprChoiceNode())
+      )
+    )
     correctNodeRead(tree)
   }
 
@@ -128,9 +143,12 @@ class NodeTreeTest extends AnyFunSuite {
       "Plus",
       List(
         SubExprNode(ConcreteNode(Num(1).toString)),
-        SubExprNode(VariableNode("Times", List(
-          SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode())
-        )))
+        SubExprNode(VariableNode(
+          "Times", List(
+            SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode())
+          )
+        )
+        )
       )
     )
     checkAllChildrenHaveCorrectParent(tree)
@@ -141,17 +159,18 @@ class NodeTreeTest extends AnyFunSuite {
       "Plus",
       List(
         SubExprNode(ConcreteNode(Num(1).toString)),
-        SubExprNode(VariableNode("Times", List(
-          SubExprNode(ExprChoiceNode()),
-          SubExprNode(VariableNode(
-            "Plus",
-            List(
-              SubExprNode(ExprChoiceNode()),
-              SubExprNode(VariableNode("Num", List(LiteralNode("2"))))
+        SubExprNode(VariableNode(
+          "Times", List(
+            SubExprNode(ExprChoiceNode()),
+            SubExprNode(VariableNode(
+              "Plus",
+              List(
+                SubExprNode(ExprChoiceNode()),
+                SubExprNode(VariableNode("Num", List(LiteralNode("2"))))
+              )
+            )
             )
           )
-          )
-        )
         )
         )
       )
@@ -164,17 +183,18 @@ class NodeTreeTest extends AnyFunSuite {
       "Plus",
       List(
         SubExprNode(ConcreteNode(Num(1).toString)),
-        SubExprNode(VariableNode("Times", List(
-          SubExprNode(ExprChoiceNode()),
-          SubExprNode(VariableNode(
-            "Plus",
-            List(
-              SubExprNode(ExprChoiceNode()),
-              SubExprNode(VariableNode("Num", List(LiteralNode("2"))))
+        SubExprNode(VariableNode(
+          "Times", List(
+            SubExprNode(ExprChoiceNode()),
+            SubExprNode(VariableNode(
+              "Plus",
+              List(
+                SubExprNode(ExprChoiceNode()),
+                SubExprNode(VariableNode("Num", List(LiteralNode("2"))))
+              )
+            )
             )
           )
-          )
-        )
         )
         )
       )
@@ -184,17 +204,18 @@ class NodeTreeTest extends AnyFunSuite {
       "Plus",
       List(
         SubExprNode(ConcreteNode(Num(1).toString)),
-        SubExprNode(VariableNode("Times", List(
-          SubExprNode(ExprChoiceNode()),
-          SubExprNode(VariableNode(
-            "Plus",
-            List(
-              SubExprNode(VariableNode("Num", List(LiteralNode("")))),
-              SubExprNode(VariableNode("Num", List(LiteralNode("2"))))
+        SubExprNode(VariableNode(
+          "Times", List(
+            SubExprNode(ExprChoiceNode()),
+            SubExprNode(VariableNode(
+              "Plus",
+              List(
+                SubExprNode(VariableNode("Num", List(LiteralNode("")))),
+                SubExprNode(VariableNode("Num", List(LiteralNode("2"))))
+              )
+            )
             )
           )
-          )
-        )
         )
         )
       )
@@ -208,37 +229,41 @@ class NodeTreeTest extends AnyFunSuite {
       "Plus",
       List(
         SubExprNode(ConcreteNode(Num(1).toString)),
-        SubExprNode(VariableNode("Times", List(
-          SubExprNode(ExprChoiceNode()),
-          SubExprNode(VariableNode(
-            "Plus",
-            List(
-              SubExprNode(ExprChoiceNode()),
-              SubExprNode(VariableNode("Num", List(LiteralNode("2"))))
+        SubExprNode(VariableNode(
+          "Times", List(
+            SubExprNode(ExprChoiceNode()),
+            SubExprNode(VariableNode(
+              "Plus",
+              List(
+                SubExprNode(ExprChoiceNode()),
+                SubExprNode(VariableNode("Num", List(LiteralNode("2"))))
+              )
+            )
             )
           )
-          )
-        )
         )
         )
       )
     )
-    val action1 = createAction("SelectExprAction", tree1.toString, tree1.children(1).children(0).treePathString, List("Num"))
+    val action1 = createAction(
+      "SelectExprAction", tree1.toString, tree1.children(1).children(0).treePathString, List("Num")
+    )
     action1.newTree shouldEqual VariableNode(
       "Plus",
       List(
         SubExprNode(ConcreteNode(Num(1).toString)),
-        SubExprNode(VariableNode("Times", List(
-          SubExprNode(VariableNode("Num", List(LiteralNode("")))),
-          SubExprNode(VariableNode(
-            "Plus",
-            List(
-              SubExprNode(ExprChoiceNode()),
-              SubExprNode(VariableNode("Num", List(LiteralNode("2"))))
+        SubExprNode(VariableNode(
+          "Times", List(
+            SubExprNode(VariableNode("Num", List(LiteralNode("")))),
+            SubExprNode(VariableNode(
+              "Plus",
+              List(
+                SubExprNode(ExprChoiceNode()),
+                SubExprNode(VariableNode("Num", List(LiteralNode("2"))))
+              )
+            )
             )
           )
-          )
-        )
         )
         )
       )
@@ -251,6 +276,134 @@ class NodeTreeTest extends AnyFunSuite {
       List(
         SubExprNode(ExprChoiceNode()),
         SubExprNode(ExprChoiceNode())
+      )
+    )
+  }
+
+  test("SelectExprAction behaves as expected") {
+    val tree1 = VariableNode(
+      "Plus",
+      List(
+        SubExprNode(ConcreteNode(Num(1).toString)),
+        SubExprNode(VariableNode(
+          "Times", List(
+            SubExprNode(ExprChoiceNode()),
+            SubExprNode(VariableNode(
+              "Plus",
+              List(
+                SubExprNode(ExprChoiceNode()),
+                SubExprNode(VariableNode("Num", List(LiteralNode("2"))))
+              )
+            )
+            )
+          )
+        )
+        )
+      )
+    )
+    createAction("SelectExprAction", tree1.toString, tree1.children(1).children(0).treePathString, List("Num")).newTree shouldEqual VariableNode(
+      "Plus",
+      List(
+        SubExprNode(ConcreteNode(Num(1).toString)),
+        SubExprNode(VariableNode(
+          "Times", List(
+            SubExprNode(VariableNode("Num", List(LiteralNode("")))),
+            SubExprNode(VariableNode(
+              "Plus",
+              List(
+                SubExprNode(ExprChoiceNode()),
+                SubExprNode(VariableNode("Num", List(LiteralNode("2"))))
+              )
+            )
+            )
+          )
+        )
+        )
+      )
+    )
+    createAction("SelectExprAction", tree1.toString, tree1.children(1).children(1).children(0).treePathString, List("Num")).newTree shouldEqual VariableNode(
+      "Plus",
+      List(
+        SubExprNode(ConcreteNode(Num(1).toString)),
+        SubExprNode(VariableNode(
+          "Times", List(
+            SubExprNode(ExprChoiceNode()),
+            SubExprNode(VariableNode(
+              "Plus",
+              List(
+                SubExprNode(VariableNode("Num", List(LiteralNode("")))),
+                SubExprNode(VariableNode("Num", List(LiteralNode("2"))))
+              )
+            )
+            )
+          )
+        )
+        )
+      )
+    )
+  }
+
+  test("EditLiteralAction behaves correctly") {
+    val tree1 = VariableNode(
+      "Plus",
+      List(
+        SubExprNode(ConcreteNode(Num(1).toString)),
+        SubExprNode(VariableNode(
+          "Times", List(
+            SubExprNode(VariableNode("Num", List(LiteralNode("")))),
+            SubExprNode(VariableNode(
+              "Plus",
+              List(
+                SubExprNode(ExprChoiceNode()),
+                SubExprNode(VariableNode("Num", List(LiteralNode("2"))))
+              )
+            )
+            )
+          )
+        )
+        )
+      )
+    )
+
+    createAction("EditLiteralAction", tree1.toString, tree1.children(1).children(1).children(1).args(0).treePathString, List("3")).newTree shouldEqual VariableNode(
+      "Plus",
+      List(
+        SubExprNode(ConcreteNode(Num(1).toString)),
+        SubExprNode(VariableNode(
+          "Times", List(
+            SubExprNode(VariableNode("Num", List(LiteralNode("")))),
+            SubExprNode(VariableNode(
+              "Plus",
+              List(
+                SubExprNode(ExprChoiceNode()),
+                SubExprNode(VariableNode("Num", List(LiteralNode("3"))))
+              )
+            )
+            )
+          )
+        )
+        )
+      )
+    )
+
+    createAction("EditLiteralAction", tree1.toString, tree1.children(1).children(0).args(0).treePathString, List("")).newTree shouldEqual VariableNode(
+      "Plus",
+      List(
+        SubExprNode(ConcreteNode(Num(1).toString)),
+        SubExprNode(VariableNode(
+          "Times", List(
+            SubExprNode(VariableNode("Num", List(LiteralNode("")))),
+            SubExprNode(VariableNode(
+              "Plus",
+              List(
+                SubExprNode(ExprChoiceNode()),
+                SubExprNode(VariableNode("Num", List(LiteralNode("2"))))
+              )
+            )
+            )
+          )
+        )
+        )
       )
     )
   }

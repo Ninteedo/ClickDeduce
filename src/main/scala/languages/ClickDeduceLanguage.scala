@@ -641,7 +641,6 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       }
       case c => throw new Exception(s"Unexpected parameter type in createAction: $c")
     }
-    println(arguments.mkString(", "))
     val result = constructor.newInstance(arguments: _*)
     result.asInstanceOf[Action]
   }
