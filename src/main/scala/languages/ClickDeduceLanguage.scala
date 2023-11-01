@@ -428,6 +428,8 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
     val exprName: String
 
+    def getExpr: Expr
+
     /**
      * Find the child of this expression tree at the given path.
      *
@@ -513,6 +515,8 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
     override val children: List[OuterNode] = args.flatMap(_.children)
 
+    override def getExpr: Expr = expr
+
     children.foreach(_.parent = Some(this))
   }
 
@@ -539,6 +543,15 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     override val children: List[OuterNode] = args.flatMap(_.children)
 
     override def toString: String = s"VariableNode(${UtilityFunctions.quote(exprName)}, $args)"
+
+    override def getExpr: Expr = {
+      val constructor = exprClass.getConstructors()(0)
+      val arguments = lang +: args.map {
+        case n: SubExprNode => n.node.getExpr
+        case n: LiteralNode => n.getLiteral
+      }
+      constructor.newInstance(arguments: _*).asInstanceOf[Expr]
+    }
 
     children.foreach(_.parent = Some(this))
     args.foreach(_.parent = Some(this))
@@ -570,6 +583,8 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     override def toHtmlLineReadOnly: TypedTag[String] = toHtmlLine(readonly, disabled)
 
     override val exprName: String = "ExprChoice"
+
+    override def getExpr: Expr = BlankExprDropDown()
   }
 
   abstract class InnerNode extends Node {
@@ -608,6 +623,8 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       case Some(value: VariableNode) => value.treePath :+ value.args.indexWhere(_ eq this)
       case _ => Nil
     }
+
+    def getLiteral: Literal = Literal.fromString(literalText)
 
     children.foreach(_.parent = this.parent)
   }

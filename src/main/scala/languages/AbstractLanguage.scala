@@ -81,11 +81,33 @@ trait AbstractLanguage {
     override lazy val toString: String = value.toString
   }
 
+  object Literal {
+    def fromString(s: String): Literal = {
+      if (List("true", "false").contains(s.toLowerCase)) {
+        LiteralBool(s.toBoolean)
+      } else if (s.startsWith("\"") && s.endsWith("\"")) {
+        LiteralString(s.substring(1, s.length - 1))
+      } else if ("-?\\d+".r.matches(s)) {
+        LiteralInt(BigInt(s))
+      } else {
+        LiteralAny(s)
+      }
+    }
+  }
+
   case class LiteralInt(value: BigInt) extends Literal
 
   case class LiteralBool(value: Boolean) extends Literal
 
-  case class LiteralString(value: String) extends Literal
+  case class LiteralString(value: String) extends Literal {
+//    override lazy val toHtml: TypedTag[String] = p(s""""$value"""")
+
+    override lazy val toString: String = s"""LiteralString("$value")"""
+  }
+
+  case class LiteralAny(value: String) extends Literal {
+    override lazy val toString: String = s"""LiteralAny("$value")"""
+  }
 
   /**
    * Function which evaluates an `Expr` to a `Value`, given an environment.

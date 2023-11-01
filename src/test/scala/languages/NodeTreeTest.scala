@@ -301,7 +301,8 @@ class NodeTreeTest extends AnyFunSuite {
         )
       )
     )
-    createAction("SelectExprAction", tree1.toString, tree1.children(1).children(0).treePathString, List("Num")).newTree shouldEqual VariableNode(
+    createAction("SelectExprAction", tree1.toString, tree1.children(1).children(0).treePathString, List("Num"))
+      .newTree shouldEqual VariableNode(
       "Plus",
       List(
         SubExprNode(ConcreteNode(Num(1).toString)),
@@ -321,7 +322,9 @@ class NodeTreeTest extends AnyFunSuite {
         )
       )
     )
-    createAction("SelectExprAction", tree1.toString, tree1.children(1).children(1).children(0).treePathString, List("Num")).newTree shouldEqual VariableNode(
+    createAction(
+      "SelectExprAction", tree1.toString, tree1.children(1).children(1).children(0).treePathString, List("Num")
+    ).newTree shouldEqual VariableNode(
       "Plus",
       List(
         SubExprNode(ConcreteNode(Num(1).toString)),
@@ -365,7 +368,9 @@ class NodeTreeTest extends AnyFunSuite {
       )
     )
 
-    createAction("EditLiteralAction", tree1.toString, tree1.children(1).children(1).children(1).args(0).treePathString, List("3")).newTree shouldEqual VariableNode(
+    createAction(
+      "EditLiteralAction", tree1.toString, tree1.children(1).children(1).children(1).args(0).treePathString, List("3")
+    ).newTree shouldEqual VariableNode(
       "Plus",
       List(
         SubExprNode(ConcreteNode(Num(1).toString)),
@@ -386,7 +391,8 @@ class NodeTreeTest extends AnyFunSuite {
       )
     )
 
-    createAction("EditLiteralAction", tree1.toString, tree1.children(1).children(0).args(0).treePathString, List("")).newTree shouldEqual VariableNode(
+    createAction("EditLiteralAction", tree1.toString, tree1.children(1).children(0).args(0).treePathString, List(""))
+      .newTree shouldEqual VariableNode(
       "Plus",
       List(
         SubExprNode(ConcreteNode(Num(1).toString)),
@@ -406,5 +412,65 @@ class NodeTreeTest extends AnyFunSuite {
         )
       )
     )
+  }
+
+  test("Correctly read expression from VariableNode with all children completed") {
+    val tree1 = VariableNode(
+      "Plus",
+      List(
+        SubExprNode(VariableNode("Num", List(LiteralNode("75")))),
+        SubExprNode(VariableNode(
+          "Times",
+          List(
+            SubExprNode(VariableNode("Num", List(LiteralNode("3")))),
+            SubExprNode(VariableNode(
+              "Plus",
+              List(
+                SubExprNode(VariableNode("Num", List(LiteralNode("2")))),
+                SubExprNode(VariableNode("Num", List(LiteralNode("3"))))
+              )
+            )
+            )
+          )
+        )
+        )
+      )
+    )
+    tree1.getExpr shouldEqual Plus(Num(75), Times(Num(3), Plus(Num(2), Num(3))))
+  }
+
+  test("Correctly read expression from VariableNode with incomplete or incorrect literal values") {
+    val tree1 = VariableNode(
+      "Plus",
+      List(
+        SubExprNode(VariableNode("Num", List(LiteralNode("")))),
+        SubExprNode(VariableNode("Num", List(LiteralNode("\"Hello!\""))))
+      )
+    )
+    tree1.getExpr shouldEqual Plus(Num(LiteralAny("")), Num(LiteralString("Hello!")))
+
+    val tree2 = VariableNode(
+      "Times",
+      List(
+        SubExprNode(VariableNode("Num", List(LiteralNode("true")))),
+        SubExprNode(VariableNode(
+          "Plus",
+          List(
+            SubExprNode(VariableNode("Num", List(LiteralNode("2")))),
+            SubExprNode(VariableNode("Num", List(LiteralNode("\"3\""))))
+          )
+        )
+        )
+      )
+    )
+    tree2.getExpr shouldEqual Times(Num(LiteralBool(true)), Plus(Num(LiteralInt(2)), Num(LiteralString("3"))))
+  }
+
+  test("ConcreteNode correctly reads its expression") {
+    val tree1 = ConcreteNode(Num(1).toString)
+    tree1.getExpr shouldEqual Num(1)
+
+    val tree2 = ConcreteNode(Times(Plus(Num(5), Num(2)), Num(3)).toString)
+    tree2.getExpr shouldEqual Times(Plus(Num(5), Num(2)), Num(3))
   }
 }
