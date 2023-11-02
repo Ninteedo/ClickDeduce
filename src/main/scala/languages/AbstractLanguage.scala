@@ -53,6 +53,8 @@ trait AbstractLanguage {
 
   case class MissingExpr() extends Expr
 
+  case class ExprPlaceholder(content: String) extends Expr
+
   /**
    * A value resulting from an expression being evaluated.
    */
@@ -102,11 +104,11 @@ trait AbstractLanguage {
   case class LiteralString(value: String) extends Literal {
 //    override lazy val toHtml: TypedTag[String] = p(s""""$value"""")
 
-    override lazy val toString: String = s"""LiteralString("$value")"""
+    override lazy val toString: String = s""""$value""""
   }
 
   case class LiteralAny(value: String) extends Literal {
-    override lazy val toString: String = s"""LiteralAny("$value")"""
+    override lazy val toString: String = value
   }
 
   /**
@@ -157,7 +159,10 @@ trait AbstractLanguage {
    * @param e The `Expr` to be pretty printed.
    * @return A `String` representing the pretty printed expression.
    */
-  def prettyPrint(e: Expr): String
+  def prettyPrint(e: Expr): String = e match {
+    case ExprPlaceholder(content) => content
+    case x => x.toHtml.toString
+  }
 
   /**
    * Function to create a human-readable string representation of a `Type`.
@@ -165,7 +170,9 @@ trait AbstractLanguage {
    * @param t The `Type` to be pretty printed.
    * @return A `String` representing the pretty printed type.
    */
-  def prettyPrint(t: Type): String
+  def prettyPrint(t: Type): String = t match {
+    case x => x.toHtml.toString
+  }
 
   /**
    * Function to create a human-readable string representation of a `Value`.
@@ -173,7 +180,9 @@ trait AbstractLanguage {
    * @param v The `Value` to be pretty printed.
    * @return A `String` representing the pretty printed value.
    */
-  def prettyPrint(v: Value): String
+  def prettyPrint(v: Value): String = v match {
+    case x => x.toHtml.toString
+  }
 
   def prettyPrint(term: Term): String = {
     term match {

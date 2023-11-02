@@ -497,6 +497,8 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       }
     }
 
+    def getValue(env: Env = Map()): Value = eval(getExpr, env)
+
     // children.foreach(_.parent = Some(this))
   }
 
@@ -521,22 +523,9 @@ trait ClickDeduceLanguage extends AbstractLanguage {
   }
 
   case class VariableNode(exprName: String, args: List[InnerNode] = Nil) extends OuterNode {
-    override def toHtmlLine: TypedTag[String] = div(
-      args.map({
-        case a: SubExprNode => a.toHtmlLineReadOnly
-        case a: LiteralNode => a.toHtmlLine
-      }
-      )
-    )
+    override def toHtmlLine: TypedTag[String] = div(raw(getExprHtmlLine))
 
-    override def toHtmlLineReadOnly: TypedTag[String] = div(
-      display := "inline",
-      args.map({
-        case a: SubExprNode => a.toHtmlLineReadOnly
-        case a: LiteralNode => a.toHtmlLineReadOnly
-      }
-      )
-    )
+    override def toHtmlLineReadOnly: TypedTag[String] = div(display := "inline", raw(getExprHtmlLineReadOnly))
 
     lazy val exprClass: Class[Expr] = exprNameToClass(exprName).get
 
@@ -551,6 +540,24 @@ trait ClickDeduceLanguage extends AbstractLanguage {
         case n: LiteralNode => n.getLiteral
       }
       constructor.newInstance(arguments: _*).asInstanceOf[Expr]
+    }
+
+    def getExprHtmlLine: String = {
+      val constructor = exprClass.getConstructors()(0)
+      val arguments = lang +: args.map {
+        case n: SubExprNode => ExprPlaceholder(n.toHtmlLineReadOnly.toString)
+        case n: LiteralNode => LiteralAny(n.toHtmlLine.toString)
+      }
+      prettyPrint(constructor.newInstance(arguments: _*).asInstanceOf[Expr])
+    }
+
+    def getExprHtmlLineReadOnly: String = {
+      val constructor = exprClass.getConstructors()(0)
+      val arguments = lang +: args.map {
+        case n: SubExprNode => ExprPlaceholder(n.toHtmlLineReadOnly.toString)
+        case n: LiteralNode => LiteralAny(n.toHtmlLineReadOnly.toString)
+      }
+      prettyPrint(constructor.newInstance(arguments: _*).asInstanceOf[Expr])
     }
 
     children.foreach(_.parent = Some(this))

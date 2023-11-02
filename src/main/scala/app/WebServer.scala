@@ -100,6 +100,7 @@ object WebServerTest extends JsonSupport {
             val action = LArith.createAction(request.actionName, request.nodeString, request.treePath, request.extraArgs)
             val updatedTree = action.newTree
             val response = NodeResponse(updatedTree.toString, updatedTree.toHtml.toString)
+            println(response)
             complete(response)
           }
         }
