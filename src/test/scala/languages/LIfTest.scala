@@ -16,6 +16,22 @@ class LIfTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhenT
   def genRandInt(): BigInt = Random.nextInt(200) - 100
 
   val bools: TableFor1[Boolean] = Table("bool", true, false)
+  val expressions: TableFor1[Expr] = Table("expressions",
+    Num(1),
+    Bool(true),
+    Bool(false),
+    Plus(Num(1), Num(2)),
+    Eq(Num(1), Num(2)),
+    IfThenElse(Bool(true), Num(1), Num(2)),
+    IfThenElse(Bool(false), Num(1), Num(2)),
+    IfThenElse(Eq(Num(1), Num(2)), Num(1), Num(2)),
+    IfThenElse(Eq(Num(1), Num(1)), IfThenElse(Bool(false), Num(5), Plus(Num(1), Num(-1))), Num(2)),
+  )
+  val newExprClasses: TableFor1[String] = Table("newExprClasses",
+    "Bool",
+    "Eq",
+    "IfThenElse"
+  )
 
   property("Bool type-checks to BoolType") {
     forAll(bools) { b =>
@@ -72,5 +88,17 @@ class LIfTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhenT
     eval(Eq(Bool(true), Bool(false))) shouldEqual BoolV(false)
     eval(Eq(Bool(true), Bool(true))) shouldEqual BoolV(true)
     eval(Eq(Num(1), Num(1))) shouldEqual BoolV(true)
+  }
+
+  property("Can correctly load expressions in LIf") {
+    forAll(expressions) { e =>
+      readExpr(e.toString).get shouldEqual e
+    }
+  }
+
+  property("Can create VariableNode for expression kinds in LIf") {
+    forAll(newExprClasses) { c =>
+      VariableNode.createFromExpr(c) shouldBe a[VariableNode]
+    }
   }
 }

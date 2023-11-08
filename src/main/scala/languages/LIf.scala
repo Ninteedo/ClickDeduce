@@ -76,7 +76,7 @@ class LIf extends LArith {
   }
 
   override def prettyPrint(e: Expr): String = e match {
-    case Bool(LiteralBool(b)) => b.toString
+    case Bool(b) => b.toString
     case Eq(e1, e2) => s"(${prettyPrint(e1)} == ${prettyPrint(e2)})"
     case IfThenElse(cond, then_expr, else_expr) => s"(if ${prettyPrint(cond)} then ${prettyPrint(then_expr)} else ${prettyPrint(else_expr)})"
     case _ => super.prettyPrint(e)
