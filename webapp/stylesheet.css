@@ -13,7 +13,7 @@
     --yellow: #f1fa8c;
     --context-menu-background: #44475a;
     --highlighted-tree: #52566c;
-    --input-outline: #282934;
+    --input-outline: #14141a;
     --disabled-input: #3c3f4e;
     --disabled-input-text: #b6b7b6;
 }
@@ -38,6 +38,24 @@ input {
 input:disabled {
     background-color: var(--disabled-input);
     color: var(--disabled-input-text);
+}
+
+button {
+    background-color: var(--current-line);
+    color: var(--foreground);
+    border: var(--input-outline) solid 2px;
+    border-radius: 3px;
+    padding: 2px;
+    font-family: 'Roboto', sans-serif;
+}
+
+button:disabled {
+    background-color: var(--disabled-input);
+    color: var(--disabled-input-text);
+}
+
+button:active {
+    background-color: var(--highlighted-tree);
 }
 
 select {
