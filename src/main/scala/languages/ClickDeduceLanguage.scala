@@ -74,11 +74,11 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     subclasses.map(_.asClass).toList
   }
 
-  protected lazy val exprClassList: List[Class[Expr]] = {
-    //    getClass.getClasses.filter(c => classOf[Expr].isAssignableFrom(c)).map(_.asInstanceOf[Class[Expr]]).toList
-    //    getSubclassesOf(classOf[Expr]).map(_.asInstanceOf[Class[Expr]])
-    Nil
+  lazy val exprClassList: List[Class[Expr]] = {
+    calculateExprClassList
   }
+  
+  protected def calculateExprClassList: List[Class[Expr]]
 
   private lazy val exprClassListDropdownHtml: TypedTag[String] = {
     select(

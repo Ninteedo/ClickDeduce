@@ -19,7 +19,7 @@ class LIfTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhenT
 
   property("Bool type-checks to BoolType") {
     forAll(bools) { b =>
-      typeOf(Bool(b)) shouldEqual BoolType
+      typeOf(Bool(b)) shouldEqual BoolType()
     }
   }
 

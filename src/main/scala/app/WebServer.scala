@@ -7,7 +7,7 @@ import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.settings.ServerSettings
-import languages.LArith
+import languages.LIf
 import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 import java.util.concurrent.atomic.AtomicInteger
@@ -44,7 +44,7 @@ object WebServerTest extends JsonSupport {
       post {
         path("expr-to-tree") {
           entity(as[EvalRequest]) { request =>
-            val expr = LArith.ExpressionEvalTree.exprToTree(LArith.readExpr(request.text).get)
+            val expr = LIf.ExpressionEvalTree.exprToTree(LIf.readExpr(request.text).get)
             complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, expr.toSvg))
           }
         }
@@ -52,8 +52,8 @@ object WebServerTest extends JsonSupport {
       post {
         path("expr-to-html-tree") {
           entity(as[EvalRequest]) { request =>
-            val expr = LArith.readExpr(request.text).get
-            val tree = LArith.ExpressionEvalTree.exprToTree(expr)
+            val expr = LIf.readExpr(request.text).get
+            val tree = LIf.ExpressionEvalTree.exprToTree(expr)
             complete(EvalResponse(expr.toString, tree.toHtml))
           }
         }
@@ -61,12 +61,12 @@ object WebServerTest extends JsonSupport {
       post {
         path("expr-to-html-tree-blank") {
           entity(as[EvalRequest]) { request =>
-            val expr = LArith.readExpr(request.text).get
+            val expr = LIf.readExpr(request.text).get
             val children = List(
-              LArith.ExpressionEvalTree(LArith.BlankExprDropDown(), None, None, Nil),
-              LArith.ExpressionEvalTree(LArith.BlankExprDropDown(), None, None, Nil)
+              LIf.ExpressionEvalTree(LIf.BlankExprDropDown(), None, None, Nil),
+              LIf.ExpressionEvalTree(LIf.BlankExprDropDown(), None, None, Nil)
             )
-            val exprTree = LArith.ExpressionEvalTree(expr, Some(LArith.eval(expr)), None, children)
+            val exprTree = LIf.ExpressionEvalTree(expr, Some(LIf.eval(expr)), None, children)
             children.foreach(_.parent = Some(exprTree))
             val response = EvalResponse(expr.toString, exprTree.toHtml)
             complete(response)
@@ -76,9 +76,9 @@ object WebServerTest extends JsonSupport {
       post {
         path("update-expr") {
           entity(as[ChangeRequest]) { request =>
-            val expr = LArith.createUnfilledExpr(request.selectedValue)
+            val expr = LIf.createUnfilledExpr(request.selectedValue)
             val treePath = request.blankTreePath.split("-").map(_.toInt).toList
-            val tree = LArith.ExpressionEvalTree.exprToTree(expr)
+            val tree = LIf.ExpressionEvalTree.exprToTree(expr)
             tree.initialTreePath = treePath
             val response = EvalResponse(expr.toString, tree.toHtml)
             complete(response)
@@ -88,7 +88,7 @@ object WebServerTest extends JsonSupport {
       post {
         path("start-node-blank") {
           entity(as[EvalRequest]) { request =>
-            val tree = LArith.ExprChoiceNode()
+            val tree = LIf.ExprChoiceNode()
             val response = NodeResponse(tree.toString, tree.toHtml.toString)
             complete(response)
           }
@@ -97,7 +97,7 @@ object WebServerTest extends JsonSupport {
       post {
         path("process-action") {
           entity(as[ActionRequest]) { request =>
-            val action = LArith.createAction(request.actionName, request.nodeString, request.treePath, request.extraArgs)
+            val action = LIf.createAction(request.actionName, request.nodeString, request.treePath, request.extraArgs)
             val updatedTree = action.newTree
             val response = NodeResponse(updatedTree.toString, updatedTree.toHtml.toString)
             complete(response)

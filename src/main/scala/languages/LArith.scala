@@ -133,7 +133,7 @@ class LArith extends ClickDeduceLanguage {
     case t => super.prettyPrint(t)
   }
 
-  override lazy val exprClassList: List[Class[Expr]] = List(classOf[Num], classOf[Plus], classOf[Times]).map(_.asInstanceOf[Class[Expr]])
+  override def calculateExprClassList: List[Class[Expr]] = List(classOf[Num], classOf[Plus], classOf[Times]).map(_.asInstanceOf[Class[Expr]])
 }
 
 object LArith extends LArith {
