@@ -3,6 +3,9 @@ const treeContainer = document.getElementById('tree');
 var treeHistory = [];
 var treeHistoryIndex = 0;
 
+const undoButton = document.getElementById('undoButton');
+const redoButton = document.getElementById('redoButton');
+
 async function handleSubmit(event, url) {
     // prevent the form from submitting the old-fashioned way
     event.preventDefault();
@@ -69,17 +72,22 @@ function updateTree(newTreeHtml, newNodeString, addToHistory = false) {
         }
         treeHistoryIndex = treeHistory.push([newTreeHtml, newNodeString]) - 1;
     }
+    updateUndoRedoButtons();
 }
 
 function useTreeFromHistory(newHistoryIndex) {
     if (newHistoryIndex >= 0 && newHistoryIndex < treeHistory.length) {
+        treeHistoryIndex = newHistoryIndex;
         let newHtml, newNodeString;
         [newHtml, newNodeString] = treeHistory[newHistoryIndex];
-        treeContainer.innerHTML = newHtml;
-        lastNodeString = newNodeString;
-        addHoverListeners();
-        treeHistoryIndex = newHistoryIndex;
+        updateTree(newHtml, newNodeString, false);
     }
+}
+
+function updateUndoRedoButtons() {
+    undoButton.disabled = treeHistoryIndex <= 0;
+
+    redoButton.disabled = treeHistoryIndex >= treeHistory.length - 1;
 }
 
 function undo() {
@@ -123,14 +131,14 @@ function addHoverListeners() {
 var contextMenuSelectedElement = null;
 
 document.addEventListener('contextmenu', function (e) {
-    var target = e.target;
+    const target = e.target;
 
     if (target.classList.contains('highlight')) {
         e.preventDefault();
 
         contextMenuSelectedElement = target;
 
-        var menu = document.getElementById('custom-context-menu');
+        const menu = document.getElementById('custom-context-menu');
         menu.style.display = 'block';
         menu.style.left = e.pageX + 'px';
         menu.style.top = e.pageY + 'px';
