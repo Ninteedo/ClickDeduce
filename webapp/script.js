@@ -1,5 +1,7 @@
 var lastNodeString = "";
 const treeContainer = document.getElementById('tree');
+var treeHistory = [];
+var treeHistoryIndex = 0;
 
 async function handleSubmit(event, url) {
     // prevent the form from submitting the old-fashioned way
@@ -53,10 +55,43 @@ function runAction(actionName, treePath, extraArgs) {
             extraArgs
         })
     }).then(response => response.json()).then(updatedTree => {
-        treeContainer.innerHTML = updatedTree.html;
-        lastNodeString = updatedTree.nodeString;
-        addHoverListeners();
+        updateTree(updatedTree.html, updatedTree.nodeString, true)
     });
+}
+
+function updateTree(newTreeHtml, newNodeString, addToHistory = false) {
+    treeContainer.innerHTML = newTreeHtml;
+    lastNodeString = newNodeString;
+    addHoverListeners();
+    if (addToHistory) {
+        if (treeHistoryIndex < treeHistory.length - 1) {
+            treeHistory = treeHistory.slice(0, treeHistoryIndex + 1);
+        }
+        treeHistoryIndex = treeHistory.push([newTreeHtml, newNodeString]) - 1;
+    }
+}
+
+function useTreeFromHistory(newHistoryIndex) {
+    if (newHistoryIndex >= 0 && newHistoryIndex < treeHistory.length) {
+        let newHtml, newNodeString;
+        [newHtml, newNodeString] = treeHistory[newHistoryIndex];
+        treeContainer.innerHTML = newHtml;
+        lastNodeString = newNodeString;
+        addHoverListeners();
+        treeHistoryIndex = newHistoryIndex;
+    }
+}
+
+function undo() {
+    if (treeHistoryIndex >= 0 && treeHistoryIndex < treeHistory.length) {
+        useTreeFromHistory(treeHistoryIndex - 1);
+    }
+}
+
+function redo() {
+    if (treeHistoryIndex >= 0 && treeHistoryIndex < treeHistory.length - 1) {
+        useTreeFromHistory(treeHistoryIndex + 1);
+    }
 }
 
 // the text input width is updated to match the text width
