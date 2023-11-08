@@ -14,6 +14,8 @@
     --context-menu-background: #44475a;
     --highlighted-tree: #52566c;
     --input-outline: #282934;
+    --disabled-input: #3c3f4e;
+    --disabled-input-text: #b6b7b6;
 }
 
 body {
@@ -31,6 +33,11 @@ input {
     padding: 2px;
     font-family: 'Roboto', sans-serif;
     /*margin: 5px;*/
+}
+
+input:disabled {
+    background-color: var(--disabled-input);
+    color: var(--disabled-input-text);
 }
 
 select {
