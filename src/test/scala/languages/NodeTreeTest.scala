@@ -414,6 +414,20 @@ class NodeTreeTest extends AnyFunSuite {
     )
   }
 
+  test("DeleteAction behaves correctly") {
+    val tree1 = VariableNode("Num", List(LiteralNode("50")))
+    createAction("DeleteAction", tree1.toString, tree1.treePathString, List())
+      .newTree shouldEqual ExprChoiceNode()
+
+    val tree2 = ConcreteNode(Plus(Num(4), Num(6)).toString, List(SubExprNode(VariableNode("Num", List(LiteralNode("4")))), SubExprNode(VariableNode("Num", List(LiteralNode("6"))))))
+    createAction("DeleteAction", tree2.toString, tree2.treePathString, List())
+      .newTree shouldEqual ExprChoiceNode()
+
+    val tree3 = VariableNode("Plus", List(SubExprNode(VariableNode("Num", List(LiteralNode("4")))), SubExprNode(VariableNode("Num", List(LiteralNode("6"))))))
+    createAction("DeleteAction", tree3.toString, tree3.children(1).treePathString, List())
+      .newTree shouldEqual VariableNode("Plus", List(SubExprNode(VariableNode("Num", List(LiteralNode("4")))), SubExprNode(ExprChoiceNode())))
+  }
+
   test("Correctly read expression from VariableNode with all children completed") {
     val tree1 = VariableNode(
       "Plus",

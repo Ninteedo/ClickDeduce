@@ -1,5 +1,5 @@
 var lastNodeString = "";
-let treeContainer = document.getElementById('tree');
+const treeContainer = document.getElementById('tree');
 
 async function handleSubmit(event, url) {
     // prevent the form from submitting the old-fashioned way
@@ -85,11 +85,15 @@ function addHoverListeners() {
     });
 }
 
+var contextMenuSelectedElement = null;
+
 document.addEventListener('contextmenu', function (e) {
     var target = e.target;
 
     if (target.classList.contains('highlight')) {
         e.preventDefault();
+
+        contextMenuSelectedElement = target;
 
         var menu = document.getElementById('custom-context-menu');
         menu.style.display = 'block';
@@ -101,3 +105,11 @@ document.addEventListener('contextmenu', function (e) {
 document.addEventListener('click', function (e) {
     document.getElementById('custom-context-menu').style.display = 'none';
 });
+
+function clearTreeNode(event) {
+    event.preventDefault();
+    if (contextMenuSelectedElement) {
+        const treePath = contextMenuSelectedElement.getAttribute("data-tree-path")
+        runAction("DeleteAction", treePath, [])
+    }
+}

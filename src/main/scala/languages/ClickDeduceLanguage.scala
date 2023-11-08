@@ -517,7 +517,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
     override val exprName: String = expr.getClass.getSimpleName
 
-    override def toString: String = s"ConcreteNode(${UtilityFunctions.quote(exprString)}, $children)"
+    override def toString: String = s"ConcreteNode(${UtilityFunctions.quote(exprString)}, $args)"
 
     override def toHtml: TypedTag[String] = super.toHtml(data("term") := expr.toString)
 
