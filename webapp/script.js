@@ -59,6 +59,12 @@ function runAction(actionName, treePath, extraArgs) {
     });
 }
 
+// the text input width is updated to match the text width
+function updateTextInputWidth(textInput) {
+    const minWidth = 2;
+    textInput.style.width = Math.max(minWidth, textInput.value.length) + "ch";
+}
+
 function addHoverListeners() {
     document.querySelectorAll('.subtree').forEach(div => {
         div.addEventListener('mouseover', (event) => {

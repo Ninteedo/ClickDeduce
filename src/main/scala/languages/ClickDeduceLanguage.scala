@@ -622,13 +622,24 @@ trait ClickDeduceLanguage extends AbstractLanguage {
   case class LiteralNode(literalText: String) extends InnerNode {
     override def toHtmlLine: TypedTag[String] = {
       input(
-        `type` := "text", onchange := "handleLiteralChanged(this)", data("tree-path") := treePathString,
+        `type` := "text",
+        onchange := "handleLiteralChanged(this)",
+        oninput := "updateTextInputWidth(this)",
+        width := Math.max(2, literalText.length) + "ch",
+        data("tree-path") := treePathString,
         value := literalText
       )
     }
 
     override def toHtmlLineReadOnly: TypedTag[String] = {
-      input(`type` := "text", readonly, disabled, data("tree-path") := treePathString, value := literalText)
+      input(
+        `type` := "text",
+        readonly,
+        disabled,
+        width := Math.max(2, literalText.length) + "ch",
+        data("tree-path") := treePathString,
+        value := literalText
+      )
     }
 
     override val children: List[OuterNode] = Nil
