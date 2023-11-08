@@ -408,8 +408,8 @@ trait ClickDeduceLanguage extends AbstractLanguage {
         cls := "subtree axiom", data("tree-path") := treePathString,
         div(cls := "expr",
           toHtmlLine(display := "inline"),
-          raw(" &DoubleDownArrow; "),
-          div(cls := "value", display := "inline", getValue().toHtml)
+          evalArrowSpan,
+          evalResultDiv
         ),
         div(cls := "annotation-axiom", exprName)
       )
@@ -421,8 +421,8 @@ trait ClickDeduceLanguage extends AbstractLanguage {
         div(
           cls := "node",
           div(cls := "expr", toHtmlLineReadOnly),
-          raw(" &DoubleDownArrow; "),
-          div(cls := "value", getValue().toHtml)
+          evalArrowSpan,
+          evalResultDiv
         ),
         div(
           cls := "args",
@@ -431,6 +431,10 @@ trait ClickDeduceLanguage extends AbstractLanguage {
         )
       )
     }
+
+    def evalArrowSpan: TypedTag[String] = span(paddingLeft := "1ch", paddingRight := "1ch", raw("&DoubleDownArrow;"))
+
+    def evalResultDiv: TypedTag[String] = div(cls := "eval-result", display := "inline", getValue().toHtml)
 
     val exprName: String
 

@@ -46,21 +46,27 @@ class LArith extends ClickDeduceLanguage {
    *
    * @param x The integer value of the number.
    */
-  case class NumV(x: BigInt) extends Value
+  case class NumV(x: BigInt) extends Value {
+    override val typ: Type = IntType()
+  }
 
   /**
    * An error that occurs due to an incorrect argument type.
    *
    * @param message The error message.
    */
-  case class UnexpectedArgValue(override val message: String) extends EvalError
+  case class UnexpectedArgValue(override val message: String) extends EvalError {
+    override val typ: Type = UnexpectedArgType(message)
+  }
 
   /**
    * An error that occurs due to attempting to process an unknown `Expr`.
    *
    * @param message The error message.
    */
-  case class UnexpectedExpr(override val message: String) extends EvalError
+  case class UnexpectedExpr(override val message: String) extends EvalError {
+    override val typ: Type = UnexpectedExprType(message)
+  }
 
   // types
 

@@ -58,15 +58,25 @@ trait AbstractLanguage {
   /**
    * A value resulting from an expression being evaluated.
    */
-  abstract class Value extends Term
+  abstract class Value extends Term {
+    override lazy val toHtml: TypedTag[String] = span(cls := "tooltip", valueText, div(cls := "tooltiptext", tooltipText))
+
+    lazy val tooltipText: String = toString + ": " + typ.toString
+
+    lazy val valueText: String = prettyPrint(this) + ": " + prettyPrint(typ)
+
+    val typ: Type
+  }
 
   /**
    * An error resulting from an expression being evaluated.
    */
   abstract class EvalError extends Value {
-    override lazy val toHtml: TypedTag[String] = span(cls := "tooltip", "?", div(cls := "tooltiptext", message))
-    
     val message: String = "Error"
+
+    override lazy val valueText: String = "?"
+
+    override lazy val tooltipText: String = message
   }
 
   /**
