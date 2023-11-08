@@ -406,7 +406,11 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     def toHtmlAxiom: TypedTag[String] = {
       div(
         cls := "subtree axiom", data("tree-path") := treePathString,
-        div(cls := "expr", toHtmlLine),
+        div(cls := "expr",
+          toHtmlLine(display := "inline"),
+          raw(" &DoubleDownArrow; "),
+          div(cls := "value", display := "inline", getValue().toHtml)
+        ),
         div(cls := "annotation-axiom", exprName)
       )
     }
@@ -416,7 +420,9 @@ trait ClickDeduceLanguage extends AbstractLanguage {
         cls := "subtree", data("tree-path") := treePathString,
         div(
           cls := "node",
-          div(cls := "expr", toHtmlLineReadOnly)
+          div(cls := "expr", toHtmlLineReadOnly),
+          raw(" &DoubleDownArrow; "),
+          div(cls := "value", getValue().toHtml)
         ),
         div(
           cls := "args",
@@ -558,6 +564,11 @@ trait ClickDeduceLanguage extends AbstractLanguage {
         case n: LiteralNode => LiteralAny(n.toHtmlLineReadOnly.toString)
       }
       prettyPrint(constructor.newInstance(arguments: _*).asInstanceOf[Expr])
+    }
+
+    def nonErrorEvalResult: Boolean = getValue() match {
+      case _: EvalError => false
+      case _ => true
     }
 
     children.foreach(_.parent = Some(this))

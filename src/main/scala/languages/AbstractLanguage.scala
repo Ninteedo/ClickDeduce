@@ -28,7 +28,7 @@ trait AbstractLanguage {
   type TypeEnv = Map[Variable, Type]
 
   trait Term {
-    lazy val toHtml: TypedTag[String] = p(prettyPrint(this))
+    lazy val toHtml: TypedTag[String] = span(raw(prettyPrint(this)))
   }
 
   /**
@@ -63,7 +63,9 @@ trait AbstractLanguage {
   /**
    * An error resulting from an expression being evaluated.
    */
-  abstract class EvalError extends Value
+  abstract class EvalError extends Value {
+    override lazy val toHtml: TypedTag[String] = span("ERROR")
+  }
 
   /**
    * The type of a value.
