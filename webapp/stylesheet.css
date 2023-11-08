@@ -32,7 +32,6 @@ input {
     border-radius: 3px;
     padding: 2px;
     font-family: 'Roboto', sans-serif;
-    /*margin: 5px;*/
 }
 
 input:disabled {
@@ -65,7 +64,6 @@ select {
     border-radius: 3px;
     padding: 2px;
     font-family: 'Roboto', sans-serif;
-    /*margin: 5px;*/
 }
 
 form {
@@ -82,7 +80,6 @@ form {
     flex-direction: column-reverse;
     align-items: center;
     position: relative;
-    /*padding-bottom: 10px;*/
 }
 
 .highlight {
@@ -96,9 +93,6 @@ form {
 }
 
 .expr {
-    /*padding: 10px 5px 0 5px;*/
-    /*margin-bottom: 0px;*/
-    /*margin-top: 15px;*/
 }
 
 .node {
@@ -116,9 +110,6 @@ form {
 }
 
 .annotation-new {
-    margin-left: 0px;
-    /*margin-bottom: 5px;*/
-    margin-top: 0px;
     font-size: 12px;
     color: var(--comment);
     align-self: flex-end;
@@ -164,9 +155,10 @@ form {
     visibility: hidden;
     background-color: var(--context-menu-background);
     color: var(--foreground);
+    border: var(--input-outline) solid 1px;
     text-align: center;
     border-radius: 6px;
-    padding: 5px 0;
+    padding: 5px 3px;
     position: absolute;
     z-index: 1;
     bottom: 125%;
