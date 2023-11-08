@@ -53,14 +53,14 @@ class LArith extends ClickDeduceLanguage {
    *
    * @param message The error message.
    */
-  case class UnexpectedArgValue(message: String) extends EvalError
+  case class UnexpectedArgValue(override val message: String) extends EvalError
 
   /**
    * An error that occurs due to attempting to process an unknown `Expr`.
    *
    * @param message The error message.
    */
-  case class UnexpectedExpr(message: String) extends EvalError
+  case class UnexpectedExpr(override val message: String) extends EvalError
 
   // types
 
