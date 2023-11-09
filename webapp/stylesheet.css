@@ -145,8 +145,24 @@ form {
     box-shadow: 1px 1px 2px #888;
     border: solid 1px #ccc;
     background-color: var(--context-menu-background);
-    padding: 10px;
+    padding: 2px;
     z-index: 1000;
+}
+
+#custom-context-menu ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#custom-context-menu ul li {
+    padding: 10px;
+    cursor: pointer;
+    text-align: left;
+}
+
+#custom-context-menu ul li:hover {
+    background-color: var(--highlighted-tree);
 }
 
 .tooltip {
