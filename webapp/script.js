@@ -14,7 +14,7 @@ async function handleSubmit(event, url) {
     let userInput = document.getElementById('userInput').value;
 
     // send a POST request to the server
-    let response = await fetch(url, {
+    await fetch(url, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -22,14 +22,9 @@ async function handleSubmit(event, url) {
         body: JSON.stringify({
             text: userInput
         })
+    }).then(response => response.json()).then(updatedTree => {
+        updateTree(updatedTree.html, updatedTree.nodeString, true);
     });
-
-    // read the response as text
-    let jsonResponse = await response.json();
-
-    // the svgText is the SVG string directly without the JSON structure:
-    treeContainer.innerHTML = jsonResponse.html;
-    lastNodeString = jsonResponse.nodeString;
 }
 
 function handleDropdownChange(dropdown) {
@@ -66,7 +61,7 @@ function updateTree(newTreeHtml, newNodeString, addToHistory = false) {
     treeContainer.innerHTML = newTreeHtml;
     lastNodeString = newNodeString;
     addHoverListeners();
-    if (addToHistory) {
+    if (addToHistory && (treeHistory.length === 0 || (newTreeHtml !== treeHistory[treeHistoryIndex][0] || newNodeString !== treeHistory[treeHistoryIndex][1]))) {
         if (treeHistoryIndex < treeHistory.length - 1) {
             treeHistory = treeHistory.slice(0, treeHistoryIndex + 1);
         }
@@ -86,9 +81,10 @@ function useTreeFromHistory(newHistoryIndex) {
 
 function updateUndoRedoButtons() {
     undoButton.disabled = treeHistoryIndex <= 0;
-
     redoButton.disabled = treeHistoryIndex >= treeHistory.length - 1;
 }
+
+updateUndoRedoButtons();
 
 function undo() {
     if (treeHistoryIndex >= 0 && treeHistoryIndex < treeHistory.length) {
@@ -118,22 +114,25 @@ function addHoverListeners() {
             // Add the highlight to the currently hovered over 'subtree'
             event.currentTarget.classList.add('highlight');
         });
-    });
-
-    // Event for when mouse leaves a .subtree
-    document.addEventListener('mouseout', (event) => {
-        if (event.target.classList.contains('subtree')) {
-            event.target.classList.remove('highlight');
-        }
+        div.addEventListener('mouseout', (event) => {
+            // Stop the event from bubbling up to parent 'subtree' elements
+            event.stopPropagation();
+            // Remove the highlight from the currently hovered over 'subtree'
+            event.currentTarget.classList.remove('highlight');
+        });
     });
 }
 
 var contextMenuSelectedElement = null;
 
 document.addEventListener('contextmenu', function (e) {
-    const target = e.target;
+    let target = e.target;
 
-    if (target.classList.contains('highlight')) {
+    while (target && !target.classList.contains('highlight')) {
+        target = target.parentElement;
+    }
+
+    if (target) {
         e.preventDefault();
 
         contextMenuSelectedElement = target;
