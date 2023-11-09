@@ -81,7 +81,9 @@ form {
     display: flex;
     flex-direction: column-reverse;
     align-items: center;
+    align-self: flex-end;
     position: relative;
+    border-radius: 3px;
 }
 
 .highlight {
