@@ -77,7 +77,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
   lazy val exprClassList: List[Class[Expr]] = {
     calculateExprClassList
   }
-  
+
   protected def calculateExprClassList: List[Class[Expr]]
 
   private lazy val exprClassListDropdownHtml: TypedTag[String] = {
@@ -640,7 +640,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
         `type` := "text",
         readonly,
         disabled,
-        width := Math.max(2, literalText.length) + "ch",
+        width := Math.max(1, literalText.length) + "ch",
         data("tree-path") := treePathString,
         value := literalText
       )
