@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50">
+    <style>
+        :root {
+            --foreground: #f8f8f2;
+            --background: #282a36;
+        }
+
+        path {
+            stroke: var(--foreground);
+            stroke-width: 2;
+        }
+    </style>
+    <defs>
+        <symbol id="corner" fill="none">
+            <path d="M3 3 L20 2 L2 20 Z" />
+        </symbol>
+    </defs>
+    <rect width="50" height="50" fill="var(--background)" />
+    <use href="#corner" transform="" />
+    <use href="#corner" transform="rotate(90 25 25)" />
+    <use href="#corner" transform="rotate(180 25 25)" />
+    <use href="#corner" transform="rotate(270 25 25)" />
+</svg>
