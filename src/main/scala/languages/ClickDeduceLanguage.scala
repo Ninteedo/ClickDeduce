@@ -600,7 +600,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
     override val children: List[OuterNode] = Nil
 
-    override def toHtmlLine: TypedTag[String] = BlankExprDropDown().toHtml
+    override def toHtmlLine: TypedTag[String] = BlankExprDropDown().toHtml(data("tree-path") := treePathString)
 
     override def toHtmlLineReadOnly: TypedTag[String] = toHtmlLine(readonly, disabled)
 
@@ -641,7 +641,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
         readonly,
         disabled,
         width := Math.max(1, literalText.length) + "ch",
-        data("tree-path") := treePathString,
+//        data("tree-path") := treePathString,
         value := literalText
       )
     }

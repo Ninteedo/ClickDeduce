@@ -82,7 +82,7 @@ class LIf extends LArith {
     case _ => super.prettyPrint(e)
   }
 
-  override def prettyPrint(v: Value): Variable = v match {
+  override def prettyPrint(v: Value): String = v match {
     case BoolV(b) => b.toString
     case _ => super.prettyPrint(v)
   }

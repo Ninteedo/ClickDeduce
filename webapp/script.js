@@ -30,20 +30,26 @@ async function handleSubmit(event, url) {
 function handleDropdownChange(dropdown) {
     const selectedValue = dropdown.value;
     const subtree = dropdown.parentElement.parentElement;
-    const dataTreePath = subtree.getAttribute("data-tree-path")
+    const dataTreePath = subtree.getAttribute("data-tree-path");
 
-    runAction("SelectExprAction", dataTreePath, [selectedValue])
+    runAction("SelectExprAction", dataTreePath, [selectedValue]);
 }
 
 function handleLiteralChanged(textInput) {
     const literalValue = textInput.value;
-    const treePath = textInput.getAttribute("data-tree-path")
+    const treePath = textInput.getAttribute("data-tree-path");
 
-    runAction("EditLiteralAction", treePath, [literalValue])
+    const focusedTreePath = nextFocusElement.getAttribute("data-tree-path");
+
+    runAction("EditLiteralAction", treePath, [literalValue]).then(() => {
+        let focusedElement = document.querySelector(`[data-tree-path="${focusedTreePath}"]`);
+        focusedElement.focus();
+        focusedElement.select();
+    });
 }
 
 function runAction(actionName, treePath, extraArgs) {
-    fetch("/process-action", {
+    return fetch("/process-action", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
@@ -68,6 +74,7 @@ function updateTree(newTreeHtml, newNodeString, addToHistory = false) {
         treeHistoryIndex = treeHistory.push([newTreeHtml, newNodeString]) - 1;
     }
     updateUndoRedoButtons();
+    updateActiveInputsList();
 }
 
 function useTreeFromHistory(newHistoryIndex) {
@@ -95,6 +102,42 @@ function undo() {
 function redo() {
     if (treeHistoryIndex >= 0 && treeHistoryIndex < treeHistory.length - 1) {
         useTreeFromHistory(treeHistoryIndex + 1);
+    }
+}
+
+let activeInputs = [];
+
+function updateActiveInputsList() {
+    activeInputs = Array.from(document.querySelectorAll('input[data-tree-path]:not([disabled]), select[data-tree-path]:not([disabled])'));
+    activeInputs.sort((a, b) => {
+        const aPath = a.getAttribute("data-tree-path");
+        const bPath = b.getAttribute("data-tree-path");
+        return aPath.localeCompare(bPath, undefined, {numeric: true, sensitivity: 'base'});
+    })
+    activeInputs.forEach(input => {
+        input.addEventListener('keydown', handleTabPressed);
+    })
+}
+
+let nextFocusElement = null;
+
+async function handleTabPressed(e) {
+    if (e.code === 'Tab') {
+        e.preventDefault();
+        let activeElemIndex = activeInputs.indexOf(e.target);
+        if (e.shiftKey) {
+            activeElemIndex -= 1;
+        } else {
+            activeElemIndex += 1;
+        }
+        if (activeElemIndex < 0) {
+            activeElemIndex = activeInputs.length - 1;
+        } else if (activeElemIndex >= activeInputs.length) {
+            activeElemIndex = 0;
+        }
+        nextFocusElement = activeInputs[activeElemIndex];
+        nextFocusElement.focus();
+        nextFocusElement.select();
     }
 }
 
