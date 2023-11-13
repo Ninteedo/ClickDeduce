@@ -16,11 +16,9 @@ async function handleSubmit(event, url) {
 
     // send a POST request to the server
     await fetch(url, {
-        method: 'POST',
-        headers: {
+        method: 'POST', headers: {
             'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
+        }, body: JSON.stringify({
             text: userInput
         })
     }).then(response => response.json()).then(updatedTree => {
@@ -40,6 +38,9 @@ function handleLiteralChanged(textInput) {
     const literalValue = textInput.value;
     const treePath = textInput.getAttribute("data-tree-path");
 
+    if (nextFocusElement == null) {
+        nextFocusElement = textInput;
+    }
     const focusedTreePath = nextFocusElement.getAttribute("data-tree-path");
 
     runAction("EditLiteralAction", treePath, [literalValue]).then(() => {
@@ -51,13 +52,8 @@ function handleLiteralChanged(textInput) {
 
 function runAction(actionName, treePath, extraArgs) {
     return fetch("/process-action", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-            actionName,
-            nodeString: lastNodeString,
-            treePath,
-            extraArgs
+        method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({
+            actionName, nodeString: lastNodeString, treePath, extraArgs
         })
     }).then(response => response.json()).then(updatedTree => {
         updateTree(updatedTree.html, updatedTree.nodeString, true)
@@ -139,6 +135,7 @@ async function handleTabPressed(e) {
         nextFocusElement = activeInputs[activeElemIndex];
         nextFocusElement.focus();
         nextFocusElement.select();
+        nextFocusElement = null;
     }
 }
 
@@ -167,7 +164,7 @@ function addHoverListeners() {
     });
 }
 
-var contextMenuSelectedElement = null;
+let contextMenuSelectedElement = null;
 
 document.addEventListener('contextmenu', function (e) {
     let target = e.target;
@@ -204,39 +201,25 @@ function clearTreeNode(event) {
 
 // Initialize Panzoom
 const panzoomInstance = panzoom(tree, {
-    bounds: true,
-    boundsPadding: 0
+    bounds: true, boundsPadding: 0
 });
-// window.addEventListener('DOMContentLoaded', (event) => {
-//     let container = document.getElementById('tree');
-//     const panZoomInstance = panzoom(container, {
-//         bounds: true,
-//         boundsPadding: 0
-//     });
-// });
 
 function zoomToFit() {
     const tree = document.getElementById('tree');
     const container = document.getElementById('tree-container');
-
-    const panzoomTransform = panzoomInstance.getTransform();
-    const currentScale = panzoomTransform.scale;
-    const currentX = panzoomTransform.x;
-    const currentY = panzoomTransform.y;
+    const firstSubtree = tree.children[0];
 
     const containerWidth = container.clientWidth;
     const containerHeight = container.clientHeight;
 
-    const treeWidth = tree.clientWidth;
-    const treeHeight = tree.clientHeight;
+    const treeWidth = firstSubtree.clientWidth;
+    const treeHeight = firstSubtree.clientHeight;
 
     const widthScale = containerWidth / treeWidth;
     const heightScale = containerHeight / treeHeight;
 
     const newScale = Math.min(widthScale, heightScale);
 
-    const newX = 0  // (containerWidth - treeWidth * newScale) / 2;
-    const newY = 0  // (containerHeight - treeHeight * newScale) / 2;
-
-    panzoomInstance.zoomAbs(newX, newY, newScale);
+    panzoomInstance.smoothZoomAbs(0, 0, newScale);
+    panzoomInstance.smoothMoveTo(0, 0);
 }
