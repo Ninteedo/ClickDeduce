@@ -220,6 +220,6 @@ function zoomToFit() {
 
     const newScale = Math.min(widthScale, heightScale);
 
-    panzoomInstance.smoothZoomAbs(0, 0, newScale);
-    panzoomInstance.smoothMoveTo(0, 0);
+    panzoomInstance.moveTo(0, 0);
+    panzoomInstance.zoomAbs(0, 0, newScale);
 }
