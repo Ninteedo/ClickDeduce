@@ -26,16 +26,20 @@
 <button onclick="undo()" id="undoButton">Undo</button>
 <button onclick="redo()" id="redoButton">Redo</button>
 
+<div id="tree-container">
 <div id="tree"></div>
+</div>
 
 <div id="custom-context-menu" class="custom-menu">
   <ul>
     <li onclick="clearTreeNode(event)">Delete</li>
     <li>Copy</li>
     <li>Paste</li>
+    <li onclick="zoomToFit()">Zoom to Fit</li>
   </ul>
 </div>
 
+<script src='https://unpkg.com/panzoom@9.4.0/dist/panzoom.min.js'></script>
 <script src="script.js"></script>
 </body>
 </html>

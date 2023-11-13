@@ -72,9 +72,18 @@ form {
     display: inline;
 }
 
+#tree-container {
+    border: var(--foreground) solid 1px;
+    width: 1000px;
+    height: 600px;
+    overflow: hidden;
+}
+
 #tree {
     margin-top: 30px;
     max-width: fit-content;
+    overflow: visible;
+    white-space: nowrap;
 }
 
 #tree, .subtree {

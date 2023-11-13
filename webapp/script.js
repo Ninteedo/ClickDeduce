@@ -1,7 +1,8 @@
-var lastNodeString = "";
-const treeContainer = document.getElementById('tree');
-var treeHistory = [];
-var treeHistoryIndex = 0;
+let lastNodeString = "";
+const tree = document.getElementById('tree');
+
+let treeHistory = [];
+let treeHistoryIndex = 0;
 
 const undoButton = document.getElementById('undoButton');
 const redoButton = document.getElementById('redoButton');
@@ -64,7 +65,7 @@ function runAction(actionName, treePath, extraArgs) {
 }
 
 function updateTree(newTreeHtml, newNodeString, addToHistory = false) {
-    treeContainer.innerHTML = newTreeHtml;
+    tree.innerHTML = newTreeHtml;
     lastNodeString = newNodeString;
     addHoverListeners();
     if (addToHistory && (treeHistory.length === 0 || (newTreeHtml !== treeHistory[treeHistoryIndex][0] || newNodeString !== treeHistory[treeHistoryIndex][1]))) {
@@ -197,4 +198,45 @@ function clearTreeNode(event) {
         const treePath = contextMenuSelectedElement.getAttribute("data-tree-path")
         runAction("DeleteAction", treePath, [])
     }
+}
+
+// Tree Panning and Zooming
+
+// Initialize Panzoom
+const panzoomInstance = panzoom(tree, {
+    bounds: true,
+    boundsPadding: 0
+});
+// window.addEventListener('DOMContentLoaded', (event) => {
+//     let container = document.getElementById('tree');
+//     const panZoomInstance = panzoom(container, {
+//         bounds: true,
+//         boundsPadding: 0
+//     });
+// });
+
+function zoomToFit() {
+    const tree = document.getElementById('tree');
+    const container = document.getElementById('tree-container');
+
+    const panzoomTransform = panzoomInstance.getTransform();
+    const currentScale = panzoomTransform.scale;
+    const currentX = panzoomTransform.x;
+    const currentY = panzoomTransform.y;
+
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
+
+    const treeWidth = tree.clientWidth;
+    const treeHeight = tree.clientHeight;
+
+    const widthScale = containerWidth / treeWidth;
+    const heightScale = containerHeight / treeHeight;
+
+    const newScale = Math.min(widthScale, heightScale);
+
+    const newX = 0  // (containerWidth - treeWidth * newScale) / 2;
+    const newY = 0  // (containerHeight - treeHeight * newScale) / 2;
+
+    panzoomInstance.zoomAbs(newX, newY, newScale);
 }
