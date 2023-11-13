@@ -201,3 +201,11 @@ form {
     visibility: visible;
     opacity: 1;
 }
+
+.error-origin {
+    color: var(--red);
+}
+
+.error-child {
+    color: var(--orange);
+}

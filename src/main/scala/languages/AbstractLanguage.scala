@@ -77,6 +77,8 @@ trait AbstractLanguage {
     override lazy val valueText: String = "?"
 
     override lazy val tooltipText: String = message
+
+    override lazy val toHtml: TypedTag[String] = span(cls := "tooltip", valueText, div(cls := "tooltiptext", tooltipText), cls := "error-origin")
   }
 
   /**
