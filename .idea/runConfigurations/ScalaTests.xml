@@ -7,6 +7,15 @@
       <list />
     </option>
     <option name="testKind" value="All in package" />
+    <option name="classBuf">
+      <list>
+        <option value="app.ExpressionTreeTest" />
+        <option value="languages.LIfTest" />
+        <option value="languages.LArithTest" />
+        <option value="languages.NodeTreeTest" />
+        <option value="languages.ReadExprTest" />
+      </list>
+    </option>
     <option name="shortenClasspath" value="NONE" />
     <method v="2">
       <option name="Make" enabled="true" />
