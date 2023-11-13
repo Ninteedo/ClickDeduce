@@ -201,7 +201,7 @@ function clearTreeNode(event) {
 
 // Initialize Panzoom
 const panzoomInstance = panzoom(tree, {
-    bounds: true, boundsPadding: 0
+    bounds: true, boundsPadding: 0, zoomDoubleClickSpeed: 1
 });
 
 function zoomToFit() {
