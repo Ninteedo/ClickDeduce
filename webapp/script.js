@@ -80,6 +80,7 @@ function runAction(actionName, treePath, extraArgs) {
         updateTree(updatedTree.html, updatedTree.nodeString, true)
     }).catch(error => {
         displayError(error);
+        useTreeFromHistory(treeHistoryIndex);
         throw error;
     });
 }
