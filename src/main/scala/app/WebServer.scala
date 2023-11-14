@@ -17,9 +17,19 @@ import scala.concurrent.ExecutionContextExecutor
 import scala.io.StdIn
 
 case class EvalRequest(langName: String)
+
 case class NodeResponse(nodeString: String, html: String)
-case class ActionRequest(langName: String, actionName: String, nodeString: String, treePath: String, extraArgs: List[String])
+
+case class ActionRequest(
+  langName: String,
+  actionName: String,
+  nodeString: String,
+  treePath: String,
+  extraArgs: List[String]
+)
+
 case class LangSelectorRequest()
+
 case class LangSelectorResponse(langSelectorHtml: String)
 
 trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
@@ -49,32 +59,34 @@ object WebServerTest extends JsonSupport {
           }
         }
       } ~
-      post {
-        path("process-action") {
-          entity(as[ActionRequest]) { request =>
-            val lang = getLanguage(request.langName)
-            val action = lang.createAction(request.actionName, request.nodeString, request.treePath, request.extraArgs)
-            val updatedTree = action.newTree
-            val response = NodeResponse(updatedTree.toString, updatedTree.toHtml.toString)
+        post {
+          path("process-action") {
+            entity(as[ActionRequest]) { request =>
+              val lang = getLanguage(request.langName)
+              val action = lang
+                .createAction(request.actionName, request.nodeString, request.treePath, request.extraArgs)
+              val updatedTree = action.newTree
+              val response = NodeResponse(updatedTree.toString, updatedTree.toHtml.toString)
+              complete(response)
+            }
+          }
+        } ~
+        get {
+          path("get-lang-selector") {
+            val langSelector: TypedTag[String] = select(
+              id := "lang-selector", name := "lang-name",
+              knownLanguages.map(lang => option(value := getLanguageName(lang), getLanguageName(lang)))
+            )
+            val response = LangSelectorResponse(langSelector.toString)
             complete(response)
           }
-        }
-      } ~
-      get {
-        path("get-lang-selector") {
-          val langSelector: TypedTag[String] = select(id := "lang-selector", name := "lang-name",
-            knownLanguages.map(lang => option(value := getLanguageName(lang), getLanguageName(lang)))
-          )
-          val response = LangSelectorResponse(langSelector.toString)
-          complete(response)
-        }
-      } ~
-      get {
-        pathEndOrSingleSlash {
-          getFromDirectory("webapp/index.html")
         } ~
-          getFromDirectory("webapp")
-      }
+        get {
+          pathEndOrSingleSlash {
+            getFromDirectory("webapp/index.html")
+          } ~
+            getFromDirectory("webapp")
+        }
     }
 
 
