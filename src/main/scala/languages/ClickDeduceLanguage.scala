@@ -627,8 +627,8 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     override def toHtmlLine: TypedTag[String] = {
       input(
         `type` := "text",
-        onchange := "handleLiteralChanged(this)",
-        oninput := "updateTextInputWidth(this)",
+//        onchange := "handleLiteralChanged(this)",
+//        oninput := "updateTextInputWidth(this)",
         width := Math.max(2, literalText.length) + "ch",
         data("tree-path") := treePathString,
         value := literalText

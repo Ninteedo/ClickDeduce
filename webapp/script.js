@@ -113,6 +113,10 @@ function updateActiveInputsList() {
     })
     activeInputs.forEach(input => {
         input.addEventListener('keydown', handleTabPressed);
+        if (input.tagName === 'input') {
+            input.addEventListener('change', () => handleLiteralChanged(input));
+            input.addEventListener('input', () => updateTextInputWidth(input));
+        }
     })
 }
 
