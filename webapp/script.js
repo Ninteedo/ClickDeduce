@@ -113,7 +113,7 @@ function updateActiveInputsList() {
     })
     activeInputs.forEach(input => {
         input.addEventListener('keydown', handleTabPressed);
-        if (input.tagName === 'input') {
+        if (input.tagName === 'INPUT') {
             input.addEventListener('change', () => handleLiteralChanged(input));
             input.addEventListener('input', () => updateTextInputWidth(input));
         }
@@ -201,6 +201,19 @@ function clearTreeNode(event) {
     }
 }
 
+let copyCache = null;
+
+function copyTreeNode(event) {
+    copyCache = contextMenuSelectedElement.getAttribute("data-node-string");
+}
+
+function pasteTreeNode(event) {
+    if (copyCache) {
+        const treePath = contextMenuSelectedElement.getAttribute("data-tree-path");
+        runAction("PasteAction", treePath, [copyCache]);
+    }
+}
+
 // Tree Panning and Zooming
 
 // Initialize Panzoom
@@ -208,7 +221,10 @@ const panzoomInstance = panzoom(tree, {
     bounds: true, boundsPadding: 0, zoomDoubleClickSpeed: 1,
     onTouch: function(e) {
         // TODO: cannot use on mobile currently
-        return false; // tells the library to not preventDefault.
+        return false;  // tells the library to not preventDefault.
+    },
+    filterKey: function(/* e, dx, dy, dz */) {
+        return true;  // don't let panzoom handle this event:
     }
 });
 

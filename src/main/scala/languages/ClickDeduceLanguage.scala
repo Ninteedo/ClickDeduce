@@ -405,7 +405,10 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
     def toHtmlAxiom: TypedTag[String] = {
       div(
-        cls := "subtree axiom", data("tree-path") := treePathString,
+        cls := "subtree axiom",
+        data("tree-path") := treePathString,
+        data("term") := getExpr.toString,
+        data("node-string") := toString,
         div(cls := "expr",
           toHtmlLine(display := "inline"),
           evalArrowSpan,
@@ -417,7 +420,10 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
     def toHtmlSubtree: TypedTag[String] = {
       div(
-        cls := "subtree", data("tree-path") := treePathString,
+        cls := "subtree",
+        data("tree-path") := treePathString,
+        data("term") := getExpr.toString,
+        data("node-string") := toString,
         div(
           cls := "node",
           div(cls := "expr", toHtmlLineReadOnly),
@@ -667,6 +673,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     case "EditLiteralAction" => classOf[EditLiteralAction]
     case "DeleteAction" => classOf[DeleteAction]
     case "InsertAction" => classOf[InsertAction]
+    case "PasteAction" => classOf[PasteAction]
   }).asInstanceOf[Class[Action]]
 
   def createAction(
@@ -737,6 +744,16 @@ trait ClickDeduceLanguage extends AbstractLanguage {
   case class InsertAction(override val originalTree: OuterNode, override val treePath: List[Int], insertTree: OuterNode)
     extends Action(originalTree, treePath) {
     override val newTree: OuterNode = originalTree.replace(treePath, insertTree)
+  }
+
+  case class PasteAction(override val originalTree: OuterNode, override val treePath: List[Int], pasteNodeString: String)
+    extends Action(originalTree, treePath) {
+    private val pasteNode: Node = Node.read(pasteNodeString).get
+
+    override val newTree: OuterNode = pasteNode match {
+      case n: OuterNode => originalTree.replace(treePath, n)
+      case n: InnerNode => originalTree.replaceInner(treePath, n)
+    }
   }
 
   /**

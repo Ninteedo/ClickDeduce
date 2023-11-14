@@ -428,6 +428,13 @@ class NodeTreeTest extends AnyFunSuite {
       .newTree shouldEqual VariableNode("Plus", List(SubExprNode(VariableNode("Num", List(LiteralNode("4")))), SubExprNode(ExprChoiceNode())))
   }
 
+  test("PasteAction behaves correctly") {
+    val tree1 = VariableNode("Plus", List(SubExprNode(VariableNode("Num", List(LiteralNode("4")))), SubExprNode(VariableNode("Num", List(LiteralNode("6"))))))
+    val pasteCache = VariableNode("Num", List(LiteralNode("50"))).toString
+    createAction("PasteAction", tree1.toString, tree1.children(1).treePathString, List(pasteCache))
+      .newTree shouldEqual VariableNode("Plus", List(SubExprNode(VariableNode("Num", List(LiteralNode("4")))), SubExprNode(VariableNode("Num", List(LiteralNode("50"))))))
+  }
+
   test("Correctly read expression from VariableNode with all children completed") {
     val tree1 = VariableNode(
       "Plus",
