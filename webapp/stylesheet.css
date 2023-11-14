@@ -209,3 +209,27 @@ form {
 .error-child {
     color: var(--orange);
 }
+
+.error-message {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: var(--red);
+    color: var(--background);
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s, visibility 0.5s;
+}
+
+.error-message.fade-in {
+    opacity: 1;
+    visibility: visible;
+}
+
+.error-message.fade-out {
+    opacity: 0;
+    visibility: hidden;
+}

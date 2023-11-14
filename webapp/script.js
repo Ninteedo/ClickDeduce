@@ -281,6 +281,11 @@ function zoomToFit() {
 
 function displayError(error) {
     const errorDiv = document.getElementById('error-message');
-    errorDiv.innerText = error;
-    errorDiv.style.display = 'block';
+    errorDiv.textContent = error;
+    errorDiv.classList.add('fade-in');
+    errorDiv.classList.remove('fade-out');
+    setTimeout(() => {
+        errorDiv.classList.add('fade-out');
+        errorDiv.classList.remove('fade-in');
+    }, 5000);
 }
