@@ -205,7 +205,11 @@ function clearTreeNode(event) {
 
 // Initialize Panzoom
 const panzoomInstance = panzoom(tree, {
-    bounds: true, boundsPadding: 0, zoomDoubleClickSpeed: 1
+    bounds: true, boundsPadding: 0, zoomDoubleClickSpeed: 1,
+    onTouch: function(e) {
+        // TODO: cannot use on mobile currently
+        return false; // tells the library to not preventDefault.
+    }
 });
 
 function zoomToFit() {
