@@ -69,8 +69,18 @@ function runAction(actionName, treePath, extraArgs) {
         method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({
             langName: getSelectedLanguage(), actionName, nodeString: lastNodeString, treePath, extraArgs
         })
+    }).then(response => {
+        if (!response.ok) {
+            return response.text().then(text => {
+                throw Error(response.statusText + "\n" + text)
+            });
+        }
+        return response;
     }).then(response => response.json()).then(updatedTree => {
         updateTree(updatedTree.html, updatedTree.nodeString, true)
+    }).catch(error => {
+        displayError(error);
+        throw error;
     });
 }
 
@@ -267,4 +277,10 @@ function zoomToFit() {
 
     panzoomInstance.moveTo(0, 0);
     panzoomInstance.zoomAbs(0, 0, newScale);
+}
+
+function displayError(error) {
+    const errorDiv = document.getElementById('error-message');
+    errorDiv.innerText = error;
+    errorDiv.style.display = 'block';
 }

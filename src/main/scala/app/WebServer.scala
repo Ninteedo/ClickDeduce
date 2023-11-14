@@ -15,6 +15,7 @@ import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 import java.util.concurrent.atomic.AtomicInteger
 import scala.concurrent.ExecutionContextExecutor
 import scala.io.StdIn
+import scala.util.{Failure, Success, Try}
 
 case class EvalRequest(langName: String)
 
@@ -62,12 +63,20 @@ object WebServerTest extends JsonSupport {
         post {
           path("process-action") {
             entity(as[ActionRequest]) { request =>
-              val lang = getLanguage(request.langName)
-              val action = lang
-                .createAction(request.actionName, request.nodeString, request.treePath, request.extraArgs)
-              val updatedTree = action.newTree
-              val response = NodeResponse(updatedTree.toString, updatedTree.toHtml.toString)
-              complete(response)
+              Try {
+                val lang = getLanguage(request.langName)
+                val action = lang
+                  .createAction(request.actionName, request.nodeString, request.treePath, request.extraArgs)
+                val updatedTree = action.newTree
+                val response = NodeResponse(updatedTree.toString, updatedTree.toHtml.toString)
+                complete(response)
+              } match {
+                case Success(response) => response
+                case Failure(exception) => complete(
+                  StatusCodes.InternalServerError,
+                  HttpEntity(ContentTypes.`text/html(UTF-8)`, exception.toString)
+                )
+              }
             }
           }
         } ~
