@@ -677,6 +677,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     case "DeleteAction" => classOf[DeleteAction]
     case "InsertAction" => classOf[InsertAction]
     case "PasteAction" => classOf[PasteAction]
+    case "IdentityAction" => classOf[IdentityAction]
   }).asInstanceOf[Class[Action]]
 
   def createAction(
@@ -757,6 +758,11 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       case n: OuterNode => originalTree.replace(treePath, n)
       case n: InnerNode => originalTree.replaceInner(treePath, n)
     }
+  }
+
+  case class IdentityAction(override val originalTree: OuterNode, override val treePath: List[Int])
+    extends Action(originalTree, treePath) {
+    override val newTree: OuterNode = originalTree
   }
 
   /**
