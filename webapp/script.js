@@ -11,15 +11,12 @@ async function handleSubmit(event, url) {
     // prevent the form from submitting the old-fashioned way
     event.preventDefault();
 
-    // get the user's input
-    let userInput = document.getElementById('userInput').value;
-
     // send a POST request to the server
     await fetch(url, {
         method: 'POST', headers: {
             'Content-Type': 'application/json'
         }, body: JSON.stringify({
-            text: userInput
+            text: ''
         })
     }).then(response => response.json()).then(updatedTree => {
         updateTree(updatedTree.html, updatedTree.nodeString, true);
