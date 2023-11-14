@@ -16,11 +16,28 @@ async function handleSubmit(event, url) {
         method: 'POST', headers: {
             'Content-Type': 'application/json'
         }, body: JSON.stringify({
-            text: ''
+            langName: getSelectedLanguage(),
         })
     }).then(response => response.json()).then(updatedTree => {
         updateTree(updatedTree.html, updatedTree.nodeString, true);
     });
+}
+
+async function loadLangSelector() {
+    const langSelectorContainer = document.getElementById('lang-selector-div');
+
+    await fetch('get-lang-selector', {
+        method: 'GET'
+    }).then(response => response.json()).then(langSelector => {
+        langSelectorContainer.innerHTML = langSelector.langSelectorHtml;
+    });
+}
+
+loadLangSelector();
+
+function getSelectedLanguage() {
+    const langSelector = document.getElementById('lang-selector');
+    return langSelector.value;
 }
 
 function handleDropdownChange(dropdown) {
@@ -50,7 +67,7 @@ function handleLiteralChanged(textInput) {
 function runAction(actionName, treePath, extraArgs) {
     return fetch("/process-action", {
         method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({
-            actionName, nodeString: lastNodeString, treePath, extraArgs
+            langName: getSelectedLanguage(), actionName, nodeString: lastNodeString, treePath, extraArgs
         })
     }).then(response => response.json()).then(updatedTree => {
         updateTree(updatedTree.html, updatedTree.nodeString, true)

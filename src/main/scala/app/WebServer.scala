@@ -8,20 +8,26 @@ import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.settings.ServerSettings
 import languages.{ClickDeduceLanguage, LArith, LIf}
+import scalatags.Text.all.*
+import scalatags.Text.{TypedTag, attrs}
 import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 import java.util.concurrent.atomic.AtomicInteger
 import scala.concurrent.ExecutionContextExecutor
 import scala.io.StdIn
 
-case class EvalRequest(text: String)
+case class EvalRequest(langName: String)
 case class NodeResponse(nodeString: String, html: String)
-case class ActionRequest(actionName: String, nodeString: String, treePath: String, extraArgs: List[String])
+case class ActionRequest(langName: String, actionName: String, nodeString: String, treePath: String, extraArgs: List[String])
+case class LangSelectorRequest()
+case class LangSelectorResponse(langSelectorHtml: String)
 
 trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val evalRequestFormat: RootJsonFormat[EvalRequest] = jsonFormat1(EvalRequest)
   implicit val nodeResponseFormat: RootJsonFormat[NodeResponse] = jsonFormat2(NodeResponse)
-  implicit val actionRequestFormat: RootJsonFormat[ActionRequest] = jsonFormat4(ActionRequest)
+  implicit val actionRequestFormat: RootJsonFormat[ActionRequest] = jsonFormat5(ActionRequest)
+  implicit val langSelectorRequestFormat: RootJsonFormat[LangSelectorRequest] = jsonFormat0(LangSelectorRequest)
+  implicit val langSelectorResponseFormat: RootJsonFormat[LangSelectorResponse] = jsonFormat1(LangSelectorResponse)
 }
 
 
@@ -36,7 +42,8 @@ object WebServerTest extends JsonSupport {
       post {
         path("start-node-blank") {
           entity(as[EvalRequest]) { request =>
-            val tree = LIf.ExprChoiceNode()
+            val lang = getLanguage(request.langName)
+            val tree = lang.ExprChoiceNode()
             val response = NodeResponse(tree.toString, tree.toHtml.toString)
             complete(response)
           }
@@ -45,11 +52,21 @@ object WebServerTest extends JsonSupport {
       post {
         path("process-action") {
           entity(as[ActionRequest]) { request =>
-            val action = LIf.createAction(request.actionName, request.nodeString, request.treePath, request.extraArgs)
+            val lang = getLanguage(request.langName)
+            val action = lang.createAction(request.actionName, request.nodeString, request.treePath, request.extraArgs)
             val updatedTree = action.newTree
             val response = NodeResponse(updatedTree.toString, updatedTree.toHtml.toString)
             complete(response)
           }
+        }
+      } ~
+      get {
+        path("get-lang-selector") {
+          val langSelector: TypedTag[String] = select(id := "lang-selector", name := "lang-name",
+            knownLanguages.map(lang => option(value := getLanguageName(lang), getLanguageName(lang)))
+          )
+          val response = LangSelectorResponse(langSelector.toString)
+          complete(response)
         }
       } ~
       get {
@@ -75,5 +92,9 @@ object WebServerTest extends JsonSupport {
       .onComplete(_ => system.terminate())
   }
 
-  val knownLanguages: List[ClickDeduceLanguage] = List(LArith, LIf)
+  private val knownLanguages: List[ClickDeduceLanguage] = List(LArith, LIf)
+
+  def getLanguage(langName: String): ClickDeduceLanguage = knownLanguages.find(getLanguageName(_) == langName).get
+
+  def getLanguageName(lang: ClickDeduceLanguage): String = lang.getClass.getSimpleName.stripSuffix("$")
 }
