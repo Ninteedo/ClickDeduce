@@ -171,7 +171,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     exprClassList.find(_.getSimpleName == name)
   }
 
-  def createTerm(name: String, args: List[Term]) = {
+  def createTerm(name: String, args: List[Term]): Term = {
     val exprClass = exprNameToClass(name)
     exprClass match {
       case Some(value) => {
@@ -188,7 +188,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     }
   }
 
-  def createUnfilledExpr(name: String) = {
+  def createUnfilledExpr(name: String): Expr = {
     val exprClass = exprNameToClass(name)
     exprClass match {
       case Some(value) => {
@@ -519,7 +519,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
   }
 
   case class ConcreteNode(exprString: String, override val args: List[InnerNode] = Nil) extends OuterNode {
-    lazy val expr = readExpr(exprString).get
+    lazy val expr: Expr = readExpr(exprString).get
 
     override def toHtmlLine: TypedTag[String] = expr.toHtml
 
@@ -543,7 +543,10 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
     override def toHtmlLineReadOnly: TypedTag[String] = div(display := "inline", raw(getExprHtmlLineReadOnly))
 
-    lazy val exprClass: Class[Expr] = exprNameToClass(exprName).get
+    lazy val exprClass: Class[Expr] = exprNameToClass(exprName) match {
+      case Some(value) => value
+      case None => throw new IllegalArgumentException(s"Unknown expression type for ${lang.getClass.getSimpleName}: $exprName")
+    }
 
     override val children: List[OuterNode] = args.flatMap(_.children)
 
@@ -586,7 +589,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
   }
 
   object VariableNode {
-    def createFromExpr(exprName: String) = {
+    def createFromExpr(exprName: String): VariableNode = {
       val exprClass = exprNameToClass(exprName).get
       val constructor = exprClass.getConstructors()(0)
       val innerNodes = constructor.getParameterTypes.map {

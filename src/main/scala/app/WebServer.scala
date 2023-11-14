@@ -3,9 +3,9 @@ package app
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives.*
-import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import akka.http.scaladsl.settings.ServerSettings
 import languages.{ClickDeduceLanguage, LArith, LIf}
 import scalatags.Text.all.*
@@ -41,6 +41,18 @@ trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val langSelectorResponseFormat: RootJsonFormat[LangSelectorResponse] = jsonFormat1(LangSelectorResponse)
 }
 
+val customExceptionHandler: ExceptionHandler = ExceptionHandler {
+  case exception: Exception => extractUri { uri =>
+    exception.printStackTrace()
+    complete(
+      HttpResponse(
+        StatusCodes.InternalServerError,
+        entity = exception.toString
+      )
+    )
+  }
+}
+
 
 object WebServerTest extends JsonSupport {
   val buttonClickCount: AtomicInteger = new AtomicInteger(0)
@@ -49,7 +61,7 @@ object WebServerTest extends JsonSupport {
     implicit val system: ActorSystem = ActorSystem("my-system")
     implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
-    val route: Route = {
+    val route: Route = handleExceptions(customExceptionHandler) {
       post {
         path("start-node-blank") {
           entity(as[EvalRequest]) { request =>
@@ -63,20 +75,12 @@ object WebServerTest extends JsonSupport {
         post {
           path("process-action") {
             entity(as[ActionRequest]) { request =>
-              Try {
-                val lang = getLanguage(request.langName)
-                val action = lang
-                  .createAction(request.actionName, request.nodeString, request.treePath, request.extraArgs)
-                val updatedTree = action.newTree
-                val response = NodeResponse(updatedTree.toString, updatedTree.toHtml.toString)
-                complete(response)
-              } match {
-                case Success(response) => response
-                case Failure(exception) => complete(
-                  StatusCodes.InternalServerError,
-                  HttpEntity(ContentTypes.`text/html(UTF-8)`, exception.toString)
-                )
-              }
+              val lang = getLanguage(request.langName)
+              val action = lang
+                .createAction(request.actionName, request.nodeString, request.treePath, request.extraArgs)
+              val updatedTree = action.newTree
+              val response = NodeResponse(updatedTree.toString, updatedTree.toHtml.toString)
+              complete(response)
             }
           }
         } ~
@@ -115,7 +119,10 @@ object WebServerTest extends JsonSupport {
 
   private val knownLanguages: List[ClickDeduceLanguage] = List(LArith, LIf)
 
-  def getLanguage(langName: String): ClickDeduceLanguage = knownLanguages.find(getLanguageName(_) == langName).get
+  def getLanguage(langName: String): ClickDeduceLanguage = knownLanguages.find(getLanguageName(_) == langName) match {
+    case Some(lang) => lang
+    case None => throw new IllegalArgumentException(s"Unknown language: $langName")
+  }
 
   def getLanguageName(lang: ClickDeduceLanguage): String = lang.getClass.getSimpleName.stripSuffix("$")
 }
