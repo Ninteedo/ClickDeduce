@@ -149,21 +149,30 @@ function updateTextInputWidth(textInput) {
     textInput.style.width = Math.max(minWidth, textInput.value.length) + "ch";
 }
 
+function clearHighlight() {
+    document.querySelector('.highlight')?.classList.remove('highlight');
+    contextMenuSelectedElement = null;
+}
+
 function addHoverListeners() {
     document.querySelectorAll('.subtree').forEach(div => {
         div.addEventListener('mouseover', (event) => {
             // Stop the event from bubbling up to parent 'subtree' elements
             event.stopPropagation();
             // Remove the highlight from any other 'subtree' elements
-            document.querySelectorAll('.subtree').forEach(el => el.classList.remove('highlight'));
-            // Add the highlight to the currently hovered over 'subtree'
-            event.currentTarget.classList.add('highlight');
+            if (contextMenuSelectedElement === null) {
+                document.querySelectorAll('.subtree').forEach(el => el.classList.remove('highlight'));
+                // Add the highlight to the currently hovered over 'subtree'
+                event.currentTarget.classList.add('highlight');
+            }
         });
         div.addEventListener('mouseout', (event) => {
             // Stop the event from bubbling up to parent 'subtree' elements
             event.stopPropagation();
             // Remove the highlight from the currently hovered over 'subtree'
-            event.currentTarget.classList.remove('highlight');
+            if (contextMenuSelectedElement === null) {
+                clearHighlight();
+            }
         });
     });
 }
@@ -186,11 +195,15 @@ document.addEventListener('contextmenu', function (e) {
         menu.style.display = 'block';
         menu.style.left = e.pageX + 'px';
         menu.style.top = e.pageY + 'px';
+    } else {
+        document.getElementById('custom-context-menu').style.display = 'none';
+        clearHighlight();
     }
 });
 
 document.addEventListener('click', function (e) {
     document.getElementById('custom-context-menu').style.display = 'none';
+    clearHighlight();
 });
 
 function clearTreeNode(event) {
@@ -233,14 +246,8 @@ function zoomToFit() {
     const container = document.getElementById('tree-container');
     const firstSubtree = tree.children[0];
 
-    const containerWidth = container.clientWidth;
-    const containerHeight = container.clientHeight;
-
-    const treeWidth = firstSubtree.clientWidth;
-    const treeHeight = firstSubtree.clientHeight;
-
-    const widthScale = containerWidth / treeWidth;
-    const heightScale = containerHeight / treeHeight;
+    const widthScale = container.clientWidth / firstSubtree.clientWidth;
+    const heightScale = container.clientHeight / firstSubtree.clientHeight;
 
     const newScale = Math.min(widthScale, heightScale);
 
