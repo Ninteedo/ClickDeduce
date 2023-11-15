@@ -682,10 +682,10 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
   def createAction(
     actionName: String,
-    modeName: String,
     nodeString: String,
     treePathString: String,
-    extraArgs: List[String]
+    extraArgs: List[String],
+    modeName: String = "edit",
   ): Action = {
     val node = Node.read(nodeString).get
     val treePath = Node.readPathString(treePathString)

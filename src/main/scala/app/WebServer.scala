@@ -78,7 +78,7 @@ object WebServerTest extends JsonSupport {
             entity(as[ActionRequest]) { request =>
               val lang = getLanguage(request.langName)
               val action = lang
-                .createAction(request.actionName, request.modeName, request.nodeString, request.treePath, request.extraArgs)
+                .createAction(request.actionName, request.nodeString, request.treePath, request.extraArgs, request.modeName)
               val updatedTree = action.newTree
               val response = NodeResponse(updatedTree.toString, updatedTree.toHtml.toString)
               complete(response)
