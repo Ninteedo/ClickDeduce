@@ -36,7 +36,7 @@ async function handleSubmit(event, url) {
             langName: getSelectedLanguage(),
         })
     }).then(response => response.json()).then(updatedTree => {
-        updateTree(updatedTree.html, updatedTree.nodeString, getSelectedMode(), true);
+        updateTree(updatedTree.html, updatedTree.nodeString, getSelectedMode(), getSelectedLanguage(), true);
     });
 }
 
@@ -47,6 +47,11 @@ async function loadLangSelector() {
         method: 'GET'
     }).then(response => response.json()).then(langSelector => {
         langSelectorContainer.innerHTML = langSelector.langSelectorHtml;
+    }).then(() => {
+        const langSelector = document.getElementById('lang-selector');
+        langSelector.addEventListener('change', () => {
+            runAction("IdentityAction", "", [])
+        })
     });
 }
 
@@ -83,9 +88,10 @@ function handleLiteralChanged(textInput) {
 
 function runAction(actionName, treePath, extraArgs) {
     const modeName = getSelectedMode();
+    const langName = getSelectedLanguage();
     return fetch("/process-action", {
         method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({
-            langName: getSelectedLanguage(),
+            langName,
             modeName,
             actionName,
             nodeString: lastNodeString,
@@ -100,7 +106,7 @@ function runAction(actionName, treePath, extraArgs) {
         }
         return response;
     }).then(response => response.json()).then(updatedTree => {
-        updateTree(updatedTree.html, updatedTree.nodeString, modeName, true)
+        updateTree(updatedTree.html, updatedTree.nodeString, modeName, langName, true)
     }).catch(error => {
         displayError(error);
         useTreeFromHistory(treeHistoryIndex);
@@ -108,7 +114,7 @@ function runAction(actionName, treePath, extraArgs) {
     });
 }
 
-function updateTree(newTreeHtml, newNodeString, modeName, addToHistory = false) {
+function updateTree(newTreeHtml, newNodeString, modeName, lang, addToHistory = false) {
     tree.innerHTML = newTreeHtml;
     lastNodeString = newNodeString;
     addHoverListeners();
@@ -121,6 +127,7 @@ function updateTree(newTreeHtml, newNodeString, modeName, addToHistory = false) 
             html: newTreeHtml,
             nodeString: newNodeString,
             mode: modeName,
+            lang,
         };
         treeHistoryIndex = treeHistory.push(newEntry) - 1;
     }
@@ -129,13 +136,15 @@ function updateTree(newTreeHtml, newNodeString, modeName, addToHistory = false) 
     modeRadios.forEach(radio => {
         radio.checked = radio.value === modeName;
     });
+    const langSelector = document.getElementById('lang-selector');
+    langSelector.value = lang;
 }
 
 function useTreeFromHistory(newHistoryIndex) {
     if (newHistoryIndex >= 0 && newHistoryIndex < treeHistory.length) {
         treeHistoryIndex = newHistoryIndex;
         const entry = treeHistory[newHistoryIndex];
-        updateTree(entry.html, entry.nodeString, entry.mode, false);
+        updateTree(entry.html, entry.nodeString, entry.mode, entry.lang, false);
     }
 }
 
