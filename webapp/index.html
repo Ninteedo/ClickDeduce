@@ -13,6 +13,17 @@
 <div id="lang-selector-div">
 </div>
 
+<div id="mode-selector-div">
+  <form>
+    <input type="radio" id="edit-mode-radio" name="mode" value="edit" checked="checked">
+    <label for="edit-mode-radio">Edit</label>
+    <input type="radio" id="type-check-mode-radio" name="mode" value="type-check">
+    <label for="type-check-mode-radio">Type-Check</label>
+    <input type="radio" id="eval-mode-radio" name="mode" value="eval">
+    <label for="eval-mode-radio">Evaluate</label>
+  </form>
+</div>
+
 <form onsubmit="handleSubmit(event, '/start-node-blank')">
   <input type="hidden" id="nodeUserInput" value="">
   <input type="submit" value="Start Node Blank">

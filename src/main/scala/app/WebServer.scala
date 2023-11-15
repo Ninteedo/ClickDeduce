@@ -23,6 +23,7 @@ case class NodeResponse(nodeString: String, html: String)
 
 case class ActionRequest(
   langName: String,
+  modeName: String,
   actionName: String,
   nodeString: String,
   treePath: String,
@@ -36,7 +37,7 @@ case class LangSelectorResponse(langSelectorHtml: String)
 trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val evalRequestFormat: RootJsonFormat[EvalRequest] = jsonFormat1(EvalRequest)
   implicit val nodeResponseFormat: RootJsonFormat[NodeResponse] = jsonFormat2(NodeResponse)
-  implicit val actionRequestFormat: RootJsonFormat[ActionRequest] = jsonFormat5(ActionRequest)
+  implicit val actionRequestFormat: RootJsonFormat[ActionRequest] = jsonFormat6(ActionRequest)
   implicit val langSelectorRequestFormat: RootJsonFormat[LangSelectorRequest] = jsonFormat0(LangSelectorRequest)
   implicit val langSelectorResponseFormat: RootJsonFormat[LangSelectorResponse] = jsonFormat1(LangSelectorResponse)
 }
@@ -77,7 +78,7 @@ object WebServerTest extends JsonSupport {
             entity(as[ActionRequest]) { request =>
               val lang = getLanguage(request.langName)
               val action = lang
-                .createAction(request.actionName, request.nodeString, request.treePath, request.extraArgs)
+                .createAction(request.actionName, request.modeName, request.nodeString, request.treePath, request.extraArgs)
               val updatedTree = action.newTree
               val response = NodeResponse(updatedTree.toString, updatedTree.toHtml.toString)
               complete(response)

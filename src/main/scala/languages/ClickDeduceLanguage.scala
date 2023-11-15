@@ -682,6 +682,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
   def createAction(
     actionName: String,
+    modeName: String,
     nodeString: String,
     treePathString: String,
     extraArgs: List[String]

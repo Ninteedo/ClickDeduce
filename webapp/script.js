@@ -7,6 +7,17 @@ let treeHistoryIndex = 0;
 const undoButton = document.getElementById('undoButton');
 const redoButton = document.getElementById('redoButton');
 
+const modeRadios = document.querySelectorAll('input[name="mode"]');
+
+function getSelectedMode() {
+    for (const radio of modeRadios) {
+        if (radio.checked) {
+            return radio.value;
+        }
+    }
+    throw Error("No mode selected");
+}
+
 async function handleSubmit(event, url) {
     // prevent the form from submitting the old-fashioned way
     event.preventDefault();
@@ -67,7 +78,12 @@ function handleLiteralChanged(textInput) {
 function runAction(actionName, treePath, extraArgs) {
     return fetch("/process-action", {
         method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({
-            langName: getSelectedLanguage(), actionName, nodeString: lastNodeString, treePath, extraArgs
+            langName: getSelectedLanguage(),
+            mode: getSelectedMode(),
+            actionName,
+            nodeString: lastNodeString,
+            treePath,
+            extraArgs
         })
     }).then(response => {
         if (!response.ok) {
