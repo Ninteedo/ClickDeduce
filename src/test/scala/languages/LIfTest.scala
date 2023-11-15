@@ -101,4 +101,12 @@ class LIfTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhenT
       VariableNode.createFromExpr(c) shouldBe a[VariableNode]
     }
   }
+
+  property("IfThenElse.getEvalChildren returns the appropriate children") {
+    val ifThenElse = IfThenElse(Bool(true), Num(1), Num(2))
+    ifThenElse.getEvalChildren(Map()) shouldEqual List(Bool(true), Num(1))
+
+    val ifThenElse2 = IfThenElse(Bool(false), Num(1), Num(2))
+    ifThenElse2.getEvalChildren(Map()) shouldEqual List(Bool(false), Num(2))
+  }
 }
