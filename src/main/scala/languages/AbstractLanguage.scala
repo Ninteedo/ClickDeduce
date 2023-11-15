@@ -48,7 +48,12 @@ trait AbstractLanguage {
       getExprFields(this)
     }
 
-    lazy val childVersion = this
+    /**
+     * Gets the child expressions of this expression, excluding any children which are not used in evaluation.
+     */
+    def getEvalChildren(env: Env): List[Expr] = children
+
+    lazy val childVersion: Expr = this
   }
 
   case class MissingExpr() extends Expr

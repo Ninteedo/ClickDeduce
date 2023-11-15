@@ -10,7 +10,13 @@ class LIf extends LArith {
 
   case class Eq(e1: Expr, e2: Expr) extends Expr
 
-  case class IfThenElse(cond: Expr, then_expr: Expr, else_expr: Expr) extends Expr
+  case class IfThenElse(cond: Expr, then_expr: Expr, else_expr: Expr) extends Expr {
+    override def getEvalChildren(env: Env): List[Expr] = eval(cond, env) match {
+      case BoolV(true) => List(cond, then_expr)
+      case BoolV(false) => List(cond, else_expr)
+      case _ => List(cond)
+    }
+  }
 
   // values
   case class BoolV(b: Boolean) extends Value {
