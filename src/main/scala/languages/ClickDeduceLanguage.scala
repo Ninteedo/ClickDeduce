@@ -412,7 +412,8 @@ trait ClickDeduceLanguage extends AbstractLanguage {
   abstract class OuterNode extends Node {
     val args: List[InnerNode]
 
-    def toHtml(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = if (children.isEmpty) toHtmlAxiom(mode) else toHtmlSubtree(mode)
+    def toHtml(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] =
+      if (children.isEmpty) toHtmlAxiom(mode) else toHtmlSubtree(mode)
 
     def toHtmlAxiom(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = {
       div(
@@ -422,8 +423,11 @@ trait ClickDeduceLanguage extends AbstractLanguage {
         data("node-string") := toString,
         div(cls := "expr",
           toHtmlLine(mode)(display := "inline"),
-          evalArrowSpan,
-          evalResultDiv
+          if (mode == NodeDisplayMode.TypeCheck) {
+            List(typeCheckTurnstileSpan, typeCheckResultDiv)
+          } else {
+            List(evalArrowSpan, evalResultDiv)
+          }
         ),
         div(cls := "annotation-axiom", exprName)
       )
@@ -437,9 +441,12 @@ trait ClickDeduceLanguage extends AbstractLanguage {
         data("node-string") := toString,
         div(
           cls := "node",
-          div(cls := "expr", toHtmlLineReadOnly()),
-          evalArrowSpan,
-          evalResultDiv
+          div(cls := "expr", toHtmlLineReadOnly(mode)),
+          if (mode == NodeDisplayMode.TypeCheck) {
+            List(typeCheckTurnstileSpan, typeCheckResultDiv)
+          } else {
+            List(evalArrowSpan, evalResultDiv)
+          }
         ),
         div(
           cls := "args",
@@ -448,6 +455,10 @@ trait ClickDeduceLanguage extends AbstractLanguage {
         )
       )
     }
+
+    def typeCheckTurnstileSpan: TypedTag[String] = span(paddingLeft := "1ch", paddingRight := "1ch", raw("&#x22a2;"))
+
+    def typeCheckResultDiv: TypedTag[String] = div(cls := "type-check-result", display := "inline", getType().toHtml)
 
     def evalArrowSpan: TypedTag[String] = span(paddingLeft := "1ch", paddingRight := "1ch", raw("&DoubleDownArrow;"))
 
@@ -534,6 +545,8 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     }
 
     def getValue(env: Env = Map()): Value = eval(getExpr, env)
+
+    def getType(env: TypeEnv = Map()): Type = typeOf(getExpr, env)
 
     // children.foreach(_.parent = Some(this))
   }

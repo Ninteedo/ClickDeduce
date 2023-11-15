@@ -73,28 +73,45 @@ trait AbstractLanguage {
     val typ: Type
   }
 
-  /**
-   * An error resulting from an expression being evaluated.
-   */
-  abstract class EvalError extends Value {
-    val message: String = "Error"
-
-    override lazy val valueText: String = "?"
-
-    override lazy val tooltipText: String = message
-
-    override lazy val toHtml: TypedTag[String] = span(cls := "tooltip", valueText, div(cls := "tooltiptext", tooltipText), cls := "error-origin")
-  }
 
   /**
    * The type of a value.
    */
-  abstract class Type extends Term
+  abstract class Type extends Term {
+    override lazy val toHtml: TypedTag[String] = span(cls := "tooltip", valueText, div(cls := "tooltiptext", tooltipText))
+
+    lazy val tooltipText: String = toString
+
+    lazy val valueText: String = prettyPrint(this)
+  }
+
+  trait TermError extends Term {
+    val message: String = "Error"
+  }
+
+  /**
+   * An error resulting from an expression being evaluated.
+   */
+  abstract class EvalError extends Value, TermError {
+    override lazy val toHtml: TypedTag[String] = span(cls := "tooltip", valueText, div(cls := "tooltiptext", tooltipText), cls := "error-origin")
+
+    override lazy val tooltipText: String = message
+
+    override lazy val valueText: String = "?"
+  }
 
   /**
    * An error resulting from an expression being type checked.
    */
-  abstract class TypeError extends Type
+  abstract class TypeError extends Type, TermError {
+    override lazy val toHtml: TypedTag[String] = span(
+      cls := "tooltip", valueText, div(cls := "tooltiptext", tooltipText), cls := "error-origin"
+    )
+
+    override lazy val tooltipText: String = message
+
+    override lazy val valueText: String = "?"
+  }
 
   abstract class Literal extends Term {
     val value: Any
@@ -192,7 +209,8 @@ trait AbstractLanguage {
    * @return A `String` representing the pretty printed type.
    */
   def prettyPrint(t: Type): String = t match {
-    case x => x.toHtml.toString
+//    case x => x.toHtml.toString
+    case x => throw new NotImplementedError(s"prettyPrint($x)")
   }
 
   /**

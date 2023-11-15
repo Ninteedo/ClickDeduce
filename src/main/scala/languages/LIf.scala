@@ -33,7 +33,7 @@ class LIf extends LArith {
   case class BoolType() extends Type
 
   case class TypeMismatchType(type1: Type, type2: Type) extends TypeError {
-
+    override val message: String = s"$type1 not compatible with $type2"
   }
 
   override def eval(e: Expr, env: Env): Value = e match {
