@@ -104,7 +104,7 @@ class LArith extends ClickDeduceLanguage {
   }
 
   override def typeOf(e: Expr, tenv: TypeEnv): Type = e match {
-    case Num(x) => IntType()
+    case Num(LiteralInt(x)) => IntType()
     case Plus(e1, e2) => (typeOf(e1, tenv), typeOf(e2, tenv)) match {
       case (IntType(), IntType()) => IntType()
       case (t1, t2) => UnexpectedArgType(s"Plus can only accept (IntType, IntType), not ($t1, $t2)")

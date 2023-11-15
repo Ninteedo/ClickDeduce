@@ -56,7 +56,7 @@ class LIf extends LArith {
   }
 
   override def typeOf(e: Expr, tenv: TypeEnv): Type = e match {
-    case Bool(_) => BoolType()
+    case Bool(LiteralBool(b)) => BoolType()
     case Eq(e1, e2) => {
       val t1 = typeOf(e1, tenv)
       val t2 = typeOf(e2, tenv)
