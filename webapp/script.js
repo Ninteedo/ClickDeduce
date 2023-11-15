@@ -9,6 +9,12 @@ const redoButton = document.getElementById('redoButton');
 
 const modeRadios = document.querySelectorAll('input[name="mode"]');
 
+for (const radio of modeRadios) {
+    radio.addEventListener('change', () => {
+        runAction("IdentityAction", "", [])
+    });
+}
+
 function getSelectedMode() {
     for (const radio of modeRadios) {
         if (radio.checked) {
@@ -30,7 +36,7 @@ async function handleSubmit(event, url) {
             langName: getSelectedLanguage(),
         })
     }).then(response => response.json()).then(updatedTree => {
-        updateTree(updatedTree.html, updatedTree.nodeString, true);
+        updateTree(updatedTree.html, updatedTree.nodeString, getSelectedMode(), true);
     });
 }
 
@@ -76,10 +82,11 @@ function handleLiteralChanged(textInput) {
 }
 
 function runAction(actionName, treePath, extraArgs) {
+    const modeName = getSelectedMode();
     return fetch("/process-action", {
         method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({
             langName: getSelectedLanguage(),
-            modeName: getSelectedMode(),
+            modeName,
             actionName,
             nodeString: lastNodeString,
             treePath,
@@ -93,7 +100,7 @@ function runAction(actionName, treePath, extraArgs) {
         }
         return response;
     }).then(response => response.json()).then(updatedTree => {
-        updateTree(updatedTree.html, updatedTree.nodeString, true)
+        updateTree(updatedTree.html, updatedTree.nodeString, modeName, true)
     }).catch(error => {
         displayError(error);
         useTreeFromHistory(treeHistoryIndex);
@@ -101,7 +108,7 @@ function runAction(actionName, treePath, extraArgs) {
     });
 }
 
-function updateTree(newTreeHtml, newNodeString, addToHistory = false) {
+function updateTree(newTreeHtml, newNodeString, modeName, addToHistory = false) {
     tree.innerHTML = newTreeHtml;
     lastNodeString = newNodeString;
     addHoverListeners();
@@ -110,18 +117,25 @@ function updateTree(newTreeHtml, newNodeString, addToHistory = false) {
         if (treeHistoryIndex < treeHistory.length - 1) {
             treeHistory = treeHistory.slice(0, treeHistoryIndex + 1);
         }
-        treeHistoryIndex = treeHistory.push([newTreeHtml, newNodeString]) - 1;
+        const newEntry = {
+            html: newTreeHtml,
+            nodeString: newNodeString,
+            mode: modeName,
+        };
+        treeHistoryIndex = treeHistory.push(newEntry) - 1;
     }
     updateUndoRedoButtons();
     updateActiveInputsList();
+    modeRadios.forEach(radio => {
+        radio.checked = radio.value === modeName;
+    });
 }
 
 function useTreeFromHistory(newHistoryIndex) {
     if (newHistoryIndex >= 0 && newHistoryIndex < treeHistory.length) {
         treeHistoryIndex = newHistoryIndex;
-        let newHtml, newNodeString;
-        [newHtml, newNodeString] = treeHistory[newHistoryIndex];
-        updateTree(newHtml, newNodeString, false);
+        const entry = treeHistory[newHistoryIndex];
+        updateTree(entry.html, entry.nodeString, entry.mode, false);
     }
 }
 
