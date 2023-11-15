@@ -105,7 +105,8 @@ function updateTree(newTreeHtml, newNodeString, addToHistory = false) {
     tree.innerHTML = newTreeHtml;
     lastNodeString = newNodeString;
     addHoverListeners();
-    if (addToHistory && (treeHistory.length === 0 || (newTreeHtml !== treeHistory[treeHistoryIndex][0] || newNodeString !== treeHistory[treeHistoryIndex][1]))) {
+    if (addToHistory && (treeHistory.length === 0 ||
+        (newTreeHtml !== treeHistory[treeHistoryIndex][0] || newNodeString !== treeHistory[treeHistoryIndex][1]))) {
         if (treeHistoryIndex < treeHistory.length - 1) {
             treeHistory = treeHistory.slice(0, treeHistoryIndex + 1);
         }
@@ -179,8 +180,10 @@ async function handleTabPressed(e) {
         }
         nextFocusElement = activeInputs[activeElemIndex];
         nextFocusElement.focus();
-        nextFocusElement.select();
-        nextFocusElement = null;
+        if (nextFocusElement.tagName === 'INPUT') {
+            nextFocusElement.select();
+        }
+        // nextFocusElement = null;
     }
 }
 
@@ -244,7 +247,9 @@ document.addEventListener('contextmenu', function (e) {
 
 document.addEventListener('click', function (e) {
     document.getElementById('custom-context-menu').style.display = 'none';
-    clearHighlight();
+    if (contextMenuSelectedElement !== null) {
+        clearHighlight();
+    }
 });
 
 function clearTreeNode(event) {
@@ -273,11 +278,11 @@ function pasteTreeNode(event) {
 // Initialize Panzoom
 const panzoomInstance = panzoom(tree, {
     bounds: true, boundsPadding: 0, zoomDoubleClickSpeed: 1,
-    onTouch: function(e) {
+    onTouch: function (e) {
         // TODO: cannot use on mobile currently
         return false;  // tells the library to not preventDefault.
     },
-    filterKey: function(/* e, dx, dy, dz */) {
+    filterKey: function (/* e, dx, dy, dz */) {
         return true;  // don't let panzoom handle this event:
     }
 });
