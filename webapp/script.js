@@ -79,7 +79,7 @@ function runAction(actionName, treePath, extraArgs) {
     return fetch("/process-action", {
         method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({
             langName: getSelectedLanguage(),
-            mode: getSelectedMode(),
+            modeName: getSelectedMode(),
             actionName,
             nodeString: lastNodeString,
             treePath,

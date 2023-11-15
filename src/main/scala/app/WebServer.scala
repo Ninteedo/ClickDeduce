@@ -68,7 +68,7 @@ object WebServerTest extends JsonSupport {
           entity(as[EvalRequest]) { request =>
             val lang = getLanguage(request.langName)
             val tree = lang.ExprChoiceNode()
-            val response = NodeResponse(tree.toString, tree.toHtml.toString)
+            val response = NodeResponse(tree.toString, tree.toHtml().toString)
             complete(response)
           }
         }
@@ -80,7 +80,8 @@ object WebServerTest extends JsonSupport {
               val action = lang
                 .createAction(request.actionName, request.nodeString, request.treePath, request.extraArgs, request.modeName)
               val updatedTree = action.newTree
-              val response = NodeResponse(updatedTree.toString, updatedTree.toHtml.toString)
+              val displayMode: lang.NodeDisplayMode = lang.NodeDisplayMode.fromString(request.modeName)
+              val response = NodeResponse(updatedTree.toString, updatedTree.toHtml(displayMode).toString)
               complete(response)
             }
           }
