@@ -45,7 +45,11 @@ class LArithTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWh
     }
   }
 
-  def createExprTable(expressions: Iterable[Expr], results: Iterable[Value], types: Iterable[Type]): TableFor3[Expr, Value, Type] = {
+  def createExprTable(
+    expressions: Iterable[Expr],
+    results: Iterable[Value],
+    types: Iterable[Type]
+  ): TableFor3[Expr, Value, Type] = {
     val zipped = List(expressions, results, types).transpose.map {
       case List(a: Expr, b: Value, c: Type) => (a, b, c)
       case _ => throw new Exception("Should not happen")
@@ -116,7 +120,10 @@ class LArithTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWh
   private val nested3DepthExpressions = for {
     _ <- 0 until 10
   } yield generateExpression(3)
-  private val nested3DepthExpressionsTable = createExprTable(nested3DepthExpressions.map(_._1), nested3DepthExpressions.map { case (_, n) => NumV(n) }, nested3DepthExpressions.map(_ => IntType()))
+  private val nested3DepthExpressionsTable = createExprTable(
+    nested3DepthExpressions.map(_._1), nested3DepthExpressions.map { case (_, n) => NumV(n) },
+    nested3DepthExpressions.map(_ => IntType())
+  )
 
   property("Commutativity of expressions") {
     forAll(nested3DepthExpressionsTable) {
@@ -155,6 +162,31 @@ class LArithTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWh
     Times(Num(15), Num(20)).children should be(List(Num(15), Num(20)))
     Plus(Num(15), Times(Num(20), Num(25))).children should be(List(Num(15), Times(Num(20), Num(25))))
     Times(Plus(Num(15), Num(20)), Num(25)).children should be(List(Plus(Num(15), Num(20)), Num(25)))
-    Times(Plus(Num(15), Num(20)), Plus(Num(25), Num(30))).children should be(List(Plus(Num(15), Num(20)), Plus(Num(25), Num(30))))
+    Times(Plus(Num(15), Num(20)), Plus(Num(25), Num(30))).children should be(
+      List(Plus(Num(15), Num(20)), Plus(Num(25), Num(30)))
+    )
+  }
+
+  property("Num with non-integer literal inputs results in errors") {
+    val invalidNumLiterals = List(
+      LiteralString("a"), LiteralBool(true), LiteralBool(false), LiteralString("5"), LiteralString("45j"),
+      LiteralAny("--1"), LiteralAny("5O"), LiteralAny("34.1"), LiteralAny("\"0\"")
+    )
+    val invalidNumLiteralsTable = Table("InvalidNumLiterals", invalidNumLiterals: _*)
+    forAll(invalidNumLiteralsTable) {
+      literal => {
+        eval(Num(literal)) shouldBe an[EvalError]
+        typeOf(Num(literal)) shouldBe an[TypeError]
+      }
+    }
+  }
+
+  property("Num with integer literal inputs is correctly interpreted") {
+    forAll(nums) {
+      num => {
+        eval(Num(Literal.fromString(num.toString))) shouldBe NumV(num)
+        eval(Num(LiteralInt(num))) shouldBe NumV(num)
+      }
+    }
   }
 }
