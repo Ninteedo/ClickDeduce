@@ -71,6 +71,8 @@ trait AbstractLanguage {
     lazy val valueText: String = prettyPrint(this) + ": " + prettyPrint(typ)
 
     val typ: Type
+
+    val isError: Boolean = false
   }
 
 
@@ -83,6 +85,8 @@ trait AbstractLanguage {
     lazy val tooltipText: String = toString
 
     lazy val valueText: String = prettyPrint(this)
+
+    val isError: Boolean = false
   }
 
   trait TermError extends Term {
@@ -98,6 +102,8 @@ trait AbstractLanguage {
     override lazy val tooltipText: String = message
 
     override lazy val valueText: String = "?"
+
+    override val isError: Boolean = true
   }
 
   /**
@@ -111,6 +117,8 @@ trait AbstractLanguage {
     override lazy val tooltipText: String = message
 
     override lazy val valueText: String = "?"
+
+    override val isError: Boolean = true
   }
 
   abstract class Literal extends Term {
