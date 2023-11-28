@@ -288,7 +288,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     def toHtmlLineReadOnly(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String]
 
     def treePath: List[Int] = parent match {
-      case Some(value) => value.treePath :+ value.children.indexWhere(_ eq this)
+      case Some(value) => value.treePath :+ value.args.indexWhere(_ eq this)
       case None => Nil
     }
 
@@ -421,7 +421,8 @@ trait ClickDeduceLanguage extends AbstractLanguage {
         data("tree-path") := treePathString,
         data("term") := getExpr.toString,
         data("node-string") := toString,
-        div(cls := "expr",
+        div(
+          cls := "expr",
           toHtmlLine(mode)(display := "inline"),
           if (mode == NodeDisplayMode.TypeCheck) {
             List(typeCheckTurnstileSpan, typeCheckResultDiv)
@@ -441,7 +442,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
         data("node-string") := toString,
         div(
           cls := "node",
-          div(cls := "expr", toHtmlLineReadOnly(mode)),
+          div(cls := "expr", toHtmlLine(mode)),
           if (mode == NodeDisplayMode.TypeCheck) {
             List(typeCheckTurnstileSpan, typeCheckResultDiv)
           } else {
@@ -485,7 +486,12 @@ trait ClickDeduceLanguage extends AbstractLanguage {
      */
     def findChild(path: List[Int]): Option[OuterNode] = path match {
       case Nil => Some(this)
-      case head :: tail => children.lift(head).flatMap(_.findChild(tail))
+      case head :: tail => {
+        args(head) match {
+          case SubExprNode(node) => node.findChild(tail)
+          case _ => None
+        }
+      }
     }
 
     def replace(path: List[Int], replacement: OuterNode): OuterNode = {
@@ -517,7 +523,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
           VariableNode(exprName, newArgs)
         }
         case head :: tail => {
-          val nextNode = children(head)
+          val nextNode = args(head).children.head
           nextNode match {
             case n: VariableNode => {
               val newNode = SubExprNode(n.replaceInner(tail, replacement))
@@ -548,6 +554,20 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
     def getType(env: TypeEnv = Map()): Type = typeOf(getExpr, env)
 
+    override def treePath: List[Int] = parent match {
+      case Some(value) => {
+        val index: Int = value.args.indexWhere(_ match {
+          case SubExprNode(node) => node eq this
+          case _ => false
+        })
+        if (index == -1) {
+          throw new Exception("Could not find self in parent node's args")
+        }
+        value.treePath :+ index
+      }
+      case None => Nil
+    }
+
     // children.foreach(_.parent = Some(this))
   }
 
@@ -562,7 +582,8 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
     override def toString: String = s"ConcreteNode(${UtilityFunctions.quote(exprString)}, $args)"
 
-    override def toHtml(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = super.toHtml(mode)(data("term") := expr.toString)
+    override def toHtml(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] =
+      super.toHtml(mode)(data("term") := expr.toString)
 
     override val children: List[OuterNode] = args.flatMap(_.children)
 
@@ -580,7 +601,9 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
     lazy val exprClass: Class[Expr] = exprNameToClass(exprName) match {
       case Some(value) => value
-      case None => throw new IllegalArgumentException(s"Unknown expression type for ${lang.getClass.getSimpleName}: $exprName")
+      case None => throw new IllegalArgumentException(
+        s"Unknown expression type for ${lang.getClass.getSimpleName}: $exprName"
+      )
     }
 
     override val children: List[OuterNode] = args.flatMap(_.children)
@@ -644,9 +667,11 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
     override val children: List[OuterNode] = Nil
 
-    override def toHtmlLine(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = BlankExprDropDown().toHtml(data("tree-path") := treePathString)
+    override def toHtmlLine(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] =
+      BlankExprDropDown().toHtml(data("tree-path") := treePathString)
 
-    override def toHtmlLineReadOnly(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = toHtmlLine(mode)(readonly, disabled)
+    override def toHtmlLineReadOnly(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] =
+      toHtmlLine(mode)(readonly, disabled)
 
     override val exprName: String = "ExprChoice"
 
@@ -654,11 +679,11 @@ trait ClickDeduceLanguage extends AbstractLanguage {
   }
 
   abstract class InnerNode extends Node {
-
   }
 
   case class SubExprNode(node: OuterNode) extends InnerNode {
-    override def toHtmlLine(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = node.toHtmlLineReadOnly(mode)
+    override def toHtmlLine(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] =
+      node.toHtmlLineReadOnly(mode)
 
     override def toHtmlLineReadOnly(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = toHtmlLine(mode)
 
@@ -671,8 +696,6 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     override def toHtmlLine(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = {
       input(
         `type` := "text",
-//        onchange := "handleLiteralChanged(this)",
-//        oninput := "updateTextInputWidth(this)",
         width := Math.max(2, literalText.length) + "ch",
         data("tree-path") := treePathString,
         value := literalText
@@ -685,7 +708,6 @@ trait ClickDeduceLanguage extends AbstractLanguage {
         readonly,
         disabled,
         width := Math.max(1, literalText.length) + "ch",
-//        data("tree-path") := treePathString,
         value := literalText
       )
     }
@@ -702,8 +724,6 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     }
 
     def getLiteral: Literal = Literal.fromString(literalText)
-
-    children.foreach(_.parent = this.parent)
   }
 
   def getActionClass(actionName: String): Class[Action] = (actionName match {
@@ -751,8 +771,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     override val treePath: List[Int],
     exprChoiceName: String
   ) extends Action(originalTree, treePath) {
-    override val newTree: OuterNode =
-      originalTree.insertExpr(exprChoiceName, treePath)
+    override val newTree: OuterNode = originalTree.insertExpr(exprChoiceName, treePath)
   }
 
   case class EditLiteralAction(
@@ -786,7 +805,11 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     override val newTree: OuterNode = originalTree.replace(treePath, insertTree)
   }
 
-  case class PasteAction(override val originalTree: OuterNode, override val treePath: List[Int], pasteNodeString: String)
+  case class PasteAction(
+    override val originalTree: OuterNode,
+    override val treePath: List[Int],
+    pasteNodeString: String
+  )
     extends Action(originalTree, treePath) {
     private val pasteNode: Node = Node.read(pasteNodeString).get
 

@@ -147,4 +147,9 @@ class LLetTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
       )
     ) shouldBe an[EvalError]
   }
+
+  property("Let expression correctly contains literal space for variable") {
+    val tree = VariableNode.createFromExpr("Let")
+    tree.args.head shouldEqual LiteralNode("")
+  }
 }

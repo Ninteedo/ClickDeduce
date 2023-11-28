@@ -7,7 +7,7 @@ import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusC
 import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import akka.http.scaladsl.settings.ServerSettings
-import languages.{ClickDeduceLanguage, LArith, LIf}
+import languages.{ClickDeduceLanguage, LArith, LIf, LLet}
 import scalatags.Text.all.*
 import scalatags.Text.{TypedTag, attrs}
 import spray.json.{DefaultJsonProtocol, RootJsonFormat}
@@ -120,7 +120,7 @@ object WebServer extends JsonSupport {
       .onComplete(_ => system.terminate())
   }
 
-  private val knownLanguages: List[ClickDeduceLanguage] = List(LArith, LIf)
+  private val knownLanguages: List[ClickDeduceLanguage] = List(LArith, LIf, LLet)
 
   def getLanguage(langName: String): ClickDeduceLanguage = knownLanguages.find(getLanguageName(_) == langName) match {
     case Some(lang) => lang
