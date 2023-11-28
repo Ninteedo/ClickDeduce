@@ -50,7 +50,9 @@ async function loadLangSelector() {
     }).then(() => {
         const langSelector = document.getElementById('lang-selector');
         langSelector.addEventListener('change', () => {
-            runAction("IdentityAction", "", [])
+            if (lastNodeString !== "") {
+                runAction("IdentityAction", "", [])
+            }
         })
     });
 }
