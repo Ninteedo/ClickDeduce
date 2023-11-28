@@ -11,6 +11,7 @@
       <list>
         <option value="app.ExpressionTreeTest" />
         <option value="languages.LIfTest" />
+        <option value="languages.LLetTest" />
         <option value="languages.LArithTest" />
         <option value="languages.NodeTreeTest" />
         <option value="languages.ReadExprTest" />
