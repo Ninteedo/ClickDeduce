@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="WebServer" type="Application" factoryName="Application">
-    <option name="MAIN_CLASS_NAME" value="app.WebServerTest" />
+    <option name="MAIN_CLASS_NAME" value="app.WebServer" />
     <module name="ClickDeduce" />
     <extension name="coverage">
       <pattern>

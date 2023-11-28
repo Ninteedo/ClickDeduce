@@ -35,11 +35,11 @@ case class LangSelectorRequest()
 case class LangSelectorResponse(langSelectorHtml: String)
 
 trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
-  implicit val evalRequestFormat: RootJsonFormat[EvalRequest] = jsonFormat1(EvalRequest)
-  implicit val nodeResponseFormat: RootJsonFormat[NodeResponse] = jsonFormat2(NodeResponse)
-  implicit val actionRequestFormat: RootJsonFormat[ActionRequest] = jsonFormat6(ActionRequest)
-  implicit val langSelectorRequestFormat: RootJsonFormat[LangSelectorRequest] = jsonFormat0(LangSelectorRequest)
-  implicit val langSelectorResponseFormat: RootJsonFormat[LangSelectorResponse] = jsonFormat1(LangSelectorResponse)
+  implicit val evalRequestFormat: RootJsonFormat[EvalRequest] = jsonFormat1(EvalRequest.apply)
+  implicit val nodeResponseFormat: RootJsonFormat[NodeResponse] = jsonFormat2(NodeResponse.apply)
+  implicit val actionRequestFormat: RootJsonFormat[ActionRequest] = jsonFormat6(ActionRequest.apply)
+  implicit val langSelectorRequestFormat: RootJsonFormat[LangSelectorRequest] = jsonFormat0(LangSelectorRequest.apply)
+  implicit val langSelectorResponseFormat: RootJsonFormat[LangSelectorResponse] = jsonFormat1(LangSelectorResponse.apply)
 }
 
 val customExceptionHandler: ExceptionHandler = ExceptionHandler {
@@ -55,7 +55,7 @@ val customExceptionHandler: ExceptionHandler = ExceptionHandler {
 }
 
 
-object WebServerTest extends JsonSupport {
+object WebServer extends JsonSupport {
   val buttonClickCount: AtomicInteger = new AtomicInteger(0)
 
   def main(args: Array[String]): Unit = {
@@ -77,8 +77,9 @@ object WebServerTest extends JsonSupport {
           path("process-action") {
             entity(as[ActionRequest]) { request =>
               val lang = getLanguage(request.langName)
-              val action = lang
-                .createAction(request.actionName, request.nodeString, request.treePath, request.extraArgs, request.modeName)
+              val action = lang.createAction(
+                request.actionName, request.nodeString, request.treePath, request.extraArgs, request.modeName
+              )
               val updatedTree = action.newTree
               val displayMode: lang.NodeDisplayMode = lang.NodeDisplayMode.fromString(request.modeName)
               val response = NodeResponse(updatedTree.toString, updatedTree.toHtml(displayMode).toString)
