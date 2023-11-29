@@ -148,8 +148,51 @@ class LLetTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
     ) shouldBe an[EvalError]
   }
 
-  property("Let expression correctly contains literal space for variable") {
+  property("Let behaviour is correct with actions") {
     val tree = VariableNode.createFromExpr("Let")
-    tree.args.head shouldEqual LiteralNode("")
+    tree.args shouldEqual List(LiteralNode(""), SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode()))
+
+    val varName: Variable = "x"
+    val setVarNameAction = EditLiteralAction(tree, List(0), varName)
+    setVarNameAction.newTree.args shouldEqual List(
+      LiteralNode(varName),
+      SubExprNode(ExprChoiceNode()),
+      SubExprNode(ExprChoiceNode())
+    )
+
+
+    val assignExprChoiceAction = SelectExprAction(setVarNameAction.newTree, List(1), "Num")
+    assignExprChoiceAction.newTree.args shouldEqual List(
+      LiteralNode(varName),
+      SubExprNode(VariableNode("Num", List(LiteralNode("")))),
+      SubExprNode(ExprChoiceNode())
+    )
+
+    val assignValue: Int = 34
+    val assignExprValueAction = EditLiteralAction(assignExprChoiceAction.newTree, List(1, 0), assignValue.toString)
+    assignExprValueAction.newTree.args shouldEqual List(
+      LiteralNode(varName),
+      SubExprNode(VariableNode("Num", List(LiteralNode(assignValue.toString)))),
+      SubExprNode(ExprChoiceNode())
+    )
+
+    val boundExprChoiceAction = SelectExprAction(assignExprValueAction.newTree, List(2), "Var")
+    boundExprChoiceAction.newTree.args shouldEqual List(
+      LiteralNode(varName),
+      SubExprNode(VariableNode("Num", List(LiteralNode(assignValue.toString)))),
+      SubExprNode(VariableNode("Var", List(LiteralNode(""))))
+    )
+
+    val boundExprValueAction = EditLiteralAction(boundExprChoiceAction.newTree, List(2, 0), varName)
+    boundExprValueAction.newTree.args shouldEqual List(
+      LiteralNode(varName),
+      SubExprNode(VariableNode("Num", List(LiteralNode(assignValue.toString)))),
+      SubExprNode(VariableNode("Var", List(LiteralNode(varName))))
+    )
+
+    boundExprValueAction.newTree.getExpr shouldEqual Let(varName, Num(assignValue), Var(varName))
+    boundExprValueAction.newTree.getEnv shouldEqual Map()
+    boundExprValueAction.newTree.findChild(List(1)).get.getEnv shouldEqual Map()
+    boundExprValueAction.newTree.findChild(List(2)).get.getEnv shouldEqual Map(varName -> NumV(assignValue))
   }
 }
