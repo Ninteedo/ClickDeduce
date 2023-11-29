@@ -1,7 +1,7 @@
 package languages
 
 import app.{FontWidthCalculator, UtilityFunctions}
-import scalatags.Text.all.*
+import scalatags.Text.all.{div, raw, *}
 import scalatags.Text.{TypedTag, attrs}
 
 import java.awt.Font
@@ -301,15 +301,18 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     val outerNodeClasses = List(ConcreteNode.getClass, VariableNode.getClass)
 
     def read(s: String): Option[Node] = {
-      def makeNode(name: String, args: List[Any]): Option[Node] = {
+      def makeNode(name: String, args: List[Any], env: Env | TypeEnv = Map()): Option[Node] = {
         val nodeClass = nodeClassList.find(_.getSimpleName == name)
         nodeClass match
           case Some(value) => {
             val constructor = value.getConstructors()(0)
-            val arguments = ClickDeduceLanguage.this +: args.map {
+            var arguments = ClickDeduceLanguage.this +: args.map {
               case LiteralString(s) => s.stripPrefix("\"").stripSuffix("\"")
               case Some(e) => e
               case x => x
+            }
+            if (constructor.getParameterTypes.last.isAssignableFrom(classOf[Env])) {
+              arguments = arguments :+ env
             }
             Some(constructor.newInstance(arguments: _*).asInstanceOf[Node])
           }
@@ -362,10 +365,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
           case name ~ "(" ~ args ~ ")" => {
             val node = makeNode(name, args)
             node match {
-              case Some(n: InnerNode) => {
-                //                n.children.foreach(_.parent = Some(n.parent.get))
-                n
-              }
+              case Some(n: InnerNode) => n
               case _ => throw new Exception("Unexpected error in innerNode")
             }
             node.get.asInstanceOf[InnerNode]
@@ -423,6 +423,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
         data("node-string") := toString,
         div(
           cls := "expr",
+          envDiv(mode),
           toHtmlLine(mode)(display := "inline"),
           if (mode == NodeDisplayMode.TypeCheck) {
             List(typeCheckTurnstileSpan, typeCheckResultDiv)
@@ -442,6 +443,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
         data("node-string") := toString,
         div(
           cls := "node",
+          envDiv(mode),
           div(cls := "expr", toHtmlLine(mode)),
           if (mode == NodeDisplayMode.TypeCheck) {
             List(typeCheckTurnstileSpan, typeCheckResultDiv)
@@ -457,13 +459,35 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       )
     }
 
-    def typeCheckTurnstileSpan: TypedTag[String] = span(paddingLeft := "1ch", paddingRight := "1ch", raw("&#x22a2;"))
+    def typeCheckTurnstileSpan: TypedTag[String] = span(paddingLeft := "0.5ch", paddingRight := "0.5ch", raw(":"))
 
-    def typeCheckResultDiv: TypedTag[String] = div(cls := "type-check-result", display := "inline", getType().toHtml)
+    def typeCheckResultDiv: TypedTag[String] = div(cls := "type-check-result", display := "inline", getType.toHtml)
 
     def evalArrowSpan: TypedTag[String] = span(paddingLeft := "1ch", paddingRight := "1ch", raw("&DoubleDownArrow;"))
 
-    def evalResultDiv: TypedTag[String] = div(cls := "eval-result", display := "inline", getValue().toHtml)
+    def evalResultDiv: TypedTag[String] = div(cls := "eval-result", display := "inline", getValue.toHtml)
+
+    def envDiv(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = {
+      val env: Env | TypeEnv = if (mode == NodeDisplayMode.TypeCheck) {
+        getTypeEnv
+      } else {
+        getEnv
+      }
+      val envHtml: String = if (env.nonEmpty) {
+        env.map((k: String, v: Value | Type) => s"$k &rarr; ${v.toHtml}").mkString("[", ", ", "],")
+      } else {
+        if (mode == NodeDisplayMode.TypeCheck) {
+          "&#x22a2;"
+        } else {
+          ""
+        }
+      }
+      div(
+        cls := "scoped-variables", display := "inline",
+        raw(envHtml),
+        paddingRight := {if (envHtml.isEmpty) "0ch" else "0.5ch"}
+      )
+    }
 
     val exprName: String
 
@@ -499,21 +523,20 @@ trait ClickDeduceLanguage extends AbstractLanguage {
         case Nil => replacement
         case head :: tail => {
           val newArgs: List[InnerNode] = args.updated(
-            head, args(head) match
+            head,
+            args(head) match {
               case SubExprNode(node: OuterNode) => SubExprNode(node.replace(tail, replacement))
               case _ => ???
+            }
           )
           val node = this match {
             case ConcreteNode(s, _) => ConcreteNode(s, newArgs)
             case VariableNode(s, _) => VariableNode(s, newArgs)
           }
-          //          newChildren.foreach(_.parent = Some(node))
           node
         }
       }
     }
-
-    //    override val children: List[OuterNode] = args.flatMap(_.children)
 
     def replaceInner(path: List[Int], replacement: InnerNode): OuterNode = {
       path match {
@@ -550,16 +573,17 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       }
     }
 
-    def getValue(env: Env = Map()): Value = eval(getExpr, env)
+    def getValue: Value = eval(getExpr, getEnv)
 
-    def getType(env: TypeEnv = Map()): Type = typeOf(getExpr, env)
+    def getType: Type = typeOf(getExpr, getTypeEnv)
 
     override def treePath: List[Int] = parent match {
       case Some(value) => {
-        val index: Int = value.args.indexWhere(_ match {
+        val index: Int = value.args.indexWhere({
           case SubExprNode(node) => node eq this
           case _ => false
-        })
+        }
+        )
         if (index == -1) {
           throw new Exception("Could not find self in parent node's args")
         }
@@ -568,10 +592,21 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       case None => Nil
     }
 
-    // children.foreach(_.parent = Some(this))
+    def getEnv: Env = parent match {
+      case Some(value) => value.getExpr.childExprEnvs(value.getEnv)(value.children.indexWhere(_ eq this))
+      case None => Map()
+    }
+
+    def getTypeEnv: TypeEnv = parent match {
+      case Some(value) => value.getExpr.childExprTypeEnvs(value.getTypeEnv)(value.children.indexWhere(_ eq this))
+      case None => Map()
+    }
   }
 
-  case class ConcreteNode(exprString: String, override val args: List[InnerNode] = Nil) extends OuterNode {
+  case class ConcreteNode(
+    exprString: String,
+    override val args: List[InnerNode] = Nil
+  ) extends OuterNode {
     lazy val expr: Expr = readExpr(exprString).get
 
     override def toHtmlLine(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = expr.toHtml
@@ -637,7 +672,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       prettyPrint(constructor.newInstance(arguments: _*).asInstanceOf[Expr])
     }
 
-    def nonErrorEvalResult: Boolean = getValue() match {
+    def nonErrorEvalResult: Boolean = getValue match {
       case _: EvalError => false
       case _ => true
     }

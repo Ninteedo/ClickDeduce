@@ -6,14 +6,20 @@ class LLet extends LIf {
   case class Var(v: Literal) extends Expr
 
   object Var {
-    def apply(v: Variable): Var = new Var(LiteralString(v))
+    def apply(v: Variable): Var = new Var(LiteralAny(v))
   }
 
-  case class Let(v: Literal, assign_expr: Expr, bound_expr: Expr) extends Expr
+  case class Let(v: Literal, assign_expr: Expr, bound_expr: Expr) extends Expr {
+    override def childExprEnvs(env: Env): List[Env] = List(env, env + (v.toString -> eval(assign_expr, env)))
+
+    override def childExprTypeEnvs(tenv: TypeEnv): List[TypeEnv] = List(
+      tenv, tenv + (v.toString -> typeOf(assign_expr, tenv))
+    )
+  }
 
   object Let {
     def apply(v: Variable, assign_expr: Expr, bound_expr: Expr): Let = new Let(
-      LiteralString(v), assign_expr, bound_expr
+      LiteralAny(v), assign_expr, bound_expr
     )
   }
 

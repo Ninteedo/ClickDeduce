@@ -54,6 +54,10 @@ trait AbstractLanguage {
     def getEvalChildren(env: Env): List[Expr] = children
 
     lazy val childVersion: Expr = this
+
+    def childExprEnvs(env: Env): List[Env] = List.fill(children.length)(env)
+
+    def childExprTypeEnvs(tenv: TypeEnv): List[TypeEnv] = List.fill(children.length)(tenv)
   }
 
   case class MissingExpr() extends Expr
