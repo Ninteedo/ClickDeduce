@@ -243,4 +243,6 @@ trait AbstractLanguage {
       case _ => "Unknown Term"
     }
   }
+  
+  def envToTypeEnv(env: Env): TypeEnv = env.map((k: String, v: Value) => (k, v.typ))
 }

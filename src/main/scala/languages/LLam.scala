@@ -1,0 +1,71 @@
+package languages
+
+class LLam extends LLet {
+  // expressions
+  case class Apply(e1: Expr, e2: Expr) extends Expr
+
+  case class Lambda(v: Literal, typ: Type, e: Expr) extends Expr
+
+  object Lambda {
+    def apply(v: Variable, typ: Type, e: Expr): Lambda = new Lambda(LiteralAny(v), typ, e)
+  }
+
+  // types
+  case class Func(in: Type, out: Type) extends Type
+
+  case class ApplyToNonFunctionErrorType(wrongType: Type) extends TypeError {
+    override val message: String = s"Cannot apply with left expression being ${prettyPrint(wrongType)}"
+  }
+
+  case class IncompatibleTypeErrorType(typ1: Type, typ2: Type) extends TypeError {
+    override val message: String = s"mismatched types for applying function (expected $typ1 but got $typ2)"
+  }
+
+  // values
+  case class LambdaV(v: Variable, inputType: Type, e: Expr, env: Env) extends Value {
+    override val typ: Type = Func(inputType, typeOf(e, envToTypeEnv(env) + (v -> inputType)))
+  }
+
+  case class ApplyToNonFunctionError(value: Value) extends EvalError {
+    override val message: String = s"Cannot apply with left expression being ${prettyPrint(value)}"
+
+    override val typ: Type = ApplyToNonFunctionErrorType(value.typ)
+  }
+
+
+  override def eval(e: Expr, env: Env): Value = e match {
+    case Lambda(LiteralAny(v), typ, e) => LambdaV(v, typ, e, env)
+    case Apply(e1, e2) => evalApply(Apply(e1, e2), env)
+    case _ => super.eval(e, env)
+  }
+
+  def evalApply(e: Apply, env: Env): Value = e match {
+    //    case Apply((Apply(e1, e2)), e3) => (Apply(e1, e2), eval(e3, env)) {
+    //      case (Apply(e1, e2), value) => (eval())
+    //    }
+    case _ => {
+      (eval(e.e1, env), eval(e.e2, env)) match {
+        case (LambdaV(v, inputType, e0, innerEnv), value) => eval(e0, innerEnv + (v -> value))
+        case (v1, _) => ApplyToNonFunctionError(v1)
+      }
+    }
+  }
+
+  override def typeOf(e: Expr, env: TypeEnv): Type = e match {
+    case Lambda(LiteralAny(v), typ, e) => Func(typ, typeOf(e, env + (v -> typ)))
+    case Apply(e1, e2) => typeOfApply(Apply(e1, e2), env)
+    case _ => super.typeOf(e, env)
+  }
+
+  def typeOfApply(e: Apply, env: TypeEnv): Type = (typeOf(e.e1, env), typeOf(e.e2, env)) match {
+    case (Func(typ1, typ2), typ3) =>
+      if (typ1 == typ3) {
+        typ2
+      } else {
+        IncompatibleTypeErrorType(typ1, typ3)
+      }
+    case (typ1, _) => ApplyToNonFunctionErrorType(typ1)
+  }
+}
+
+object LLam extends LLam {}
