@@ -49,4 +49,98 @@ class LLamTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
 
     eval(Apply(Apply(twiceFunction, incrementFunction), Num(4))) shouldEqual NumV(6)
   }
+
+  property("Lambda node behaves appropriately with simple argument type") {
+    val initialTree = VariableNode.createFromExpr("Lambda")
+    initialTree.args shouldEqual List(
+      LiteralNode(""),
+      TypeChoiceNode(),
+      SubExprNode(ExprChoiceNode())
+    )
+
+    val argName: String = "foo"
+    val editVarNameAction = EditLiteralAction(initialTree, List(0), argName)
+    editVarNameAction.newTree.args shouldEqual List(
+      LiteralNode(argName),
+      TypeChoiceNode(),
+      SubExprNode(ExprChoiceNode())
+    )
+
+    val argType: Type = IntType()
+    val argTypeName: String = argType.getClass.getSimpleName
+    val setArgTypeAction = SelectTypeAction(editVarNameAction.newTree, List(1), argTypeName)
+    setArgTypeAction.newTree.args shouldEqual List(
+      LiteralNode(argName),
+      TypeNode(argTypeName, Nil),
+      SubExprNode(ExprChoiceNode())
+    )
+
+    val setExprKindAction = SelectExprAction(setArgTypeAction.newTree, List(2), "Var")
+    setExprKindAction.newTree.args shouldEqual List(
+      LiteralNode(argName),
+      TypeNode(argTypeName, Nil),
+      SubExprNode(VariableNode("Var", List(LiteralNode(""))))
+    )
+
+    val setVarExprLiteral = EditLiteralAction(setExprKindAction.newTree, List(2, 0), argName)
+    setVarExprLiteral.newTree.args shouldEqual List(
+      LiteralNode(argName),
+      TypeNode(argTypeName, Nil),
+      SubExprNode(VariableNode("Var", List(LiteralNode(argName))))
+    )
+  }
+
+  property("Lambda node behaves appropriately with complex argument type") {
+    val initialTree = VariableNode.createFromExpr("Lambda")
+    initialTree.args shouldEqual List(
+      LiteralNode(""),
+      TypeChoiceNode(),
+      SubExprNode(ExprChoiceNode())
+    )
+
+    val argName: String = "bar"
+    val editVarNameAction = EditLiteralAction(initialTree, List(0), argName)
+    editVarNameAction.newTree.args shouldEqual List(
+      LiteralNode(argName),
+      TypeChoiceNode(),
+      SubExprNode(ExprChoiceNode())
+    )
+
+    val completeTypeNode = TypeNode("Func", List(TypeNode("IntType", Nil), TypeNode("IntType", Nil)))
+
+    val setArgFuncTypeAction = SelectTypeAction(editVarNameAction.newTree, List(1), "Func")
+    setArgFuncTypeAction.newTree.args shouldEqual List(
+      LiteralNode(argName),
+      TypeNode("Func", List(TypeChoiceNode(), TypeChoiceNode())),
+      SubExprNode(ExprChoiceNode())
+    )
+
+    val setArgFuncInTypeAction = SelectTypeAction(setArgFuncTypeAction.newTree, List(1, 0), "IntType")
+    setArgFuncInTypeAction.newTree.args shouldEqual List(
+      LiteralNode(argName),
+      TypeNode("Func", List(TypeNode("IntType", Nil), TypeChoiceNode())),
+      SubExprNode(ExprChoiceNode())
+    )
+
+    val setArgFuncOutTypeAction = SelectTypeAction(setArgFuncInTypeAction.newTree, List(1, 1), "IntType")
+    setArgFuncOutTypeAction.newTree.args shouldEqual List(
+      LiteralNode(argName),
+      TypeNode("Func", List(TypeNode("IntType", Nil), TypeNode("IntType", Nil))),
+      SubExprNode(ExprChoiceNode())
+    )
+
+    val setExprKindAction = SelectExprAction(setArgFuncOutTypeAction.newTree, List(2), "Var")
+    setExprKindAction.newTree.args shouldEqual List(
+      LiteralNode(argName),
+      completeTypeNode,
+      SubExprNode(VariableNode("Var", List(LiteralNode(""))))
+    )
+
+    val setVarExprLiteral = EditLiteralAction(setExprKindAction.newTree, List(2, 0), argName)
+    setVarExprLiteral.newTree.args shouldEqual List(
+      LiteralNode(argName),
+      completeTypeNode,
+      SubExprNode(VariableNode("Var", List(LiteralNode(argName))))
+    )
+  }
 }

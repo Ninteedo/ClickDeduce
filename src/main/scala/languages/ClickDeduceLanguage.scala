@@ -60,6 +60,12 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     val value: Any = ""
   }
 
+  case class BlankTypeDropDown() extends Type, BlankSpace {
+    override lazy val toHtml: TypedTag[String] = {
+      typeClassListDropdownHtml(name := id.toString)
+    }
+  }
+
   //  def getSubclassesOf[T <: Class[Any]](parentClass: Class[T]): List[T] = {
   //    val runtimeMirror = ru.runtimeMirror(getClass.getClassLoader)
   //    val classSymbol = runtimeMirror.classSymbol(parentClass)
@@ -74,17 +80,30 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     subclasses.map(_.asClass).toList
   }
 
-  lazy val exprClassList: List[Class[Expr]] = {
-    calculateExprClassList
-  }
+  lazy val exprClassList: List[Class[Expr]] = calculateExprClassList
 
   protected def calculateExprClassList: List[Class[Expr]]
+
+  lazy val typeClassList: List[Class[Type]] = calculateTypeClassList
+
+  protected def calculateTypeClassList: List[Class[Type]] = List(classOf[UnknownType]).map(_.asInstanceOf[Class[Type]])
 
   private lazy val exprClassListDropdownHtml: TypedTag[String] = {
     select(
       cls := "expr-dropdown", onchange := "handleDropdownChange(this)",
       option(value := "", "Select Expr..."),
       exprClassList.map(e => {
+        option(value := e.getSimpleName, e.getSimpleName)
+      }
+      )
+    )
+  }
+
+  private lazy val typeClassListDropdownHtml: TypedTag[String] = {
+    select(
+      cls := "expr-dropdown", onchange := "handleDropdownChange(this)",
+      option(value := "", "Select Expr..."),
+      typeClassList.map(e => {
         option(value := e.getSimpleName, e.getSimpleName)
       }
       )
@@ -169,6 +188,10 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
   def exprNameToClass(name: String): Option[Class[Expr]] = {
     exprClassList.find(_.getSimpleName == name)
+  }
+
+  def typeNameToClass(name: String): Option[Class[Type]] = {
+    typeClassList.find(_.getSimpleName == name)
   }
 
   def createTerm(name: String, args: List[Term]): Term = {
@@ -354,7 +377,8 @@ trait ClickDeduceLanguage extends AbstractLanguage {
         def outerNodeName: Parser[String] = "ExprChoiceNode" | "ConcreteNode" | "VariableNode" // outerNodeClasses
         // .map(_.getSimpleName.stripSuffix("$")).mkString("|").r
 
-        def innerNodeName: Parser[String] = "SubExprNode" | "LiteralNode" //  innerNodeClasses.map(_.getSimpleName
+        def innerNodeName: Parser[String] = "SubExprNode" | "LiteralNode" | "TypeChoiceNode" | "TypeNode" //
+        // innerNodeClasses.map(_.getSimpleName
         // .stripSuffix("$")).mkString("|").r
 
         def outerNodeArg: Parser[Any] = outerListParse | innerNode | stringLiteral ^^ (s => LiteralString(s))
@@ -485,7 +509,9 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       div(
         cls := "scoped-variables", display := "inline",
         raw(envHtml),
-        paddingRight := {if (envHtml.isEmpty) "0ch" else "0.5ch"}
+        paddingRight := {
+          if (envHtml.isEmpty) "0ch" else "0.5ch"
+        }
       )
     }
 
@@ -545,15 +571,13 @@ trait ClickDeduceLanguage extends AbstractLanguage {
           val newArgs = args.updated(head, replacement)
           VariableNode(exprName, newArgs)
         }
-        case head :: tail => {
-          val nextNode = args(head).children.head
-          nextNode match {
+        case head :: tail => args(head) match {
+          case SubExprNode(node) => node match {
             case n: VariableNode => {
               val newNode = SubExprNode(n.replaceInner(tail, replacement))
               val newArgs = args.updated(head, newNode)
               VariableNode(exprName, newArgs)
             }
-            case _ => ???
           }
         }
       }
@@ -650,6 +674,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       val arguments = lang +: args.map {
         case n: SubExprNode => n.node.getExpr
         case n: LiteralNode => n.getLiteral
+        case n: TypeNodeParent => n.getType
       }
       constructor.newInstance(arguments: _*).asInstanceOf[Expr]
     }
@@ -659,6 +684,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       val arguments = lang +: args.map {
         case n: SubExprNode => ExprPlaceholder(n.toHtmlLineReadOnly(mode).toString)
         case n: LiteralNode => LiteralAny(n.toHtmlLine(mode).toString)
+        case n: TypeNodeParent => n.getType
       }
       prettyPrint(constructor.newInstance(arguments: _*).asInstanceOf[Expr])
     }
@@ -689,6 +715,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
         case c if classOf[ClickDeduceLanguage] isAssignableFrom c => None
         case c if classOf[Expr] isAssignableFrom c => Some(SubExprNode(ExprChoiceNode()))
         case c if classOf[Literal] isAssignableFrom c => Some(LiteralNode(""))
+        case c if classOf[Type] isAssignableFrom c => Some(TypeChoiceNode())
         case c => throw new Exception(s"Unexpected parameter type in createFromExpr: $c")
       }.filter(_.isDefined).map(_.get)
       val result = VariableNode(exprName, innerNodes.toList)
@@ -761,6 +788,63 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     def getLiteral: Literal = Literal.fromString(literalText)
   }
 
+  abstract class TypeNodeParent extends InnerNode {
+    def getType: Type
+  }
+
+  case class TypeNode(typeName: String, subTypes: List[InnerNode]) extends TypeNodeParent {
+    override def toHtmlLine(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = ???
+
+    override def toHtmlLineReadOnly(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = ???
+
+    override def getType: Type = {
+      val constructor = typeClass.getConstructors()(0)
+      val arguments = lang +: subTypes.map {
+        case tn: TypeNodeParent => tn.getType
+        case ln: LiteralNode => ln.getLiteral
+      }
+      constructor.newInstance(arguments: _*).asInstanceOf[Type]
+    }
+
+    protected lazy val typeClass: Class[Type] = typeNameToClass(typeName) match {
+      case Some(value) => value
+      case None => throw new IllegalArgumentException(
+        s"Unknown expression type for ${lang.getClass.getSimpleName}: $typeName"
+      )
+    }
+  }
+
+  object TypeNode {
+    def fromTypeName(typeName: String): TypeNode = {
+      typeNameToClass(typeName) match {
+        case Some(typ) => {
+          val constructor = typ.getConstructors()(0)
+          val arguments = constructor.getParameterTypes.map({
+            case c if classOf[Type] isAssignableFrom c => Some(TypeChoiceNode())
+            case c if classOf[Literal] isAssignableFrom c => Some(LiteralNode(""))
+            case c if classOf[ClickDeduceLanguage] isAssignableFrom c => None
+          }
+          ).filter(_.isDefined).map(_.get).toList
+          TypeNode(typeName, arguments)
+        }
+        case None => throw new IllegalArgumentException(
+          s"Unknown expression type for ${lang.getClass.getSimpleName}: $typeName"
+        )
+      }
+    }
+  }
+
+  case class TypeChoiceNode() extends TypeNodeParent {
+    override def toHtmlLine(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] =
+      BlankTypeDropDown().toHtml(data("tree-path") := treePathString)
+
+    override def toHtmlLineReadOnly(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] =
+      toHtmlLine(mode)(readonly, disabled)
+
+    override def getType: Type = UnknownType()
+  }
+
+
   def getActionClass(actionName: String): Class[Action] = (actionName match {
     case "SelectExprAction" => classOf[SelectExprAction]
     case "EditLiteralAction" => classOf[EditLiteralAction]
@@ -815,6 +899,14 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     newLiteralText: String
   ) extends Action(originalTree, treePath) {
     override val newTree: OuterNode = originalTree.replaceInner(treePath, LiteralNode(newLiteralText))
+  }
+
+  case class SelectTypeAction(
+    override val originalTree: OuterNode,
+    override val treePath: List[Int],
+    typeChoiceName: String
+  ) extends Action(originalTree, treePath) {
+    override val newTree: OuterNode = originalTree.replaceInner(treePath, TypeNode.fromTypeName(typeChoiceName))
   }
 
   //  case class CompleteEvaluationAction(override val originalTree: OuterNode, override val treePath: List[Int])

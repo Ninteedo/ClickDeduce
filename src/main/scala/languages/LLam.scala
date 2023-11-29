@@ -66,6 +66,32 @@ class LLam extends LLet {
       }
     case (typ1, _) => ApplyToNonFunctionErrorType(typ1)
   }
+
+  override def prettyPrint(e: Expr): String = e match {
+    case Lambda(v, typ, e) => s"λ$v:${prettyPrint(typ)}. ${prettyPrint(e)}"
+    case Apply(e1, e2) => s"${prettyPrint(e1)} ${prettyPrint(e2)}"
+    case _ => super.prettyPrint(e)
+  }
+
+  override def prettyPrint(v: Value): Variable = v match {
+    case LambdaV(v, inputType, e, env) => s"λ$v. $e"
+    case _ => super.prettyPrint(v)
+  }
+
+  override def prettyPrint(t: Type): Variable = t match {
+    case Func(in, out) => s"${prettyPrint(in)} → ${prettyPrint(out)}"
+    case ApplyToNonFunctionErrorType(typ) => s"CannotApplyError(${prettyPrint(typ)})"
+    case IncompatibleTypeErrorType(typ1, typ2) => s"IncompatibleTypes(${prettyPrint(typ1)}, ${prettyPrint(typ2)})"
+    case _ => super.prettyPrint(t)
+  }
+
+  override def calculateExprClassList: List[Class[Expr]] = {
+    super.calculateExprClassList ++ List(classOf[Lambda], classOf[Apply]).map(_.asInstanceOf[Class[Expr]])
+  }
+
+  override def calculateTypeClassList: List[Class[Type]] = {
+    super.calculateTypeClassList ++ List(classOf[Func]).map(_.asInstanceOf[Class[Type]])
+  }
 }
 
 object LLam extends LLam {}

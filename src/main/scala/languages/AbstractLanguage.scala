@@ -93,6 +93,10 @@ trait AbstractLanguage {
     val isError: Boolean = false
   }
 
+  case class UnknownType() extends Type {
+
+  }
+
   trait TermError extends Term {
     val message: String = "Error"
   }
@@ -221,7 +225,8 @@ trait AbstractLanguage {
    * @return A `String` representing the pretty printed type.
    */
   def prettyPrint(t: Type): String = t match {
-//    case x => x.toHtml.toString
+    case x: TypeError => x.message
+    case x: UnknownType => "Unknown"
     case x => throw new NotImplementedError(s"prettyPrint($x)")
   }
 
@@ -243,6 +248,6 @@ trait AbstractLanguage {
       case _ => "Unknown Term"
     }
   }
-  
+
   def envToTypeEnv(env: Env): TypeEnv = env.map((k: String, v: Value) => (k, v.typ))
 }

@@ -102,6 +102,10 @@ class LIf extends LArith {
   override def calculateExprClassList: List[Class[Expr]] = {
     super.calculateExprClassList ++ List(classOf[Bool], classOf[Eq], classOf[IfThenElse]).map(_.asInstanceOf[Class[Expr]])
   }
+
+  override def calculateTypeClassList: List[Class[Type]] = {
+    super.calculateTypeClassList ++ List(classOf[BoolType]).map(_.asInstanceOf[Class[Type]])
+  }
 }
 
 object LIf extends LIf {}

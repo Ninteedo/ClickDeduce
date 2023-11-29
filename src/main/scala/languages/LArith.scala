@@ -10,13 +10,14 @@ class LArith extends ClickDeduceLanguage {
    * @param x The integer value of the number.
    */
   case class Num(x: Literal) extends Expr {
-//    def this(x: BigInt) = this(LiteralInt(x))
-//
-//    def this(x: Int) = this(BigInt(x))
+    //    def this(x: BigInt) = this(LiteralInt(x))
+    //
+    //    def this(x: Int) = this(BigInt(x))
   }
 
   object Num {
     def apply(x: BigInt): Num = new Num(LiteralInt(x))
+
     def apply(x: Int): Num = new Num(LiteralInt(BigInt(x)))
   }
 
@@ -133,7 +134,11 @@ class LArith extends ClickDeduceLanguage {
     case t => super.prettyPrint(t)
   }
 
-  override def calculateExprClassList: List[Class[Expr]] = List(classOf[Num], classOf[Plus], classOf[Times]).map(_.asInstanceOf[Class[Expr]])
+  override def calculateExprClassList: List[Class[Expr]] = List(classOf[Num], classOf[Plus], classOf[Times])
+    .map(_.asInstanceOf[Class[Expr]])
+
+  override def calculateTypeClassList: List[Class[Type]] = super.calculateTypeClassList ++ List(classOf[IntType])
+    .map(_.asInstanceOf[Class[Type]])
 }
 
 object LArith extends LArith {
