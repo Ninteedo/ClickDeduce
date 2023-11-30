@@ -14,7 +14,7 @@ class NodeTreeTest extends AnyFunSuite {
     val children = List(ConcreteNode(Num(1).toString), ConcreteNode(Num(2).toString))
     val args = children.map(SubExprNode(_))
     val tree = ConcreteNode(expr.toString, args)
-    children.foreach(_.parent = Some(tree))
+    children.foreach(_.setParent(tree))
     tree.exprName shouldEqual "Plus"
     children(0).exprName shouldEqual "Num"
     children(1).exprName shouldEqual "Num"
@@ -31,7 +31,7 @@ class NodeTreeTest extends AnyFunSuite {
     val variableChild = SubExprNode(variableChildInner)
     val children = List(concreteChild, variableChild)
     val tree = VariableNode("Times", children)
-    children.foreach(_.node.parent = Some(tree))
+    children.foreach(_.node.setParent(tree))
     tree.exprName shouldEqual "Times"
     //    children(0).node.exprName shouldBe "Num"
     //    children(1).node.exprName shouldBe "Num"
@@ -119,9 +119,9 @@ class NodeTreeTest extends AnyFunSuite {
     nodeRead shouldEqual node
 
     def checkParents(original: Node, read: Node, isRoot: Boolean): Unit = {
-      read.parent shouldEqual original.parent
+      read.getParent shouldEqual original.getParent
       if (!isRoot) {
-        read.parent shouldNot be(None)
+        read.getParent shouldNot be(None)
       }
       read.children.zip(original.children).foreach { case (readChild, originalChild) =>
         checkParents(originalChild, readChild, isRoot = false)
@@ -133,7 +133,7 @@ class NodeTreeTest extends AnyFunSuite {
 
   def checkAllChildrenHaveCorrectParent(n: Node): Unit = {
     n.children.foreach { child =>
-      child.parent shouldEqual Some(n)
+      child.getParent shouldEqual Some(n)
       checkAllChildrenHaveCorrectParent(child)
     }
   }
@@ -419,20 +419,30 @@ class NodeTreeTest extends AnyFunSuite {
     createAction("DeleteAction", tree1.toString, tree1.treePathString, List())
       .newTree shouldEqual ExprChoiceNode()
 
-    val tree2 = ConcreteNode(Plus(Num(4), Num(6)).toString, List(SubExprNode(VariableNode("Num", List(LiteralNode("4")))), SubExprNode(VariableNode("Num", List(LiteralNode("6"))))))
+    val tree2 = ConcreteNode(Plus(Num(4), Num(6)).toString, List(SubExprNode(
+      VariableNode("Num", List(LiteralNode("4")))
+    ), SubExprNode(VariableNode("Num", List(LiteralNode("6"))))))
     createAction("DeleteAction", tree2.toString, tree2.treePathString, List())
       .newTree shouldEqual ExprChoiceNode()
 
-    val tree3 = VariableNode("Plus", List(SubExprNode(VariableNode("Num", List(LiteralNode("4")))), SubExprNode(VariableNode("Num", List(LiteralNode("6"))))))
+    val tree3 = VariableNode("Plus", List(SubExprNode(VariableNode("Num", List(LiteralNode("4")))), SubExprNode(
+      VariableNode("Num", List(LiteralNode("6")))
+    )))
     createAction("DeleteAction", tree3.toString, tree3.children(1).treePathString, List())
-      .newTree shouldEqual VariableNode("Plus", List(SubExprNode(VariableNode("Num", List(LiteralNode("4")))), SubExprNode(ExprChoiceNode())))
+      .newTree shouldEqual VariableNode("Plus", List(SubExprNode(VariableNode("Num", List(LiteralNode("4")))), SubExprNode(
+      ExprChoiceNode()
+    )))
   }
 
   test("PasteAction behaves correctly") {
-    val tree1 = VariableNode("Plus", List(SubExprNode(VariableNode("Num", List(LiteralNode("4")))), SubExprNode(VariableNode("Num", List(LiteralNode("6"))))))
+    val tree1 = VariableNode("Plus", List(SubExprNode(VariableNode("Num", List(LiteralNode("4")))), SubExprNode(
+      VariableNode("Num", List(LiteralNode("6")))
+    )))
     val pasteCache = VariableNode("Num", List(LiteralNode("50"))).toString
     createAction("PasteAction", tree1.toString, tree1.children(1).treePathString, List(pasteCache))
-      .newTree shouldEqual VariableNode("Plus", List(SubExprNode(VariableNode("Num", List(LiteralNode("4")))), SubExprNode(VariableNode("Num", List(LiteralNode("50"))))))
+      .newTree shouldEqual VariableNode("Plus", List(SubExprNode(VariableNode("Num", List(LiteralNode("4")))), SubExprNode(
+      VariableNode("Num", List(LiteralNode("50")))
+    )))
   }
 
   test("Correctly read expression from VariableNode with all children completed") {

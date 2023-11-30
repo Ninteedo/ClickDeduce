@@ -98,7 +98,7 @@ class LIfTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhenT
 
   property("Can create VariableNode for expression kinds in LIf") {
     forAll(newExprClasses) { c =>
-      VariableNode.createFromExpr(c) shouldBe a[VariableNode]
+      VariableNode.createFromExprName(c) shouldBe a[VariableNode]
     }
   }
 

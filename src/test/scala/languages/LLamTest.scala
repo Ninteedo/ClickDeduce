@@ -16,6 +16,7 @@ class LLamTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
   val twiceFunction: Lambda = Lambda(
     "f", Func(IntType(), IntType()), Lambda("x", IntType(), Apply(Var("f"), Apply(Var("f"), Var("x"))))
   )
+  val incrementTwiceFunction: Apply = Apply(twiceFunction, incrementFunction)
 
   property("Lambda correctly type-checks") {
     typeOf(incrementFunction) shouldEqual Func(IntType(), IntType())
@@ -51,10 +52,10 @@ class LLamTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
   }
 
   property("Lambda node behaves appropriately with simple argument type") {
-    val initialTree = VariableNode.createFromExpr("Lambda")
+    val initialTree = VariableNode.createFromExprName("Lambda")
     initialTree.args shouldEqual List(
       LiteralNode(""),
-      TypeChoiceNode(),
+      SubTypeNode(TypeChoiceNode()),
       SubExprNode(ExprChoiceNode())
     )
 
@@ -62,7 +63,7 @@ class LLamTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
     val editVarNameAction = EditLiteralAction(initialTree, List(0), argName)
     editVarNameAction.newTree.args shouldEqual List(
       LiteralNode(argName),
-      TypeChoiceNode(),
+      SubTypeNode(TypeChoiceNode()),
       SubExprNode(ExprChoiceNode())
     )
 
@@ -71,30 +72,30 @@ class LLamTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
     val setArgTypeAction = SelectTypeAction(editVarNameAction.newTree, List(1), argTypeName)
     setArgTypeAction.newTree.args shouldEqual List(
       LiteralNode(argName),
-      TypeNode(argTypeName, Nil),
+      SubTypeNode(TypeNode(argTypeName, Nil)),
       SubExprNode(ExprChoiceNode())
     )
 
     val setExprKindAction = SelectExprAction(setArgTypeAction.newTree, List(2), "Var")
     setExprKindAction.newTree.args shouldEqual List(
       LiteralNode(argName),
-      TypeNode(argTypeName, Nil),
+      SubTypeNode(TypeNode(argTypeName, Nil)),
       SubExprNode(VariableNode("Var", List(LiteralNode(""))))
     )
 
     val setVarExprLiteral = EditLiteralAction(setExprKindAction.newTree, List(2, 0), argName)
     setVarExprLiteral.newTree.args shouldEqual List(
       LiteralNode(argName),
-      TypeNode(argTypeName, Nil),
+      SubTypeNode(TypeNode(argTypeName, Nil)),
       SubExprNode(VariableNode("Var", List(LiteralNode(argName))))
     )
   }
 
   property("Lambda node behaves appropriately with complex argument type") {
-    val initialTree = VariableNode.createFromExpr("Lambda")
+    val initialTree = VariableNode.createFromExprName("Lambda")
     initialTree.args shouldEqual List(
       LiteralNode(""),
-      TypeChoiceNode(),
+      SubTypeNode(TypeChoiceNode()),
       SubExprNode(ExprChoiceNode())
     )
 
@@ -102,30 +103,31 @@ class LLamTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
     val editVarNameAction = EditLiteralAction(initialTree, List(0), argName)
     editVarNameAction.newTree.args shouldEqual List(
       LiteralNode(argName),
-      TypeChoiceNode(),
+      SubTypeNode(TypeChoiceNode()),
       SubExprNode(ExprChoiceNode())
     )
 
-    val completeTypeNode = TypeNode("Func", List(TypeNode("IntType", Nil), TypeNode("IntType", Nil)))
+    val completeTypeNode =
+      SubTypeNode(TypeNode("Func", List(SubTypeNode(TypeNode("IntType", Nil)), SubTypeNode(TypeNode("IntType", Nil)))))
 
     val setArgFuncTypeAction = SelectTypeAction(editVarNameAction.newTree, List(1), "Func")
     setArgFuncTypeAction.newTree.args shouldEqual List(
       LiteralNode(argName),
-      TypeNode("Func", List(TypeChoiceNode(), TypeChoiceNode())),
+      SubTypeNode(TypeNode("Func", List(SubTypeNode(TypeChoiceNode()), SubTypeNode(TypeChoiceNode())))),
       SubExprNode(ExprChoiceNode())
     )
 
     val setArgFuncInTypeAction = SelectTypeAction(setArgFuncTypeAction.newTree, List(1, 0), "IntType")
     setArgFuncInTypeAction.newTree.args shouldEqual List(
       LiteralNode(argName),
-      TypeNode("Func", List(TypeNode("IntType", Nil), TypeChoiceNode())),
+      SubTypeNode(TypeNode("Func", List(SubTypeNode(TypeNode("IntType", Nil)), SubTypeNode(TypeChoiceNode())))),
       SubExprNode(ExprChoiceNode())
     )
 
     val setArgFuncOutTypeAction = SelectTypeAction(setArgFuncInTypeAction.newTree, List(1, 1), "IntType")
     setArgFuncOutTypeAction.newTree.args shouldEqual List(
       LiteralNode(argName),
-      TypeNode("Func", List(TypeNode("IntType", Nil), TypeNode("IntType", Nil))),
+      SubTypeNode(TypeNode("Func", List(SubTypeNode(TypeNode("IntType", Nil)), SubTypeNode(TypeNode("IntType", Nil))))),
       SubExprNode(ExprChoiceNode())
     )
 
@@ -142,5 +144,41 @@ class LLamTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
       completeTypeNode,
       SubExprNode(VariableNode("Var", List(LiteralNode(argName))))
     )
+  }
+
+  property("Lambda expression string can be correctly read") {
+    val tree = incrementFunction
+    val treeString = "Lambda(\"x\",IntType(),Plus(Var(\"x\"),Num(1)))"
+    readExpr(tree.toString) shouldEqual Some(incrementFunction)
+
+    val tree2 = incrementTwiceFunction
+    readExpr(tree2.toString) shouldEqual Some(incrementTwiceFunction)
+  }
+
+  property("Lambda is converted to HTML without error") {
+    val tree = Apply(incrementFunction, Num(3))
+    val node = VariableNode(
+      "Apply",
+      List(
+        SubExprNode(VariableNode(
+          "Lambda",
+          List(
+            LiteralNode("x"),
+            SubTypeNode(TypeNode("IntType", Nil)),
+            SubExprNode(VariableNode(
+              "Plus",
+              List(
+                SubExprNode(VariableNode("Var", List(LiteralNode("x")))),
+                SubExprNode(VariableNode("Num", List(LiteralNode("1"))))
+              )
+            )
+            )
+          )
+        )
+        ),
+        SubExprNode(VariableNode("Num", List(LiteralNode("3"))))
+      )
+    )
+    val htmlVersion = node.toHtml(NodeDisplayMode.Edit).toString
   }
 }

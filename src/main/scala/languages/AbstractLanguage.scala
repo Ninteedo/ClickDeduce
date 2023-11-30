@@ -96,6 +96,8 @@ trait AbstractLanguage {
   case class UnknownType() extends Type {
 
   }
+  
+  case class TypePlaceholder(content: String) extends Type
 
   trait TermError extends Term {
     val message: String = "Error"
@@ -227,6 +229,7 @@ trait AbstractLanguage {
   def prettyPrint(t: Type): String = t match {
     case x: TypeError => x.message
     case x: UnknownType => "Unknown"
+    case TypePlaceholder(content) => content
     case x => throw new NotImplementedError(s"prettyPrint($x)")
   }
 

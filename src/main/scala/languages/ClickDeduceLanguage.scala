@@ -124,8 +124,74 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     //    getClass.getClasses.filter(c => classOf[Node].isAssignableFrom(c)).map(_.asInstanceOf[Class[Node]]).toList
     //    getSubclassesOf(classOf[Node]).map(_.asInstanceOf[Class[Node]])
     List(
-      classOf[ConcreteNode], classOf[VariableNode], classOf[ExprChoiceNode], classOf[SubExprNode], classOf[LiteralNode]
+      classOf[ConcreteNode], classOf[VariableNode], classOf[ExprChoiceNode], classOf[SubExprNode], classOf[LiteralNode],
+      classOf[TypeNode], classOf[TypeChoiceNode], classOf[SubTypeNode]
     ).map(_.asInstanceOf[Class[Node]])
+  }
+
+  /**
+   * Create an `Expr` given its name and a list of arguments.
+   *
+   * @param name The name of the `Expr` to be created. Must match the name of a class extending `Expr` in the
+   *             language.
+   * @param args The arguments to be passed to the constructor of the `Expr`.
+   * @return The `Expr` created, if successful.
+   */
+  def parseTerm(s: String): Option[Term] = {
+    @tailrec
+    def makeTerm(name: String, args: List[Any]): Option[Term] = {
+      def constructTermFromArgs[T](termClass: Class[T]): T = {
+        val constructor = termClass.getConstructors()(0)
+        val arguments = this +: args.map {
+          case Some(e) => e
+          case x => x
+        }
+        constructor.newInstance(arguments: _*).asInstanceOf[T]
+      }
+
+      val exprClass = exprClassList.find(_.getSimpleName == name)
+      exprClass match {
+        case Some(value) => {
+          Some(constructTermFromArgs(value))
+        }
+        case None => {
+          val blankClass = blankClassList.find(_.getSimpleName == name)
+          blankClass match {
+            case Some(value) => makeTerm("MissingExpr", Nil)
+            case None => typeClassList.find(_.getSimpleName == name) match {
+              case Some(value) => {
+                Some(constructTermFromArgs(value))
+              }
+              case None => None
+            }
+          }
+        }
+      }
+    }
+
+    object TermParser extends JavaTokenParsers {
+      def term: Parser[Option[Term]] = name ~ "(" ~ repsep(arg, "\\s*,\\s*".r) ~ ")" ^^ {
+        case name ~ "(" ~ args ~ ")" => makeTerm(name, args)
+        case _ => None
+      }
+
+      def name: Parser[String] = "[A-Za-z]\\w*".r
+
+      def identifier: Parser[String] = "[A-Za-z_$][\\w_$]*".r
+
+      def arg: Parser[Any] = term | stringLiteral ^^ (s => LiteralString(s)) |
+        wholeNumber ^^ (n => LiteralInt(BigInt(n))) |
+        "true" ^^ (_ => LiteralBool(true)) | "false" ^^ (_ => LiteralBool(false)) |
+        identifier ^^ (s => LiteralAny(s))
+
+      def parseTerm(s: String): ParseResult[Option[Term]] = parseAll(term, s.strip())
+    }
+
+    TermParser.parseTerm(s) match {
+      case TermParser.Success(matched, _) => matched
+      case x =>
+        None
+    }
   }
 
   /**
@@ -135,55 +201,14 @@ trait ClickDeduceLanguage extends AbstractLanguage {
    * @param s The string to be parsed.
    * @return The `Expr` represented by the string, if successful.
    */
-  def readExpr(s: String): Option[Expr] = {
-    /**
-     * Create an `Expr` given its name and a list of arguments.
-     *
-     * @param name The name of the `Expr` to be created. Must match the name of a class extending `Expr` in the
-     *             language.
-     * @param args The arguments to be passed to the constructor of the `Expr`.
-     * @return The `Expr` created, if successful.
-     */
-    @tailrec
-    def makeExpr(name: String, args: List[Any]): Option[Expr] = {
-      val exprClass = exprClassList.find(_.getSimpleName == name)
-      exprClass match
-        case Some(value) => {
-          val constructor = value.getConstructors()(0)
-          val arguments = this +: args.map {
-            case Some(e) => e
-            case x => x
-          }
-          Some(constructor.newInstance(arguments: _*).asInstanceOf[Expr])
-        }
-        case None => {
-          val blankClass = blankClassList.find(_.getSimpleName == name)
-          blankClass match {
-            case Some(value) => makeExpr("MissingExpr", Nil)
-            case None => None
-          }
-        }
-    }
+  def readExpr(s: String): Option[Expr] = parseTerm(s) match {
+    case Some(e: Expr) => Some(e)
+    case _ => None
+  }
 
-    object ExprParser extends JavaTokenParsers {
-      def expr: Parser[Option[Expr]] = name ~ "(" ~ repsep(arg, "\\s*,\\s*".r) ~ ")" ^^ {
-        case name ~ "(" ~ args ~ ")" => makeExpr(name, args)
-        case _ => None
-      }
-
-      def name: Parser[String] = "[A-Za-z]\\w*".r
-
-      def arg: Parser[Any] = expr | stringLiteral ^^ (s => LiteralString(s)) | wholeNumber ^^ (n => LiteralInt(
-        BigInt(n)
-      )) | "true" ^^ (_ => LiteralBool(true)) | "false" ^^ (_ => LiteralBool(false))
-
-      def parseExpr(s: String): ParseResult[Option[Expr]] = parseAll(expr, s.strip())
-    }
-
-    ExprParser.parseExpr(s) match {
-      case ExprParser.Success(matched, _) => matched
-      case _ => None
-    }
+  def readType(s: String): Option[Type] = parseTerm(s) match {
+    case Some(t: Type) => Some(t)
+    case _ => None
   }
 
   def exprNameToClass(name: String): Option[Class[Expr]] = {
@@ -304,13 +329,22 @@ trait ClickDeduceLanguage extends AbstractLanguage {
   abstract class Node {
     val children: List[OuterNode] = Nil
 
-    var parent: Option[OuterNode] = None
+    private var parent: Option[OuterNode] = None
+
+    def getParent: Option[OuterNode] = parent
+
+    def setParent(parentNode: OuterNode): Unit = getParent match {
+      case None => parent = Some(parentNode)
+      case Some(value) => parent = Some(parentNode)
+      //        if (!(value eq parentNode))
+      //          throw new Exception("Cannot initialise parent multiple times")
+    }
 
     def toHtmlLine(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String]
 
     def toHtmlLineReadOnly(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String]
 
-    def treePath: List[Int] = parent match {
+    def treePath: List[Int] = getParent match {
       case Some(value) => value.treePath :+ value.args.indexWhere(_ eq this)
       case None => Nil
     }
@@ -326,7 +360,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     def read(s: String): Option[Node] = {
       def makeNode(name: String, args: List[Any], env: Env | TypeEnv = Map()): Option[Node] = {
         val nodeClass = nodeClassList.find(_.getSimpleName == name)
-        nodeClass match
+        nodeClass match {
           case Some(value) => {
             val constructor = value.getConstructors()(0)
             var arguments = ClickDeduceLanguage.this +: args.map {
@@ -340,10 +374,11 @@ trait ClickDeduceLanguage extends AbstractLanguage {
             Some(constructor.newInstance(arguments: _*).asInstanceOf[Node])
           }
           case None => None
+        }
       }
 
       object NodeParser extends JavaTokenParsers {
-        def outerNode: Parser[Option[OuterNode | Expr]] = outerNodeName ~ "(" ~ repsep(
+        def outerNode: Parser[Option[OuterNode | Expr | Type]] = outerNodeName ~ "(" ~ repsep(
           outerNodeArg, "\\s*,\\s*".r
         ) ~ ")" ^^ {
           case name ~ "(" ~ args ~ ")" => {
@@ -351,13 +386,17 @@ trait ClickDeduceLanguage extends AbstractLanguage {
               val node = makeNode(name, args)
               node match {
                 case Some(n: OuterNode) => {
-                  n.children.foreach(_.parent = Some(n))
+                  n.children.foreach(_.setParent(n))
                   Some(n)
                 }
                 case _ => throw new Exception("Unexpected error in outerNode")
               }
             } else {
-              readExpr(s"$name(${args.mkString(", ")})")
+              val exprString = s"$name(${args.mkString(", ")})"
+              readExpr(exprString) match {
+                case Some(expr) => Some(expr)
+                case None => readType(exprString)
+              }
             }
           }
           case _ => None
@@ -374,10 +413,11 @@ trait ClickDeduceLanguage extends AbstractLanguage {
           }
         }
 
-        def outerNodeName: Parser[String] = "ExprChoiceNode" | "ConcreteNode" | "VariableNode" // outerNodeClasses
+        def outerNodeName: Parser[String] = "ExprChoiceNode" | "ConcreteNode" | "VariableNode" | "TypeChoiceNode" |
+          "TypeNode" // outerNodeClasses
         // .map(_.getSimpleName.stripSuffix("$")).mkString("|").r
 
-        def innerNodeName: Parser[String] = "SubExprNode" | "LiteralNode" | "TypeChoiceNode" | "TypeNode" //
+        def innerNodeName: Parser[String] = "SubExprNode" | "LiteralNode" | "SubTypeNode" //
         // innerNodeClasses.map(_.getSimpleName
         // .stripSuffix("$")).mkString("|").r
 
@@ -397,7 +437,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
           case _ => throw new Exception("Unexpected error in innerNode")
         }
 
-        def parseNode(s: String): ParseResult[Option[Node | Expr]] = parseAll(outerNode, s.strip())
+        def parseNode(s: String): ParseResult[Option[Node | Expr | Type]] = parseAll(outerNode, s.strip())
       }
 
       NodeParser.parseNode(s) match {
@@ -405,14 +445,14 @@ trait ClickDeduceLanguage extends AbstractLanguage {
           def parentify(node: Node): Unit = node match {
             case (n: OuterNode) => {
               n.children.foreach({ c =>
-                c.parent = Some(n)
+                c.setParent(n)
                 parentify(c)
               }
               )
             }
             case (n: InnerNode) => {
               n.children.foreach({ c =>
-                c.parent = n.parent
+                c.setParent(n.getParent.get)
                 parentify(c)
               }
               )
@@ -438,6 +478,122 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
     def toHtml(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] =
       if (children.isEmpty) toHtmlAxiom(mode) else toHtmlSubtree(mode)
+
+    def toHtmlAxiom(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String]
+
+    def toHtmlSubtree(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String]
+
+    /**
+     * Find the child of this expression tree at the given path.
+     *
+     * @param path the path to the child
+     * @return the child at the given path, if it exists
+     */
+    def findChild(path: List[Int]): Option[OuterNode] = path match {
+      case Nil => Some(this)
+      case head :: tail => {
+        args(head) match {
+          case SubExprNode(node) => node.findChild(tail)
+          case _ => None
+        }
+      }
+    }
+
+    def replace(path: List[Int], replacement: Node): OuterNode = path match {
+      case Nil => replacement match {
+        case n: OuterNode => n
+      }
+      case head :: tail => {
+        val updatedArgs = args.updated(
+          head,
+          args(head) match {
+            case SubExprNode(node) => SubExprNode(node.replace(tail, replacement) match {
+              case n: ExprNode => n
+            }
+            )
+            case SubTypeNode(node) => SubTypeNode(node.replace(tail, replacement) match {
+              case n: TypeNodeParent => n
+            }
+            )
+            case LiteralNode(literalText) => tail match {
+              case Nil => replacement match {
+                case n: InnerNode => n
+              }
+            }
+          }
+        )
+
+        this match {
+          case VariableNode(exprName, _) => VariableNode(exprName, updatedArgs)
+          case ConcreteNode(exprString, _) => ConcreteNode(exprString, updatedArgs)
+          case TypeNode(typeName, _) => TypeNode(typeName, updatedArgs)
+        }
+      }
+    }
+
+    //    def replace(path: List[Int], replacement: OuterNode): OuterNode
+    //
+    //    def replaceInner(path: List[Int], replacement: InnerNode): OuterNode
+
+    def insertExpr(newExprName: String, newTreePath: List[Int]): VariableNode = {
+      val newNode = VariableNode.createFromExprName(newExprName)
+      val oldNode = findChild(newTreePath).get
+      oldNode match {
+        case x: ExprChoiceNode => {
+          replace(newTreePath, newNode) match {
+            case v: VariableNode => v
+            case x => throw new Exception(s"Unexpected node kind after replaceInner in insertExpr: $x")
+          }
+        }
+        case x => throw new Exception(s"Unexpected node kind in insertExpr: $x")
+      }
+    }
+
+    override def treePath: List[Int] = getParent match {
+      case Some(value) => {
+        val index: Int = value.args.indexWhere({
+          case SubExprNode(node) => node eq this
+          case SubTypeNode(node) => node eq this
+          case _ => false
+        }
+        )
+        if (index == -1) {
+          throw new Exception("Could not find self in parent node's args")
+        }
+        value.treePath :+ index
+      }
+      case None => Nil
+    }
+  }
+
+  abstract class ExprNode extends OuterNode {
+    override def setParent(parentNode: OuterNode): Unit = parentNode match {
+      case n: ExprNode => super.setParent(n)
+    }
+
+    override def getParent: Option[ExprNode] = super.getParent match {
+      case Some(n: ExprNode) => Some(n)
+      case None => None
+    }
+
+    val exprName: String
+
+    def getExpr: Expr
+
+    def getValue: Value = eval(getExpr, getEnv)
+
+    def getType: Type = typeOf(getExpr, getTypeEnv)
+
+    def getEnv: Env = getParent match {
+      case Some(value) =>
+        value.getExpr.childExprEnvs(value.getEnv)(value.children.indexWhere(_ eq this))
+      case None => Map()
+    }
+
+    def getTypeEnv: TypeEnv = getParent match {
+      case Some(value) => value.getExpr.childExprTypeEnvs(value.getTypeEnv)(value.children.indexWhere(_ eq this))
+      case None => Map()
+    }
 
     def toHtmlAxiom(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = {
       div(
@@ -515,122 +671,28 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       )
     }
 
-    val exprName: String
-
-    def getExpr: Expr
-
     def getVisibleChildren(mode: NodeDisplayMode): List[OuterNode] = mode match {
       case NodeDisplayMode.Edit => children
       case NodeDisplayMode.Evaluation => {
         val childExprs = getExpr.getEvalChildren(Map())
-        children.filter(c => childExprs.contains(c.getExpr))
+        children.filter({
+          case c: ExprNode => childExprs.contains(c.getExpr)
+          case _ => false
+        }
+        )
       }
       case NodeDisplayMode.TypeCheck => children
     }
 
-    /**
-     * Find the child of this expression tree at the given path.
-     *
-     * @param path the path to the child
-     * @return the child at the given path, if it exists
-     */
-    def findChild(path: List[Int]): Option[OuterNode] = path match {
-      case Nil => Some(this)
-      case head :: tail => {
-        args(head) match {
-          case SubExprNode(node) => node.findChild(tail)
-          case _ => None
-        }
-      }
-    }
-
-    def replace(path: List[Int], replacement: OuterNode): OuterNode = {
-      path match {
-        case Nil => replacement
-        case head :: tail => {
-          val newArgs: List[InnerNode] = args.updated(
-            head,
-            args(head) match {
-              case SubExprNode(node: OuterNode) => SubExprNode(node.replace(tail, replacement))
-              case _ => ???
-            }
-          )
-          val node = this match {
-            case ConcreteNode(s, _) => ConcreteNode(s, newArgs)
-            case VariableNode(s, _) => VariableNode(s, newArgs)
-          }
-          node
-        }
-      }
-    }
-
-    def replaceInner(path: List[Int], replacement: InnerNode): OuterNode = {
-      path match {
-        case Nil => this
-        case head :: Nil => {
-          val newArgs = args.updated(head, replacement)
-          VariableNode(exprName, newArgs)
-        }
-        case head :: tail => args(head) match {
-          case SubExprNode(node) => node match {
-            case n: VariableNode => {
-              val newNode = SubExprNode(n.replaceInner(tail, replacement))
-              val newArgs = args.updated(head, newNode)
-              VariableNode(exprName, newArgs)
-            }
-          }
-        }
-      }
-    }
-
-    def insertExpr(newExprName: String, newTreePath: List[Int]): VariableNode = {
-      val newNode = VariableNode.createFromExpr(newExprName)
-      val oldNode = findChild(newTreePath).get
-      oldNode match {
-        case x: ExprChoiceNode => {
-          replace(newTreePath, newNode) match {
-            case v: VariableNode => v
-            case x => throw new Exception(s"Unexpected node kind after replaceInner in insertExpr: $x")
-          }
-        }
-        case x => throw new Exception(s"Unexpected node kind in insertExpr: $x")
-      }
-    }
-
-    def getValue: Value = eval(getExpr, getEnv)
-
-    def getType: Type = typeOf(getExpr, getTypeEnv)
-
-    override def treePath: List[Int] = parent match {
-      case Some(value) => {
-        val index: Int = value.args.indexWhere({
-          case SubExprNode(node) => node eq this
-          case _ => false
-        }
-        )
-        if (index == -1) {
-          throw new Exception("Could not find self in parent node's args")
-        }
-        value.treePath :+ index
-      }
-      case None => Nil
-    }
-
-    def getEnv: Env = parent match {
-      case Some(value) => value.getExpr.childExprEnvs(value.getEnv)(value.children.indexWhere(_ eq this))
-      case None => Map()
-    }
-
-    def getTypeEnv: TypeEnv = parent match {
-      case Some(value) => value.getExpr.childExprTypeEnvs(value.getTypeEnv)(value.children.indexWhere(_ eq this))
-      case None => Map()
-    }
+    //    def replace(path: List[Int], replacement: OuterNode): ExprNode
+    //
+    //    def replaceInner(path: List[Int], replacement: InnerNode): ExprNode
   }
 
   case class ConcreteNode(
     exprString: String,
     override val args: List[InnerNode] = Nil
-  ) extends OuterNode {
+  ) extends ExprNode {
     lazy val expr: Expr = readExpr(exprString).get
 
     override def toHtmlLine(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = expr.toHtml
@@ -648,10 +710,10 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
     override def getExpr: Expr = expr
 
-    children.foreach(_.parent = Some(this))
+    children.foreach(_.setParent(this))
   }
 
-  case class VariableNode(exprName: String, args: List[InnerNode] = Nil) extends OuterNode {
+  case class VariableNode(exprName: String, args: List[InnerNode] = Nil) extends ExprNode {
     override def toHtmlLine(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] =
       div(raw(getExprHtmlLine(mode)))
 
@@ -674,7 +736,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       val arguments = lang +: args.map {
         case n: SubExprNode => n.node.getExpr
         case n: LiteralNode => n.getLiteral
-        case n: TypeNodeParent => n.getType
+        case n: SubTypeNode => n.node.getType
       }
       constructor.newInstance(arguments: _*).asInstanceOf[Expr]
     }
@@ -684,7 +746,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       val arguments = lang +: args.map {
         case n: SubExprNode => ExprPlaceholder(n.toHtmlLineReadOnly(mode).toString)
         case n: LiteralNode => LiteralAny(n.toHtmlLine(mode).toString)
-        case n: TypeNodeParent => n.getType
+        case n: SubTypeNode => TypePlaceholder(n.node.toHtmlLine(mode).toString)
       }
       prettyPrint(constructor.newInstance(arguments: _*).asInstanceOf[Expr])
     }
@@ -694,6 +756,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       val arguments = lang +: args.map {
         case n: SubExprNode => ExprPlaceholder(n.toHtmlLineReadOnly(mode).toString)
         case n: LiteralNode => LiteralAny(n.toHtmlLineReadOnly(mode).toString)
+        case n: SubTypeNode => TypePlaceholder(n.node.toHtmlLineReadOnly(mode).toString)
       }
       prettyPrint(constructor.newInstance(arguments: _*).asInstanceOf[Expr])
     }
@@ -703,28 +766,60 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       case _ => true
     }
 
-    children.foreach(_.parent = Some(this))
-    args.foreach(_.parent = Some(this))
+    //    def replace(path: List[Int], replacement: OuterNode): VariableNode = path match {
+    //      case Nil => replacement.asInstanceOf[VariableNode] // TODO: type unsafe
+    //      case head :: tail => {
+    //        val newArgs: List[InnerNode] = args.updated(
+    //          head,
+    //          args(head) match {
+    //            case SubExprNode(node) => SubExprNode(node.replace(tail, replacement))
+    //            case _ => ???
+    //          }
+    //        )
+    //        VariableNode(exprName, newArgs)
+    //      }
+    //    }
+    //
+    //    def replaceInner(path: List[Int], replacement: InnerNode): VariableNode = path match {
+    //      case Nil => this
+    //      case head :: Nil => {
+    //        val newArgs = args.updated(head, replacement)
+    //        VariableNode(exprName, newArgs)
+    //      }
+    //      case head :: tail => args(head) match {
+    //        case SubExprNode(node) => node match {
+    //          case n: VariableNode => {
+    //            val newNode = SubExprNode(n.replaceInner(tail, replacement))
+    //            val newArgs = args.updated(head, newNode)
+    //            VariableNode(exprName, newArgs)
+    //          }
+    //        }
+    //      }
+    //    }
+
+
+    children.foreach(_.setParent(this))
+    args.foreach(_.setParent(this))
   }
 
   object VariableNode {
-    def createFromExpr(exprName: String): VariableNode = {
+    def createFromExprName(exprName: String): VariableNode = {
       val exprClass = exprNameToClass(exprName).get
       val constructor = exprClass.getConstructors()(0)
       val innerNodes = constructor.getParameterTypes.map {
         case c if classOf[ClickDeduceLanguage] isAssignableFrom c => None
         case c if classOf[Expr] isAssignableFrom c => Some(SubExprNode(ExprChoiceNode()))
         case c if classOf[Literal] isAssignableFrom c => Some(LiteralNode(""))
-        case c if classOf[Type] isAssignableFrom c => Some(TypeChoiceNode())
+        case c if classOf[Type] isAssignableFrom c => Some(SubTypeNode(TypeChoiceNode()))
         case c => throw new Exception(s"Unexpected parameter type in createFromExpr: $c")
       }.filter(_.isDefined).map(_.get)
       val result = VariableNode(exprName, innerNodes.toList)
-      innerNodes.foreach(_.parent = Some(result))
+      innerNodes.foreach(_.setParent(result))
       result
     }
   }
 
-  case class ExprChoiceNode() extends OuterNode {
+  case class ExprChoiceNode() extends ExprNode {
     override val args: List[InnerNode] = Nil
 
     override val children: List[OuterNode] = Nil
@@ -743,15 +838,24 @@ trait ClickDeduceLanguage extends AbstractLanguage {
   abstract class InnerNode extends Node {
   }
 
-  case class SubExprNode(node: OuterNode) extends InnerNode {
+  case class SubExprNode(node: ExprNode) extends InnerNode {
+    override def setParent(parentNode: OuterNode): Unit = parentNode match {
+      case n: ExprNode => super.setParent(n)
+    }
+
+    override def getParent: Option[ExprNode] = super.getParent match {
+      case Some(n: ExprNode) => Some(n)
+      case None => None
+    }
+
     override def toHtmlLine(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] =
       node.toHtmlLineReadOnly(mode)
 
     override def toHtmlLineReadOnly(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = toHtmlLine(mode)
 
-    override val children: List[OuterNode] = List(node)
+    override val children: List[ExprNode] = List(node)
 
-    children.foreach(_.parent = this.parent)
+    //    children.foreach(_.setParent(this.getParent.get))
   }
 
   case class LiteralNode(literalText: String) extends InnerNode {
@@ -780,7 +884,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       s"LiteralNode(${UtilityFunctions.quote(literalText)})"
     }
 
-    override def treePath: List[Int] = parent match {
+    override def treePath: List[Int] = getParent match {
       case Some(value: VariableNode) => value.treePath :+ value.args.indexWhere(_ eq this)
       case _ => Nil
     }
@@ -788,19 +892,49 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     def getLiteral: Literal = Literal.fromString(literalText)
   }
 
-  abstract class TypeNodeParent extends InnerNode {
+  abstract class TypeNodeParent extends OuterNode {
     def getType: Type
+
+    def getTypeName: String = getType.getClass.getSimpleName
+
+    def toHtmlAxiom(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = {
+      div(
+        cls := "subtree axiom",
+        data("tree-path") := treePathString,
+        data("term") := getType.toString,
+        data("node-string") := toString,
+        div(
+          cls := "expr",
+          toHtmlLine(mode)(display := "inline"),
+        ),
+        div(cls := "annotation-axiom", getTypeName)
+      )
+    }
+
+    def toHtmlSubtree(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = {
+      div(
+        cls := "subtree",
+        data("tree-path") := treePathString,
+        data("term") := getType.toString,
+        data("node-string") := toString,
+        div(
+          cls := "node",
+          div(cls := "expr", toHtmlLine(mode)),
+        ),
+        div(
+          cls := "args",
+          children.map(_.toHtml(mode)),
+          div(cls := "annotation-new", getTypeName)
+        )
+      )
+    }
   }
 
-  case class TypeNode(typeName: String, subTypes: List[InnerNode]) extends TypeNodeParent {
-    override def toHtmlLine(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = ???
-
-    override def toHtmlLineReadOnly(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = ???
-
+  case class TypeNode(typeName: String, args: List[InnerNode]) extends TypeNodeParent {
     override def getType: Type = {
       val constructor = typeClass.getConstructors()(0)
-      val arguments = lang +: subTypes.map {
-        case tn: TypeNodeParent => tn.getType
+      val arguments = lang +: args.map {
+        case tn: SubTypeNode => tn.node.getType
         case ln: LiteralNode => ln.getLiteral
       }
       constructor.newInstance(arguments: _*).asInstanceOf[Type]
@@ -812,6 +946,14 @@ trait ClickDeduceLanguage extends AbstractLanguage {
         s"Unknown expression type for ${lang.getClass.getSimpleName}: $typeName"
       )
     }
+
+    override def toHtmlLine(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] =
+      getType.toHtml(data("tree-path") := treePathString)
+
+    override def toHtmlLineReadOnly(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] =
+      toHtmlLine(mode)(readonly, disabled)
+
+    override val children: List[OuterNode] = args.filter(_.isInstanceOf[SubTypeNode]).flatMap(_.children)
   }
 
   object TypeNode {
@@ -820,7 +962,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
         case Some(typ) => {
           val constructor = typ.getConstructors()(0)
           val arguments = constructor.getParameterTypes.map({
-            case c if classOf[Type] isAssignableFrom c => Some(TypeChoiceNode())
+            case c if classOf[Type] isAssignableFrom c => Some(SubTypeNode(TypeChoiceNode()))
             case c if classOf[Literal] isAssignableFrom c => Some(LiteralNode(""))
             case c if classOf[ClickDeduceLanguage] isAssignableFrom c => None
           }
@@ -835,6 +977,8 @@ trait ClickDeduceLanguage extends AbstractLanguage {
   }
 
   case class TypeChoiceNode() extends TypeNodeParent {
+    override val args: List[InnerNode] = Nil
+
     override def toHtmlLine(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] =
       BlankTypeDropDown().toHtml(data("tree-path") := treePathString)
 
@@ -842,6 +986,15 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       toHtmlLine(mode)(readonly, disabled)
 
     override def getType: Type = UnknownType()
+  }
+
+  case class SubTypeNode(node: TypeNodeParent) extends InnerNode {
+    override val children: List[OuterNode] = List(node)
+
+    override def toHtmlLine(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] =
+      node.toHtmlLineReadOnly(mode)
+
+    override def toHtmlLineReadOnly(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = toHtmlLine(mode)
   }
 
 
@@ -898,7 +1051,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     override val treePath: List[Int],
     newLiteralText: String
   ) extends Action(originalTree, treePath) {
-    override val newTree: OuterNode = originalTree.replaceInner(treePath, LiteralNode(newLiteralText))
+    override val newTree: OuterNode = originalTree.replace(treePath, LiteralNode(newLiteralText))
   }
 
   case class SelectTypeAction(
@@ -906,7 +1059,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     override val treePath: List[Int],
     typeChoiceName: String
   ) extends Action(originalTree, treePath) {
-    override val newTree: OuterNode = originalTree.replaceInner(treePath, TypeNode.fromTypeName(typeChoiceName))
+    override val newTree: OuterNode = originalTree.replace(treePath, TypeNode.fromTypeName(typeChoiceName))
   }
 
   //  case class CompleteEvaluationAction(override val originalTree: OuterNode, override val treePath: List[Int])
@@ -942,7 +1095,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
     override val newTree: OuterNode = pasteNode match {
       case n: OuterNode => originalTree.replace(treePath, n)
-      case n: InnerNode => originalTree.replaceInner(treePath, n)
+      case n: InnerNode => originalTree.replace(treePath, n)
     }
   }
 

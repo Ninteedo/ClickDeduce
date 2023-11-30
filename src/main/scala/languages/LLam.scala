@@ -1,10 +1,18 @@
 package languages
 
+import scala.collection.immutable.List
+
 class LLam extends LLet {
   // expressions
   case class Apply(e1: Expr, e2: Expr) extends Expr
 
-  case class Lambda(v: Literal, typ: Type, e: Expr) extends Expr
+  case class Lambda(v: Literal, typ: Type, e: Expr) extends Expr {
+    override def childExprEnvs(env: Env): List[Env] = List(env, env + (v.toString -> NumV(-999)))
+
+    override def childExprTypeEnvs(tenv: TypeEnv): List[TypeEnv] = List(
+      tenv, tenv + (v.toString -> typ)
+    )
+  }
 
   object Lambda {
     def apply(v: Variable, typ: Type, e: Expr): Lambda = new Lambda(LiteralAny(v), typ, e)
