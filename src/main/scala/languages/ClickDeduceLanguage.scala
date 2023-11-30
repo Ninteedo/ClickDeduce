@@ -90,7 +90,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
   private lazy val exprClassListDropdownHtml: TypedTag[String] = {
     select(
-      cls := "expr-dropdown", onchange := "handleDropdownChange(this)",
+      cls := "expr-dropdown", onchange := "handleDropdownChange(this, \"expr\")",
       option(value := "", "Select Expr..."),
       exprClassList.map(e => {
         option(value := e.getSimpleName, e.getSimpleName)
@@ -101,8 +101,8 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
   private lazy val typeClassListDropdownHtml: TypedTag[String] = {
     select(
-      cls := "expr-dropdown", onchange := "handleDropdownChange(this)",
-      option(value := "", "Select Expr..."),
+      cls := "expr-dropdown", onchange := "handleDropdownChange(this, \"type\")",
+      option(value := "", "Select Type..."),
       typeClassList.map(e => {
         option(value := e.getSimpleName, e.getSimpleName)
       }
@@ -954,6 +954,8 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       toHtmlLine(mode)(readonly, disabled)
 
     override val children: List[OuterNode] = args.filter(_.isInstanceOf[SubTypeNode]).flatMap(_.children)
+
+    override def toString: String = s"TypeNode(${UtilityFunctions.quote(typeName)}, $args)"
   }
 
   object TypeNode {
@@ -1005,6 +1007,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     case "InsertAction" => classOf[InsertAction]
     case "PasteAction" => classOf[PasteAction]
     case "IdentityAction" => classOf[IdentityAction]
+    case "SelectTypeAction" => classOf[SelectTypeAction]
   }).asInstanceOf[Class[Action]]
 
   def createAction(

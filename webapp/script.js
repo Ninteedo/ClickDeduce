@@ -64,12 +64,17 @@ function getSelectedLanguage() {
     return langSelector.value;
 }
 
-function handleDropdownChange(dropdown) {
+function handleDropdownChange(dropdown, kind) {
     const selectedValue = dropdown.value;
     const subtree = dropdown.parentElement.parentElement;
     const dataTreePath = subtree.getAttribute("data-tree-path");
 
-    runAction("SelectExprAction", dataTreePath, [selectedValue]);
+    let actionName = "SelectExprAction";
+    if (kind === "type") {
+        actionName = "SelectTypeAction";
+    }
+
+    runAction(actionName, dataTreePath, [selectedValue]);
 }
 
 function handleLiteralChanged(textInput) {
