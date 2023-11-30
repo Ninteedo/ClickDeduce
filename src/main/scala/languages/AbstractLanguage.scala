@@ -29,13 +29,28 @@ trait AbstractLanguage {
 
   trait Term {
     lazy val toHtml: TypedTag[String] = span(raw(prettyPrint(this)))
+
+    def getChildren(env: Env = Map(), mode: DisplayMode = DisplayMode.Edit): List[Term] = Nil
   }
 
   /**
    * An unevaluated expression.
    */
   abstract class Expr extends Term {
-    def children: List[Expr] = {
+    override def getChildren(env: Env = Map(), mode: DisplayMode = DisplayMode.Edit): List[Term] = {
+      def getExprFields(e: Expr): List[Expr] = {
+        e match {
+          case e0: Product =>
+            val values = e0.productIterator.toList
+            values.collect({ case e: Expr => e.childVersion })
+          case _ => Nil
+        }
+      }
+
+      getExprFields(this)
+    }
+
+    def getChildrenExpressions: List[Expr] = {
       def getExprFields(e: Expr): List[Expr] = {
         e match {
           case e0: Product =>
@@ -51,13 +66,13 @@ trait AbstractLanguage {
     /**
      * Gets the child expressions of this expression, excluding any children which are not used in evaluation.
      */
-    def getEvalChildren(env: Env): List[Expr] = children
+    def getEvalChildren(env: Env): List[Expr] = getChildren().filter(_.isInstanceOf[Expr]).map({case e: Expr => e})
 
     lazy val childVersion: Expr = this
 
-    def childExprEnvs(env: Env): List[Env] = List.fill(children.length)(env)
+    def childExprEnvs(env: Env): List[Env] = List.fill(getChildren().length)(env)
 
-    def childExprTypeEnvs(tenv: TypeEnv): List[TypeEnv] = List.fill(children.length)(tenv)
+    def childExprTypeEnvs(tenv: TypeEnv): List[TypeEnv] = List.fill(getChildren().length)(tenv)
   }
 
   case class MissingExpr() extends Expr
@@ -96,7 +111,7 @@ trait AbstractLanguage {
   case class UnknownType() extends Type {
 
   }
-  
+
   case class TypePlaceholder(content: String) extends Type
 
   trait TermError extends Term {
@@ -253,4 +268,15 @@ trait AbstractLanguage {
   }
 
   def envToTypeEnv(env: Env): TypeEnv = env.map((k: String, v: Value) => (k, v.typ))
+
+  enum DisplayMode:
+    case Edit, Evaluation, TypeCheck
+
+  object DisplayMode {
+    def fromString(s: String): DisplayMode = s match {
+      case "edit" => Edit
+      case "eval" => Evaluation
+      case "type-check" => TypeCheck
+    }
+  }
 }

@@ -315,17 +315,6 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     }
   }
 
-  enum NodeDisplayMode:
-    case Edit, Evaluation, TypeCheck
-
-  object NodeDisplayMode {
-    def fromString(s: String): NodeDisplayMode = s match {
-      case "edit" => Edit
-      case "eval" => Evaluation
-      case "type-check" => TypeCheck
-    }
-  }
-
   abstract class Node {
     val children: List[OuterNode] = Nil
 
@@ -340,9 +329,9 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       //          throw new Exception("Cannot initialise parent multiple times")
     }
 
-    def toHtmlLine(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String]
+    def toHtmlLine(mode: DisplayMode = DisplayMode.Edit): TypedTag[String]
 
-    def toHtmlLineReadOnly(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String]
+    def toHtmlLineReadOnly(mode: DisplayMode = DisplayMode.Edit): TypedTag[String]
 
     def treePath: List[Int] = getParent match {
       case Some(value) => value.treePath :+ value.args.indexWhere(_ eq this)
@@ -476,12 +465,12 @@ trait ClickDeduceLanguage extends AbstractLanguage {
   abstract class OuterNode extends Node {
     val args: List[InnerNode]
 
-    def toHtml(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] =
+    def toHtml(mode: DisplayMode = DisplayMode.Edit): TypedTag[String] =
       if (children.isEmpty) toHtmlAxiom(mode) else toHtmlSubtree(mode)
 
-    def toHtmlAxiom(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String]
+    def toHtmlAxiom(mode: DisplayMode = DisplayMode.Edit): TypedTag[String]
 
-    def toHtmlSubtree(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String]
+    def toHtmlSubtree(mode: DisplayMode = DisplayMode.Edit): TypedTag[String]
 
     /**
      * Find the child of this expression tree at the given path.
@@ -494,6 +483,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       case head :: tail => {
         args(head) match {
           case SubExprNode(node) => node.findChild(tail)
+          case SubTypeNode(node) => node.findChild(tail)
           case _ => None
         }
       }
@@ -595,7 +585,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       case None => Map()
     }
 
-    def toHtmlAxiom(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = {
+    def toHtmlAxiom(mode: DisplayMode = DisplayMode.Edit): TypedTag[String] = {
       div(
         cls := "subtree axiom",
         data("tree-path") := treePathString,
@@ -605,7 +595,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
           cls := "expr",
           envDiv(mode),
           toHtmlLine(mode)(display := "inline"),
-          if (mode == NodeDisplayMode.TypeCheck) {
+          if (mode == DisplayMode.TypeCheck) {
             List(typeCheckTurnstileSpan, typeCheckResultDiv)
           } else {
             List(evalArrowSpan, evalResultDiv)
@@ -615,7 +605,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       )
     }
 
-    def toHtmlSubtree(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = {
+    def toHtmlSubtree(mode: DisplayMode = DisplayMode.Edit): TypedTag[String] = {
       div(
         cls := "subtree",
         data("tree-path") := treePathString,
@@ -625,7 +615,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
           cls := "node",
           envDiv(mode),
           div(cls := "expr", toHtmlLine(mode)),
-          if (mode == NodeDisplayMode.TypeCheck) {
+          if (mode == DisplayMode.TypeCheck) {
             List(typeCheckTurnstileSpan, typeCheckResultDiv)
           } else {
             List(evalArrowSpan, evalResultDiv)
@@ -647,8 +637,8 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
     def evalResultDiv: TypedTag[String] = div(cls := "eval-result", display := "inline", getValue.toHtml)
 
-    def envDiv(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = {
-      val env: Env | TypeEnv = if (mode == NodeDisplayMode.TypeCheck) {
+    def envDiv(mode: DisplayMode = DisplayMode.Edit): TypedTag[String] = {
+      val env: Env | TypeEnv = if (mode == DisplayMode.TypeCheck) {
         getTypeEnv
       } else {
         getEnv
@@ -656,7 +646,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       val envHtml: String = if (env.nonEmpty) {
         env.map((k: String, v: Value | Type) => s"$k &rarr; ${v.toHtml}").mkString("[", ", ", "],")
       } else {
-        if (mode == NodeDisplayMode.TypeCheck) {
+        if (mode == DisplayMode.TypeCheck) {
           "&#x22a2;"
         } else {
           ""
@@ -671,9 +661,9 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       )
     }
 
-    def getVisibleChildren(mode: NodeDisplayMode): List[OuterNode] = mode match {
-      case NodeDisplayMode.Edit => children
-      case NodeDisplayMode.Evaluation => {
+    def getVisibleChildren(mode: DisplayMode): List[OuterNode] = mode match {
+      case DisplayMode.Edit => children
+      case DisplayMode.Evaluation => {
         val childExprs = getExpr.getEvalChildren(Map())
         children.filter({
           case c: ExprNode => childExprs.contains(c.getExpr)
@@ -681,7 +671,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
         }
         )
       }
-      case NodeDisplayMode.TypeCheck => children
+      case DisplayMode.TypeCheck => children
     }
 
     //    def replace(path: List[Int], replacement: OuterNode): ExprNode
@@ -695,15 +685,15 @@ trait ClickDeduceLanguage extends AbstractLanguage {
   ) extends ExprNode {
     lazy val expr: Expr = readExpr(exprString).get
 
-    override def toHtmlLine(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = expr.toHtml
+    override def toHtmlLine(mode: DisplayMode = DisplayMode.Edit): TypedTag[String] = expr.toHtml
 
-    override def toHtmlLineReadOnly(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = toHtmlLine(mode)
+    override def toHtmlLineReadOnly(mode: DisplayMode = DisplayMode.Edit): TypedTag[String] = toHtmlLine(mode)
 
     override val exprName: String = expr.getClass.getSimpleName
 
     override def toString: String = s"ConcreteNode(${UtilityFunctions.quote(exprString)}, $args)"
 
-    override def toHtml(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] =
+    override def toHtml(mode: DisplayMode = DisplayMode.Edit): TypedTag[String] =
       super.toHtml(mode)(data("term") := expr.toString)
 
     override val children: List[OuterNode] = args.flatMap(_.children)
@@ -714,10 +704,10 @@ trait ClickDeduceLanguage extends AbstractLanguage {
   }
 
   case class VariableNode(exprName: String, args: List[InnerNode] = Nil) extends ExprNode {
-    override def toHtmlLine(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] =
+    override def toHtmlLine(mode: DisplayMode = DisplayMode.Edit): TypedTag[String] =
       div(raw(getExprHtmlLine(mode)))
 
-    override def toHtmlLineReadOnly(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] =
+    override def toHtmlLineReadOnly(mode: DisplayMode = DisplayMode.Edit): TypedTag[String] =
       div(display := "inline", raw(getExprHtmlLineReadOnly(mode)))
 
     lazy val exprClass: Class[Expr] = exprNameToClass(exprName) match {
@@ -741,7 +731,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       constructor.newInstance(arguments: _*).asInstanceOf[Expr]
     }
 
-    def getExprHtmlLine(mode: NodeDisplayMode = NodeDisplayMode.Edit): String = {
+    def getExprHtmlLine(mode: DisplayMode = DisplayMode.Edit): String = {
       val constructor = exprClass.getConstructors()(0)
       val arguments = lang +: args.map {
         case n: SubExprNode => ExprPlaceholder(n.toHtmlLineReadOnly(mode).toString)
@@ -751,7 +741,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       prettyPrint(constructor.newInstance(arguments: _*).asInstanceOf[Expr])
     }
 
-    def getExprHtmlLineReadOnly(mode: NodeDisplayMode = NodeDisplayMode.Edit): String = {
+    def getExprHtmlLineReadOnly(mode: DisplayMode = DisplayMode.Edit): String = {
       val constructor = exprClass.getConstructors()(0)
       val arguments = lang +: args.map {
         case n: SubExprNode => ExprPlaceholder(n.toHtmlLineReadOnly(mode).toString)
@@ -817,6 +807,11 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       innerNodes.foreach(_.setParent(result))
       result
     }
+
+//    def fromExpr(e: Expr): VariableNode = {
+//      val node = VariableNode.createFromExprName(e.getClass.getSimpleName)
+//
+//    }
   }
 
   case class ExprChoiceNode() extends ExprNode {
@@ -824,10 +819,10 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
     override val children: List[OuterNode] = Nil
 
-    override def toHtmlLine(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] =
+    override def toHtmlLine(mode: DisplayMode = DisplayMode.Edit): TypedTag[String] =
       BlankExprDropDown().toHtml(data("tree-path") := treePathString)
 
-    override def toHtmlLineReadOnly(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] =
+    override def toHtmlLineReadOnly(mode: DisplayMode = DisplayMode.Edit): TypedTag[String] =
       toHtmlLine(mode)(readonly, disabled)
 
     override val exprName: String = "ExprChoice"
@@ -848,10 +843,10 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       case None => None
     }
 
-    override def toHtmlLine(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] =
+    override def toHtmlLine(mode: DisplayMode = DisplayMode.Edit): TypedTag[String] =
       node.toHtmlLineReadOnly(mode)
 
-    override def toHtmlLineReadOnly(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = toHtmlLine(mode)
+    override def toHtmlLineReadOnly(mode: DisplayMode = DisplayMode.Edit): TypedTag[String] = toHtmlLine(mode)
 
     override val children: List[ExprNode] = List(node)
 
@@ -859,7 +854,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
   }
 
   case class LiteralNode(literalText: String) extends InnerNode {
-    override def toHtmlLine(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = {
+    override def toHtmlLine(mode: DisplayMode = DisplayMode.Edit): TypedTag[String] = {
       input(
         `type` := "text",
         width := Math.max(2, literalText.length) + "ch",
@@ -868,7 +863,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       )
     }
 
-    override def toHtmlLineReadOnly(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = {
+    override def toHtmlLineReadOnly(mode: DisplayMode = DisplayMode.Edit): TypedTag[String] = {
       input(
         `type` := "text",
         readonly,
@@ -897,7 +892,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
     def getTypeName: String = getType.getClass.getSimpleName
 
-    def toHtmlAxiom(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = {
+    def toHtmlAxiom(mode: DisplayMode = DisplayMode.Edit): TypedTag[String] = {
       div(
         cls := "subtree axiom",
         data("tree-path") := treePathString,
@@ -911,7 +906,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       )
     }
 
-    def toHtmlSubtree(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = {
+    def toHtmlSubtree(mode: DisplayMode = DisplayMode.Edit): TypedTag[String] = {
       div(
         cls := "subtree",
         data("tree-path") := treePathString,
@@ -947,15 +942,36 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       )
     }
 
-    override def toHtmlLine(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] =
+    override def toHtmlLine(mode: DisplayMode = DisplayMode.Edit): TypedTag[String] =
       getType.toHtml(data("tree-path") := treePathString)
 
-    override def toHtmlLineReadOnly(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] =
+    override def toHtmlLineReadOnly(mode: DisplayMode = DisplayMode.Edit): TypedTag[String] =
       toHtmlLine(mode)(readonly, disabled)
 
     override val children: List[OuterNode] = args.filter(_.isInstanceOf[SubTypeNode]).flatMap(_.children)
 
     override def toString: String = s"TypeNode(${UtilityFunctions.quote(typeName)}, $args)"
+
+    def getExprHtmlLine(mode: DisplayMode = DisplayMode.Edit): String = {
+      val constructor = typeClass.getConstructors()(0)
+      val arguments = lang +: args.map {
+        case n: LiteralNode => LiteralAny(n.toHtmlLine(mode).toString)
+        case n: SubTypeNode => TypePlaceholder(n.node.toHtmlLine(mode).toString)
+      }
+      prettyPrint(constructor.newInstance(arguments: _*).asInstanceOf[Expr])
+    }
+
+    def getExprHtmlLineReadOnly(mode: DisplayMode = DisplayMode.Edit): String = {
+      val constructor = typeClass.getConstructors()(0)
+      val arguments = lang +: args.map {
+        case n: LiteralNode => LiteralAny(n.toHtmlLineReadOnly(mode).toString)
+        case n: SubTypeNode => TypePlaceholder(n.node.toHtmlLineReadOnly(mode).toString)
+      }
+      prettyPrint(constructor.newInstance(arguments: _*).asInstanceOf[Expr])
+    }
+
+    children.foreach(_.setParent(this))
+    args.foreach(_.setParent(this))
   }
 
   object TypeNode {
@@ -981,10 +997,10 @@ trait ClickDeduceLanguage extends AbstractLanguage {
   case class TypeChoiceNode() extends TypeNodeParent {
     override val args: List[InnerNode] = Nil
 
-    override def toHtmlLine(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] =
+    override def toHtmlLine(mode: DisplayMode = DisplayMode.Edit): TypedTag[String] =
       BlankTypeDropDown().toHtml(data("tree-path") := treePathString)
 
-    override def toHtmlLineReadOnly(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] =
+    override def toHtmlLineReadOnly(mode: DisplayMode = DisplayMode.Edit): TypedTag[String] =
       toHtmlLine(mode)(readonly, disabled)
 
     override def getType: Type = UnknownType()
@@ -993,10 +1009,10 @@ trait ClickDeduceLanguage extends AbstractLanguage {
   case class SubTypeNode(node: TypeNodeParent) extends InnerNode {
     override val children: List[OuterNode] = List(node)
 
-    override def toHtmlLine(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] =
+    override def toHtmlLine(mode: DisplayMode = DisplayMode.Edit): TypedTag[String] =
       node.toHtmlLineReadOnly(mode)
 
-    override def toHtmlLineReadOnly(mode: NodeDisplayMode = NodeDisplayMode.Edit): TypedTag[String] = toHtmlLine(mode)
+    override def toHtmlLineReadOnly(mode: DisplayMode = DisplayMode.Edit): TypedTag[String] = toHtmlLine(mode)
   }
 
 
@@ -1294,7 +1310,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
   object ExpressionEvalTree {
     def exprToTree(e0: Expr): ExpressionEvalTree = {
-      val childTrees = e0.children.map(exprToTree)
+      val childTrees = e0.getChildrenExpressions.map(exprToTree)
       val valueResult: Option[Value] = lang.eval(e0) match {
         case e: EvalError => None
         case v => Some(v)

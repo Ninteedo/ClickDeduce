@@ -50,7 +50,7 @@ class LIf extends LArith {
     case IfThenElse(cond, then_expr, else_expr) => eval(cond, env) match {
       case BoolV(true) => eval(then_expr, env)
       case BoolV(false) => eval(else_expr, env)
-      case v => v
+      case v => if (v.isError) {v} else {TypeMismatchError("IfThenElse", v.typ, BoolType())}
     }
     case _ => super.eval(e, env)
   }

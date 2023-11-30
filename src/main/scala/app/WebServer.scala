@@ -81,7 +81,7 @@ object WebServer extends JsonSupport {
                 request.actionName, request.nodeString, request.treePath, request.extraArgs, request.modeName
               )
               val updatedTree = action.newTree
-              val displayMode: lang.NodeDisplayMode = lang.NodeDisplayMode.fromString(request.modeName)
+              val displayMode: lang.DisplayMode = lang.DisplayMode.fromString(request.modeName)
               val response = NodeResponse(updatedTree.toString, updatedTree.toHtml(displayMode).toString)
               complete(response)
             }

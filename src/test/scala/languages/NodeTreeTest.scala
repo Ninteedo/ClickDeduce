@@ -504,4 +504,31 @@ class NodeTreeTest extends AnyFunSuite {
     val tree2 = ConcreteNode(Times(Plus(Num(5), Num(2)), Num(3)).toString)
     tree2.getExpr shouldEqual Times(Plus(Num(5), Num(2)), Num(3))
   }
+
+  test("Nested TypeNodes have correct tree paths") {
+    val tree = LLam.VariableNode(
+        "Lambda",
+        List(
+          LLam.LiteralNode("x"),
+          LLam.SubTypeNode(LLam.TypeNode("Func", List(
+            LLam.SubTypeNode(LLam.TypeNode("IntType", Nil)),
+            LLam.SubTypeNode(LLam.TypeNode("BoolType", Nil))
+          ))),
+          LLam.SubExprNode(LLam.VariableNode("Var", List(LLam.LiteralNode("x"))))
+        )
+      )
+
+    tree.findChild(List(1)) shouldEqual Some(LLam.TypeNode(
+      "Func", List(
+        LLam.SubTypeNode(LLam.TypeNode("IntType", Nil)),
+        LLam.SubTypeNode(LLam.TypeNode("BoolType", Nil))
+      )
+    ))
+    tree.findChild(List(1)).get.treePath shouldEqual List(1)
+
+    tree.findChild(List(1, 0)) shouldEqual Some(LLam.TypeNode("IntType", Nil))
+    tree.findChild(List(1, 0)).get.treePath shouldEqual List(1, 0)
+    tree.findChild(List(1, 1)) shouldEqual Some(LLam.TypeNode("BoolType", Nil))
+    tree.findChild(List(1, 0)).get.treePath shouldEqual List(1, 0)
+  }
 }

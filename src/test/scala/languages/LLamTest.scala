@@ -50,6 +50,10 @@ class LLamTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
 
     eval(Apply(Apply(twiceFunction, incrementFunction), Num(4))) shouldEqual NumV(6)
   }
+  
+  property("Apply results in error when left side is not a function") {
+    
+  }
 
   property("Lambda node behaves appropriately with simple argument type") {
     val initialTree = VariableNode.createFromExprName("Lambda")
@@ -179,7 +183,7 @@ class LLamTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
         SubExprNode(VariableNode("Num", List(LiteralNode("3"))))
       )
     )
-    val htmlVersion = node.toHtml(NodeDisplayMode.Edit).toString
+    val htmlVersion = node.toHtml(DisplayMode.Edit).toString
   }
 
   property("Lambda node createAction behaves appropriately with complex argument type") {
