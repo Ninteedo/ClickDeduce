@@ -16,6 +16,8 @@ class LLam extends LLet {
   }
 
   case class Lambda(v: Literal, typ: Type, e: Expr) extends Expr {
+    override def getChildrenBase(): List[Term] = List(v, typ, e)
+
     override def getChildrenEval(env: Env): List[(Term, Env)] = Nil
 
     override def getChildrenTypeCheck(tenv: TypeEnv): List[(Term, TypeEnv)] = List((e, tenv + (v.toString -> typ)))

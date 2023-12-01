@@ -595,7 +595,10 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       case Some(value) => {
         val parentExpressions: List[(Term, TypeEnv)] = value.getExpr.getChildrenTypeCheck(value.getTypeEnv)
         val indexMap = parentExpressions.map(t1 => value.getExpr.getChildrenBase().indexWhere(_ eq t1._1))
-        parentExpressions(indexMap(value.indexOf(this)))._2
+        indexMap.indexOf(value.indexOf(this)) match {
+          case -1 => Map()
+          case i => parentExpressions(i)._2
+        }
       }
       case None => Map()
     }

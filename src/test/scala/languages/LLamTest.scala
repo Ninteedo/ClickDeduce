@@ -64,8 +64,12 @@ class LLamTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
   }
 
   property("Lambda has appropriate children expressions in type-check mode") {
-    incrementFunction.getChildrenEval(Map()) shouldEqual List(
-      incrementFunction.e
+    incrementFunction.getChildrenTypeCheck(Map()) shouldEqual List(
+      (incrementFunction.e, Map("x" -> IntType()))
+    )
+
+    incrementFunction.getChildrenTypeCheck(Map("y" -> BoolType())) shouldEqual List(
+      (incrementFunction.e, Map("x" -> IntType(), "y" -> BoolType()))
     )
   }
 
