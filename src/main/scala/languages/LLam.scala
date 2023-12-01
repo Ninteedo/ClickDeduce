@@ -6,10 +6,7 @@ class LLam extends LLet {
   // expressions
   case class Apply(e1: Expr, e2: Expr) extends Expr {
     override def getChildrenEval(env: Env = Map()): List[(Term, Env)] = (eval(e1, env), eval(e2, env)) match {
-      case (v1: FunctionValue, v2) => {
-        println(v1.getContainedFunction())
-        List((e1, env), (e2, env), (v1.getContainedFunction(), env))
-      }
+      case (v1: FunctionValue, v2) => List((e1, env), (e2, env), (v1.getContainedFunction(), env))
       case _ => List((e1, env), (e2, env))
     }
 
@@ -97,7 +94,7 @@ class LLam extends LLet {
   }
 
   override def prettyPrint(v: Value): String = v match {
-    case LambdaV(v, inputType, e, env) => s"λ$v. $e"
+    case LambdaV(v, inputType, e, env) => s"λ$v. ${prettyPrint(e)}"
     case PlaceholderValue(typ) => "?"
     case _ => super.prettyPrint(v)
   }
