@@ -68,7 +68,7 @@ object WebServer extends JsonSupport {
           entity(as[EvalRequest]) { request =>
             val lang = getLanguage(request.langName)
             val tree = lang.ExprChoiceNode()
-            val response = NodeResponse(tree.toString, tree.toHtml().toString)
+            val response = NodeResponse(tree.toString, tree.toHtml(lang.DisplayMode.Edit).toString)
             complete(response)
           }
         }
