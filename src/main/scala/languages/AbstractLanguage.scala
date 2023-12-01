@@ -30,49 +30,35 @@ trait AbstractLanguage {
   trait Term {
     lazy val toHtml: TypedTag[String] = span(raw(prettyPrint(this)))
 
-    def getChildren(env: Env = Map(), mode: DisplayMode = DisplayMode.Edit): List[Term] = Nil
+    def getChildrenBase(): List[Term] = Nil
+
+    def getChildrenEval(env: Env = Map()): List[(Term, Env)] = Nil
+
+    def getChildrenTypeCheck(tenv: TypeEnv = Map()): List[(Term, TypeEnv)] = Nil
   }
 
   /**
    * An unevaluated expression.
    */
   abstract class Expr extends Term {
-    override def getChildren(env: Env = Map(), mode: DisplayMode = DisplayMode.Edit): List[Term] = {
-      def getExprFields(e: Expr): List[Expr] = {
-        e match {
-          case e0: Product =>
-            val values = e0.productIterator.toList
-            values.collect({ case e: Expr => e.childVersion })
-          case _ => Nil
-        }
+    private def getExprFields(e: Expr): List[Expr] = {
+      e match {
+        case e0: Product =>
+          val values = e0.productIterator.toList
+          values.collect({ case e: Expr => e })
+        case _ => Nil
       }
-
-      getExprFields(this)
     }
 
-    def getChildrenExpressions: List[Expr] = {
-      def getExprFields(e: Expr): List[Expr] = {
-        e match {
-          case e0: Product =>
-            val values = e0.productIterator.toList
-            values.collect({ case e: Expr => e.childVersion })
-          case _ => Nil
-        }
-      }
+    override def getChildrenBase(): List[Term] = getExprFields(this)
 
-      getExprFields(this)
-    }
+    override def getChildrenEval(env: Env = Map()): List[(Term, Env)] =
+      getExprFields(this).zip(LazyList.continually(env))
 
-    /**
-     * Gets the child expressions of this expression, excluding any children which are not used in evaluation.
-     */
-    def getEvalChildren(env: Env): List[Expr] = getChildren().filter(_.isInstanceOf[Expr]).map({case e: Expr => e})
+    override def getChildrenTypeCheck(tenv: TypeEnv): List[(Term, TypeEnv)] =
+      getExprFields(this).zip(LazyList.continually(tenv))
 
     lazy val childVersion: Expr = this
-
-    def childExprEnvs(env: Env): List[Env] = List.fill(getChildren().length)(env)
-
-    def childExprTypeEnvs(tenv: TypeEnv): List[TypeEnv] = List.fill(getChildren().length)(tenv)
   }
 
   case class MissingExpr() extends Expr
@@ -83,7 +69,9 @@ trait AbstractLanguage {
    * A value resulting from an expression being evaluated.
    */
   abstract class Value extends Term {
-    override lazy val toHtml: TypedTag[String] = span(cls := "tooltip", valueText, div(cls := "tooltiptext", tooltipText))
+    override lazy val toHtml: TypedTag[String] = span(
+      cls := "tooltip", valueText, div(cls := "tooltiptext", tooltipText)
+    )
 
     lazy val tooltipText: String = toString + ": " + typ.toString
 
@@ -99,7 +87,9 @@ trait AbstractLanguage {
    * The type of a value.
    */
   abstract class Type extends Term {
-    override lazy val toHtml: TypedTag[String] = span(cls := "tooltip", valueText, div(cls := "tooltiptext", tooltipText))
+    override lazy val toHtml: TypedTag[String] = span(
+      cls := "tooltip", valueText, div(cls := "tooltiptext", tooltipText)
+    )
 
     lazy val tooltipText: String = toString
 
@@ -122,7 +112,9 @@ trait AbstractLanguage {
    * An error resulting from an expression being evaluated.
    */
   abstract class EvalError extends Value, TermError {
-    override lazy val toHtml: TypedTag[String] = span(cls := "tooltip", valueText, div(cls := "tooltiptext", tooltipText), cls := "error-origin")
+    override lazy val toHtml: TypedTag[String] = span(
+      cls := "tooltip", valueText, div(cls := "tooltiptext", tooltipText), cls := "error-origin"
+    )
 
     override lazy val tooltipText: String = message
 
@@ -173,7 +165,7 @@ trait AbstractLanguage {
   case class LiteralBool(value: Boolean) extends Literal
 
   case class LiteralString(value: String) extends Literal {
-//    override lazy val toHtml: TypedTag[String] = p(s""""$value"""")
+    //    override lazy val toHtml: TypedTag[String] = p(s""""$value"""")
 
     override lazy val toString: String = s""""$value""""
   }

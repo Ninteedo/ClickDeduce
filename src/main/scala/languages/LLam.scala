@@ -5,35 +5,20 @@ import scala.collection.immutable.List
 class LLam extends LLet {
   // expressions
   case class Apply(e1: Expr, e2: Expr) extends Expr {
-    override def getEvalChildren(env: Env): List[Expr] = (eval(e1, env), eval(e2, env)) match {
+    override def getChildrenEval(env: Env = Map()): List[(Term, Env)] = (eval(e1, env), eval(e2, env)) match {
       case (v1: FunctionValue, v2) => {
         println(v1.getContainedFunction())
-        List(e1, e2, v1.getContainedFunction())
+        List((e1, env), (e2, env), (v1.getContainedFunction(), env))
       }
-      case _ => List(e1, e2)
+      case _ => List((e1, env), (e2, env))
     }
 
-    override def getChildren(env: Env = Map(), mode: DisplayMode = DisplayMode.Edit): List[Term] = mode match {
-      case DisplayMode.Edit => List(e1, e2)
-      case DisplayMode.Evaluation => (eval(e1, env), eval(e2, env)) match {
-        case (v1: FunctionValue, v2) => {
-          println(v1.getContainedFunction())
-          List(e1, e2, v1.getContainedFunction())
-        }
-        case _ => List(e1, e2)
-      }
-      case DisplayMode.TypeCheck => List(e1, e2)
-    }
   }
 
   case class Lambda(v: Literal, typ: Type, e: Expr) extends Expr {
-    override def childExprEnvs(env: Env): List[Env] = List(env, env + (v.toString -> PlaceholderValue(typ)))
+    override def getChildrenEval(env: Env): List[(Term, Env)] = Nil
 
-    override def childExprTypeEnvs(tenv: TypeEnv): List[TypeEnv] = List(
-      tenv, tenv + (v.toString -> typ)
-    )
-
-    override def getEvalChildren(env: Env): List[Expr] = Nil
+    override def getChildrenTypeCheck(tenv: TypeEnv): List[(Term, TypeEnv)] = List((e, tenv + (v.toString -> typ)))
   }
 
   object Lambda {

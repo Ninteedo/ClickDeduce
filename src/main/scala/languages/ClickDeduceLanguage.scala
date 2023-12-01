@@ -489,6 +489,11 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       }
     }
 
+    def indexOf(node: Node): Int = node match {
+      case n: InnerNode => args.indexWhere(_ eq n)
+      case n: OuterNode => args.indexWhere(_.children.exists(_ eq n))
+    }
+
     def replace(path: List[Int], replacement: Node): OuterNode = path match {
       case Nil => replacement match {
         case n: OuterNode => n
@@ -575,13 +580,23 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     def getType: Type = typeOf(getExpr, getTypeEnv)
 
     def getEnv: Env = getParent match {
-      case Some(value) =>
-        value.getExpr.childExprEnvs(value.getEnv)(value.children.indexWhere(_ eq this))
+      case Some(value) => {
+        val parentExpressions: List[(Term, Env)] = value.getExpr.getChildrenEval(value.getEnv)
+        val indexMap = parentExpressions.map(t1 => value.getExpr.getChildrenBase().indexWhere(_ eq t1._1))
+        indexMap.indexOf(value.indexOf(this)) match {
+          case -1 => Map()
+          case i => parentExpressions(i)._2
+        }
+      }
       case None => Map()
     }
 
     def getTypeEnv: TypeEnv = getParent match {
-      case Some(value) => value.getExpr.childExprTypeEnvs(value.getTypeEnv)(value.children.indexWhere(_ eq this))
+      case Some(value) => {
+        val parentExpressions: List[(Term, TypeEnv)] = value.getExpr.getChildrenTypeCheck(value.getTypeEnv)
+        val indexMap = parentExpressions.map(t1 => value.getExpr.getChildrenBase().indexWhere(_ eq t1._1))
+        parentExpressions(indexMap(value.indexOf(this)))._2
+      }
       case None => Map()
     }
 
@@ -664,7 +679,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     def getVisibleChildren(mode: DisplayMode): List[OuterNode] = mode match {
       case DisplayMode.Edit => children
       case DisplayMode.Evaluation => {
-        val childExprs = getExpr.getEvalChildren(Map())
+        val childExprs = getExpr.getChildrenEval(Map()).map(_._1)
         children.filter({
           case c: ExprNode => childExprs.contains(c.getExpr)
           case _ => false
@@ -721,8 +736,8 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
     override def toString: String = s"VariableNode(${UtilityFunctions.quote(exprName)}, $args)"
 
-    override def getExpr: Expr = {
-      val constructor = exprClass.getConstructors()(0)
+    lazy val expr: Expr = {
+      val constructor = exprClass.getConstructors.head
       val arguments = lang +: args.map {
         case n: SubExprNode => n.node.getExpr
         case n: LiteralNode => n.getLiteral
@@ -731,8 +746,10 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       constructor.newInstance(arguments: _*).asInstanceOf[Expr]
     }
 
+    override def getExpr: Expr = expr
+
     def getExprHtmlLine(mode: DisplayMode = DisplayMode.Edit): String = {
-      val constructor = exprClass.getConstructors()(0)
+      val constructor = exprClass.getConstructors.head
       val arguments = lang +: args.map {
         case n: SubExprNode => ExprPlaceholder(n.toHtmlLineReadOnly(mode).toString)
         case n: LiteralNode => LiteralAny(n.toHtmlLine(mode).toString)
@@ -742,7 +759,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     }
 
     def getExprHtmlLineReadOnly(mode: DisplayMode = DisplayMode.Edit): String = {
-      val constructor = exprClass.getConstructors()(0)
+      val constructor = exprClass.getConstructors.head
       val arguments = lang +: args.map {
         case n: SubExprNode => ExprPlaceholder(n.toHtmlLineReadOnly(mode).toString)
         case n: LiteralNode => LiteralAny(n.toHtmlLineReadOnly(mode).toString)
@@ -1310,7 +1327,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
   object ExpressionEvalTree {
     def exprToTree(e0: Expr): ExpressionEvalTree = {
-      val childTrees = e0.getChildrenExpressions.map(exprToTree)
+      val childTrees = e0.getChildrenEval().map(_._1).filter(_.isInstanceOf[Expr]).map(_.asInstanceOf[Expr]).map(exprToTree)
       val valueResult: Option[Value] = lang.eval(e0) match {
         case e: EvalError => None
         case v => Some(v)

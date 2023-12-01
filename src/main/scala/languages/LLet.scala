@@ -10,10 +10,12 @@ class LLet extends LIf {
   }
 
   case class Let(v: Literal, assign_expr: Expr, bound_expr: Expr) extends Expr {
-    override def childExprEnvs(env: Env): List[Env] = List(env, env + (v.toString -> eval(assign_expr, env)))
+    override def getChildrenEval(env: Env): List[(Term, Env)] = List(
+      (assign_expr, env), (bound_expr, env + (v.toString -> eval(assign_expr, env)))
+    )
 
-    override def childExprTypeEnvs(tenv: TypeEnv): List[TypeEnv] = List(
-      tenv, tenv + (v.toString -> typeOf(assign_expr, tenv))
+    override def getChildrenTypeCheck(tenv: TypeEnv): List[(Term, TypeEnv)] = List(
+      (assign_expr, tenv), (bound_expr, tenv + (v.toString -> typeOf(assign_expr, tenv)))
     )
   }
 

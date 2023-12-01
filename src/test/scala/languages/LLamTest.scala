@@ -50,9 +50,23 @@ class LLamTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
 
     eval(Apply(Apply(twiceFunction, incrementFunction), Num(4))) shouldEqual NumV(6)
   }
-  
+
   property("Apply results in error when left side is not a function") {
-    
+    val leftExpressions: List[Expr] = List(
+      Num(4),
+      Bool(false),
+      IfThenElse(Apply(incrementFunction, Num(4)), Num(2), Num(3)),
+      Apply(incrementFunction, Num(8))
+    )
+    leftExpressions.foreach {l =>
+      eval(Apply(l, Num(4))) shouldBe an[EvalError]
+    }
+  }
+
+  property("Lambda has appropriate children expressions in type-check mode") {
+    incrementFunction.getChildrenEval(Map()) shouldEqual List(
+      incrementFunction.e
+    )
   }
 
   property("Lambda node behaves appropriately with simple argument type") {

@@ -16,7 +16,8 @@ class LIfTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhenT
   def genRandInt(): BigInt = Random.nextInt(200) - 100
 
   val bools: TableFor1[Boolean] = Table("bool", true, false)
-  val expressions: TableFor1[Expr] = Table("expressions",
+  val expressions: TableFor1[Expr] = Table(
+    "expressions",
     Num(1),
     Bool(true),
     Bool(false),
@@ -27,7 +28,8 @@ class LIfTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhenT
     IfThenElse(Eq(Num(1), Num(2)), Num(1), Num(2)),
     IfThenElse(Eq(Num(1), Num(1)), IfThenElse(Bool(false), Num(5), Plus(Num(1), Num(-1))), Num(2)),
   )
-  val newExprClasses: TableFor1[String] = Table("newExprClasses",
+  val newExprClasses: TableFor1[String] = Table(
+    "newExprClasses",
     "Bool",
     "Eq",
     "IfThenElse"
@@ -104,9 +106,88 @@ class LIfTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhenT
 
   property("IfThenElse.getEvalChildren returns the appropriate children") {
     val ifThenElse = IfThenElse(Bool(true), Num(1), Num(2))
-    ifThenElse.getEvalChildren(Map()) shouldEqual List(Bool(true), Num(1))
+    ifThenElse.getChildrenEval(Map()) shouldEqual List((Bool(true), Map()), (Num(1), Map()))
 
     val ifThenElse2 = IfThenElse(Bool(false), Num(1), Num(2))
-    ifThenElse2.getEvalChildren(Map()) shouldEqual List(Bool(false), Num(2))
+    ifThenElse2.getChildrenEval(Map()) shouldEqual List((Bool(false), Map()), (Num(2), Map()))
+  }
+
+  property("IfThenElse behaviour is correct when using actions") {
+    val initialTree = ExprChoiceNode()
+
+    val selectIfThenElseAction = createAction("SelectExprAction", initialTree.toString, "", List("IfThenElse"))
+    selectIfThenElseAction.newTree shouldEqual VariableNode(
+      "IfThenElse", List(SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode()))
+    )
+
+    val selectCondAction = createAction("SelectExprAction", selectIfThenElseAction.newTree.toString, "0", List("Bool"))
+    selectCondAction.newTree shouldEqual VariableNode(
+      "IfThenElse", List(
+        SubExprNode(VariableNode("Bool", List(LiteralNode("")))), SubExprNode(ExprChoiceNode()),
+        SubExprNode(ExprChoiceNode())
+      )
+    )
+
+    val enterBoolAction = createAction("EditLiteralAction", selectCondAction.newTree.toString, "0-0", List("true"))
+    enterBoolAction.newTree shouldEqual VariableNode(
+      "IfThenElse", List(
+        SubExprNode(VariableNode("Bool", List(LiteralNode("true")))), SubExprNode(ExprChoiceNode()),
+        SubExprNode(ExprChoiceNode())
+      )
+    )
+
+    val selectThenExprAction = createAction("SelectExprAction", enterBoolAction.newTree.toString, "1", List("Num"))
+    selectThenExprAction.newTree shouldEqual VariableNode(
+      "IfThenElse", List(
+        SubExprNode(VariableNode("Bool", List(LiteralNode("true")))),
+        SubExprNode(VariableNode("Num", List(LiteralNode("")))),
+        SubExprNode(ExprChoiceNode())
+      )
+    )
+
+    val enterThenExprAction = createAction("EditLiteralAction", selectThenExprAction.newTree.toString, "1-0", List("1"))
+    enterThenExprAction.newTree shouldEqual VariableNode(
+      "IfThenElse", List(
+        SubExprNode(VariableNode("Bool", List(LiteralNode("true")))),
+        SubExprNode(VariableNode("Num", List(LiteralNode("1")))),
+        SubExprNode(ExprChoiceNode())
+      )
+    )
+
+    val selectElseExprAction = createAction("SelectExprAction", enterThenExprAction.newTree.toString, "2", List("Num"))
+    selectElseExprAction.newTree shouldEqual VariableNode(
+      "IfThenElse", List(
+        SubExprNode(VariableNode("Bool", List(LiteralNode("true")))),
+        SubExprNode(VariableNode("Num", List(LiteralNode("1")))),
+        SubExprNode(VariableNode("Num", List(LiteralNode(""))))
+      )
+    )
+
+    val enterElseExprAction = createAction("EditLiteralAction", selectElseExprAction.newTree.toString, "2-0", List("2"))
+    enterElseExprAction.newTree shouldEqual VariableNode(
+      "IfThenElse", List(
+        SubExprNode(VariableNode("Bool", List(LiteralNode("true")))),
+        SubExprNode(VariableNode("Num", List(LiteralNode("1")))),
+        SubExprNode(VariableNode("Num", List(LiteralNode("2"))))
+      )
+    )
+
+    enterElseExprAction.newTree match {
+      case n: VariableNode => n.getExpr shouldEqual IfThenElse(Bool(true), Num(1), Num(2))
+    }
+  }
+
+  property("IfThenElse tree can be converted to HTML without error") {
+    val tree = VariableNode(
+      "IfThenElse", List(
+        SubExprNode(VariableNode("Bool", List(LiteralNode("true")))),
+        SubExprNode(VariableNode("Num", List(LiteralNode("1")))),
+        SubExprNode(VariableNode("Num", List(LiteralNode("2"))))
+      )
+    )
+
+    tree.toHtml(DisplayMode.Edit)
+    tree.toHtml(DisplayMode.TypeCheck)
+    tree.toHtml(DisplayMode.Evaluation)
   }
 }
