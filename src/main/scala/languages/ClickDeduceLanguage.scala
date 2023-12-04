@@ -677,17 +677,24 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       case DisplayMode.Edit => children
       case DisplayMode.Evaluation => {
         val childExprs = getExpr.getChildrenEval(getEnv).map(_._1)
+        var unconsumedChildren = children
+
         childExprs.flatMap({
           case expr: Expr => {
-            val matchingChild = children.collectFirst {
-              case c: ExprNode if c.getExpr == expr => c
+            val matchingChild = unconsumedChildren.collectFirst {
+              case c: ExprNode if c.getExpr eq expr => c
+              case c: ExprChoiceNode if c.getExpr == expr && !c.isPhantom => c
             }
 
             matchingChild match {
-              case Some(childNode) => Some(childNode)
+              case Some(childNode) => {
+                unconsumedChildren = unconsumedChildren.filter(_ ne childNode)
+                Some(childNode)
+              }
               case None => {
                 val newNode = VariableNode.fromExpr(expr)
                 newNode.setParent(this)
+                newNode.markPhantom()
                 Some(newNode)
               }
             }
@@ -696,6 +703,14 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       }
       case DisplayMode.TypeCheck => children
     }
+
+    var isPhantomStore = false
+
+    def markPhantom(): Unit = {
+      isPhantomStore = true
+    }
+
+    override def isPhantom: Boolean = isPhantomStore
 
     def phantomClassName: String = if (isPhantom) " phantom" else ""
   }
@@ -756,15 +771,9 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
     override def getExpr: Expr = exprOverride.getOrElse(expr)
 
-    def overrideExpr(e: Expr): Unit = exprOverride = Some(e)
-
-    var isPhantomStore = false
-
-    def markPhantom(): Unit = {
-      isPhantomStore = true
+    def overrideExpr(e: Expr): Unit = {
+      exprOverride = Some(e)
     }
-
-    override def isPhantom: Boolean = isPhantomStore
 
     def getExprHtmlLine(mode: DisplayMode): String = {
       val constructor = exprClass.getConstructors.head
@@ -811,24 +820,30 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       result
     }
 
-    def fromExpr(e: Expr): VariableNode = {
-      val exprClass = e.getClass
-      val constructor = exprClass.getConstructors()(0)
-      val innerNodes = e match {
-        case e0: Product => {
-          val values = e0.productIterator.toList
-          values.collect({
-            case c: Expr => SubExprNode(VariableNode.fromExpr(c))
-            case c: Literal => LiteralNode(c.toString)
-            case c: Type => SubTypeNode(TypeNode.fromType(c))
-          })
-        }
+    def fromExpr(e: Expr): ExprNode = e match {
+      case blank: BlankExprDropDown => {
+        val result = ExprChoiceNode()
+        result
       }
-      val result = VariableNode(e.getClass.getSimpleName, innerNodes)
-      result.overrideExpr(e)
-      result.markPhantom()
-      innerNodes.foreach(_.setParent(result))
-      result
+      case e => {
+        val exprClass = e.getClass
+        val constructor = exprClass.getConstructors()(0)
+        val innerNodes = e match {
+          case e0: Product => {
+            val values = e0.productIterator.toList
+            values.collect({
+              case c: Expr => SubExprNode(VariableNode.fromExpr(c))
+              case c: Literal => LiteralNode(c.toString)
+              case c: Type => SubTypeNode(TypeNode.fromType(c))
+            }
+            )
+          }
+        }
+        val result = VariableNode(e.getClass.getSimpleName, innerNodes)
+        result.overrideExpr(e)
+        innerNodes.foreach(_.setParent(result))
+        result
+      }
     }
   }
 

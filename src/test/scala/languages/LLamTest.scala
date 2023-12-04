@@ -299,5 +299,11 @@ class LLamTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
     phantomTree.getExpr shouldEqual Plus(Var("x"), Num(1))
     phantomTree.getEnv shouldEqual Map("x" -> NumV(8))
     phantomTree.getValue shouldEqual NumV(9)
+
+    val exprChoicePhantomExpr = Apply(Lambda(LiteralAny(""), BlankTypeDropDown(), BlankExprDropDown()), BlankExprDropDown())
+    val exprChoicePhantomTree = VariableNode.fromExpr(exprChoicePhantomExpr)
+    exprChoicePhantomTree.getVisibleChildren(DisplayMode.Evaluation) shouldEqual
+      exprChoicePhantomTree.children :+ ExprChoiceNode()
+    exprChoicePhantomTree.getVisibleChildren(DisplayMode.Evaluation).last.isPhantom shouldEqual true
   }
 }
