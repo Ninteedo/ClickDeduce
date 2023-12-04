@@ -108,7 +108,7 @@ object WebServer extends JsonSupport {
 
     val defaultSettings = ServerSettings(system)
     val customSettings = defaultSettings.withTransparentHeadRequests(true)
-    val portNumber = 27015
+    val portNumber = 27019
 
     val bindingFuture = Http().newServerAt("0.0.0.0", portNumber).withSettings(customSettings).bind(route)
 

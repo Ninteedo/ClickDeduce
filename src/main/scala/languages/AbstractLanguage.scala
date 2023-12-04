@@ -70,12 +70,12 @@ trait AbstractLanguage {
    */
   abstract class Value extends Term {
     override lazy val toHtml: TypedTag[String] = span(
-      cls := "tooltip", valueText, div(cls := "tooltiptext", tooltipText)
+      cls := "tooltip", valueText(display := "inline"), div(cls := "tooltiptext", tooltipText)
     )
 
     lazy val tooltipText: String = toString + ": " + typ.toString
 
-    lazy val valueText: String = prettyPrint(this) + ": " + prettyPrint(typ)
+    lazy val valueText: TypedTag[String] = div(prettyPrint(this) + ": " + prettyPrint(typ))
 
     val typ: Type
 
@@ -88,12 +88,12 @@ trait AbstractLanguage {
    */
   abstract class Type extends Term {
     override lazy val toHtml: TypedTag[String] = span(
-      cls := "tooltip", valueText, div(cls := "tooltiptext", tooltipText)
+      cls := "tooltip", valueText(display := "inline"), div(cls := "tooltiptext", tooltipText)
     )
 
     lazy val tooltipText: String = toString
 
-    lazy val valueText: String = prettyPrint(this)
+    lazy val valueText: TypedTag[String] = div(prettyPrint(this))
 
     val isError: Boolean = false
   }
@@ -118,7 +118,7 @@ trait AbstractLanguage {
 
     override lazy val tooltipText: String = message
 
-    override lazy val valueText: String = "?"
+    override lazy val valueText: TypedTag[String] = div("?")
 
     override val isError: Boolean = true
   }
@@ -128,12 +128,12 @@ trait AbstractLanguage {
    */
   abstract class TypeError extends Type, TermError {
     override lazy val toHtml: TypedTag[String] = span(
-      cls := "tooltip", valueText, div(cls := "tooltiptext", tooltipText), cls := "error-origin"
+      cls := "tooltip", valueText(display := "inline"), div(cls := "tooltiptext", tooltipText), cls := "error-origin"
     )
 
     override lazy val tooltipText: String = message
 
-    override lazy val valueText: String = "?"
+    override lazy val valueText: TypedTag[String] = div("?")
 
     override val isError: Boolean = true
   }

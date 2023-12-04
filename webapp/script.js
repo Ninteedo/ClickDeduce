@@ -260,7 +260,7 @@ document.addEventListener('contextmenu', function (e) {
         target = target.parentElement;
     }
 
-    if (target) {
+    if (target && !target.classList.contains('phantom')) {
         e.preventDefault();
 
         contextMenuSelectedElement = target;

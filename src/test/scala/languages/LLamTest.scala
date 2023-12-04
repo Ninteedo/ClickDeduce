@@ -263,4 +263,22 @@ class LLamTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
       SubExprNode(VariableNode("Var", List(LiteralNode(argName))))
     )
   }
+
+  property("Apply node has a third tree shown") {
+    val expr = Apply(incrementFunction, Num(8))
+    val tree = VariableNode.fromExpr(expr)
+
+    tree.getExpr shouldEqual expr
+
+    tree.getVisibleChildren(DisplayMode.Edit) shouldEqual tree.children
+    tree.getVisibleChildren(DisplayMode.TypeCheck) shouldEqual tree.children
+
+    tree.getVisibleChildren(DisplayMode.Evaluation) shouldEqual
+      tree.children :+ VariableNode.fromExpr(Plus(Var("x"), Num(1)))
+
+    val phantomTree = tree.getVisibleChildren(DisplayMode.Evaluation).last.asInstanceOf[ExprNode]
+    phantomTree.getExpr shouldEqual Plus(Var("x"), Num(1))
+    phantomTree.getEnv shouldEqual Map("x" -> NumV(8))
+    phantomTree.getValue shouldEqual NumV(9)
+  }
 }

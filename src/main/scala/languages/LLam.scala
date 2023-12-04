@@ -1,15 +1,20 @@
 package languages
 
+import scalatags.Text
+import scalatags.Text.TypedTag
+import scalatags.Text.all.*
+
 import scala.collection.immutable.List
 
 class LLam extends LLet {
   // expressions
   case class Apply(e1: Expr, e2: Expr) extends Expr {
     override def getChildrenEval(env: Env = Map()): List[(Term, Env)] = (eval(e1, env), eval(e2, env)) match {
-      case (v1: FunctionValue, v2) => List((e1, env), (e2, env), (v1.getContainedFunction(), env))
+      case (v1: FunctionValue, v2) => List(
+        (e1, env), (e2, env), (v1.getContainedFunction, env + (v1.getVarName -> v2))
+      )
       case _ => List((e1, env), (e2, env))
     }
-
   }
 
   case class Lambda(v: Literal, typ: Type, e: Expr) extends Expr {
@@ -35,6 +40,12 @@ class LLam extends LLet {
     } else {
       IncompatibleTypeErrorType(in, argType)
     }
+
+    override lazy val valueText: TypedTag[String] = div(
+      in.toHtml,
+      raw(" → "),
+      out.toHtml
+    )
   }
 
   case class ApplyToNonFunctionErrorType(wrongType: Type) extends TypeError {
@@ -47,7 +58,9 @@ class LLam extends LLet {
 
   // values
   trait FunctionValue extends Value {
-    def getContainedFunction(): Expr
+    def getContainedFunction: Expr
+
+    def getVarName: Variable
 
     def evalApply(value: Value): Value
   }
@@ -55,9 +68,20 @@ class LLam extends LLet {
   case class LambdaV(v: Variable, inputType: Type, e: Expr, env: Env) extends Value, FunctionValue {
     override val typ: Type = Func(inputType, typeOf(e, envToTypeEnv(env) + (v -> inputType)))
 
-    override def getContainedFunction(): Expr = e
+    override def getVarName: Variable = v
+
+    override def getContainedFunction: Expr = e
 
     override def evalApply(value: Value): Value = eval(e, env + (v -> value))
+
+    override lazy val valueText: TypedTag[String] = {
+      div(
+        raw(s"λ$v. "),
+        e.toHtml(readonly, disabled),
+        raw(s" : "),
+        typ.toHtml(readonly, disabled)
+      )
+    }
   }
 
   case class ApplyToNonFunctionError(value: Value) extends EvalError {
@@ -94,7 +118,10 @@ class LLam extends LLet {
   }
 
   override def prettyPrint(v: Value): String = v match {
-    case LambdaV(v, inputType, e, env) => s"λ$v. ${prettyPrint(e)}"
+    case LambdaV(v, inputType, e, env) => {
+      val eString: String = if (e == BlankExprDropDown()) "?" else prettyPrint(e)
+      s"λ$v. $eString"
+    }
     case PlaceholderValue(typ) => "?"
     case _ => super.prettyPrint(v)
   }

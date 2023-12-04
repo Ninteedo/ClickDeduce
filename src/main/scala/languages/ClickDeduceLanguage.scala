@@ -1,7 +1,7 @@
 package languages
 
 import app.{FontWidthCalculator, UtilityFunctions}
-import scalatags.Text.all.{div, raw, *}
+import scalatags.Text.all.{div, raw, s, *}
 import scalatags.Text.{TypedTag, attrs}
 
 import java.awt.Font
@@ -553,12 +553,13 @@ trait ClickDeduceLanguage extends AbstractLanguage {
         }
         )
         if (index == -1) {
-          throw new Exception("Could not find self in parent node's args")
-        }
-        value.treePath :+ index
+          if (isPhantom) Nil else throw new Exception("Could not find self in parent node's args")
+        } else value.treePath :+ index
       }
       case None => Nil
     }
+
+    def isPhantom: Boolean = false
   }
 
   abstract class ExprNode extends OuterNode {
@@ -582,11 +583,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     def getEnv: Env = getParent match {
       case Some(value) => {
         val parentExpressions: List[(Term, Env)] = value.getExpr.getChildrenEval(value.getEnv)
-        val indexMap = parentExpressions.map(t1 => value.getExpr.getChildrenBase().indexWhere(_ eq t1._1))
-        indexMap.indexOf(value.indexOf(this)) match {
-          case -1 => Map()
-          case i => parentExpressions(i)._2
-        }
+        parentExpressions.find(_._1 eq getExpr).map(_._2).getOrElse(Map())
       }
       case None => Map()
     }
@@ -605,7 +602,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
     def toHtmlAxiom(mode: DisplayMode): TypedTag[String] = {
       div(
-        cls := "subtree axiom",
+        cls := "subtree axiom" + phantomClassName,
         data("tree-path") := treePathString,
         data("term") := getExpr.toString,
         data("node-string") := toString,
@@ -616,7 +613,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
     def toHtmlSubtree(mode: DisplayMode): TypedTag[String] = {
       div(
-        cls := "subtree",
+        cls := "subtree" + phantomClassName,
         data("tree-path") := treePathString,
         data("term") := getExpr.toString,
         data("node-string") := toString,
@@ -640,7 +637,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     def evalSubtreeDiv: TypedTag[String] = div(
       cls := "node",
       envDiv(DisplayMode.Evaluation),
-      div(cls := "expr", toHtmlLine(DisplayMode.Evaluation)),
+      div(cls := "expr", if (!isPhantom) toHtmlLine(DisplayMode.Evaluation) else toHtmlLineReadOnly(DisplayMode.Evaluation)),
       evalArrowSpan,
       evalResultDiv
     )
@@ -656,7 +653,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     def evalAxiomDiv: TypedTag[String] = div(
       cls := "expr",
       envDiv(DisplayMode.Evaluation),
-      toHtmlLine(DisplayMode.Evaluation)(display := "inline"),
+      (if (!isPhantom) toHtmlLine(DisplayMode.Evaluation) else toHtmlLineReadOnly(DisplayMode.Evaluation))(display := "inline"),
       evalArrowSpan,
       evalResultDiv
     )
@@ -688,14 +685,27 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       case DisplayMode.Edit => children
       case DisplayMode.Evaluation => {
         val childExprs = getExpr.getChildrenEval(Map()).map(_._1)
-        children.filter({
-          case c: ExprNode => childExprs.contains(c.getExpr)
-          case _ => false
-        }
-        )
+        childExprs.flatMap({
+          case expr: Expr => {
+            val matchingChild = children.collectFirst {
+              case c: ExprNode if c.getExpr == expr => c
+            }
+
+            matchingChild match {
+              case Some(childNode) => Some(childNode)
+              case None => {
+                val newNode = VariableNode.fromExpr(expr)
+                newNode.setParent(this)
+                Some(newNode)
+              }
+            }
+          }
+        })
       }
       case DisplayMode.TypeCheck => children
     }
+
+    def phantomClassName: String = if (isPhantom) " phantom" else ""
   }
 
   case class ConcreteNode(
@@ -750,7 +760,19 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       constructor.newInstance(arguments: _*).asInstanceOf[Expr]
     }
 
-    override def getExpr: Expr = expr
+    var exprOverride: Option[Expr] = None
+
+    override def getExpr: Expr = exprOverride.getOrElse(expr)
+
+    def overrideExpr(e: Expr): Unit = exprOverride = Some(e)
+
+    var isPhantomStore = false
+
+    def markPhantom(): Unit = {
+      isPhantomStore = true
+    }
+
+    override def isPhantom: Boolean = isPhantomStore
 
     def getExprHtmlLine(mode: DisplayMode): String = {
       val constructor = exprClass.getConstructors.head
@@ -797,10 +819,25 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       result
     }
 
-    //    def fromExpr(e: Expr): VariableNode = {
-    //      val node = VariableNode.createFromExprName(e.getClass.getSimpleName)
-    //
-    //    }
+    def fromExpr(e: Expr): VariableNode = {
+      val exprClass = e.getClass
+      val constructor = exprClass.getConstructors()(0)
+      val innerNodes = e match {
+        case e0: Product => {
+          val values = e0.productIterator.toList
+          values.collect({
+            case c: Expr => SubExprNode(VariableNode.fromExpr(c))
+            case c: Literal => LiteralNode(c.toString)
+            case c: Type => SubTypeNode(TypeNode.fromType(c))
+          })
+        }
+      }
+      val result = VariableNode(e.getClass.getSimpleName, innerNodes)
+      result.overrideExpr(e)
+      result.markPhantom()
+      innerNodes.foreach(_.setParent(result))
+      result
+    }
   }
 
   case class ExprChoiceNode() extends ExprNode {
@@ -980,6 +1017,23 @@ trait ClickDeduceLanguage extends AbstractLanguage {
           s"Unknown expression type for ${lang.getClass.getSimpleName}: $typeName"
         )
       }
+    }
+
+    def fromType(typ: Type): TypeNode = {
+      val typeClass = typ.getClass
+      val constructor = typeClass.getConstructors()(0)
+      val innerNodes = typ match {
+        case e0: Product => {
+          val values = e0.productIterator.toList
+          values.collect({
+            case c: Literal => LiteralNode(c.toString)
+            case c: Type => SubTypeNode(TypeNode.fromType(c))
+          })
+        }
+      }
+      val result = TypeNode(typ.getClass.getSimpleName, innerNodes)
+      innerNodes.foreach(_.setParent(result))
+      result
     }
   }
 
