@@ -684,7 +684,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     def getVisibleChildren(mode: DisplayMode): List[OuterNode] = mode match {
       case DisplayMode.Edit => children
       case DisplayMode.Evaluation => {
-        val childExprs = getExpr.getChildrenEval(Map()).map(_._1)
+        val childExprs = getExpr.getChildrenEval(getEnv).map(_._1)
         childExprs.flatMap({
           case expr: Expr => {
             val matchingChild = children.collectFirst {
