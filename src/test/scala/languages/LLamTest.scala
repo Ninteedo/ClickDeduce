@@ -178,8 +178,7 @@ class LLamTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
   }
 
   property("Lambda is converted to HTML without error") {
-    val tree = Apply(incrementFunction, Num(3))
-    val node = VariableNode(
+    val node1 = VariableNode(
       "Apply",
       List(
         SubExprNode(VariableNode(
@@ -201,7 +200,27 @@ class LLamTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
         SubExprNode(VariableNode("Num", List(LiteralNode("3"))))
       )
     )
-    val htmlVersion = node.toHtml(DisplayMode.Edit).toString
+
+    val node2 = VariableNode(
+      "Lambda",
+      List(
+        LiteralNode(""),
+        SubTypeNode(TypeChoiceNode()),
+        SubExprNode(VariableNode(
+          "Var",
+          List(LiteralNode("bar"))
+        ))
+      )
+    )
+
+    val nodes: TableFor1[VariableNode] = Table("node", node1, node2)
+    val modes: TableFor1[DisplayMode] = Table("mode", DisplayMode.values: _*)
+
+    modes.forEvery({ mode =>
+      nodes.forEvery({ node =>
+        node.toHtml(mode).toString
+      })
+    })
   }
 
   property("Lambda node createAction behaves appropriately with complex argument type") {

@@ -23,13 +23,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
   }
 
   case class BlankExprDropDown() extends Expr, BlankSpace {
-    override lazy val toHtml: TypedTag[String] = {
-      //      exprClassListDropdownHtml.replace("select", s"select name='$id'")
-      //      select(name := id.toString, exprClassList.map(e => {
-      //        option(value := e.getSimpleName, e.getSimpleName)
-      //      }))
-      exprClassListDropdownHtml(name := id.toString)
-    }
+    override lazy val toHtml: TypedTag[String] = exprClassListDropdownHtml(name := id.toString)
   }
 
   case class BlankChildPlaceholder() extends Expr, BlankSpace {
@@ -61,9 +55,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
   }
 
   case class BlankTypeDropDown() extends Type, BlankSpace {
-    override lazy val toHtml: TypedTag[String] = {
-      typeClassListDropdownHtml(name := id.toString)
-    }
+    override lazy val toHtml: TypedTag[String] = typeClassListDropdownHtml(name := id.toString)
   }
 
   //  def getSubclassesOf[T <: Class[Any]](parentClass: Class[T]): List[T] = {
@@ -779,7 +771,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       val arguments = lang +: args.map {
         case n: SubExprNode => ExprPlaceholder(n.toHtmlLineReadOnly(mode).toString)
         case n: LiteralNode => LiteralAny(n.toHtmlLine(mode).toString)
-        case n: SubTypeNode => TypePlaceholder(n.node.toHtmlLine(mode).toString)
+        case n: SubTypeNode => TypePlaceholder(n.node.toHtmlLineReadOnly(mode).toString)
       }
       prettyPrint(constructor.newInstance(arguments: _*).asInstanceOf[Expr])
     }
@@ -1055,7 +1047,8 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     override def toHtmlLine(mode: DisplayMode): TypedTag[String] =
       node.toHtmlLineReadOnly(mode)
 
-    override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] = toHtmlLine(mode)
+    override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] =
+      toHtmlLine(mode)(readonly, disabled)
   }
 
 
