@@ -306,4 +306,28 @@ class LLamTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
       exprChoicePhantomTree.children :+ ExprChoiceNode()
     exprChoicePhantomTree.getVisibleChildren(DisplayMode.Evaluation).last.isPhantom shouldEqual true
   }
+
+  property("Lambda expression has correct environment when editing subexpression") {
+    val expr = incrementFunction
+    val tree = VariableNode(
+      "Lambda",
+      List(
+        LiteralNode("x"),
+        SubTypeNode(TypeNode("IntType", Nil)),
+        SubExprNode(VariableNode(
+          "Plus",
+          List(
+            SubExprNode(VariableNode("Var", List(LiteralNode("x")))),
+            SubExprNode(VariableNode("Num", List(LiteralNode("1"))))
+          )
+        )
+        )
+      )
+    )
+
+    val subExprNode = tree.children.last.asInstanceOf[VariableNode]
+    subExprNode.getEditEnv shouldEqual Map("x" -> PlaceholderValue(IntType()))
+    subExprNode.getTypeEnv shouldEqual Map("x" -> IntType())
+    subExprNode.getType shouldEqual IntType()
+  }
 }

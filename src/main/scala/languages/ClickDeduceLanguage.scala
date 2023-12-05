@@ -568,9 +568,19 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
     def getExpr: Expr
 
+    def getEditValueResult: Value = eval(getExpr, getEditEnv)
+
     def getValue: Value = eval(getExpr, getEnv)
 
     def getType: Type = typeOf(getExpr, getTypeEnv)
+
+    def getEditEnv: Env = getParent match {
+      case Some(value) => {
+        val parentExpressions: List[(Term, Env)] = value.getExpr.getChildrenBase(value.getEditEnv)
+        parentExpressions.find(_._1 eq getExpr).map(_._2).getOrElse(Map())
+      }
+      case None => Map()
+    }
 
     def getEnv: Env = getParent match {
       case Some(value) => {
@@ -583,11 +593,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     def getTypeEnv: TypeEnv = getParent match {
       case Some(value) => {
         val parentExpressions: List[(Term, TypeEnv)] = value.getExpr.getChildrenTypeCheck(value.getTypeEnv)
-        val indexMap = parentExpressions.map(t1 => value.getExpr.getChildrenBase().indexWhere(_ eq t1._1))
-        indexMap.indexOf(value.indexOf(this)) match {
-          case -1 => Map()
-          case i => parentExpressions(i)._2
-        }
+        parentExpressions.find(_._1 eq getExpr).map(_._2).getOrElse(Map())
       }
       case None => Map()
     }
@@ -598,7 +604,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
         data("tree-path") := treePathString,
         data("term") := getExpr.toString,
         data("node-string") := toString,
-        if (mode == DisplayMode.TypeCheck) typeCheckAxiomDiv else evalAxiomDiv,
+        divByMode(mode, true),
         div(cls := "annotation-axiom", exprName)
       )
     }
@@ -609,7 +615,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
         data("tree-path") := treePathString,
         data("term") := getExpr.toString,
         data("node-string") := toString,
-        if (mode == DisplayMode.TypeCheck) typeCheckSubtreeDiv else evalSubtreeDiv,
+        divByMode(mode, false),
         div(
           cls := "args",
           getVisibleChildren(mode).map(_.toHtml(mode)),
@@ -618,34 +624,51 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       )
     }
 
-    def typeCheckSubtreeDiv: TypedTag[String] = div(
-      cls := "node",
+    def divByMode(mode: DisplayMode, isAxiom: Boolean): TypedTag[String] = mode match {
+      case DisplayMode.Edit => editDiv(isAxiom)
+      case DisplayMode.Evaluation => evalDiv(isAxiom)
+      case DisplayMode.TypeCheck => typeCheckDiv(isAxiom)
+    }
+
+    def editDiv(isAxiom: Boolean): TypedTag[String] = div(
+      cls := (if (isAxiom) "expr" else "node"),
+      envDiv(DisplayMode.Edit),
+      if (isAxiom) {
+        (if (!isPhantom) toHtmlLine(DisplayMode.Edit) else toHtmlLineReadOnly(DisplayMode.Edit))(display := "inline")
+      } else {
+        div(cls := "expr", if (!isPhantom) toHtmlLine(DisplayMode.Edit) else toHtmlLineReadOnly(DisplayMode.Edit))
+      },
+      {
+        val evalResult = getEditValueResult
+        println(evalResult)
+        if (!evalResult.isError && !evalResult.isPlaceholder) {
+          List(evalArrowSpan, evalResultDiv)
+        } else {
+          List(typeCheckTurnstileSpan, typeCheckResultDiv)
+        }
+      }
+    )
+
+    def typeCheckDiv(isAxiom: Boolean): TypedTag[String] = div(
+      cls := (if (isAxiom) "expr" else "node"),
       envDiv(DisplayMode.TypeCheck),
-      div(cls := "expr", toHtmlLine(DisplayMode.TypeCheck)),
+      if (isAxiom) {
+        toHtmlLine(DisplayMode.TypeCheck)(display := "inline")
+      } else {
+        div(cls := "expr", toHtmlLine(DisplayMode.TypeCheck))
+      },
       typeCheckTurnstileSpan,
       typeCheckResultDiv
     )
 
-    def evalSubtreeDiv: TypedTag[String] = div(
-      cls := "node",
+    def evalDiv(isAxiom: Boolean): TypedTag[String] = div(
+      cls := (if (isAxiom) "expr" else "node"),
       envDiv(DisplayMode.Evaluation),
-      div(cls := "expr", if (!isPhantom) toHtmlLine(DisplayMode.Evaluation) else toHtmlLineReadOnly(DisplayMode.Evaluation)),
-      evalArrowSpan,
-      evalResultDiv
-    )
-
-    def typeCheckAxiomDiv: TypedTag[String] = div(
-      cls := "expr",
-      envDiv(DisplayMode.TypeCheck),
-      toHtmlLine(DisplayMode.TypeCheck)(display := "inline"),
-      typeCheckTurnstileSpan,
-      typeCheckResultDiv
-    )
-
-    def evalAxiomDiv: TypedTag[String] = div(
-      cls := "expr",
-      envDiv(DisplayMode.Evaluation),
-      (if (!isPhantom) toHtmlLine(DisplayMode.Evaluation) else toHtmlLineReadOnly(DisplayMode.Evaluation))(display := "inline"),
+      if (isAxiom) {
+        (if (!isPhantom) toHtmlLine(DisplayMode.Evaluation) else toHtmlLineReadOnly(DisplayMode.Evaluation))(display := "inline")
+      } else {
+        div(cls := "expr", if (!isPhantom) toHtmlLine(DisplayMode.Evaluation) else toHtmlLineReadOnly(DisplayMode.Evaluation))
+      },
       evalArrowSpan,
       evalResultDiv
     )
@@ -658,8 +681,14 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
     def evalResultDiv: TypedTag[String] = div(cls := "eval-result", display := "inline", getValue.toHtml)
 
+    def editEvalResultDiv: TypedTag[String] = div(cls := "eval-result", display := "inline", getEditValueResult.toHtml)
+
     def envDiv(mode: DisplayMode): TypedTag[String] = {
-      val env: Env | TypeEnv = if (mode == DisplayMode.TypeCheck) getTypeEnv else getEnv
+      val env: Env | TypeEnv = mode match {
+        case DisplayMode.Edit => getEditEnv
+        case DisplayMode.Evaluation => getEnv
+        case DisplayMode.TypeCheck => getTypeEnv
+      }
       val envHtml: String = (if (env.nonEmpty)
         env.map((k: String, v: Value | Type) => s"$k &rarr; ${v.toHtml}").mkString("[", ", ", "]") else "") +
         (if (mode == DisplayMode.TypeCheck) " &#x22a2;" else if (env.nonEmpty) "," else "")

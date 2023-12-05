@@ -30,11 +30,13 @@ trait AbstractLanguage {
   trait Term {
     lazy val toHtml: TypedTag[String] = span(raw(prettyPrint(this)))
 
-    def getChildrenBase(): List[Term] = Nil
+    def getChildrenBase(env: Env = Map()): List[(Term, Env)] = Nil
 
     def getChildrenEval(env: Env = Map()): List[(Term, Env)] = Nil
 
     def getChildrenTypeCheck(tenv: TypeEnv = Map()): List[(Term, TypeEnv)] = Nil
+
+    def isPlaceholder: Boolean = false
   }
 
   /**
@@ -50,7 +52,7 @@ trait AbstractLanguage {
       }
     }
 
-    override def getChildrenBase(): List[Term] = getExprFields(this)
+    override def getChildrenBase(env: Env = Map()): List[(Term, Env)] = getExprFields(this).zip(LazyList.continually(env))
 
     override def getChildrenEval(env: Env = Map()): List[(Term, Env)] =
       getExprFields(this).zip(LazyList.continually(env))

@@ -18,7 +18,7 @@ class LLam extends LLet {
   }
 
   case class Lambda(v: Literal, typ: Type, e: Expr) extends Expr {
-    override def getChildrenBase(): List[Term] = List(v, typ, e)
+    override def getChildrenBase(env: Env): List[(Term, Env)] = List((v, env), (typ, env), (e, env + (v.toString -> PlaceholderValue(typ))))
 
     override def getChildrenEval(env: Env): List[(Term, Env)] = Nil
 
@@ -91,6 +91,7 @@ class LLam extends LLet {
   }
 
   case class PlaceholderValue(override val typ: Type) extends Value {
+    override def isPlaceholder: Boolean = true
   }
 
   override def eval(e: Expr, env: Env): Value = e match {

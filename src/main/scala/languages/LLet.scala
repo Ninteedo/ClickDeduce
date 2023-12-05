@@ -10,7 +10,8 @@ class LLet extends LIf {
   }
 
   case class Let(v: Literal, assign_expr: Expr, bound_expr: Expr) extends Expr {
-    override def getChildrenBase(): List[Term] = List(v, assign_expr, bound_expr)
+    override def getChildrenBase(env: Env): List[(Term, Env)] =
+      List((v, env), (assign_expr, env), (bound_expr, env + (v.toString -> eval(assign_expr, env))))
 
     override def getChildrenEval(env: Env): List[(Term, Env)] = List(
       (assign_expr, env), (bound_expr, env + (v.toString -> eval(assign_expr, env)))
