@@ -470,12 +470,16 @@ trait ClickDeduceLanguage extends AbstractLanguage {
      * @param path the path to the child
      * @return the child at the given path, if it exists
      */
-    def findChild(path: List[Int]): Option[OuterNode] = path match {
+    def findChild(path: List[Int]): Option[Node] = path match {
       case Nil => Some(this)
       case head :: tail => {
         args(head) match {
           case SubExprNode(node) => node.findChild(tail)
           case SubTypeNode(node) => node.findChild(tail)
+          case n: LiteralNode => tail match {
+            case Nil => Some(n)
+            case _ => throw new Exception(s"LiteralNode has no children, but path is not empty: $path")
+          }
           case _ => None
         }
       }
@@ -515,24 +519,6 @@ trait ClickDeduceLanguage extends AbstractLanguage {
           case ConcreteNode(exprString, _) => ConcreteNode(exprString, updatedArgs)
           case TypeNode(typeName, _) => TypeNode(typeName, updatedArgs)
         }
-      }
-    }
-
-    //    def replace(path: List[Int], replacement: OuterNode): OuterNode
-    //
-    //    def replaceInner(path: List[Int], replacement: InnerNode): OuterNode
-
-    def insertExpr(newExprName: String, newTreePath: List[Int]): VariableNode = {
-      val newNode = VariableNode.createFromExprName(newExprName)
-      val oldNode = findChild(newTreePath).get
-      oldNode match {
-        case x: ExprChoiceNode => {
-          replace(newTreePath, newNode) match {
-            case v: VariableNode => v
-            case x => throw new Exception(s"Unexpected node kind after replaceInner in insertExpr: $x")
-          }
-        }
-        case x => throw new Exception(s"Unexpected node kind in insertExpr: $x")
       }
     }
 
@@ -640,7 +626,6 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       },
       {
         val evalResult = getEditValueResult
-        println(evalResult)
         if (!evalResult.isError && !evalResult.isPlaceholder) {
           List(evalArrowSpan, evalResultDiv)
         } else {
@@ -1142,7 +1127,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     override val treePath: List[Int],
     exprChoiceName: String
   ) extends Action(originalTree, treePath) {
-    override val newTree: OuterNode = originalTree.insertExpr(exprChoiceName, treePath)
+    override val newTree: OuterNode = originalTree.replace(treePath, VariableNode.createFromExprName(exprChoiceName))
   }
 
   case class EditLiteralAction(

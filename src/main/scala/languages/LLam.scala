@@ -77,9 +77,9 @@ class LLam extends LLet {
     override lazy val valueText: TypedTag[String] = {
       div(
         raw(s"λ$v. "),
-        e.toHtml(readonly, disabled),
+        e.toHtml,
         raw(s" : "),
-        typ.toHtml(readonly, disabled)
+        typ.toHtml
       )
     }
   }

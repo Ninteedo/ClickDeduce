@@ -199,7 +199,7 @@ class NodeTreeTest extends AnyFunSuite {
         )
       )
     )
-    val updated = originalTree.insertExpr("Num", List(1, 1, 0))
+    val updated = originalTree.replace(List(1, 1, 0), VariableNode.createFromExprName("Num"))
     updated shouldEqual VariableNode(
       "Plus",
       List(
