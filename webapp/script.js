@@ -124,7 +124,7 @@ function runAction(actionName, treePath, extraArgs) {
 function updateTree(newTreeHtml, newNodeString, modeName, lang, addToHistory = false) {
     tree.innerHTML = newTreeHtml;
     lastNodeString = newNodeString;
-    addHoverListeners();
+    treeCleanup();
     if (addToHistory && (treeHistory.length === 0 ||
         (newTreeHtml !== treeHistory[treeHistoryIndex][0] || newNodeString !== treeHistory[treeHistoryIndex][1]))) {
         if (treeHistoryIndex < treeHistory.length - 1) {
@@ -145,6 +145,11 @@ function updateTree(newTreeHtml, newNodeString, modeName, lang, addToHistory = f
     });
     const langSelector = document.getElementById('lang-selector');
     langSelector.value = lang;
+}
+
+function treeCleanup() {
+    addHoverListeners();
+    makeOrphanedInputsReadOnly();
 }
 
 function useTreeFromHistory(newHistoryIndex) {
@@ -248,6 +253,13 @@ function addHoverListeners() {
                 clearHighlight();
             }
         });
+    });
+}
+
+function makeOrphanedInputsReadOnly() {
+    document.querySelectorAll('#tree select:not([data-tree-path]), #tree input:not([data-tree-path])').forEach(el => {
+        el.setAttribute('readonly', true);
+        el.setAttribute('disabled', true);
     });
 }
 
