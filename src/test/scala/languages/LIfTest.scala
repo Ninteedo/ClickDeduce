@@ -37,13 +37,13 @@ class LIfTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhenT
 
   property("Bool type-checks to BoolType") {
     forAll(bools) { b =>
-      typeOf(Bool(b)) shouldEqual BoolType()
+      Bool(b).typeCheck(Map()) shouldEqual BoolType()
     }
   }
 
   property("Bool correctly evaluates to BoolV") {
     forAll(bools) { b =>
-      eval(Bool(b)) shouldEqual BoolV(b)
+      Bool(b).eval(Map()) shouldEqual BoolV(b)
     }
   }
 
@@ -54,42 +54,42 @@ class LIfTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhenT
   }
 
   property("IfThenElse returns then_expr when cond is true") {
-    eval(IfThenElse(Bool(true), Num(1), Num(2))) shouldEqual NumV(1)
-    eval(IfThenElse(Bool(true), Bool(true), Bool(false))) shouldEqual BoolV(true)
+    IfThenElse(Bool(true), Num(1), Num(2)).eval(Map()) shouldEqual NumV(1)
+    IfThenElse(Bool(true), Bool(true), Bool(false)).eval(Map()) shouldEqual BoolV(true)
   }
 
   property("IfThenElse returns else_expr when cond is false") {
-    eval(IfThenElse(Bool(false), Num(1), Num(2))) shouldEqual NumV(2)
-    eval(IfThenElse(Bool(false), Bool(true), Bool(false))) shouldEqual BoolV(false)
+    IfThenElse(Bool(false), Num(1), Num(2)).eval(Map()) shouldEqual NumV(2)
+    IfThenElse(Bool(false), Bool(true), Bool(false)).eval(Map()) shouldEqual BoolV(false)
   }
 
   property("IfThenElse correctly type-checks when both branches have the same type") {
-    typeOf(IfThenElse(Bool(true), Num(1), Num(2))) shouldEqual IntType()
-    typeOf(IfThenElse(Bool(true), Bool(true), Bool(false))) shouldEqual BoolType()
+    IfThenElse(Bool(true), Num(1), Num(2)).typeCheck(Map()) shouldEqual IntType()
+    IfThenElse(Bool(true), Bool(true), Bool(false)).typeCheck(Map()) shouldEqual BoolType()
   }
 
   property("IfThenElse type-checks to an error when the branches have different types") {
-    typeOf(IfThenElse(Bool(true), Num(1), Bool(false))) shouldBe a[TypeError]
-    typeOf(IfThenElse(Bool(true), Bool(true), Num(2))) shouldBe a[TypeError]
+    IfThenElse(Bool(true), Num(1), Bool(false)).typeCheck(Map()) shouldBe a[TypeError]
+    IfThenElse(Bool(true), Bool(true), Num(2)).typeCheck(Map()) shouldBe a[TypeError]
   }
 
   property("Eq type-checks to BoolType when both sides have the same type") {
-    typeOf(Eq(Num(1), Num(2))) shouldEqual BoolType()
-    typeOf(Eq(Bool(true), Bool(false))) shouldEqual BoolType()
-    typeOf(Eq(Bool(true), Bool(true))) shouldEqual BoolType()
-    typeOf(Eq(Num(1), Num(1))) shouldEqual BoolType()
+    Eq(Num(1), Num(2)).typeCheck(Map()) shouldEqual BoolType()
+    Eq(Bool(true), Bool(false)).typeCheck(Map()) shouldEqual BoolType()
+    Eq(Bool(true), Bool(true)).typeCheck(Map()) shouldEqual BoolType()
+    Eq(Num(1), Num(1)).typeCheck(Map()) shouldEqual BoolType()
   }
 
   property("Eq type-checks to an error when the sides have different types") {
-    typeOf(Eq(Num(1), Bool(false))) shouldBe a[TypeError]
-    typeOf(Eq(Bool(true), Num(2))) shouldBe a[TypeError]
+    Eq(Num(1), Bool(false)).typeCheck(Map()) shouldBe a[TypeError]
+    Eq(Bool(true), Num(2)).typeCheck(Map()) shouldBe a[TypeError]
   }
 
   property("Eq correctly evaluates to BoolV") {
-    eval(Eq(Num(1), Num(2))) shouldEqual BoolV(false)
-    eval(Eq(Bool(true), Bool(false))) shouldEqual BoolV(false)
-    eval(Eq(Bool(true), Bool(true))) shouldEqual BoolV(true)
-    eval(Eq(Num(1), Num(1))) shouldEqual BoolV(true)
+    Eq(Num(1), Num(2)).eval(Map()) shouldEqual BoolV(false)
+    Eq(Bool(true), Bool(false)).eval(Map()) shouldEqual BoolV(false)
+    Eq(Bool(true), Bool(true)).eval(Map()) shouldEqual BoolV(true)
+    Eq(Num(1), Num(1)).eval(Map()) shouldEqual BoolV(true)
   }
 
   property("Can correctly load expressions in LIf") {

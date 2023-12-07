@@ -554,11 +554,11 @@ trait ClickDeduceLanguage extends AbstractLanguage {
 
     def getExpr: Expr
 
-    def getEditValueResult: Value = eval(getExpr, getEditEnv)
+    def getEditValueResult: Value = getExpr.eval(getEditEnv)
 
-    def getValue: Value = eval(getExpr, getEnv)
+    def getValue: Value = getExpr.eval(getEnv)
 
-    def getType: Type = typeOf(getExpr, getTypeEnv)
+    def getType: Type = getExpr.typeCheck(getTypeEnv)
 
     def getEditEnv: Env = getParent match {
       case Some(value) => {
@@ -1377,7 +1377,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     def exprToTree(e0: Expr): ExpressionEvalTree = {
       val childTrees = e0.getChildrenEval().map(_._1).filter(_.isInstanceOf[Expr]).map(_.asInstanceOf[Expr])
         .map(exprToTree)
-      val valueResult: Option[Value] = lang.eval(e0) match {
+      val valueResult: Option[Value] = e0.eval(Map()) match {
         case e: EvalError => None
         case v => Some(v)
       }

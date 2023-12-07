@@ -9,7 +9,17 @@ import scala.collection.immutable.List
 class LLam extends LLet {
   // expressions
   case class Apply(e1: Expr, e2: Expr) extends Expr {
-    override def getChildrenEval(env: Env = Map()): List[(Term, Env)] = (eval(e1, env), eval(e2, env)) match {
+    override def eval(env: Env): Value = e1.eval(env) match {
+      case v1: FunctionValue => v1.evalApply(e2.eval(env))
+      case v1 => ApplyToNonFunctionError(v1)
+    }
+
+    override def typeCheck(tEnv: TypeEnv): Type = e1.typeCheck(tEnv) match {
+      case t1: FunctionType => t1.typeOfApply(e2.typeCheck(tEnv))
+      case t1 => ApplyToNonFunctionErrorType(t1)
+    }
+
+    override def getChildrenEval(env: Env = Map()): List[(Term, Env)] = (e1.eval(env), e2.eval(env)) match {
       case (v1: FunctionValue, v2) => List(
         (e1, env), (e2, env), (v1.getContainedFunction, env + (v1.getVarName -> v2))
       )
@@ -18,6 +28,16 @@ class LLam extends LLet {
   }
 
   case class Lambda(v: Literal, typ: Type, e: Expr) extends Expr {
+    override def eval(env: Env): Value = v match {
+      case LiteralAny(identifier) => LambdaV(identifier, typ, e, env)
+      case _ => InvalidIdentifierEvalError(v)
+    }
+
+    override def typeCheck(tEnv: TypeEnv): Type = v match {
+      case LiteralAny(identifier) => Func(typ, e.typeCheck(tEnv + (identifier -> typ)))
+      case _ => InvalidIdentifierTypeError(v)
+    }
+
     override def getChildrenBase(env: Env): List[(Term, Env)] = List((v, env), (typ, env), (e, env + (v.toString -> PlaceholderValue(typ))))
 
     override def getChildrenEval(env: Env): List[(Term, Env)] = Nil
@@ -66,13 +86,13 @@ class LLam extends LLet {
   }
 
   case class LambdaV(v: Variable, inputType: Type, e: Expr, env: Env) extends FunctionValue {
-    override val typ: Type = Func(inputType, typeOf(e, envToTypeEnv(env) + (v -> inputType)))
+    override val typ: Type = Func(inputType, e.typeCheck(envToTypeEnv(env) + (v -> inputType)))
 
     override def getVarName: Variable = v
 
     override def getContainedFunction: Expr = e
 
-    override def evalApply(value: Value): Value = eval(e, env + (v -> value))
+    override def evalApply(value: Value): Value = e.eval(env + (v -> value))
 
     override lazy val valueText: TypedTag[String] = {
       div(
@@ -92,24 +112,6 @@ class LLam extends LLet {
 
   case class PlaceholderValue(override val typ: Type) extends Value {
     override def isPlaceholder: Boolean = true
-  }
-
-  override def eval(e: Expr, env: Env): Value = e match {
-    case Lambda(LiteralAny(v), typ, e) => LambdaV(v, typ, e, env)
-    case Apply(e1, e2) => eval(e1, env) match {
-      case v1: FunctionValue => v1.evalApply(eval(e2, env))
-      case v1 => ApplyToNonFunctionError(v1)
-    }
-    case _ => super.eval(e, env)
-  }
-
-  override def typeOf(e: Expr, env: TypeEnv): Type = e match {
-    case Lambda(LiteralAny(v), typ, e) => Func(typ, typeOf(e, env + (v -> typ)))
-    case Apply(e1, e2) => typeOf(e1, env) match {
-      case t1: FunctionType => t1.typeOfApply(typeOf(e2, env))
-      case t1 => ApplyToNonFunctionErrorType(t1)
-    }
-    case _ => super.typeOf(e, env)
   }
 
   override def prettyPrint(e: Expr): String = e match {

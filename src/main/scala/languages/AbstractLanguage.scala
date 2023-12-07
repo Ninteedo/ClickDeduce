@@ -61,6 +61,22 @@ trait AbstractLanguage {
       getExprFields(this).zip(LazyList.continually(tenv))
 
     lazy val childVersion: Expr = this
+
+    /**
+     * Function which evaluates this `Expr` to a `Value`, given an environment.
+     *
+     * @param env The environment to evaluate in.
+     * @return The `Value` resulting from evaluating this.
+     */
+    def eval(env: Env): Value = UnexpectedExpr(toString)
+
+    /**
+     * Function to perform type checking on this `Expr` in the given type environment.
+     *
+     * @param tEnv The type environment in which type checking is done.
+     * @return The `Type` of this expression after type checking.
+     */
+    def typeCheck(tEnv: TypeEnv): Type = UnexpectedExprType(toString)
   }
 
   case class MissingExpr() extends Expr
@@ -84,7 +100,6 @@ trait AbstractLanguage {
     val isError: Boolean = false
   }
 
-
   /**
    * The type of a value.
    */
@@ -100,9 +115,7 @@ trait AbstractLanguage {
     val isError: Boolean = false
   }
 
-  case class UnknownType() extends Type {
-
-  }
+  case class UnknownType() extends Type
 
   case class TypePlaceholder(content: String) extends Type
 
@@ -126,6 +139,16 @@ trait AbstractLanguage {
   }
 
   /**
+   * An error that occurs due to attempting to process an unknown `Expr`.
+   *
+   * @param message The error message.
+   */
+  case class UnexpectedExpr(override val message: String) extends EvalError {
+    override val typ: Type = UnexpectedExprType(message)
+  }
+
+
+  /**
    * An error resulting from an expression being type checked.
    */
   abstract class TypeError extends Type, TermError {
@@ -139,6 +162,13 @@ trait AbstractLanguage {
 
     override val isError: Boolean = true
   }
+
+  /**
+   * An error that occurs due to attempting to process an unknown `Expr`.
+   *
+   * @param message The error message.
+   */
+  case class UnexpectedExprType(override val message: String) extends TypeError
 
   abstract class Literal extends Term {
     val value: Any
@@ -174,48 +204,6 @@ trait AbstractLanguage {
 
   case class LiteralAny(value: String) extends Literal {
     override lazy val toString: String = value
-  }
-
-  /**
-   * Function which evaluates an `Expr` to a `Value`, given an environment.
-   *
-   * @param e   The `Expr` to evaluate.
-   * @param env The environment to evaluate the `Expr` in.
-   * @return The `Value` resulting from evaluating the `Expr`.
-   */
-  def eval(e: Expr, env: Env): Value
-
-  /**
-   * Function which evaluates an `Expr` to a `Value`, given an empty environment.
-   *
-   * Equivalent to calling <code>eval(e, Map()).</code>
-   *
-   * @param e The `Expr` to evaluate.
-   * @return The `Value` resulting from evaluating the `Expr`.
-   */
-  def eval(e: Expr): Value = {
-    eval(e, Map())
-  }
-
-  /**
-   * Function to perform type checking on an `Expr` in the given type environment.
-   *
-   * @param e    The `Expr` on which type checking needs to be performed.
-   * @param tenv The type environment in which type checking is done.
-   * @return The `Type` of the expression after type checking.
-   */
-  def typeOf(e: Expr, tenv: TypeEnv): Type
-
-  /**
-   * Overloaded type checking function that performs type checking on an `Expr` in an empty type environment.
-   *
-   * Equivalent to calling <code>typeCheck(e, Map()).</code>
-   *
-   * @param e The `Expr` on which type checking needs to be performed.
-   * @return The `Type` of the expression after type checking.
-   */
-  def typeOf(e: Expr): Type = {
-    typeOf(e, Map())
   }
 
   /**

@@ -20,27 +20,27 @@ class LArithTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWh
 
   property("Num type-checks to IntType") {
     forAll(nums) { n =>
-      typeOf(Num(n), Map()) should be(IntType())
+      Num(n).typeCheck(Map()) should be(IntType())
     }
   }
 
   property("Num correctly evaluates to NumV") {
     forAll(nums) { n =>
-      eval(Num(n), Map()) should be(NumV(n))
+      Num(n).eval(Map()) should be(NumV(n))
     }
   }
 
   def testExpression(table: TableFor3[Expr, Value, Type], expressionName: String): Unit = {
     property(s"$expressionName type-checks correctly") {
       forAll(table) { (expr, _, typ) => {
-        typeOf(expr, Map()) should be(typ)
+        expr.typeCheck(Map()) should be(typ)
       }
       }
     }
 
     property(s"$expressionName evaluates correctly") {
       forAll(table) { (expr, res, _) =>
-        eval(expr, Map()) should be(res)
+        expr.eval(Map()) should be(res)
       }
     }
   }
@@ -127,17 +127,17 @@ class LArithTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWh
 
   property("Commutativity of expressions") {
     forAll(nested3DepthExpressionsTable) {
-      case (Plus(e1, e2), _, _) => eval(Plus(e1, e2), Map()) should be(eval(Plus(e2, e1), Map()))
-      case (Times(e1, e2), _, _) => eval(Times(e1, e2), Map()) should be(eval(Times(e2, e1), Map()))
+      case (Plus(e1, e2), _, _) => Plus(e1, e2).eval(Map()) should be(Plus(e2, e1).eval(Map()))
+      case (Times(e1, e2), _, _) => Times(e1, e2).eval(Map()) should be(Times(e2, e1).eval(Map()))
     }
   }
 
   property("Identity expressions have no effect") {
     forAll(nested3DepthExpressionsTable) {
       if (Random.nextBoolean()) {
-        case (e, res, _) => eval(Plus(e, Num(0)), Map()) should be(res)
+        case (e, res, _) => Plus(e, Num(0)).eval(Map()) should be(res)
       } else {
-        case (e, res, _) => eval(Times(e, Num(1)), Map()) should be(res)
+        case (e, res, _) => Times(e, Num(1)).eval(Map()) should be(res)
       }
     }
   }
@@ -177,8 +177,8 @@ class LArithTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWh
     val invalidNumLiteralsTable = Table("InvalidNumLiterals", invalidNumLiterals: _*)
     forAll(invalidNumLiteralsTable) {
       literal => {
-        eval(Num(literal)) shouldBe an[EvalError]
-        typeOf(Num(literal)) shouldBe an[TypeError]
+        Num(literal).eval(Map()) shouldBe an[EvalError]
+        Num(literal).typeCheck(Map()) shouldBe an[TypeError]
       }
     }
   }
@@ -186,8 +186,8 @@ class LArithTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWh
   property("Num with integer literal inputs is correctly interpreted") {
     forAll(nums) {
       num => {
-        eval(Num(Literal.fromString(num.toString))) shouldBe NumV(num)
-        eval(Num(LiteralInt(num))) shouldBe NumV(num)
+        Num(Literal.fromString(num.toString)).eval(Map()) shouldBe NumV(num)
+        Num(LiteralInt(num)).eval(Map()) shouldBe NumV(num)
       }
     }
   }

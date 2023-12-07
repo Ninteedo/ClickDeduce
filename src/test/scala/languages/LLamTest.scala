@@ -19,36 +19,34 @@ class LLamTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
   val incrementTwiceFunction: Apply = Apply(twiceFunction, incrementFunction)
 
   property("Lambda correctly type-checks") {
-    typeOf(incrementFunction) shouldEqual Func(IntType(), IntType())
+    incrementFunction.typeCheck(Map()) shouldEqual Func(IntType(), IntType())
 
     val exampleEnv: TypeEnv = Map("y" -> BoolType())
-    typeOf(incrementFunction, exampleEnv) shouldEqual Func(IntType(), IntType())
+    incrementFunction.typeCheck(exampleEnv) shouldEqual Func(IntType(), IntType())
   }
 
   property("Lambda correctly evaluates") {
-    eval(incrementFunction) shouldEqual LambdaV("x", IntType(), Plus(Var("x"), Num(1)), Map())
+    incrementFunction.eval(Map()) shouldEqual LambdaV("x", IntType(), Plus(Var("x"), Num(1)), Map())
 
     val exampleEnv: Env = Map("y" -> NumV(76))
-    eval(incrementFunction, exampleEnv) shouldEqual LambdaV("x", IntType(), Plus(Var("x"), Num(1)), exampleEnv)
+    incrementFunction.eval(exampleEnv) shouldEqual LambdaV("x", IntType(), Plus(Var("x"), Num(1)), exampleEnv)
   }
 
   property("Apply correctly type-checks") {
-    typeOf(Apply(incrementFunction, Num(24))) shouldEqual IntType()
-    typeOf(Apply(incrementFunction, Num(24)), Map("x" -> BoolType(), "y" -> IntType())) shouldEqual IntType()
+    Apply(incrementFunction, Num(24)).typeCheck(Map()) shouldEqual IntType()
+    Apply(incrementFunction, Num(24)).typeCheck(Map("x" -> BoolType(), "y" -> IntType())) shouldEqual IntType()
 
-    typeOf(Apply(Lambda("a", BoolType(), IfThenElse(Var("a"), Num(5), Num(10))), Bool(true))) shouldEqual IntType()
-    typeOf(Apply(IfThenElse(Bool(false), incrementFunction, Lambda("b", IntType(), Times(Var("b"), Num(-1)))), Num(-3))
-    ) shouldEqual IntType()
+    Apply(Lambda("a", BoolType(), IfThenElse(Var("a"), Num(5), Num(10))), Bool(true)).typeCheck(Map()) shouldEqual IntType()
+    Apply(IfThenElse(Bool(false), incrementFunction, Lambda("b", IntType(), Times(Var("b"), Num(-1)))), Num(-3)).typeCheck(Map()) shouldEqual IntType()
   }
 
   property("Apply correctly evaluates") {
-    eval(Apply(incrementFunction, Num(24))) shouldEqual NumV(25)
-    eval(Apply(incrementFunction, Num(78)), Map("x" -> NumV(2))) shouldEqual NumV(79)
+    Apply(incrementFunction, Num(24)).eval(Map()) shouldEqual NumV(25)
+    Apply(incrementFunction, Num(78)).eval(Map("x" -> NumV(2))) shouldEqual NumV(79)
 
-    eval(Apply(IfThenElse(Bool(false), incrementFunction, Lambda("b", IntType(), Times(Var("b"), Num(-1)))), Num(-3))
-    ) shouldEqual NumV(3)
+    Apply(IfThenElse(Bool(false), incrementFunction, Lambda("b", IntType(), Times(Var("b"), Num(-1)))), Num(-3)).eval(Map()) shouldEqual NumV(3)
 
-    eval(Apply(Apply(twiceFunction, incrementFunction), Num(4))) shouldEqual NumV(6)
+    Apply(Apply(twiceFunction, incrementFunction), Num(4)).eval(Map()) shouldEqual NumV(6)
   }
 
   property("Apply results in error when left side is not a function") {
@@ -59,7 +57,7 @@ class LLamTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
       Apply(incrementFunction, Num(8))
     )
     leftExpressions.foreach {l =>
-      eval(Apply(l, Num(4))) shouldBe an[EvalError]
+      Apply(l, Num(4)).eval(Map()) shouldBe an[EvalError]
     }
   }
 

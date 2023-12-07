@@ -3,22 +3,56 @@ package languages
 class LLet extends LIf {
   // expressions
 
-  case class Var(v: Literal) extends Expr
+  case class Var(v: Literal) extends Expr {
+    override def eval(env: Env): Value = v match {
+      case LiteralAny(identifier) => env.getOrElse(identifier, UnknownVariableEvalError(v))
+      case _ => InvalidIdentifierEvalError(v)
+    }
+
+    override def typeCheck(tEnv: TypeEnv): Type = v match {
+      case LiteralAny(identifier) => tEnv.getOrElse(identifier, UnknownVariableTypeError(v))
+      case _ => InvalidIdentifierTypeError(v)
+    }
+  }
 
   object Var {
     def apply(v: Variable): Var = new Var(LiteralAny(v))
   }
 
   case class Let(v: Literal, assign_expr: Expr, bound_expr: Expr) extends Expr {
+    override def eval(env: Env): Value = v match {
+      case LiteralAny(identifier) => {
+        val assign_val: Value = assign_expr.eval(env)
+        if (assign_val.isError) {
+          assign_val
+        } else {
+          bound_expr.eval(env + (identifier -> assign_val))
+        }
+      }
+      case _ => InvalidIdentifierEvalError(v)
+    }
+
+    override def typeCheck(tEnv: TypeEnv): Type = v match {
+      case LiteralAny(identifier) => {
+        val assign_type: Type = assign_expr.typeCheck(tEnv)
+        if (assign_type.isError) {
+          assign_type
+        } else {
+          bound_expr.typeCheck(tEnv + (identifier -> assign_type) )
+        }
+      }
+      case _ => InvalidIdentifierTypeError(v)
+    }
+
     override def getChildrenBase(env: Env): List[(Term, Env)] =
-      List((v, env), (assign_expr, env), (bound_expr, env + (v.toString -> eval(assign_expr, env))))
+      List((v, env), (assign_expr, env), (bound_expr, env + (v.toString -> assign_expr.eval(env))))
 
     override def getChildrenEval(env: Env): List[(Term, Env)] = List(
-      (assign_expr, env), (bound_expr, env + (v.toString -> eval(assign_expr, env)))
+      (assign_expr, env), (bound_expr, env + (v.toString -> assign_expr.eval(env)))
     )
 
     override def getChildrenTypeCheck(tenv: TypeEnv): List[(Term, TypeEnv)] = List(
-      (assign_expr, tenv), (bound_expr, tenv + (v.toString -> typeOf(assign_expr, tenv)))
+      (assign_expr, tenv), (bound_expr, tenv + (v.toString -> assign_expr.typeCheck(tenv)))
     )
   }
 
@@ -40,30 +74,14 @@ class LLet extends LIf {
     override val message: String = s"Unknown variable identifier '$v'"
   }
 
-  override def eval(e: Expr, env: Env): Value = e match {
-    case Var(LiteralAny(v)) => env.getOrElse(v, UnknownVariableEvalError(LiteralAny(v)))
-    case Let(LiteralAny(v), assign_expr, bound_expr) => {
-      val assign_val: Value = eval(assign_expr, env)
-      if (assign_val.isError) {
-        assign_val
-      } else {
-        eval(bound_expr, env + (v -> assign_val))
-      }
-    }
-    case _ => super.eval(e, env)
+  case class InvalidIdentifierEvalError(v: Literal) extends EvalError {
+    override val message: String = s"Invalid identifier '$v'"
+
+    override val typ: Type = InvalidIdentifierTypeError(v)
   }
 
-  override def typeOf(e: Expr, tenv: TypeEnv): Type = e match {
-    case Var(LiteralAny(v)) => tenv.getOrElse(v, UnknownVariableTypeError(LiteralAny(v)))
-    case Let(LiteralAny(v), assign_expr, bound_expr) => {
-      val assign_type: Type = typeOf(assign_expr, tenv)
-      if (assign_type.isError) {
-        assign_type
-      } else {
-        typeOf(bound_expr, tenv + (v -> assign_type))
-      }
-    }
-    case _ => super.typeOf(e, tenv)
+  case class InvalidIdentifierTypeError(v: Literal) extends TypeError {
+    override val message: String = s"Invalid identifier '$v'"
   }
 
   override def prettyPrint(e: Expr): String = e match {

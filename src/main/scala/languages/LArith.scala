@@ -10,9 +10,15 @@ class LArith extends ClickDeduceLanguage {
    * @param x The integer value of the number.
    */
   case class Num(x: Literal) extends Expr {
-    //    def this(x: BigInt) = this(LiteralInt(x))
-    //
-    //    def this(x: Int) = this(BigInt(x))
+    override def eval(env: Env): Value = x match {
+      case LiteralInt(x) => NumV(x)
+      case _ => UnexpectedArgValue(s"Num can only accept LiteralInt, not $x")
+    }
+
+    override def typeCheck(tEnv: TypeEnv): Type = x match {
+      case LiteralInt(_) => IntType()
+      case _ => UnexpectedArgType(s"Num can only accept LiteralInt, not $x")
+    }
   }
 
   object Num {
@@ -28,7 +34,17 @@ class LArith extends ClickDeduceLanguage {
    * @param e1 The first expression to add.
    * @param e2 The second expression to add.
    */
-  case class Plus(e1: Expr, e2: Expr) extends Expr
+  case class Plus(e1: Expr, e2: Expr) extends Expr {
+    override def eval(env: Env): Value = (e1.eval(env), e2.eval(env)) match {
+      case (NumV(x), NumV(y)) => NumV(x + y)
+      case (v1, v2) => UnexpectedArgValue(s"Plus can only accept (NumV, NumV), not ($v1, $v2)")
+    }
+
+    override def typeCheck(tEnv: TypeEnv): Type = (e1.typeCheck(tEnv), e2.typeCheck(tEnv)) match {
+      case (IntType(), IntType()) => IntType()
+      case (t1, t2) => UnexpectedArgType(s"Plus can only accept (IntType, IntType), not ($t1, $t2)")
+    }
+  }
 
   /**
    * A times expression.
@@ -37,7 +53,17 @@ class LArith extends ClickDeduceLanguage {
    * @param e1 The first expression to multiply.
    * @param e2 The second expression to multiply.
    */
-  case class Times(e1: Expr, e2: Expr) extends Expr
+  case class Times(e1: Expr, e2: Expr) extends Expr {
+    override def eval(env: Env): Value = (e1.eval(env), e2.eval(env)) match {
+      case (NumV(x), NumV(y)) => NumV(x * y)
+      case (v1, v2) => UnexpectedArgValue(s"Times can only accept (NumV, NumV), not ($v1, $v2)")
+    }
+
+    override def typeCheck(tEnv: TypeEnv): Type = (e1.typeCheck(tEnv), e2.typeCheck(tEnv)) match {
+      case (IntType(), IntType()) => IntType()
+      case (t1, t2) => UnexpectedArgType(s"Times can only accept (IntType, IntType), not ($t1, $t2)")
+    }
+  }
 
   // values
 
@@ -60,15 +86,6 @@ class LArith extends ClickDeduceLanguage {
     override val typ: Type = UnexpectedArgType(message)
   }
 
-  /**
-   * An error that occurs due to attempting to process an unknown `Expr`.
-   *
-   * @param message The error message.
-   */
-  case class UnexpectedExpr(override val message: String) extends EvalError {
-    override val typ: Type = UnexpectedExprType(message)
-  }
-
   // types
 
   /**
@@ -82,40 +99,6 @@ class LArith extends ClickDeduceLanguage {
    * @param message The error message.
    */
   case class UnexpectedArgType(override val message: String) extends TypeError
-
-  /**
-   * An error that occurs due to attempting to process an unknown `Expr`.
-   *
-   * @param message The error message.
-   */
-  case class UnexpectedExprType(override val message: String) extends TypeError
-
-
-  override def eval(e: Expr, env: Env): Value = e match {
-    case Num(LiteralInt(x)) => NumV(x)
-    case Plus(e1, e2) => (eval(e1, env), eval(e2, env)) match {
-      case (NumV(x), NumV(y)) => NumV(x + y)
-      case (v1, v2) => UnexpectedArgValue(s"Plus can only accept (NumV, NumV), not ($v1, $v2)")
-    }
-    case Times(e1, e2) => (eval(e1, env), eval(e2, env)) match {
-      case (NumV(x), NumV(y)) => NumV(x * y)
-      case (v1, v2) => UnexpectedArgValue(s"Times can only accept (NumV, NumV), not ($v1, $v2)")
-    }
-    case _ => UnexpectedExpr(s"Unexpected expression: $e")
-  }
-
-  override def typeOf(e: Expr, tenv: TypeEnv): Type = e match {
-    case Num(LiteralInt(x)) => IntType()
-    case Plus(e1, e2) => (typeOf(e1, tenv), typeOf(e2, tenv)) match {
-      case (IntType(), IntType()) => IntType()
-      case (t1, t2) => UnexpectedArgType(s"Plus can only accept (IntType, IntType), not ($t1, $t2)")
-    }
-    case Times(e1, e2) => (typeOf(e1, tenv), typeOf(e2, tenv)) match {
-      case (IntType(), IntType()) => IntType()
-      case (t1, t2) => UnexpectedArgType(s"Times can only accept (IntType, IntType), not ($t1, $t2)")
-    }
-    case _ => UnexpectedExprType(s"Unexpected expression: $e")
-  }
 
   override def prettyPrint(e: Expr): String = e match {
     case Num(x) => x.toString

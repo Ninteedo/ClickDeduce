@@ -29,7 +29,7 @@ class LLetTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
     forAll(assortedValues) {
       value => {
         val v = randomElement(variableNames)
-        eval(Var(v), Map(v -> value)) shouldEqual value
+        Var(v).eval(Map(v -> value)) shouldEqual value
       }
     }
 
@@ -43,7 +43,7 @@ class LLetTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
           env += v -> value
         }
         val v: Variable = randomElement(env.keys.toList)
-        eval(Var(v), env) shouldEqual env(v)
+        Var(v).eval(env) shouldEqual env(v)
       }
     }
   }
@@ -53,7 +53,7 @@ class LLetTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
     forAll(assortedValues) {
       value => {
         val v = randomElement(variableNames)
-        typeOf(Var(v), Map(v -> value.typ)) shouldEqual value.typ
+        Var(v).typeCheck(Map(v -> value.typ)) shouldEqual value.typ
       }
     }
 
@@ -67,85 +67,75 @@ class LLetTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
           env += v -> value.typ
         }
         val v: Variable = randomElement(env.keys.toList)
-        typeOf(Var(v), env) shouldEqual env(v)
+        Var(v).typeCheck(env) shouldEqual env(v)
       }
     }
   }
 
   property("Let correctly type-checks") {
-    typeOf(Let("y", Num(51), Var("y"))) shouldEqual IntType()
-    typeOf(Let("gri3hga3", Bool(true), IfThenElse(Var("gri3hga3"), Num(1), Num(2)))) shouldEqual IntType()
-    typeOf(Eq(Num(0), Let("abc", Num(3), Plus(Num(-3), Var("abc"))))) shouldEqual BoolType()
+    Let("y", Num(51), Var("y")).typeCheck(Map()) shouldEqual IntType()
+    Let("gri3hga3", Bool(true), IfThenElse(Var("gri3hga3"), Num(1), Num(2))).typeCheck(Map()) shouldEqual IntType()
+    Eq(Num(0), Let("abc", Num(3), Plus(Num(-3), Var("abc")))).typeCheck(Map()) shouldEqual BoolType()
   }
 
   property("Let correctly evaluates with single Let in expression") {
-    eval(Let("x", Num(2), Var("x"))) shouldEqual NumV(2)
-    eval(Let("gh2", Bool(false), Eq(Var("gh2"), Bool(false)))) shouldEqual BoolV(true)
-    eval(Let("iou", Plus(Num(1), Num(5)), Times(Var("iou"), Var("iou")))) shouldEqual NumV(36)
+    Let("x", Num(2), Var("x")).eval(Map()) shouldEqual NumV(2)
+    Let("gh2", Bool(false), Eq(Var("gh2"), Bool(false))).eval(Map()) shouldEqual BoolV(true)
+    Let("iou", Plus(Num(1), Num(5)), Times(Var("iou"), Var("iou"))).eval(Map()) shouldEqual NumV(36)
   }
 
   property("Let correctly evaluates with multiple Let expressions in single expression") {
-    eval(
+    Let(
+      "x",
+      Num(43),
       Let(
-        "x",
-        Num(43),
-        Let(
-          "y",
-          Num(12),
-          Plus(Var("x"), Var("y"))
-        )
+        "y",
+        Num(12),
+        Plus(Var("x"), Var("y"))
       )
-    ) shouldEqual NumV(55)
+    ).eval(Map()) shouldEqual NumV(55)
 
-    eval(
-      Let(
-        "hello",
-        Plus(
-          Let(
-            "world",
-            Num(2),
-            Times(Var("world"), Num(-1))
-          ),
-          Num(6)
-        ),
-        Eq(Num(4), Var("hello"))
-      )
-    ) shouldEqual BoolV(true)
-
-    eval(
-      Let(
-        "x",
-        Num(1),
-        Let(
-          "y",
-          Num(2),
-          Let(
-            "z",
-            Num(3),
-            Plus(Plus(Var("z"), Var("y")), Var("x"))
-          )
-        )
-      )
-    ) shouldEqual NumV(6)
-
-    eval(
+    Let(
+      "hello",
       Plus(
-        Let("x", Num(20), Plus(Var("x"), Num(1))),
-        Let("x", Num(34), Times(Var("x"), Num(-1)))
+        Let(
+          "world",
+          Num(2),
+          Times(Var("world"), Num(-1))
+        ),
+        Num(6)
+      ),
+      Eq(Num(4), Var("hello"))
+    ).eval(Map()) shouldEqual BoolV(true)
+
+    Let(
+      "x",
+      Num(1),
+      Let(
+        "y",
+        Num(2),
+        Let(
+          "z",
+          Num(3),
+          Plus(Plus(Var("z"), Var("y")), Var("x"))
+        )
       )
-    ) shouldEqual NumV(-13)
+    ).eval(Map()) shouldEqual NumV(6)
+
+    Plus(
+      Let("x", Num(20), Plus(Var("x"), Num(1))),
+      Let("x", Num(34), Times(Var("x"), Num(-1)))
+    ).eval(Map()) shouldEqual NumV(-13)
   }
 
   property("Var results an error when variable not found") {
-    eval(Var("x"), Map("y" -> NumV(4), "xx" -> NumV(1), "w" -> BoolV(true))) shouldBe an[EvalError]
-    typeOf(Var("x"), Map("y" -> IntType(), "xx" -> IntType(), "w" -> BoolType())) shouldBe an[TypeError]
+    Var("x").eval(Map("y" -> NumV(4), "xx" -> NumV(1), "w" -> BoolV(true))) shouldBe an[EvalError]
+    Var("x").typeCheck(Map("y" -> IntType(), "xx" -> IntType(), "w" -> BoolType())) shouldBe an[TypeError]
 
-    eval(
-      Plus(
-        Var("foo"),
-        Let("foo", Num(1), Var("foo"))
-      )
-    ) shouldBe an[EvalError]
+    Plus(
+      Var("foo"),
+      Let("foo", Num(1), Var("foo"))
+    ).eval(Map()) shouldBe an[EvalError]
   }
 
   property("Let behaviour is correct with actions") {
