@@ -34,7 +34,7 @@ class LLam extends LLet {
     def typeOfApply(argType: Type): Type
   }
 
-  case class Func(in: Type, out: Type) extends Type, FunctionType {
+  case class Func(in: Type, out: Type) extends FunctionType {
     override def typeOfApply(argType: Type): Type = if (argType == in) {
       out
     } else {
@@ -65,7 +65,7 @@ class LLam extends LLet {
     def evalApply(value: Value): Value
   }
 
-  case class LambdaV(v: Variable, inputType: Type, e: Expr, env: Env) extends Value, FunctionValue {
+  case class LambdaV(v: Variable, inputType: Type, e: Expr, env: Env) extends FunctionValue {
     override val typ: Type = Func(inputType, typeOf(e, envToTypeEnv(env) + (v -> inputType)))
 
     override def getVarName: Variable = v
