@@ -627,7 +627,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       {
         val evalResult = getEditValueResult
         if (!evalResult.isError && !evalResult.isPlaceholder) {
-          List(evalArrowSpan, evalResultDiv)
+          List(evalArrowSpan, editEvalResultDiv)
         } else {
           List(typeCheckTurnstileSpan, typeCheckResultDiv)
         }

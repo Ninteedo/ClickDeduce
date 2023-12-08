@@ -105,11 +105,12 @@ class LIfTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhenT
   }
 
   property("IfThenElse.getEvalChildren returns the appropriate children") {
+    val exampleEnv: Env = Map("a" -> NumV(1), "b" -> NumV(2), "c" -> NumV(3))
     val ifThenElse = IfThenElse(Bool(true), Num(1), Num(2))
-    ifThenElse.getChildrenEval(Map()) shouldEqual List((Bool(true), Map()), (Num(1), Map()))
+    ifThenElse.getChildrenEval(exampleEnv) shouldEqual List((Bool(true), exampleEnv), (Num(1), exampleEnv))
 
     val ifThenElse2 = IfThenElse(Bool(false), Num(1), Num(2))
-    ifThenElse2.getChildrenEval(Map()) shouldEqual List((Bool(false), Map()), (Num(2), Map()))
+    ifThenElse2.getChildrenEval(exampleEnv) shouldEqual List((Bool(false), exampleEnv), (Num(2), exampleEnv))
   }
 
   property("IfThenElse behaviour is correct when using actions") {

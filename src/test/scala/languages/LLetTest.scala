@@ -202,4 +202,18 @@ class LLetTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
       expr2.typeCheck(tEnv) shouldBe an[TypeError]
     }
   }
+
+  property("Edit tree with bound variables is correct with IfThenElse in edit mode") {
+    val cond = VariableNode("Bool", List(LiteralNode("true")))
+    val thenExpr = VariableNode("Var", List(LiteralNode("x")))
+    val elseExpr = VariableNode("Var", List(LiteralNode("x")))
+    val ifThenElseNode = VariableNode("IfThenElse", List(SubExprNode(cond), SubExprNode(thenExpr), SubExprNode(elseExpr)))
+    val numNode = VariableNode("Num", List(LiteralNode("1")))
+    val tree = VariableNode("Let", List(LiteralNode("x"), SubExprNode(numNode), SubExprNode(ifThenElseNode)))
+
+    tree.getEditValueResult shouldEqual NumV(1)
+    ifThenElseNode.getEditValueResult shouldEqual NumV(1)
+    thenExpr.getEditValueResult shouldEqual NumV(1)
+    elseExpr.getEditValueResult shouldEqual NumV(1)
+  }
 }

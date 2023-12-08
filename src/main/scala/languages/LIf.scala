@@ -64,10 +64,10 @@ class LIf extends LArith {
       case t => TypeMismatchType(t, BoolType())
     }
 
-    override def getChildrenEval(env: Env): List[(Expr, Env)] = cond.eval(env) match {
+    override def getChildrenEval(env: Env): List[(Term, Env)] = cond.eval(env) match {
       case BoolV(true) => List((cond, env), (then_expr, env))
       case BoolV(false) => List((cond, env), (else_expr, env))
-      case _ => List((cond, env))
+      case _ => List((cond, env), (then_expr, env), (else_expr, env))
     }
   }
 
