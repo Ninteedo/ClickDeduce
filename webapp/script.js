@@ -81,15 +81,20 @@ function handleLiteralChanged(textInput) {
     const literalValue = textInput.value;
     const treePath = textInput.getAttribute("data-tree-path");
 
-    if (nextFocusElement == null) {
-        nextFocusElement = textInput;
+    let focusedTreePath = null;
+    if (nextFocusElement != null) {
+        focusedTreePath = nextFocusElement.getAttribute("data-tree-path");
     }
-    const focusedTreePath = nextFocusElement.getAttribute("data-tree-path");
 
     runAction("EditLiteralAction", treePath, [literalValue]).then(() => {
+        console.log(focusedTreePath);
+        if (focusedTreePath == null) { return; }
         let focusedElement = document.querySelector(`[data-tree-path="${focusedTreePath}"]`);
-        focusedElement.focus();
-        focusedElement.select();
+        if (focusedElement != null) {
+            console.log(focusedElement);
+            focusedElement.focus();
+            focusedElement.select();
+        }
     });
 }
 
@@ -150,6 +155,7 @@ function updateTree(newTreeHtml, newNodeString, modeName, lang, addToHistory = f
 function treeCleanup() {
     addHoverListeners();
     makeOrphanedInputsReadOnly();
+    makePhantomInputsReadOnly();
 }
 
 function useTreeFromHistory(newHistoryIndex) {
@@ -263,6 +269,20 @@ function makeOrphanedInputsReadOnly() {
     });
 }
 
+function makePhantomInputsReadOnly() {
+    document.querySelectorAll('#tree select, #tree input').forEach(el => {
+        if (hasClassOrPrentHasClass(el, 'phantom')) {
+            el.setAttribute('readonly', true);
+            el.setAttribute('disabled', true);
+        }
+    })
+}
+
+function hasClassOrPrentHasClass(element, className) {
+    return element.classList.contains(className) ||
+        (element.parentElement && hasClassOrPrentHasClass(element.parentElement, className));
+}
+
 let contextMenuSelectedElement = null;
 
 document.addEventListener('contextmenu', function (e) {
@@ -272,7 +292,7 @@ document.addEventListener('contextmenu', function (e) {
         target = target.parentElement;
     }
 
-    if (target && !target.classList.contains('phantom')) {
+    if (target && !hasClassOrPrentHasClass(target, 'phantom')) {
         e.preventDefault();
 
         contextMenuSelectedElement = target;
@@ -319,7 +339,7 @@ function pasteTreeNode(event) {
 
 // Initialize Panzoom
 const panzoomInstance = panzoom(tree, {
-    bounds: true, boundsPadding: 0, zoomDoubleClickSpeed: 1,
+    bounds: false, boundsPadding: 0, zoomDoubleClickSpeed: 1,
     onTouch: function (e) {
         // TODO: cannot use on mobile currently
         return false;  // tells the library to not preventDefault.
