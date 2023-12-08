@@ -120,7 +120,7 @@ object WebServer extends JsonSupport {
       .onComplete(_ => system.terminate())
   }
 
-  private val knownLanguages: List[ClickDeduceLanguage] = List(LArith, LIf, LLet, LLam)
+  private val knownLanguages: List[ClickDeduceLanguage] = List(LArith, LIf, LLet, LLam, LRec)
 
   def getLanguage(langName: String): ClickDeduceLanguage = knownLanguages.find(getLanguageName(_) == langName) match {
     case Some(lang) => lang
