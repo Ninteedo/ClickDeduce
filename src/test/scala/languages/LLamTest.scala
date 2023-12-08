@@ -290,7 +290,7 @@ class LLamTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
     tree.getVisibleChildren(DisplayMode.Edit) shouldEqual tree.children
     tree.getVisibleChildren(DisplayMode.TypeCheck) shouldEqual tree.children
 
-    tree.getVisibleChildren(DisplayMode.Evaluation) shouldEqual
+    tree.getVisibleChildren(DisplayMode.Evaluation) shouldEqual 
       tree.children :+ VariableNode.fromExpr(Plus(Var("x"), Num(1)))
 
     val phantomTree = tree.getVisibleChildren(DisplayMode.Evaluation).last.asInstanceOf[ExprNode]
@@ -298,7 +298,7 @@ class LLamTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
     phantomTree.getEnv shouldEqual Map("x" -> NumV(8))
     phantomTree.getValue shouldEqual NumV(9)
 
-    val exprChoicePhantomExpr = Apply(Lambda(LiteralAny(""), BlankTypeDropDown(), BlankExprDropDown()), BlankExprDropDown())
+    val exprChoicePhantomExpr = Apply(Lambda(LiteralIdentifier("x"), BlankTypeDropDown(), BlankExprDropDown()), BlankExprDropDown())
     val exprChoicePhantomTree = VariableNode.fromExpr(exprChoicePhantomExpr)
     exprChoicePhantomTree.getVisibleChildren(DisplayMode.Evaluation) shouldEqual
       exprChoicePhantomTree.children :+ ExprChoiceNode()

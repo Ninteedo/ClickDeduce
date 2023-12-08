@@ -29,12 +29,12 @@ class LLam extends LLet {
 
   case class Lambda(v: Literal, typ: Type, e: Expr) extends Expr {
     override def eval(env: Env): Value = v match {
-      case LiteralAny(identifier) => LambdaV(identifier, typ, e, env)
+      case LiteralIdentifier(identifier) => LambdaV(identifier, typ, e, env)
       case _ => InvalidIdentifierEvalError(v)
     }
 
     override def typeCheck(tEnv: TypeEnv): Type = v match {
-      case LiteralAny(identifier) => Func(typ, e.typeCheck(tEnv + (identifier -> typ)))
+      case LiteralIdentifier(identifier) => Func(typ, e.typeCheck(tEnv + (identifier -> typ)))
       case _ => InvalidIdentifierTypeError(v)
     }
 
@@ -46,7 +46,7 @@ class LLam extends LLet {
   }
 
   object Lambda {
-    def apply(v: Variable, typ: Type, e: Expr): Lambda = new Lambda(LiteralAny(v), typ, e)
+    def apply(v: Variable, typ: Type, e: Expr): Lambda = new Lambda(Literal.fromString(v), typ, e)
   }
 
   // types

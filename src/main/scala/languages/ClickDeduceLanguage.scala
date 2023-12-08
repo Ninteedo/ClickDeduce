@@ -174,7 +174,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       def arg: Parser[Any] = term | stringLiteral ^^ (s => LiteralString(s)) |
         wholeNumber ^^ (n => LiteralInt(BigInt(n))) |
         "true" ^^ (_ => LiteralBool(true)) | "false" ^^ (_ => LiteralBool(false)) |
-        identifier ^^ (s => LiteralAny(s))
+        identifier ^^ (s => LiteralIdentifier(s))
 
       def parseTerm(s: String): ParseResult[Option[Term]] = parseAll(term, s.strip())
     }

@@ -19,6 +19,7 @@ class LLetTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
   val assortedValues: TableFor1[Value] = Table("value", intValues.map(NumV.apply) ++ bools.map(BoolV.apply): _*)
 
   val variableNames: List[Variable] = List("a", "b", "x", "y", "foo", "bar", "gha867", "p1f")
+  val invalidVariableNames: List[Variable] = List("", ".", "1", "1foo", "foo bar", "845", " x")
 
   def randomElement[A](l: List[A]): A = {
     l(Random.nextInt(l.length))
@@ -186,5 +187,19 @@ class LLetTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
     finalTree.getEnv shouldEqual Map()
     finalTree.findChild(List(1)).get.asInstanceOf[ExprNode].getEnv shouldEqual Map()
     finalTree.findChild(List(2)).get.asInstanceOf[ExprNode].getEnv shouldEqual Map(varName -> NumV(assignValue))
+  }
+
+  property("Invalid variable names result in an error") {
+    val env = Map("x" -> NumV(1), "y" -> NumV(2), "z" -> NumV(3))
+    val tEnv = envToTypeEnv(env)
+    forAll(Table("name", invalidVariableNames: _*)) { name =>
+      val expr1 = Var(name)
+      expr1.eval(env + (name -> NumV(1))) shouldBe an[EvalError]
+      expr1.typeCheck(tEnv + (name -> IntType())) shouldBe an[TypeError]
+
+      val expr2 = Let(name, Num(2), Num(3))
+      expr2.eval(env) shouldBe an[EvalError]
+      expr2.typeCheck(tEnv) shouldBe an[TypeError]
+    }
   }
 }

@@ -186,6 +186,8 @@ trait AbstractLanguage {
         LiteralString(s.substring(1, s.length - 1))
       } else if ("-?\\d+".r.matches(s)) {
         LiteralInt(BigInt(s))
+      } else if ("[A-Za-z_$][\\w_$]*".r.matches(s)) {
+        LiteralIdentifier(s)
       } else {
         LiteralAny(s)
       }
@@ -200,6 +202,10 @@ trait AbstractLanguage {
     //    override lazy val toHtml: TypedTag[String] = p(s""""$value"""")
 
     override lazy val toString: String = s""""$value""""
+  }
+
+  case class LiteralIdentifier(value: String) extends Literal {
+    override lazy val toString: String = value
   }
 
   case class LiteralAny(value: String) extends Literal {

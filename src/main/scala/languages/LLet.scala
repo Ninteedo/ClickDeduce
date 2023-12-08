@@ -5,23 +5,23 @@ class LLet extends LIf {
 
   case class Var(v: Literal) extends Expr {
     override def eval(env: Env): Value = v match {
-      case LiteralAny(identifier) => env.getOrElse(identifier, UnknownVariableEvalError(v))
+      case LiteralIdentifier(identifier) => env.getOrElse(identifier, UnknownVariableEvalError(v))
       case _ => InvalidIdentifierEvalError(v)
     }
 
     override def typeCheck(tEnv: TypeEnv): Type = v match {
-      case LiteralAny(identifier) => tEnv.getOrElse(identifier, UnknownVariableTypeError(v))
+      case LiteralIdentifier(identifier) => tEnv.getOrElse(identifier, UnknownVariableTypeError(v))
       case _ => InvalidIdentifierTypeError(v)
     }
   }
 
   object Var {
-    def apply(v: Variable): Var = new Var(LiteralAny(v))
+    def apply(v: Variable): Var = new Var(Literal.fromString(v))
   }
 
   case class Let(v: Literal, assign_expr: Expr, bound_expr: Expr) extends Expr {
     override def eval(env: Env): Value = v match {
-      case LiteralAny(identifier) => {
+      case LiteralIdentifier(identifier) => {
         val assign_val: Value = assign_expr.eval(env)
         if (assign_val.isError) {
           assign_val
@@ -33,7 +33,7 @@ class LLet extends LIf {
     }
 
     override def typeCheck(tEnv: TypeEnv): Type = v match {
-      case LiteralAny(identifier) => {
+      case LiteralIdentifier(identifier) => {
         val assign_type: Type = assign_expr.typeCheck(tEnv)
         if (assign_type.isError) {
           assign_type
@@ -58,7 +58,7 @@ class LLet extends LIf {
 
   object Let {
     def apply(v: Variable, assign_expr: Expr, bound_expr: Expr): Let = new Let(
-      LiteralAny(v), assign_expr, bound_expr
+      Literal.fromString(v), assign_expr, bound_expr
     )
   }
 
