@@ -31,7 +31,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       span(cls := "blank-child-placeholder", data("blank-id") := id.toString, "?")
     }
 
-    override lazy val childVersion = BlankExprDropDown()
+    override lazy val childVersion: Expr = BlankExprDropDown()
   }
 
   case class BlankValueInput() extends BlankSpace {
@@ -122,12 +122,9 @@ trait ClickDeduceLanguage extends AbstractLanguage {
   }
 
   /**
-   * Create an `Expr` given its name and a list of arguments.
+   * Create an `Term` given its string representation.
    *
-   * @param name The name of the `Expr` to be created. Must match the name of a class extending `Expr` in the
-   *             language.
-   * @param args The arguments to be passed to the constructor of the `Expr`.
-   * @return The `Expr` created, if successful.
+   * @return The `Term` created, if successful.
    */
   def parseTerm(s: String): Option[Term] = {
     @tailrec
@@ -334,9 +331,9 @@ trait ClickDeduceLanguage extends AbstractLanguage {
   }
 
   object Node {
-    val innerNodeClasses = List(ExprChoiceNode.getClass, SubExprNode.getClass, LiteralNode.getClass)
+    val innerNodeClasses: List[Class[_ <: Object]] = List(ExprChoiceNode.getClass, SubExprNode.getClass, LiteralNode.getClass)
 
-    val outerNodeClasses = List(ConcreteNode.getClass, VariableNode.getClass)
+    val outerNodeClasses: List[Class[_ <: Object]] = List(ConcreteNode.getClass, VariableNode.getClass)
 
     def read(s: String): Option[Node] = {
       def makeNode(name: String, args: List[Any], env: Env | TypeEnv = Map()): Option[Node] = {
@@ -413,7 +410,6 @@ trait ClickDeduceLanguage extends AbstractLanguage {
               case Some(n: InnerNode) => n
               case _ => throw new Exception("Unexpected error in innerNode")
             }
-            node.get.asInstanceOf[InnerNode]
           }
           case _ => throw new Exception("Unexpected error in innerNode")
         }
@@ -424,14 +420,14 @@ trait ClickDeduceLanguage extends AbstractLanguage {
       NodeParser.parseNode(s) match {
         case NodeParser.Success(Some(matched: Node), _) => {
           def parentify(node: Node): Unit = node match {
-            case (n: OuterNode) => {
+            case n: OuterNode => {
               n.children.foreach({ c =>
                 c.setParent(n)
                 parentify(c)
               }
               )
             }
-            case (n: InnerNode) => {
+            case n: InnerNode => {
               n.children.foreach({ c =>
                 c.setParent(n.getParent.get)
                 parentify(c)

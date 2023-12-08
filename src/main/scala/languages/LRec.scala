@@ -25,11 +25,11 @@ class LRec extends LLam {
 
     override def getChildrenBase(env: Env): List[(Term, Env)] = List(
       (f, env), (v, env), (in_typ, env), (out_typ, env),
-      (e, env + (f.toString -> PlaceholderValue(Func(in_typ, out_typ)), v.toString -> PlaceholderValue(in_typ)))
+      (e, env ++ Map(f.toString -> PlaceholderValue(Func(in_typ, out_typ)), v.toString -> PlaceholderValue(in_typ)))
     )
 
     override def getChildrenTypeCheck(tenv: TypeEnv): List[(Term, TypeEnv)] = List(
-      (e, tenv + (f.toString -> Func(in_typ, out_typ), v.toString -> in_typ))
+      (e, tenv ++ Map(f.toString -> Func(in_typ, out_typ), v.toString -> in_typ))
     )
 
     override def getChildrenEval(env: Env): List[(Term, Env)] = Nil
@@ -44,9 +44,9 @@ class LRec extends LLam {
   case class RecV(f: Literal, v: Literal, in_typ: Type, out_typ: Type, e: Expr, env: Env) extends FunctionValue {
     override val typ: Type = Func(in_typ, out_typ)
 
-    override def getFunctionEvaluation(applyValue: Value): (Expr, Env) = (e, env + (f.toString -> this, v.toString -> applyValue))
+    override def getFunctionEvaluation(applyValue: Value): (Expr, Env) = (e, env ++ Map(f.toString -> this, v.toString -> applyValue))
 
-    override def evalApply(value: Value): Value = e.eval(env + (f.toString -> this, v.toString -> value))
+    override def evalApply(value: Value): Value = e.eval(env ++ Map(f.toString -> this, v.toString -> value))
 
     override lazy val valueText: Text.TypedTag[String] = div(
       raw(s"rec $f($v: "),
