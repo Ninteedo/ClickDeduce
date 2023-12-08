@@ -21,7 +21,7 @@ class LLam extends LLet {
 
     override def getChildrenEval(env: Env = Map()): List[(Term, Env)] = (e1.eval(env), e2.eval(env)) match {
       case (v1: FunctionValue, v2) => List(
-        (e1, env), (e2, env), (v1.getContainedFunction, env + (v1.getVarName -> v2))
+        (e1, env), (e2, env), v1.getFunctionEvaluation(v2)
       )
       case _ => List((e1, env), (e2, env))
     }
@@ -78,9 +78,7 @@ class LLam extends LLet {
 
   // values
   trait FunctionValue extends Value {
-    def getContainedFunction: Expr
-
-    def getVarName: Variable
+    def getFunctionEvaluation(applyValue: Value): (Expr, Env)
 
     def evalApply(value: Value): Value
   }
@@ -88,9 +86,7 @@ class LLam extends LLet {
   case class LambdaV(v: Variable, inputType: Type, e: Expr, env: Env) extends FunctionValue {
     override val typ: Type = Func(inputType, e.typeCheck(envToTypeEnv(env) + (v -> inputType)))
 
-    override def getVarName: Variable = v
-
-    override def getContainedFunction: Expr = e
+    override def getFunctionEvaluation(applyValue: Value): (Expr, Env) = (e, env + (v -> applyValue))
 
     override def evalApply(value: Value): Value = e.eval(env + (v -> value))
 

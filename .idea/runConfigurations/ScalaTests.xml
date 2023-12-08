@@ -13,6 +13,7 @@
         <option value="languages.LIfTest" />
         <option value="languages.LLamTest" />
         <option value="languages.LLetTest" />
+        <option value="languages.LRecTest" />
         <option value="languages.LArithTest" />
         <option value="languages.NodeTreeTest" />
         <option value="languages.ReadExprTest" />

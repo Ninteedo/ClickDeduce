@@ -44,9 +44,7 @@ class LRec extends LLam {
   case class RecV(f: Literal, v: Literal, in_typ: Type, out_typ: Type, e: Expr, env: Env) extends FunctionValue {
     override val typ: Type = Func(in_typ, out_typ)
 
-    override def getVarName: Variable = v.toString
-
-    override def getContainedFunction: Expr = e
+    override def getFunctionEvaluation(applyValue: Value): (Expr, Env) = (e, env + (f.toString -> this, v.toString -> applyValue))
 
     override def evalApply(value: Value): Value = e.eval(env + (f.toString -> this, v.toString -> value))
 
