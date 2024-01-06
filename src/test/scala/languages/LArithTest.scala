@@ -8,7 +8,7 @@ import org.scalatest.propspec.AnyPropSpec
 
 import scala.util.Random
 
-class LArithTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhenThen {
+class LArithTest extends TestTemplate[Expr, Value, Type] {
   Random.setSeed(2023)
 
   def genRandInt(): BigInt = {
@@ -28,42 +28,6 @@ class LArithTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWh
     forAll(nums)(n =>
       Num(n).eval(Map()) shouldBe NumV(n)
     )
-  }
-
-  /**
-   * Run tests for the type-checking and evaluation of a table of expressions and their correct results and types.
-   * @param table the table of expressions, results, and types
-   * @param expressionName the name of the expression to display in the test name
-   */
-  def testExpression(table: TableFor3[Expr, Value, Type], expressionName: String): Unit = {
-    property(s"$expressionName type-checks correctly") {
-      forAll(table)((expr, _, typ) => {
-        println(s"$expr -> $typ")
-        expr.typeCheck(Map()) shouldBe typ
-      })
-    }
-
-    property(s"$expressionName evaluates correctly") {
-      forAll(table)((expr, res, _) => {
-        println(s"$expr -> $res")
-        expr.eval(Map()) shouldBe res
-      })
-    }
-  }
-
-  /**
-   * Create a table of expressions, their correct evaluation results, and their correct types.
-   */
-  def createExprTable(
-    expressions: Iterable[Expr],
-    results: Iterable[Value],
-    types: Iterable[Type]
-  ): TableFor3[Expr, Value, Type] = {
-    val zipped = List(expressions, results, types).transpose.map {
-      case List(a: Expr, b: Value, c: Type) => (a, b, c)
-      case _ => throw new Exception("Should not happen")
-    }
-    Table(("expressions", "results", "types"), zipped: _*)
   }
 
   /**
@@ -134,7 +98,7 @@ class LArithTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWh
   }
 
   private val nested3DepthExpressions = (0 until 10).map(_ => generateExpression(3))
-  private val nested3DepthExpressionsTable = createExprTable(
+  private val nested3DepthExpressionsTable: TableFor3[Expr, Value, Type] = createExprTable(
     nested3DepthExpressions.map(_._1), nested3DepthExpressions.map { case (_, n) => NumV(n) },
     nested3DepthExpressions.map(_ => IntType())
   )
