@@ -8,9 +8,7 @@ import org.scalatest.propspec.AnyPropSpec
 
 import scala.util.Random
 
-class LIfTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhenThen {
-  Random.setSeed(2024)
-
+class LIfTest extends TestTemplate[Expr, Value, Type] {
   def genRandBool(): Boolean = Random.nextBoolean()
 
   def genRandInt(): BigInt = Random.nextInt(200) - 100
@@ -35,17 +33,10 @@ class LIfTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhenT
     "IfThenElse"
   )
 
-  property("Bool type-checks to BoolType") {
-    forAll(bools) { b =>
-      Bool(b).typeCheck(Map()) shouldEqual BoolType()
-    }
-  }
-
-  property("Bool correctly evaluates to BoolV") {
-    forAll(bools) { b =>
-      Bool(b).eval(Map()) shouldEqual BoolV(b)
-    }
-  }
+  testExpression(
+    createExprTable(List(Bool(true), Bool(false)), List(BoolV(true), BoolV(false)), List(BoolType(), BoolType())),
+    "Bool"
+  )
 
   property("BoolV's type is BoolType") {
     forAll(bools) { b =>
@@ -53,15 +44,16 @@ class LIfTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhenT
     }
   }
 
-  property("IfThenElse returns then_expr when cond is true") {
-    IfThenElse(Bool(true), Num(1), Num(2)).eval(Map()) shouldEqual NumV(1)
-    IfThenElse(Bool(true), Bool(true), Bool(false)).eval(Map()) shouldEqual BoolV(true)
-  }
-
-  property("IfThenElse returns else_expr when cond is false") {
-    IfThenElse(Bool(false), Num(1), Num(2)).eval(Map()) shouldEqual NumV(2)
-    IfThenElse(Bool(false), Bool(true), Bool(false)).eval(Map()) shouldEqual BoolV(false)
-  }
+  testExpression(
+    TableFor3(
+      ("expr", "value", "type"),
+      (IfThenElse(Bool(true), Num(1), Num(2)), NumV(1), IntType()),
+      (IfThenElse(Bool(true), Bool(true), Bool(false)), BoolV(true), BoolType()),
+      (IfThenElse(Bool(false), Num(1), Num(2)), NumV(2), IntType()),
+      (IfThenElse(Bool(false), Bool(true), Bool(false)), BoolV(false), BoolType()),
+    ),
+    "Basic IfThenElse expressions"
+  )
 
   property("IfThenElse correctly type-checks when both branches have the same type") {
     IfThenElse(Bool(true), Num(1), Num(2)).typeCheck(Map()) shouldEqual IntType()
@@ -81,16 +73,24 @@ class LIfTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhenT
   }
 
   property("Eq type-checks to an error when the sides have different types") {
-    Eq(Num(1), Bool(false)).typeCheck(Map()) shouldBe a[TypeError]
-    Eq(Bool(true), Num(2)).typeCheck(Map()) shouldBe a[TypeError]
+    Eq(Num(1), Bool(false)).typeCheck(Map()) shouldBe a[TypeMismatchType]
+    Eq(Bool(true), Num(2)).typeCheck(Map()) shouldBe a[TypeMismatchType]
   }
 
-  property("Eq correctly evaluates to BoolV") {
-    Eq(Num(1), Num(2)).eval(Map()) shouldEqual BoolV(false)
-    Eq(Bool(true), Bool(false)).eval(Map()) shouldEqual BoolV(false)
-    Eq(Bool(true), Bool(true)).eval(Map()) shouldEqual BoolV(true)
-    Eq(Num(1), Num(1)).eval(Map()) shouldEqual BoolV(true)
+  property("Eq evaluates to an error when the sides have different types") {
+    Eq(Num(1), Bool(false)).eval(Map()) shouldBe a[TypeMismatchError]
+    Eq(Bool(true), Num(2)).eval(Map()) shouldBe a[TypeMismatchError]
   }
+
+  testExpression(
+    TableFor3(("expr", "value", "type"),
+      (Eq(Num(1), Num(2)), BoolV(false), BoolType()),
+      (Eq(Bool(true), Bool(false)), BoolV(false), BoolType()),
+      (Eq(Bool(true), Bool(true)), BoolV(true), BoolType()),
+      (Eq(Num(1), Num(1)), BoolV(true), BoolType()),
+    ),
+    "Basic Eq expression"
+  )
 
   property("Can correctly load expressions in LIf") {
     forAll(expressions) { e =>

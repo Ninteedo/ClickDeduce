@@ -5,8 +5,12 @@ import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor1, TableFor3}
 import org.scalatest.propspec.AnyPropSpec
 
+import scala.util.Random
+
 trait TestTemplate[E <: ClickDeduceLanguage#Expr, V <: ClickDeduceLanguage#Value, T <: ClickDeduceLanguage#Type]
   extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhenThen {
+  Random.setSeed(2024)
+  
   /**
    * Run tests for the type-checking and evaluation of a table of expressions and their correct results and types.
    *

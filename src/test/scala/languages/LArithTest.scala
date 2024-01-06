@@ -9,8 +9,6 @@ import org.scalatest.propspec.AnyPropSpec
 import scala.util.Random
 
 class LArithTest extends TestTemplate[Expr, Value, Type] {
-  Random.setSeed(2023)
-
   def genRandInt(): BigInt = {
     Random.nextInt(200) - 100
   }
