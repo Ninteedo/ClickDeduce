@@ -8,22 +8,10 @@ import org.scalatest.propspec.AnyPropSpec
 
 import scala.util.Random
 
-class LLetTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhenThen {
-  Random.setSeed(2025)
-
-  val intValues: List[BigInt] = List(0, 1, -1, 2, -2, 5, -5, 10, 100, -100, 198765, -157396, 5168765, -4376418)
-  val nums: TableFor1[BigInt] = Table("num", intValues: _*)
-
-  val bools: TableFor1[Boolean] = Table("bool", true, false)
-
+class LLetTest extends TestTemplate[Expr, Value, Type] {
   val assortedValues: TableFor1[Value] = Table("value", intValues.map(NumV.apply) ++ bools.map(BoolV.apply): _*)
 
-  val variableNames: List[Variable] = List("a", "b", "x", "y", "foo", "bar", "gha867", "p1f")
-  val invalidVariableNames: List[Variable] = List("", ".", "1", "1foo", "foo bar", "845", " x")
-
-  def randomElement[A](l: List[A]): A = {
-    l(Random.nextInt(l.length))
-  }
+  def randomElement[A](l: List[A]): A = l(Random.nextInt(l.length))
 
   property("Var correctly returns a value from the environment during evaluation") {
     // environment with only correct variable
@@ -49,16 +37,16 @@ class LLetTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
     }
   }
 
-  property("Var correctly type-checks") {
-    // environment with only correct variable
+  property("Var correctly type-checks with simple environment") {
     forAll(assortedValues) {
       value => {
         val v = randomElement(variableNames)
         Var(v).typeCheck(Map(v -> value.typ)) shouldEqual value.typ
       }
     }
+  }
 
-    // big environment with lots of other variables
+  property("Var correctly type-checks with big environment") {
     forAll(assortedValues) {
       value => {
         var env: TypeEnv = Map()
@@ -130,23 +118,23 @@ class LLetTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
   }
 
   property("Var results an error when variable not found") {
-    Var("x").eval(Map("y" -> NumV(4), "xx" -> NumV(1), "w" -> BoolV(true))) shouldBe an[EvalError]
-    Var("x").typeCheck(Map("y" -> IntType(), "xx" -> IntType(), "w" -> BoolType())) shouldBe an[TypeError]
+    Var("x").typeCheck(Map("y" -> IntType(), "xx" -> IntType(), "w" -> BoolType())) shouldBe an[UnknownVariableTypeError]
+    Var("x").eval(Map("y" -> NumV(4), "xx" -> NumV(1), "w" -> BoolV(true))) shouldBe an[UnknownVariableEvalError]
 
     Plus(
       Var("foo"),
       Let("foo", Num(1), Var("foo"))
-    ).eval(Map()) shouldBe an[EvalError]
+    ).eval(Map()) shouldBe an[UnknownVariableEvalError]
   }
 
   property("Let behaviour is correct with actions") {
     val tree = VariableNode.createFromExprName("Let")
     tree.args shouldEqual List(LiteralNode(""), SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode()))
 
-    val varName: Variable = "x"
-    val setVarNameAction = EditLiteralAction(tree, List(0), varName)
+    val v: Variable = "x"
+    val setVarNameAction = EditLiteralAction(tree, List(0), v)
     setVarNameAction.newTree.args shouldEqual List(
-      LiteralNode(varName),
+      LiteralNode(v),
       SubExprNode(ExprChoiceNode()),
       SubExprNode(ExprChoiceNode())
     )
@@ -154,7 +142,7 @@ class LLetTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
 
     val assignExprChoiceAction = SelectExprAction(setVarNameAction.newTree, List(1), "Num")
     assignExprChoiceAction.newTree.args shouldEqual List(
-      LiteralNode(varName),
+      LiteralNode(v),
       SubExprNode(VariableNode("Num", List(LiteralNode("")))),
       SubExprNode(ExprChoiceNode())
     )
@@ -162,31 +150,31 @@ class LLetTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
     val assignValue: Int = 34
     val assignExprValueAction = EditLiteralAction(assignExprChoiceAction.newTree, List(1, 0), assignValue.toString)
     assignExprValueAction.newTree.args shouldEqual List(
-      LiteralNode(varName),
+      LiteralNode(v),
       SubExprNode(VariableNode("Num", List(LiteralNode(assignValue.toString)))),
       SubExprNode(ExprChoiceNode())
     )
 
     val boundExprChoiceAction = SelectExprAction(assignExprValueAction.newTree, List(2), "Var")
     boundExprChoiceAction.newTree.args shouldEqual List(
-      LiteralNode(varName),
+      LiteralNode(v),
       SubExprNode(VariableNode("Num", List(LiteralNode(assignValue.toString)))),
       SubExprNode(VariableNode("Var", List(LiteralNode(""))))
     )
 
-    val boundExprValueAction = EditLiteralAction(boundExprChoiceAction.newTree, List(2, 0), varName)
+    val boundExprValueAction = EditLiteralAction(boundExprChoiceAction.newTree, List(2, 0), v)
     boundExprValueAction.newTree.args shouldEqual List(
-      LiteralNode(varName),
+      LiteralNode(v),
       SubExprNode(VariableNode("Num", List(LiteralNode(assignValue.toString)))),
-      SubExprNode(VariableNode("Var", List(LiteralNode(varName))))
+      SubExprNode(VariableNode("Var", List(LiteralNode(v))))
     )
 
     val finalTree = boundExprValueAction.newTree.asInstanceOf[ExprNode]
 
-    finalTree.getExpr shouldEqual Let(varName, Num(assignValue), Var(varName))
+    finalTree.getExpr shouldEqual Let(v, Num(assignValue), Var(v))
     finalTree.getEnv shouldEqual Map()
     finalTree.findChild(List(1)).get.asInstanceOf[ExprNode].getEnv shouldEqual Map()
-    finalTree.findChild(List(2)).get.asInstanceOf[ExprNode].getEnv shouldEqual Map(varName -> NumV(assignValue))
+    finalTree.findChild(List(2)).get.asInstanceOf[ExprNode].getEnv shouldEqual Map(v -> NumV(assignValue))
   }
 
   property("Invalid variable names result in an error") {

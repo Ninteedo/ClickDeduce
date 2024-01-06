@@ -13,9 +13,6 @@ class LArithTest extends TestTemplate[Expr, Value, Type] {
     Random.nextInt(200) - 100
   }
 
-  val intValues: List[BigInt] = List(0, 1, -1, 2, -2, 5, -5, 10, 100, -100, 198765, -157396, 5168765, -4376418, 159871598156996L)
-  val nums: TableFor1[BigInt] = Table("num", intValues: _*)
-
   property("Num type-checks to IntType") {
     forAll(nums)(n =>
       Num(n).typeCheck(Map()) shouldBe IntType()

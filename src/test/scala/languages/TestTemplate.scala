@@ -10,7 +10,7 @@ import scala.util.Random
 trait TestTemplate[E <: ClickDeduceLanguage#Expr, V <: ClickDeduceLanguage#Value, T <: ClickDeduceLanguage#Type]
   extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhenThen {
   Random.setSeed(2024)
-  
+
   /**
    * Run tests for the type-checking and evaluation of a table of expressions and their correct results and types.
    *
@@ -47,4 +47,10 @@ trait TestTemplate[E <: ClickDeduceLanguage#Expr, V <: ClickDeduceLanguage#Value
     }
     Table(("expressions", "results", "types"), zipped: _*)
   }
+
+  val bools: TableFor1[Boolean] = Table("bool", true, false)
+  val intValues: List[BigInt] = List(0, 1, -1, 2, -2, 5, -5, 10, 100, -100, 198765, -157396, 5168765, -4376418, 159871598156996L)
+  val nums: TableFor1[BigInt] = Table("num", intValues: _*)
+  val variableNames: List[String] = List("a", "b", "x", "y", "foo", "bar", "gha867", "p1f")
+  val invalidVariableNames: List[String] = List("", ".", "1", "1foo", "foo bar", "845", " x")
 }

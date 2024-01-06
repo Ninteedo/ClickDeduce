@@ -13,7 +13,6 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
 
   def genRandInt(): BigInt = Random.nextInt(200) - 100
 
-  val bools: TableFor1[Boolean] = Table("bool", true, false)
   val expressions: TableFor1[Expr] = Table(
     "expressions",
     Num(1),
