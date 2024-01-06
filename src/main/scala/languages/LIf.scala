@@ -23,9 +23,9 @@ class LIf extends LArith {
       val v1 = e1.eval(env)
       val v2 = e2.eval(env)
       if (v1.typ == v2.typ) {
-        BoolV (v1 == v2)
+        BoolV(v1 == v2)
       } else {
-        TypeMismatchError ("Eq", v1.typ, v2.typ)
+        TypeMismatchError("Eq", v1.typ, v2.typ)
       }
     }
 
@@ -44,11 +44,8 @@ class LIf extends LArith {
     override def eval(env: Env): Value = cond.eval(env) match {
       case BoolV(true) => then_expr.eval(env)
       case BoolV(false) => else_expr.eval(env)
-      case v => if (v.isError) {
-        v
-      } else {
-        TypeMismatchError("IfThenElse", v.typ, BoolType())
-      }
+      case v if v.isError => v
+      case v => TypeMismatchError("IfThenElse", v.typ, BoolType())
     }
 
     override def typeCheck(tEnv: TypeEnv): Type = cond.typeCheck(tEnv) match {
@@ -88,51 +85,6 @@ class LIf extends LArith {
   case class TypeMismatchType(type1: Type, type2: Type) extends TypeError {
     override val message: String = s"$type1 not compatible with $type2"
   }
-
-//  override def eval(e: Expr, env: Env): Value = e match {
-//    case Bool(LiteralBool(b)) => BoolV(b)
-//    case Eq(e1, e2) => {
-//      val v1 = eval(e1, env)
-//      val v2 = eval(e2, env)
-//      if (v1.typ == v2.typ) {
-//        BoolV(v1 == v2)
-//      } else {
-//        TypeMismatchError("Eq", v1.typ, v2.typ)
-//      }
-//    }
-//    case IfThenElse(cond, then_expr, else_expr) => eval(cond, env) match {
-//      case BoolV(true) => eval(then_expr, env)
-//      case BoolV(false) => eval(else_expr, env)
-//      case v => if (v.isError) {v} else {TypeMismatchError("IfThenElse", v.typ, BoolType())}
-//    }
-//    case _ => super.eval(e, env)
-//  }
-//
-//  override def typeOf(e: Expr, tenv: TypeEnv): Type = e match {
-//    case Bool(LiteralBool(b)) => BoolType()
-//    case Eq(e1, e2) => {
-//      val t1 = typeOf(e1, tenv)
-//      val t2 = typeOf(e2, tenv)
-//      if (t1 == t2) {
-//        BoolType()
-//      } else {
-//        TypeMismatchType(t1, t2)
-//      }
-//    }
-//    case IfThenElse(cond, then_expr, else_expr) => typeOf(cond, tenv) match {
-//      case BoolType() => {
-//        val t1 = typeOf(then_expr, tenv)
-//        val t2 = typeOf(else_expr, tenv)
-//        if (t1 == t2) {
-//          t1
-//        } else {
-//          TypeMismatchType(t1, t2)
-//        }
-//      }
-//      case t => TypeMismatchType(t, BoolType())
-//    }
-//    case _ => super.typeOf(e, tenv)
-//  }
 
   override def prettyPrint(e: Expr): String = e match {
     case Bool(b) => b.toString
