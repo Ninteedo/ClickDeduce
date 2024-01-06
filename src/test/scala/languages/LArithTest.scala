@@ -165,4 +165,16 @@ class LArithTest extends TestTemplate[Expr, Value, Type] {
       }
     }
   }
+  
+  property("Plus and Times pass errors on") {
+    Plus(Num(LiteralString("invalid")), Num(5)).typeCheck(Map()) shouldEqual Num(LiteralString("invalid")).typeCheck(Map())
+    Plus(Num(5), Num(LiteralString("invalid"))).typeCheck(Map()) shouldEqual Num(LiteralString("invalid")).typeCheck(Map())
+    Times(Num(LiteralString("invalid")), Num(5)).typeCheck(Map()) shouldEqual Num(LiteralString("invalid")).typeCheck(Map())
+    Times(Num(5), Num(LiteralString("invalid"))).typeCheck(Map()) shouldEqual Num(LiteralString("invalid")).typeCheck(Map())
+
+    Plus(Num(LiteralString("invalid")), Num(5)).eval(Map()) shouldEqual Num(LiteralString("invalid")).eval(Map())
+    Plus(Num(5), Num(LiteralString("invalid"))).eval(Map()) shouldEqual Num(LiteralString("invalid")).eval(Map())
+    Times(Num(LiteralString("invalid")), Num(5)).eval(Map()) shouldEqual Num(LiteralString("invalid")).eval(Map())
+    Times(Num(5), Num(LiteralString("invalid"))).eval(Map()) shouldEqual Num(LiteralString("invalid")).eval(Map())
+  }
 }
