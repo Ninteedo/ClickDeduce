@@ -39,14 +39,14 @@ class LArith extends ClickDeduceLanguage {
       case (NumV(x), NumV(y)) => NumV(x + y)
       case (v1, _) if v1.isError => v1
       case (_, v2) if v2.isError => v2
-      case (v1, v2) => UnexpectedArgValue(s"Plus can only accept (NumV, NumV), not ($v1, $v2)")
+      case (v1, v2) => UnexpectedArgValue(s"Plus cannot accept ($v1, $v2)")
     }
 
     override def typeCheck(tEnv: TypeEnv): Type = (e1.typeCheck(tEnv), e2.typeCheck(tEnv)) match {
       case (IntType(), IntType()) => IntType()
       case (t1, _) if t1.isError => t1
       case (_, t2) if t2.isError => t2
-      case (t1, t2) => UnexpectedArgType(s"Plus can only accept (IntType, IntType), not ($t1, $t2)")
+      case (t1, t2) => UnexpectedArgType(s"Plus cannot accept ($t1, $t2)")
     }
   }
 
@@ -62,14 +62,14 @@ class LArith extends ClickDeduceLanguage {
       case (NumV(x), NumV(y)) => NumV(x * y)
       case (v1, _) if v1.isError => v1
       case (_, v2) if v2.isError => v2
-      case (v1, v2) => UnexpectedArgValue(s"Times can only accept (NumV, NumV), not ($v1, $v2)")
+      case (v1, v2) => UnexpectedArgValue(s"Times cannot accept ($v1, $v2)")
     }
 
     override def typeCheck(tEnv: TypeEnv): Type = (e1.typeCheck(tEnv), e2.typeCheck(tEnv)) match {
       case (IntType(), IntType()) => IntType()
       case (t1, _) if t1.isError => t1
       case (_, t2) if t2.isError => t2
-      case (t1, t2) => UnexpectedArgType(s"Times can only accept (IntType, IntType), not ($t1, $t2)")
+      case (t1, t2) => UnexpectedArgType(s"Times cannot accept ($t1, $t2)")
     }
   }
 
