@@ -43,7 +43,7 @@ class LArithTest extends TestTemplate[Expr, Value, Type] {
       createExprTable(expressions, results, types)
     }
 
-    testExpression(table, opName)
+    testExpression(opName, table)
   }
 
   arithmeticOperationTests(Plus.apply, _ + _, "Plus")
@@ -85,7 +85,7 @@ class LArithTest extends TestTemplate[Expr, Value, Type] {
     val expressions = generated.map(_._1)
     val results = generated.map { case (_, n) => NumV(n) }
     val types = expressions.map(_ => IntType())
-    testExpression(createExprTable(expressions, results, types), s"$depth-depth nested arithmetic operations")
+    testExpression(s"$depth-depth nested arithmetic operations", createExprTable(expressions, results, types))
   }
 
   for (depth <- 0 to 6) {
@@ -162,16 +162,18 @@ class LArithTest extends TestTemplate[Expr, Value, Type] {
       }
     }
   }
-  
-  property("Plus and Times pass errors on") {
-    Plus(Num(LiteralString("invalid")), Num(5)).typeCheck(Map()) shouldEqual Num(LiteralString("invalid")).typeCheck(Map())
-    Plus(Num(5), Num(LiteralString("invalid"))).typeCheck(Map()) shouldEqual Num(LiteralString("invalid")).typeCheck(Map())
-    Times(Num(LiteralString("invalid")), Num(5)).typeCheck(Map()) shouldEqual Num(LiteralString("invalid")).typeCheck(Map())
-    Times(Num(5), Num(LiteralString("invalid"))).typeCheck(Map()) shouldEqual Num(LiteralString("invalid")).typeCheck(Map())
 
-    Plus(Num(LiteralString("invalid")), Num(5)).eval(Map()) shouldEqual Num(LiteralString("invalid")).eval(Map())
-    Plus(Num(5), Num(LiteralString("invalid"))).eval(Map()) shouldEqual Num(LiteralString("invalid")).eval(Map())
-    Times(Num(LiteralString("invalid")), Num(5)).eval(Map()) shouldEqual Num(LiteralString("invalid")).eval(Map())
-    Times(Num(5), Num(LiteralString("invalid"))).eval(Map()) shouldEqual Num(LiteralString("invalid")).eval(Map())
+  property("Plus and Times pass errors on") {
+    val invalidNumType = Num(LiteralString("invalid")).typeCheck(Map())
+    Plus(Num(LiteralString("invalid")), Num(5)).typeCheck(Map()) shouldEqual invalidNumType
+    Plus(Num(5), Num(LiteralString("invalid"))).typeCheck(Map()) shouldEqual invalidNumType
+    Times(Num(LiteralString("invalid")), Num(5)).typeCheck(Map()) shouldEqual invalidNumType
+    Times(Num(5), Num(LiteralString("invalid"))).typeCheck(Map()) shouldEqual invalidNumType
+
+    val invalidNumValue = Num(LiteralString("invalid")).eval(Map())
+    Plus(Num(LiteralString("invalid")), Num(5)).eval(Map()) shouldEqual invalidNumValue
+    Plus(Num(5), Num(LiteralString("invalid"))).eval(Map()) shouldEqual invalidNumValue
+    Times(Num(LiteralString("invalid")), Num(5)).eval(Map()) shouldEqual invalidNumValue
+    Times(Num(5), Num(LiteralString("invalid"))).eval(Map()) shouldEqual invalidNumValue
   }
 }

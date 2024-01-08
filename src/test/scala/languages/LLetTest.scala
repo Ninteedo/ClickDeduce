@@ -3,7 +3,7 @@ package languages
 import languages.LLet.*
 import org.scalatest.GivenWhenThen
 import org.scalatest.matchers.should.Matchers.{an, shouldBe, shouldEqual}
-import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor1}
+import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor1, TableFor3}
 import org.scalatest.propspec.AnyPropSpec
 
 import scala.util.Random
@@ -12,30 +12,6 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
   val assortedValues: TableFor1[Value] = Table("value", intValues.map(NumV.apply) ++ bools.map(BoolV.apply): _*)
 
   def randomElement[A](l: List[A]): A = l(Random.nextInt(l.length))
-
-  property("Var correctly returns a value from the environment during evaluation") {
-    // environment with only correct variable
-    forAll(assortedValues) {
-      value => {
-        val v = randomElement(variableNames)
-        Var(v).eval(Map(v -> value)) shouldEqual value
-      }
-    }
-
-    // big environment with lots of other variables
-    forAll(assortedValues) {
-      value => {
-        var env: Env = Map()
-        for (i <- 0 until Math.min(assortedValues.length, variableNames.length)) {
-          val v = randomElement(variableNames)
-          val value = randomElement(assortedValues.toList)
-          env += v -> value
-        }
-        val v: Variable = randomElement(env.keys.toList)
-        Var(v).eval(env) shouldEqual env(v)
-      }
-    }
-  }
 
   property("Var correctly type-checks with simple environment") {
     forAll(assortedValues) {
@@ -61,70 +37,37 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
     }
   }
 
-  property("Let correctly type-checks") {
-    Let("y", Num(51), Var("y")).typeCheck(Map()) shouldEqual IntType()
-    Let("gri3hga3", Bool(true), IfThenElse(Var("gri3hga3"), Num(1), Num(2))).typeCheck(Map()) shouldEqual IntType()
-    Eq(Num(0), Let("abc", Num(3), Plus(Num(-3), Var("abc")))).typeCheck(Map()) shouldEqual BoolType()
-  }
+  testExpression(
+    "Let with single Let in expression",
+    TableFor3(
+      ("expr", "value", "type"),
+      (Let("x", Bool(false), Var("x")), BoolV(false), BoolType()),
+      (Let("y", Num(51), Var("y")), NumV(51), IntType()),
+      (Let("gh2", Bool(false), Eq(Var("gh2"), Bool(false))), BoolV(true), BoolType()),
+      (Let("gri3hga3", Bool(true), IfThenElse(Var("gri3hga3"), Num(1), Num(2))), NumV(1), IntType()),
+      (Let("iou", Plus(Num(1), Num(5)), Times(Var("iou"), Var("iou"))), NumV(36), IntType()),
+      (Eq(Num(0), Let("abc", Num(3), Plus(Num(-3), Var("abc")))), BoolV(true), BoolType()),
+      (Plus(Num(1), Let("x", Num(2), Plus(Var("x"), Num(3)))), NumV(6), IntType()),
+    )
+  )
 
-  property("Let correctly evaluates with single Let in expression") {
-    Let("x", Num(2), Var("x")).eval(Map()) shouldEqual NumV(2)
-    Let("gh2", Bool(false), Eq(Var("gh2"), Bool(false))).eval(Map()) shouldEqual BoolV(true)
-    Let("iou", Plus(Num(1), Num(5)), Times(Var("iou"), Var("iou"))).eval(Map()) shouldEqual NumV(36)
-  }
-
-  property("Let correctly evaluates with multiple Let expressions in single expression") {
-    Let(
-      "x",
-      Num(43),
-      Let(
-        "y",
-        Num(12),
-        Plus(Var("x"), Var("y"))
-      )
-    ).eval(Map()) shouldEqual NumV(55)
-
-    Let(
-      "hello",
-      Plus(
-        Let(
-          "world",
-          Num(2),
-          Times(Var("world"), Num(-1))
-        ),
-        Num(6)
-      ),
-      Eq(Num(4), Var("hello"))
-    ).eval(Map()) shouldEqual BoolV(true)
-
-    Let(
-      "x",
-      Num(1),
-      Let(
-        "y",
-        Num(2),
-        Let(
-          "z",
-          Num(3),
-          Plus(Plus(Var("z"), Var("y")), Var("x"))
-        )
-      )
-    ).eval(Map()) shouldEqual NumV(6)
-
-    Plus(
-      Let("x", Num(20), Plus(Var("x"), Num(1))),
-      Let("x", Num(34), Times(Var("x"), Num(-1)))
-    ).eval(Map()) shouldEqual NumV(-13)
-  }
+  testExpression(
+    "Let with multiple Lets in expression",
+    TableFor3(
+      ("expr", "value", "type"),
+      (Let("x", Num(43), Let("y", Num(12), Plus(Var("x"), Var("y")))), NumV(55), IntType()),
+      (Let("hello", Plus(Let("world", Num(2), Times(Var("world"), Num(-1))), Num(6)), Eq(Num(4), Var("hello"))), BoolV(true), BoolType()),
+      (Let("x", Num(1), Let("y", Num(2), Let("z", Num(3), Plus(Plus(Var("z"), Var("y")), Var("x"))))), NumV(6), IntType()),
+      (Plus(Let("x", Num(20), Plus(Var("x"), Num(1))), Let("x", Num(34), Times(Var("x"), Num(-1)))), NumV(-13), IntType()),
+      (Let("x", Num(1), Let("x", Num(2), Var("x"))), NumV(2), IntType()),
+    )
+  )
 
   property("Var results an error when variable not found") {
     Var("x").typeCheck(Map("y" -> IntType(), "xx" -> IntType(), "w" -> BoolType())) shouldBe an[UnknownVariableTypeError]
     Var("x").eval(Map("y" -> NumV(4), "xx" -> NumV(1), "w" -> BoolV(true))) shouldBe an[UnknownVariableEvalError]
 
-    Plus(
-      Var("foo"),
-      Let("foo", Num(1), Var("foo"))
-    ).eval(Map()) shouldBe an[UnknownVariableEvalError]
+    Plus(Var("foo"), Let("foo", Num(1), Var("foo"))).eval(Map()) shouldBe an[UnknownVariableEvalError]
   }
 
   property("Let behaviour is correct with actions") {
@@ -138,7 +81,6 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
       SubExprNode(ExprChoiceNode()),
       SubExprNode(ExprChoiceNode())
     )
-
 
     val assignExprChoiceAction = SelectExprAction(setVarNameAction.newTree, List(1), "Num")
     assignExprChoiceAction.newTree.args shouldEqual List(
@@ -182,8 +124,8 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
     val tEnv = envToTypeEnv(env)
     forAll(Table("name", invalidVariableNames: _*)) { name =>
       val expr1 = Var(name)
-      expr1.eval(env + (name -> NumV(1))) shouldBe an[EvalError]
-      expr1.typeCheck(tEnv + (name -> IntType())) shouldBe an[TypeError]
+      expr1.eval(env + (name -> NumV(1))) shouldBe an[InvalidIdentifierEvalError]
+      expr1.typeCheck(tEnv + (name -> IntType())) shouldBe an[InvalidIdentifierTypeError]
 
       val expr2 = Let(name, Num(2), Num(3))
       expr2.eval(env) shouldBe an[EvalError]

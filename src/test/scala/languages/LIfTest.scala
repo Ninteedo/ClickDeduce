@@ -33,8 +33,8 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
   )
 
   testExpression(
-    createExprTable(List(Bool(true), Bool(false)), List(BoolV(true), BoolV(false)), List(BoolType(), BoolType())),
-    "Bool"
+    "Bool",
+    createExprTable(List(Bool(true), Bool(false)), List(BoolV(true), BoolV(false)), List(BoolType(), BoolType()))
   )
 
   property("BoolV's type is BoolType") {
@@ -44,14 +44,13 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
   }
 
   testExpression(
-    TableFor3(
+    "Basic IfThenElse expressions", TableFor3(
       ("expr", "value", "type"),
       (IfThenElse(Bool(true), Num(1), Num(2)), NumV(1), IntType()),
       (IfThenElse(Bool(true), Bool(true), Bool(false)), BoolV(true), BoolType()),
       (IfThenElse(Bool(false), Num(1), Num(2)), NumV(2), IntType()),
       (IfThenElse(Bool(false), Bool(true), Bool(false)), BoolV(false), BoolType()),
-    ),
-    "Basic IfThenElse expressions"
+    )
   )
 
   property("IfThenElse correctly type-checks when both branches have the same type") {
@@ -82,13 +81,13 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
   }
 
   testExpression(
-    TableFor3(("expr", "value", "type"),
+    "Basic Eq expression", TableFor3(
+      ("expr", "value", "type"),
       (Eq(Num(1), Num(2)), BoolV(false), BoolType()),
       (Eq(Bool(true), Bool(false)), BoolV(false), BoolType()),
       (Eq(Bool(true), Bool(true)), BoolV(true), BoolType()),
       (Eq(Num(1), Num(1)), BoolV(true), BoolType()),
-    ),
-    "Basic Eq expression"
+    )
   )
 
   property("Can correctly load expressions in LIf") {

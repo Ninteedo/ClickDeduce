@@ -17,7 +17,7 @@ trait TestTemplate[E <: ClickDeduceLanguage#Expr, V <: ClickDeduceLanguage#Value
    * @param table          the table of expressions, results, and types
    * @param expressionName the name of the expression to display in the test name
    */
-  def testExpression(table: TableFor3[E, V, T], expressionName: String): Unit = {
+  def testExpression(expressionName: String, table: TableFor3[E, V, T]): Unit = {
     property(s"$expressionName type-checks correctly") {
       forAll(table)((expr, _, typ) => {
         println(s"$expr -> $typ")
