@@ -15,6 +15,7 @@ import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 import java.util.concurrent.atomic.AtomicInteger
 import scala.concurrent.ExecutionContextExecutor
 import scala.io.StdIn
+import scala.sys.process.Process
 import scala.util.{Failure, Success, Try}
 
 case class EvalRequest(langName: String)
@@ -105,6 +106,12 @@ object WebServer extends JsonSupport {
         }
     }
 
+    if (!bundleScripts()) {
+      println("Failed to bundle scripts")
+      return
+    } else {
+      println("\nSuccessfully bundled scripts\n\n")
+    }
 
     val defaultSettings = ServerSettings(system)
     val customSettings = defaultSettings.withTransparentHeadRequests(true)
@@ -128,4 +135,27 @@ object WebServer extends JsonSupport {
   }
 
   def getLanguageName(lang: ClickDeduceLanguage): String = lang.getClass.getSimpleName.stripSuffix("$")
+
+  def bundleScripts(): Boolean = {
+    println("Bundling scripts...")
+    val processBuilder = new ProcessBuilder("cmd.exe", "/c", "npm run build")
+    processBuilder.directory(new java.io.File("webapp"))
+
+    // Redirect error stream to the standard output stream
+    processBuilder.redirectErrorStream(true)
+
+    val process = processBuilder.start()
+
+    // Capture and print the output
+    val inputStream = process.getInputStream
+    val reader = new java.io.BufferedReader(new java.io.InputStreamReader(inputStream))
+
+    var line: String = ""
+    while ({line = reader.readLine(); line != null}) {
+      println(line)
+    }
+
+    val exitCode = process.waitFor()
+    exitCode == 0
+  }
 }
