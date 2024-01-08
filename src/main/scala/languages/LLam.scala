@@ -9,12 +9,12 @@ import scala.collection.immutable.List
 class LLam extends LLet {
   // expressions
   case class Apply(e1: Expr, e2: Expr) extends Expr {
-    override def eval(env: Env): Value = e1.eval(env) match {
+    override def evalInner(env: Env): Value = e1.eval(env) match {
       case v1: FunctionValue => v1.evalApply(e2.eval(env))
       case v1 => ApplyToNonFunctionError(v1)
     }
 
-    override def typeCheck(tEnv: TypeEnv): Type = e1.typeCheck(tEnv) match {
+    override def typeCheckInner(tEnv: TypeEnv): Type = e1.typeCheck(tEnv) match {
       case t1: FunctionType => t1.typeOfApply(e2.typeCheck(tEnv))
       case t1 => ApplyToNonFunctionErrorType(t1)
     }
@@ -28,12 +28,12 @@ class LLam extends LLet {
   }
 
   case class Lambda(v: Literal, typ: Type, e: Expr) extends Expr {
-    override def eval(env: Env): Value = v match {
+    override def evalInner(env: Env): Value = v match {
       case LiteralIdentifier(identifier) => LambdaV(identifier, typ, e, env)
       case _ => InvalidIdentifierEvalError(v)
     }
 
-    override def typeCheck(tEnv: TypeEnv): Type = v match {
+    override def typeCheckInner(tEnv: TypeEnv): Type = v match {
       case LiteralIdentifier(identifier) => Func(typ, e.typeCheck(tEnv + (identifier -> typ)))
       case _ => InvalidIdentifierTypeError(v)
     }

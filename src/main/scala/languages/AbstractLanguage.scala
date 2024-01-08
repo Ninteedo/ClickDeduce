@@ -68,7 +68,15 @@ trait AbstractLanguage {
      * @param env The environment to evaluate in.
      * @return The `Value` resulting from evaluating this.
      */
-    def eval(env: Env): Value = UnexpectedExpr(toString)
+    final def eval(env: Env = Map()): Value = {
+      try {
+        evalInner(env)
+      } catch {
+        case e: Throwable => EvalException(e)
+      }
+    }
+
+    protected def evalInner(env: Env): Value = UnexpectedExpr(toString)
 
     /**
      * Function to perform type checking on this `Expr` in the given type environment.
@@ -76,7 +84,15 @@ trait AbstractLanguage {
      * @param tEnv The type environment in which type checking is done.
      * @return The `Type` of this expression after type checking.
      */
-    def typeCheck(tEnv: TypeEnv): Type = UnexpectedExprType(toString)
+    final def typeCheck(tEnv: TypeEnv = Map()): Type = {
+      try {
+        typeCheckInner(tEnv)
+      } catch {
+        case e: Exception => TypeException(e)
+      }
+    }
+
+    protected def typeCheckInner(tEnv: TypeEnv): Type = UnexpectedExprType(toString)
   }
 
   case class MissingExpr() extends Expr
@@ -147,6 +163,12 @@ trait AbstractLanguage {
     override val typ: Type = UnexpectedExprType(message)
   }
 
+  case class EvalException(exception: Throwable) extends EvalError {
+    override val message: String = exception.getMessage
+
+    override val typ: Type = TypeException(exception)
+  }
+
 
   /**
    * An error resulting from an expression being type checked.
@@ -169,6 +191,10 @@ trait AbstractLanguage {
    * @param message The error message.
    */
   case class UnexpectedExprType(override val message: String) extends TypeError
+
+  case class TypeException(exception: Throwable) extends TypeError {
+    override val message: String = exception.getMessage
+  }
 
   abstract class Literal extends Term {
     val value: Any

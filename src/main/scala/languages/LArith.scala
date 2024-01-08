@@ -10,12 +10,12 @@ class LArith extends ClickDeduceLanguage {
    * @param x The integer value of the number.
    */
   case class Num(x: Literal) extends Expr {
-    override def eval(env: Env): Value = x match {
+    override def evalInner(env: Env): Value = x match {
       case LiteralInt(x) => NumV(x)
       case _ => UnexpectedArgValue(s"Num can only accept LiteralInt, not $x")
     }
 
-    override def typeCheck(tEnv: TypeEnv): Type = x match {
+    override def typeCheckInner(tEnv: TypeEnv): Type = x match {
       case LiteralInt(_) => IntType()
       case _ => UnexpectedArgType(s"Num can only accept LiteralInt, not $x")
     }
@@ -35,14 +35,14 @@ class LArith extends ClickDeduceLanguage {
    * @param e2 The second expression to add.
    */
   case class Plus(e1: Expr, e2: Expr) extends Expr {
-    override def eval(env: Env): Value = (e1.eval(env), e2.eval(env)) match {
+    override def evalInner(env: Env): Value = (e1.eval(env), e2.eval(env)) match {
       case (NumV(x), NumV(y)) => NumV(x + y)
       case (v1, _) if v1.isError => v1
       case (_, v2) if v2.isError => v2
       case (v1, v2) => UnexpectedArgValue(s"Plus cannot accept ($v1, $v2)")
     }
 
-    override def typeCheck(tEnv: TypeEnv): Type = (e1.typeCheck(tEnv), e2.typeCheck(tEnv)) match {
+    override def typeCheckInner(tEnv: TypeEnv): Type = (e1.typeCheck(tEnv), e2.typeCheck(tEnv)) match {
       case (IntType(), IntType()) => IntType()
       case (t1, _) if t1.isError => t1
       case (_, t2) if t2.isError => t2
@@ -58,14 +58,14 @@ class LArith extends ClickDeduceLanguage {
    * @param e2 The second expression to multiply.
    */
   case class Times(e1: Expr, e2: Expr) extends Expr {
-    override def eval(env: Env): Value = (e1.eval(env), e2.eval(env)) match {
+    override def evalInner(env: Env): Value = (e1.eval(env), e2.eval(env)) match {
       case (NumV(x), NumV(y)) => NumV(x * y)
       case (v1, _) if v1.isError => v1
       case (_, v2) if v2.isError => v2
       case (v1, v2) => UnexpectedArgValue(s"Times cannot accept ($v1, $v2)")
     }
 
-    override def typeCheck(tEnv: TypeEnv): Type = (e1.typeCheck(tEnv), e2.typeCheck(tEnv)) match {
+    override def typeCheckInner(tEnv: TypeEnv): Type = (e1.typeCheck(tEnv), e2.typeCheck(tEnv)) match {
       case (IntType(), IntType()) => IntType()
       case (t1, _) if t1.isError => t1
       case (_, t2) if t2.isError => t2

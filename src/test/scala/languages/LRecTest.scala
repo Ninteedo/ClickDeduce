@@ -2,6 +2,7 @@ package languages
 
 import languages.LRec.*
 import org.scalatest.GivenWhenThen
+import org.scalatest.matchers.must.Matchers.be
 import org.scalatest.matchers.should.Matchers.{a, an, shouldBe, shouldEqual}
 import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor1}
 import org.scalatest.propspec.AnyPropSpec
@@ -57,5 +58,13 @@ class LRecTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
     phantomNode.isPhantom shouldEqual true
     phantomNode.getEnv shouldEqual Map("factorial" -> factorialFunction.eval(Map()), "n" -> NumV(3))
     phantomNode.getValue shouldEqual NumV(6)
+  }
+
+  property("Infinite recursion results in a stack overflow error") {
+    val infiniteRec = Rec("f", "x", IntType(), IntType(), Apply(Var("f"), Var("x")))
+    Apply(infiniteRec, Num(1)).eval(Map()) shouldBe a[EvalException]
+    Apply(infiniteRec, Num(1)).eval(Map()) match {
+      case EvalException(exception) => exception shouldBe a[StackOverflowError]
+    }
   }
 }

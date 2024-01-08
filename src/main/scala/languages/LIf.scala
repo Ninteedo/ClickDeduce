@@ -3,12 +3,12 @@ package languages
 class LIf extends LArith {
   // expressions
   case class Bool(b: Literal) extends Expr {
-    override def eval(env: Env): Value = b match {
+    override def evalInner(env: Env): Value = b match {
       case LiteralBool(b) => BoolV(b)
       case _ => UnexpectedArgValue(s"Bool can only accept LiteralBool, not $b")
     }
 
-    override def typeCheck(tEnv: TypeEnv): Type = b match {
+    override def typeCheckInner(tEnv: TypeEnv): Type = b match {
       case LiteralBool(_) => BoolType()
       case _ => UnexpectedArgType(s"Bool can only accept LiteralBool, not $b")
     }
@@ -19,7 +19,7 @@ class LIf extends LArith {
   }
 
   case class Eq(e1: Expr, e2: Expr) extends Expr {
-    override def eval(env: Env): Value = {
+    override def evalInner(env: Env): Value = {
       val v1 = e1.eval(env)
       val v2 = e2.eval(env)
       if (v1.typ == v2.typ) {
@@ -29,7 +29,7 @@ class LIf extends LArith {
       }
     }
 
-    override def typeCheck(tEnv: TypeEnv): Type = {
+    override def typeCheckInner(tEnv: TypeEnv): Type = {
       val t1 = e1.typeCheck(tEnv)
       val t2 = e2.typeCheck(tEnv)
       if (t1 == t2) {
@@ -41,14 +41,14 @@ class LIf extends LArith {
   }
 
   case class IfThenElse(cond: Expr, then_expr: Expr, else_expr: Expr) extends Expr {
-    override def eval(env: Env): Value = cond.eval(env) match {
+    override def evalInner(env: Env): Value = cond.eval(env) match {
       case BoolV(true) => then_expr.eval(env)
       case BoolV(false) => else_expr.eval(env)
       case v if v.isError => v
       case v => TypeMismatchError("IfThenElse", v.typ, BoolType())
     }
 
-    override def typeCheck(tEnv: TypeEnv): Type = cond.typeCheck(tEnv) match {
+    override def typeCheckInner(tEnv: TypeEnv): Type = cond.typeCheck(tEnv) match {
       case BoolType() => {
         val t1 = then_expr.typeCheck(tEnv)
         val t2 = else_expr.typeCheck(tEnv)

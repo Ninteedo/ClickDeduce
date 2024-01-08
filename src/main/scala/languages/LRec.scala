@@ -7,7 +7,7 @@ import scalatags.Text.all.*
 class LRec extends LLam {
   // expressions
   case class Rec(f: Literal, v: Literal, in_typ: Type, out_typ: Type, e: Expr) extends Expr {
-    override def eval(env: Env): Value = f match {
+    override def evalInner(env: Env): Value = f match {
       case LiteralIdentifier(f_id) => v match {
         case LiteralIdentifier(v_id) => RecV(f, v, in_typ, out_typ, e, env)
         case _ => InvalidIdentifierEvalError(v)
@@ -15,7 +15,7 @@ class LRec extends LLam {
       case _ => InvalidIdentifierEvalError(f)
     }
 
-    override def typeCheck(tEnv: TypeEnv): Type = f match {
+    override def typeCheckInner(tEnv: TypeEnv): Type = f match {
       case LiteralIdentifier(f_id) => v match {
         case LiteralIdentifier(v_id) => Func(in_typ, out_typ)
         case _ => InvalidIdentifierTypeError(v)

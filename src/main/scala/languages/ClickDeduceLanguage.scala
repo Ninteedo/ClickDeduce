@@ -453,8 +453,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
   abstract class OuterNode extends Node {
     val args: List[InnerNode]
 
-    def toHtml(mode: DisplayMode): TypedTag[String] =
-      if (children.isEmpty) toHtmlAxiom(mode) else toHtmlSubtree(mode)
+    def toHtml(mode: DisplayMode): TypedTag[String] = if (children.isEmpty) toHtmlAxiom(mode) else toHtmlSubtree(mode)
 
     def toHtmlAxiom(mode: DisplayMode): TypedTag[String]
 
