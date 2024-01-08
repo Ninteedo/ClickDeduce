@@ -1,3 +1,5 @@
+const panzoom = require('panzoom');
+
 let lastNodeString = "";
 const tree = document.getElementById('tree');
 
@@ -273,16 +275,16 @@ function makeOrphanedInputsReadOnly() {
 
 function makePhantomInputsReadOnly() {
     document.querySelectorAll('#tree select, #tree input').forEach(el => {
-        if (hasClassOrPrentHasClass(el, 'phantom')) {
+        if (hasClassOrParentHasClass(el, 'phantom')) {
             el.setAttribute('readonly', true);
             el.setAttribute('disabled', true);
         }
     })
 }
 
-function hasClassOrPrentHasClass(element, className) {
+function hasClassOrParentHasClass(element, className) {
     return element.classList.contains(className) ||
-        (element.parentElement && hasClassOrPrentHasClass(element.parentElement, className));
+        (element.parentElement && hasClassOrParentHasClass(element.parentElement, className));
 }
 
 let contextMenuSelectedElement = null;
@@ -294,7 +296,7 @@ document.addEventListener('contextmenu', function (e) {
         target = target.parentElement;
     }
 
-    if (target && !hasClassOrPrentHasClass(target, 'phantom')) {
+    if (target && !hasClassOrParentHasClass(target, 'phantom')) {
         e.preventDefault();
 
         contextMenuSelectedElement = target;
@@ -375,3 +377,13 @@ function displayError(error) {
         errorDiv.classList.remove('fade-in');
     }, 5000);
 }
+
+window.handleSubmit = handleSubmit;
+window.undo = undo;
+window.redo = redo;
+window.zoomToFit = zoomToFit;
+window.clearTreeNode = clearTreeNode;
+window.copyTreeNode = copyTreeNode;
+window.pasteTreeNode = pasteTreeNode;
+window.handleDropdownChange = handleDropdownChange;
+window.handleLiteralChanged = handleLiteralChanged;
