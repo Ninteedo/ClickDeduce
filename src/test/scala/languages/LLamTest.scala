@@ -3,32 +3,33 @@ package languages
 import languages.LLam.*
 import org.scalatest.GivenWhenThen
 import org.scalatest.matchers.should.Matchers.{an, shouldBe, shouldEqual}
-import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor1}
+import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor1, TableFor3}
 import org.scalatest.propspec.AnyPropSpec
 
 import scala.collection.immutable.Map
 import scala.util.Random
 
-class LLamTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhenThen {
-  Random.setSeed(2026)
-
+class LLamTest extends TestTemplate[Expr, Value, Type] {
   val incrementFunction: Lambda = Lambda("x", IntType(), Plus(Var("x"), Num(1)))
-  val twiceFunction: Lambda = Lambda(
-    "f", Func(IntType(), IntType()), Lambda("x", IntType(), Apply(Var("f"), Apply(Var("f"), Var("x"))))
-  )
+  val twiceFunction: Lambda = Lambda("f", Func(IntType(), IntType()), Lambda("x", IntType(), Apply(Var("f"), Apply(Var("f"), Var("x")))))
   val incrementTwiceFunction: Apply = Apply(twiceFunction, incrementFunction)
 
-  property("Lambda correctly type-checks") {
-    incrementFunction.typeCheck(Map()) shouldEqual Func(IntType(), IntType())
+  testExpression(
+    "Lambda",
+    createExprTable(
+      (incrementFunction, LambdaV("x", IntType(), Plus(Var("x"), Num(1)), Map()), Func(IntType(), IntType())),
+      (Lambda("x", BoolType(), Eq(Var("x"), Bool(true))), LambdaV("x", BoolType(), Eq(Var("x"), Bool(true)), Map()), Func(BoolType(), BoolType())),
+      (twiceFunction, LambdaV("f", twiceFunction.typ, twiceFunction.e, Map()), Func(Func(IntType(), IntType()), Func(IntType(), IntType()))),
+    )
+  )
 
-    val exampleEnv: TypeEnv = Map("y" -> BoolType())
+  property("Lambda correctly type-checks with existing environment") {
+    val exampleEnv: TypeEnv = Map("x" -> BoolType(), "y" -> BoolType())
     incrementFunction.typeCheck(exampleEnv) shouldEqual Func(IntType(), IntType())
   }
 
-  property("Lambda correctly evaluates") {
-    incrementFunction.eval(Map()) shouldEqual LambdaV("x", IntType(), Plus(Var("x"), Num(1)), Map())
-
-    val exampleEnv: Env = Map("y" -> NumV(76))
+  property("Lambda correctly evaluates with existing environment") {
+    val exampleEnv: Env = Map("x" -> BoolV(true), "y" -> NumV(76))
     incrementFunction.eval(exampleEnv) shouldEqual LambdaV("x", IntType(), Plus(Var("x"), Num(1)), exampleEnv)
   }
 
@@ -57,7 +58,8 @@ class LLamTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
       Apply(incrementFunction, Num(8))
     )
     leftExpressions.foreach {l =>
-      Apply(l, Num(4)).eval(Map()) shouldBe an[EvalError]
+      Apply(l, Num(4)).typeCheck(Map()) shouldBe an[ApplyToNonFunctionErrorType]
+      Apply(l, Num(4)).eval(Map()) shouldBe an[ApplyToNonFunctionError]
     }
   }
 
@@ -290,7 +292,7 @@ class LLamTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
     tree.getVisibleChildren(DisplayMode.Edit) shouldEqual tree.children
     tree.getVisibleChildren(DisplayMode.TypeCheck) shouldEqual tree.children
 
-    tree.getVisibleChildren(DisplayMode.Evaluation) shouldEqual 
+    tree.getVisibleChildren(DisplayMode.Evaluation) shouldEqual
       tree.children :+ VariableNode.fromExpr(Plus(Var("x"), Num(1)))
 
     val phantomTree = tree.getVisibleChildren(DisplayMode.Evaluation).last.asInstanceOf[ExprNode]

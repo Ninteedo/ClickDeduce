@@ -2,7 +2,7 @@ package languages
 
 import languages.LRec.*
 import org.scalatest.GivenWhenThen
-import org.scalatest.matchers.should.Matchers.{an, shouldBe, shouldEqual}
+import org.scalatest.matchers.should.Matchers.{a, an, shouldBe, shouldEqual}
 import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor1}
 import org.scalatest.propspec.AnyPropSpec
 
@@ -47,12 +47,12 @@ class LRecTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
     val children = factorialTree.getVisibleChildren(DisplayMode.Evaluation)
     children.length shouldEqual 3
 
-    children.head shouldBe an[VariableNode]
+    children.head shouldBe a[VariableNode]
     children.head.asInstanceOf[VariableNode].exprName shouldEqual "Rec"
 
     children(1) shouldEqual VariableNode("Num", List(LiteralNode("3")))
 
-    children(2) shouldBe an[VariableNode]
+    children(2) shouldBe a[VariableNode]
     val phantomNode = children(2).asInstanceOf[VariableNode]
     phantomNode.isPhantom shouldEqual true
     phantomNode.getEnv shouldEqual Map("factorial" -> factorialFunction.eval(Map()), "n" -> NumV(3))

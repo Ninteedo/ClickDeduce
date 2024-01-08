@@ -48,6 +48,10 @@ trait TestTemplate[E <: ClickDeduceLanguage#Expr, V <: ClickDeduceLanguage#Value
     Table(("expressions", "results", "types"), zipped: _*)
   }
 
+  def createExprTable(tuples: (E, V, T)*): TableFor3[E, V, T] = {
+    Table(("expressions", "results", "types"), tuples.toSeq: _*)
+  }
+
   val bools: TableFor1[Boolean] = Table("bool", true, false)
   val intValues: List[BigInt] = List(0, 1, -1, 2, -2, 5, -5, 10, 100, -100, 198765, -157396, 5168765, -4376418, 159871598156996L)
   val nums: TableFor1[BigInt] = Table("num", intValues: _*)

@@ -39,8 +39,7 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
 
   testExpression(
     "Let with single Let in expression",
-    TableFor3(
-      ("expr", "value", "type"),
+    createExprTable(
       (Let("x", Bool(false), Var("x")), BoolV(false), BoolType()),
       (Let("y", Num(51), Var("y")), NumV(51), IntType()),
       (Let("gh2", Bool(false), Eq(Var("gh2"), Bool(false))), BoolV(true), BoolType()),
@@ -53,8 +52,7 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
 
   testExpression(
     "Let with multiple Lets in expression",
-    TableFor3(
-      ("expr", "value", "type"),
+    createExprTable(
       (Let("x", Num(43), Let("y", Num(12), Plus(Var("x"), Var("y")))), NumV(55), IntType()),
       (Let("hello", Plus(Let("world", Num(2), Times(Var("world"), Num(-1))), Num(6)), Eq(Num(4), Var("hello"))), BoolV(true), BoolType()),
       (Let("x", Num(1), Let("y", Num(2), Let("z", Num(3), Plus(Plus(Var("z"), Var("y")), Var("x"))))), NumV(6), IntType()),

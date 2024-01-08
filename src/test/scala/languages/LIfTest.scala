@@ -44,8 +44,8 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
   }
 
   testExpression(
-    "Basic IfThenElse expressions", TableFor3(
-      ("expr", "value", "type"),
+    "Basic IfThenElse expressions",
+    createExprTable(
       (IfThenElse(Bool(true), Num(1), Num(2)), NumV(1), IntType()),
       (IfThenElse(Bool(true), Bool(true), Bool(false)), BoolV(true), BoolType()),
       (IfThenElse(Bool(false), Num(1), Num(2)), NumV(2), IntType()),
@@ -81,8 +81,8 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
   }
 
   testExpression(
-    "Basic Eq expression", TableFor3(
-      ("expr", "value", "type"),
+    "Basic Eq expression",
+    createExprTable(
       (Eq(Num(1), Num(2)), BoolV(false), BoolType()),
       (Eq(Bool(true), Bool(false)), BoolV(false), BoolType()),
       (Eq(Bool(true), Bool(true)), BoolV(true), BoolType()),
