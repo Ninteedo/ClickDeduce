@@ -1,0 +1,10 @@
+{
+  "name": "click_deduce_webapp",
+  "version": "1.0.0",
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "scripts": {
+    "test": "jest"
+  }
+}

@@ -11,7 +11,7 @@ const modeRadios = document.querySelectorAll('input[name="mode"]');
 
 for (const radio of modeRadios) {
     radio.addEventListener('change', () => {
-        runAction("IdentityAction", "", [])
+        runAction("IdentityAction", "", []);
     });
 }
 
@@ -30,9 +30,11 @@ async function handleSubmit(event, url) {
 
     // send a POST request to the server
     await fetch(url, {
-        method: 'POST', headers: {
+        method: 'POST',
+        headers: {
             'Content-Type': 'application/json'
-        }, body: JSON.stringify({
+        },
+        body: JSON.stringify({
             langName: getSelectedLanguage(),
         })
     }).then(response => response.json()).then(updatedTree => {
