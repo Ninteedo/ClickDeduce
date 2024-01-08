@@ -17,9 +17,6 @@
     "start-scala": "sbt run",
     "start": "npm run build && npm run start-scala"
   },
-  "jest": {
-    "testEnvironment": "jsdom"
-  },
   "dependencies": {
     "jsdom": "^23.2.0",
     "panzoom": "9.4.0"
