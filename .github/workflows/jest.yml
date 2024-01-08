@@ -14,13 +14,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Change to webapp directory
-      run: cd webapp
     - name: Install Node.js
       uses: actions/setup-node@v2
       with:
         node-version: '16'
     - name: Install dependencies
+      working-directory: ./webapp
       run: npm install
     - name: Run Jest tests
+      working-directory: ./webapp
       run: npm test
