@@ -11,16 +11,4 @@ document.body.innerHTML = `
   </div>
 `;
 
-jest.mock('panzoom', () => {
-    // Mock the panzoom function
-    return jest.fn().mockImplementation(() => {
-        // Return an object that resembles the panzoom instance
-        return {
-            zoomAbs: jest.fn(),
-            moveTo: jest.fn(),
-            // Add more methods as needed for your tests
-        };
-    });
-});
-
 const script = require("./script.js");

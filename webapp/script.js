@@ -1,21 +1,13 @@
 const panzoom = require('panzoom');
 
 let lastNodeString = "";
-const tree = document.getElementById('tree');
 
 let treeHistory = [];
 let treeHistoryIndex = 0;
 
-const undoButton = document.getElementById('undoButton');
-const redoButton = document.getElementById('redoButton');
-
-const modeRadios = document.querySelectorAll('input[name="mode"]');
-
-for (const radio of modeRadios) {
-    radio.addEventListener('change', () => {
-        runAction("IdentityAction", "", []);
-    });
-}
+let tree;
+let undoButton, redoButton;
+let modeRadios;
 
 function getSelectedMode() {
     for (const radio of modeRadios) {
@@ -60,8 +52,6 @@ async function loadLangSelector() {
         })
     });
 }
-
-loadLangSelector();
 
 function getSelectedLanguage() {
     const langSelector = document.getElementById('lang-selector');
@@ -175,8 +165,6 @@ function updateUndoRedoButtons() {
     redoButton.disabled = treeHistoryIndex >= treeHistory.length - 1;
 }
 
-updateUndoRedoButtons();
-
 function undo() {
     if (treeHistoryIndex >= 0 && treeHistoryIndex < treeHistory.length) {
         useTreeFromHistory(treeHistoryIndex - 1);
@@ -289,35 +277,6 @@ function hasClassOrParentHasClass(element, className) {
 
 let contextMenuSelectedElement = null;
 
-document.addEventListener('contextmenu', function (e) {
-    let target = e.target;
-
-    while (target && !target.classList.contains('highlight')) {
-        target = target.parentElement;
-    }
-
-    if (target && !hasClassOrParentHasClass(target, 'phantom')) {
-        e.preventDefault();
-
-        contextMenuSelectedElement = target;
-
-        const menu = document.getElementById('custom-context-menu');
-        menu.style.display = 'block';
-        menu.style.left = e.pageX + 'px';
-        menu.style.top = e.pageY + 'px';
-    } else {
-        document.getElementById('custom-context-menu').style.display = 'none';
-        clearHighlight();
-    }
-});
-
-document.addEventListener('click', function (e) {
-    document.getElementById('custom-context-menu').style.display = 'none';
-    if (contextMenuSelectedElement !== null) {
-        clearHighlight();
-    }
-});
-
 function clearTreeNode(event) {
     event.preventDefault();
     if (contextMenuSelectedElement) {
@@ -342,16 +301,7 @@ function pasteTreeNode(event) {
 // Tree Panning and Zooming
 
 // Initialize Panzoom
-const panzoomInstance = panzoom(tree, {
-    bounds: false, boundsPadding: 0, zoomDoubleClickSpeed: 1,
-    onTouch: function (e) {
-        // TODO: cannot use on mobile currently
-        return false;  // tells the library to not preventDefault.
-    },
-    filterKey: function (/* e, dx, dy, dz */) {
-        return true;  // don't let panzoom handle this event:
-    }
-});
+let panzoomInstance;
 
 function zoomToFit() {
     const tree = document.getElementById('tree');
@@ -378,6 +328,63 @@ function displayError(error) {
     }, 5000);
 }
 
+function initialise() {
+    undoButton = document.getElementById('undoButton');
+    redoButton = document.getElementById('redoButton');
+    tree = document.getElementById('tree');
+    modeRadios = document.querySelectorAll('input[name="mode"]');
+
+    for (const radio of modeRadios) {
+        radio.addEventListener('change', () => {
+            runAction("IdentityAction", "", []);
+        });
+    }
+
+    loadLangSelector();
+    updateUndoRedoButtons();
+
+    document.addEventListener('contextmenu', function (e) {
+        let target = e.target;
+
+        while (target && !target.classList.contains('highlight')) {
+            target = target.parentElement;
+        }
+
+        if (target && !hasClassOrParentHasClass(target, 'phantom')) {
+            e.preventDefault();
+
+            contextMenuSelectedElement = target;
+
+            const menu = document.getElementById('custom-context-menu');
+            menu.style.display = 'block';
+            menu.style.left = e.pageX + 'px';
+            menu.style.top = e.pageY + 'px';
+        } else {
+            document.getElementById('custom-context-menu').style.display = 'none';
+            clearHighlight();
+        }
+    });
+
+    document.addEventListener('click', function (e) {
+        document.getElementById('custom-context-menu').style.display = 'none';
+        if (contextMenuSelectedElement !== null) {
+            clearHighlight();
+        }
+    });
+
+    panzoomInstance = panzoom(tree, {
+        bounds: false, boundsPadding: 0, zoomDoubleClickSpeed: 1,
+        onTouch: function (e) {
+            // TODO: cannot use on mobile currently
+            return false;  // tells the library to not preventDefault.
+        },
+        filterKey: function (/* e, dx, dy, dz */) {
+            return true;  // don't let panzoom handle this event:
+        }
+    });
+}
+
+window.initialise = initialise;
 window.handleSubmit = handleSubmit;
 window.undo = undo;
 window.redo = redo;
