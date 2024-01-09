@@ -139,7 +139,6 @@ object WebServer extends JsonSupport {
   def bundleScripts(): Boolean = {
     println("Bundling scripts...")
     val processBuilder = new ProcessBuilder("cmd.exe", "/c", "npm run build")
-    processBuilder.directory(new java.io.File("webapp"))
 
     // Redirect error stream to the standard output stream
     processBuilder.redirectErrorStream(true)
