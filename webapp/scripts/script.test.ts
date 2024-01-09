@@ -14,7 +14,7 @@ const defaultHtml = `
     </div>
 `;
 
-const script = require("./script.ts");
+import {initialise} from "./script";
 
 const langSelectorLanguages = ["LArith", "LIf"];
 const optionsHtml = langSelectorLanguages.map(lang => {
@@ -27,37 +27,79 @@ const langSelectorHtml = `
 `;
 
 
-let dummyFetchResponse;
+let dummyFetchResponse: any = null;
 
-function setDummyFetchResponse(response) {
+function setDummyFetchResponse(response: any): void {
     dummyFetchResponse = response;
 }
 
-function clearDummyFetchResponse() {
+function clearDummyFetchResponse(): void {
     dummyFetchResponse = null;
 }
 
-function fetchMock(url, request) {
+class MockResponse {
+    private body: string;
+    private status: number;
+    private statusText: string;
+    private headers: Map<string, string>;
+
+    constructor(body: string, init: any = {}) {
+        this.body = body;
+        this.status = init.status || 200;
+        this.statusText = init.statusText || 'OK';
+
+        const headersIterable = Object.entries(init.headers || {});
+        // @ts-ignore
+        this.headers = new Map(headersIterable);
+    }
+
+    async text(): Promise<string> {
+        return Promise.resolve(this.body);
+    }
+
+    async json(): Promise<any> {
+        try {
+            return Promise.resolve(JSON.parse(this.body));
+        } catch (e) {
+            return Promise.reject(e);
+        }
+    }
+}
+
+function fetchMock(url: string, request: any): Promise<Response> {
+    let responseJson: any = null;
     if (url === 'get-lang-selector') {
         if (request['method'] === 'GET') {
-            return Promise.resolve({
-                json: () => Promise.resolve({
-                    langSelectorHtml
-                })
-            });
+            responseJson = {langSelectorHtml};
         } else {
             return Promise.reject("Error: Cannot use POST on get-lang-selector");
         }
     } else if (url === 'dummy-url') {
-        return Promise.resolve({
-            json: () => Promise.resolve(dummyFetchResponse)
-        });
+        responseJson = dummyFetchResponse;
     } else {
-        return undefined;
+        return Promise.reject("Error: Unknown URL");
     }
+    const response: MockResponse = new MockResponse(JSON.stringify(responseJson),
+        {
+            status: 200,
+            headers: {
+                'Content-type': 'application/json'
+            }
+        }
+    );
+    // @ts-ignore
+    return Promise.resolve(response);
 }
 
 global.fetch = jest.fn(fetchMock);
+
+// mock panzoom module, doesn't need to do anything
+jest.mock('panzoom', () => ({
+    __esModule: true,
+    default: jest.fn().mockImplementation(() => ({
+
+    }))
+}))
 
 beforeEach(() => {
     document.body.innerHTML = defaultHtml;

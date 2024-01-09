@@ -10,6 +10,7 @@
         "moduleResolution": "nodenext"
     },
     "include": [
-        "./webapp/scripts/*"
+        "./webapp/scripts/*",
+        "node_modules/ts-jest/globals.d.ts"
     ]
 }
