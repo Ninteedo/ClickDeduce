@@ -352,9 +352,9 @@ export function zoomToFit(): void {
     panzoomInstance.zoomAbs(0, 0, newScale);
 }
 
-function displayError(error: string): void {
+function displayError(error: any): void {
     const errorDiv: HTMLDivElement = document.getElementById('error-message') as HTMLDivElement;
-    errorDiv.textContent = error;
+    errorDiv.textContent = error.toString();
     errorDiv.classList.add('fade-in');
     errorDiv.classList.remove('fade-out');
     setTimeout(() => {

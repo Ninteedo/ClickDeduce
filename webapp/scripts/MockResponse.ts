@@ -4,10 +4,16 @@ export class MockResponse {
     private statusText: string;
     private headers: Map<string, string>;
 
+    public ok: boolean = true;
+
     constructor(body: string, init: any = {}) {
         this.body = body;
         this.status = init.status || 200;
         this.statusText = init.statusText || 'OK';
+
+        if (this.status >= 400) {
+            this.ok = false;
+        }
 
         const headersIterable = Object.entries(init.headers || {});
         // @ts-ignore
