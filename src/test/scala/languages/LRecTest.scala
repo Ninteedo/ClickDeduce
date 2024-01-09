@@ -2,10 +2,12 @@ package languages
 
 import languages.LRec.*
 import org.scalatest.GivenWhenThen
+import org.scalatest.concurrent.TimeLimits.failAfter
 import org.scalatest.matchers.must.Matchers.be
 import org.scalatest.matchers.should.Matchers.{a, an, shouldBe, shouldEqual}
 import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor1}
 import org.scalatest.propspec.AnyPropSpec
+import org.scalatest.time.{Millis, Span}
 
 import scala.collection.immutable.Map
 import scala.util.Random
@@ -62,9 +64,11 @@ class LRecTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
 
   property("Infinite recursion results in a stack overflow error") {
     val infiniteRec = Rec("f", "x", IntType(), IntType(), Apply(Var("f"), Var("x")))
-    Apply(infiniteRec, Num(1)).eval(Map()) shouldBe a[EvalException]
-    Apply(infiniteRec, Num(1)).eval(Map()) match {
-      case EvalException(exception) => exception shouldBe a[StackOverflowError]
+    failAfter(Span(1000, Millis)) {
+      Apply(infiniteRec, Num(1)).eval(Map()) shouldBe a[EvalException]
+      Apply(infiniteRec, Num(1)).eval(Map()) match {
+        case EvalException(exception) => exception shouldBe a[StackOverflowError]
+      }
     }
   }
 }
