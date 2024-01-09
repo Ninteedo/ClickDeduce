@@ -12,7 +12,7 @@ let redoButton: HTMLButtonElement;
 let modeRadios: HTMLInputElement[];
 let langSelector: HTMLSelectElement;
 
-function getSelectedMode() {
+function getSelectedMode(): string {
     for (const radio of modeRadios) {
         if (radio.checked) {
             return radio.value;
@@ -21,7 +21,7 @@ function getSelectedMode() {
     throw Error("No mode selected");
 }
 
-export async function handleSubmit(event: { preventDefault: () => void; }, url: string) {
+export async function handleSubmit(event: Event, url: string): Promise<void> {
     // prevent the form from submitting the old-fashioned way
     event.preventDefault();
 
@@ -39,15 +39,15 @@ export async function handleSubmit(event: { preventDefault: () => void; }, url: 
     });
 }
 
-async function loadLangSelector() {
-    const langSelectorContainer = document.getElementById('lang-selector-div');
+async function loadLangSelector(): Promise<void> {
+    const langSelectorContainer: HTMLDivElement = document.getElementById('lang-selector-div') as HTMLDivElement;
 
     await fetch('get-lang-selector', {
         method: 'GET'
     }).then(response => response.json()).then(langSelector => {
         langSelectorContainer.innerHTML = langSelector.langSelectorHtml;
     }).then(() => {
-        const langSelector = document.getElementById('lang-selector');
+        const langSelector: HTMLElement = document.getElementById('lang-selector');
         langSelector.addEventListener('change', () => {
             if (lastNodeString !== "") {
                 runAction("IdentityAction", "", [])
@@ -56,36 +56,36 @@ async function loadLangSelector() {
     });
 }
 
-function getSelectedLanguage() {
+function getSelectedLanguage(): string {
     return langSelector.value;
 }
 
-export function handleDropdownChange(dropdown: HTMLSelectElement, kind: String) {
-    const selectedValue = dropdown.value;
-    const subtree = dropdown.parentElement.parentElement;
-    const dataTreePath = subtree.getAttribute("data-tree-path");
+export async function handleDropdownChange(dropdown: HTMLSelectElement, kind: string): Promise<void> {
+    const selectedValue: string = dropdown.value;
+    const subtree: HTMLElement = dropdown.parentElement.parentElement;
+    const dataTreePath: string = subtree.getAttribute("data-tree-path");
 
-    let actionName = "SelectExprAction";
+    let actionName: string = "SelectExprAction";
     if (kind === "type") {
         actionName = "SelectTypeAction";
     }
 
-    runAction(actionName, dataTreePath, [selectedValue]);
+    await runAction(actionName, dataTreePath, [selectedValue]);
 }
 
-export function handleLiteralChanged(textInput: HTMLInputElement) {
-    const literalValue = textInput.value;
-    const treePath = textInput.getAttribute("data-tree-path");
+export async function handleLiteralChanged(textInput: HTMLInputElement): Promise<void> {
+    const literalValue: string = textInput.value;
+    const treePath: string = textInput.getAttribute("data-tree-path");
 
     let focusedTreePath: string = null;
     if (nextFocusElement != null) {
         focusedTreePath = nextFocusElement.getAttribute("data-tree-path");
     }
 
-    runAction("EditLiteralAction", treePath, [literalValue]).then(() => {
+    await runAction("EditLiteralAction", treePath, [literalValue]).then(() => {
         console.log(focusedTreePath);
         if (focusedTreePath == null) { return; }
-        let focusedElement = document.querySelector(`[data-tree-path="${focusedTreePath}"]`);
+        let focusedElement: HTMLElement = document.querySelector(`[data-tree-path="${focusedTreePath}"]`);
         if (focusedElement != null && focusedElement instanceof HTMLElement) {
             console.log(focusedElement);
             focusedElement.focus();
@@ -97,8 +97,8 @@ export function handleLiteralChanged(textInput: HTMLInputElement) {
 }
 
 async function runAction(actionName: string, treePath: string, extraArgs: any[]): Promise<void> {
-    const modeName = getSelectedMode();
-    const langName = getSelectedLanguage();
+    const modeName: string = getSelectedMode();
+    const langName: string = getSelectedLanguage();
     return fetch("/process-action", {
         method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({
             langName,
@@ -149,13 +149,13 @@ function updateTree(newTreeHtml: string, newNodeString: string, modeName: string
     langSelector.value = lang;
 }
 
-function treeCleanup() {
+function treeCleanup(): void {
     addHoverListeners();
     makeOrphanedInputsReadOnly();
     makePhantomInputsReadOnly();
 }
 
-function useTreeFromHistory(newHistoryIndex: number) {
+function useTreeFromHistory(newHistoryIndex: number): void {
     if (newHistoryIndex >= 0 && newHistoryIndex < treeHistory.length) {
         treeHistoryIndex = newHistoryIndex;
         const entry = treeHistory[newHistoryIndex];
@@ -163,18 +163,18 @@ function useTreeFromHistory(newHistoryIndex: number) {
     }
 }
 
-function updateUndoRedoButtons() {
+function updateUndoRedoButtons(): void {
     undoButton.disabled = treeHistoryIndex <= 0;
     redoButton.disabled = treeHistoryIndex >= treeHistory.length - 1;
 }
 
-export function undo() {
+export function undo(): void {
     if (treeHistoryIndex >= 0 && treeHistoryIndex < treeHistory.length) {
         useTreeFromHistory(treeHistoryIndex - 1);
     }
 }
 
-export function redo() {
+export function redo(): void {
     if (treeHistoryIndex >= 0 && treeHistoryIndex < treeHistory.length - 1) {
         useTreeFromHistory(treeHistoryIndex + 1);
     }
@@ -182,7 +182,7 @@ export function redo() {
 
 let activeInputs: HTMLInputElement[] = [];
 
-function updateActiveInputsList() {
+function updateActiveInputsList(): void {
     activeInputs = Array.from(document.querySelectorAll('input[data-tree-path]:not([disabled]), select[data-tree-path]:not([disabled])'));
     activeInputs.sort((a, b) => {
         const aPath = a.getAttribute("data-tree-path");
@@ -200,7 +200,7 @@ function updateActiveInputsList() {
 
 let nextFocusElement: HTMLElement = null;
 
-export async function handleTabPressed(e: { code: string; preventDefault: () => void; target: EventTarget; shiftKey: boolean; }) {
+export async function handleTabPressed(e: KeyboardEvent): Promise<void> {
     if (e.code === 'Tab' && e.target instanceof HTMLInputElement) {
         e.preventDefault();
         let activeElemIndex = activeInputs.indexOf(e.target);
@@ -224,22 +224,22 @@ export async function handleTabPressed(e: { code: string; preventDefault: () => 
 }
 
 // the text input width is updated to match the text width
-function updateTextInputWidth(textInput: HTMLInputElement) {
-    const minWidth = 2;
+function updateTextInputWidth(textInput: HTMLInputElement): void {
+    const minWidth: number = 2;
     textInput.style.width = Math.max(minWidth, textInput.value.length) + "ch";
 }
 
-function clearHighlight() {
+function clearHighlight(): void {
     document.querySelector('.highlight')?.classList.remove('highlight');
     contextMenuSelectedElement = null;
 }
 
-function addHoverListeners() {
+function addHoverListeners(): void {
     document.querySelectorAll('.subtree').forEach(div => {
         div.addEventListener('mouseover', (event) => {
             // Stop the event from bubbling up to parent 'subtree' elements
             event.stopPropagation();
-            const target = event.currentTarget;
+            const target: EventTarget = event.currentTarget;
 
             // Remove the highlight from any other 'subtree' elements
             if (contextMenuSelectedElement === null) {
@@ -261,14 +261,14 @@ function addHoverListeners() {
     });
 }
 
-function makeOrphanedInputsReadOnly() {
+function makeOrphanedInputsReadOnly(): void {
     document.querySelectorAll('#tree select:not([data-tree-path]), #tree input:not([data-tree-path])').forEach(el => {
         el.setAttribute('readonly', "true");
         el.setAttribute('disabled', "true");
     });
 }
 
-function makePhantomInputsReadOnly() {
+function makePhantomInputsReadOnly(): void {
     document.querySelectorAll('#tree select, #tree input').forEach(el => {
         if (el instanceof HTMLElement && hasClassOrParentHasClass(el, 'phantom')) {
             el.setAttribute('readonly', "true");
@@ -284,11 +284,11 @@ function hasClassOrParentHasClass(element: HTMLElement, className: string): bool
 
 let contextMenuSelectedElement: HTMLElement = null;
 
-export function clearTreeNode(event: Event): void {
+export async function clearTreeNode(event: Event): Promise<void> {
     event.preventDefault();
     if (contextMenuSelectedElement) {
-        const treePath = contextMenuSelectedElement.getAttribute("data-tree-path")
-        runAction("DeleteAction", treePath, [])
+        const treePath: string = contextMenuSelectedElement.getAttribute("data-tree-path")
+        await runAction("DeleteAction", treePath, [])
     }
 }
 
@@ -298,10 +298,10 @@ export function copyTreeNode(event: Event): void {
     copyCache = contextMenuSelectedElement.getAttribute("data-node-string");
 }
 
-export function pasteTreeNode(event: Event): void {
+export async function pasteTreeNode(event: Event): Promise<void> {
     if (copyCache) {
         const treePath = contextMenuSelectedElement.getAttribute("data-tree-path");
-        runAction("PasteAction", treePath, [copyCache]);
+        await runAction("PasteAction", treePath, [copyCache]);
     }
 }
 
@@ -311,21 +311,20 @@ export function pasteTreeNode(event: Event): void {
 let panzoomInstance: PanZoom;
 
 export function zoomToFit(): void {
-    const tree = document.getElementById('tree');
-    const container = document.getElementById('tree-container');
-    const firstSubtree = tree.children[0];
+    const container: HTMLElement = document.getElementById('tree-container');
+    const firstSubtree: Element = tree.children[0];
 
-    const widthScale = container.clientWidth / firstSubtree.clientWidth;
-    const heightScale = container.clientHeight / firstSubtree.clientHeight;
+    const widthScale: number = container.clientWidth / firstSubtree.clientWidth;
+    const heightScale: number = container.clientHeight / firstSubtree.clientHeight;
 
-    const newScale = Math.min(widthScale, heightScale);
+    const newScale: number = Math.min(widthScale, heightScale);
 
     panzoomInstance.moveTo(0, 0);
     panzoomInstance.zoomAbs(0, 0, newScale);
 }
 
 function displayError(error: string): void {
-    const errorDiv = document.getElementById('error-message');
+    const errorDiv: HTMLDivElement = document.getElementById('error-message') as HTMLDivElement;
     errorDiv.textContent = error;
     errorDiv.classList.add('fade-in');
     errorDiv.classList.remove('fade-out');
@@ -335,7 +334,7 @@ function displayError(error: string): void {
     }, 5000);
 }
 
-export function initialise() {
+export function initialise(): void {
     undoButton = <HTMLButtonElement>document.getElementById('undoButton');
     redoButton = <HTMLButtonElement>document.getElementById('redoButton');
     tree = <HTMLDivElement>document.getElementById('tree');

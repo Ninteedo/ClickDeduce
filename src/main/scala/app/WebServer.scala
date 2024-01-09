@@ -110,9 +110,9 @@ object WebServer extends JsonSupport {
     if (!bundleScripts()) {
       println("Failed to bundle scripts")
       return
-    } else {
-      println("\nSuccessfully bundled scripts\n\n")
     }
+
+    println("\nSuccessfully bundled scripts\n\n")
 
     val defaultSettings = ServerSettings(system)
     val customSettings = defaultSettings.withTransparentHeadRequests(true)
