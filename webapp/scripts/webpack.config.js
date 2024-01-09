@@ -12,7 +12,7 @@ module.exports = {
 
     // Configuration for the development server
     devServer: {
-        contentBase: './dist',
+        contentBase: '../dist',
     },
 
     // Module/rules configuration to tell Webpack how to handle different types of modules
