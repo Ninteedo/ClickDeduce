@@ -1,4 +1,6 @@
-const { test, beforeEach, afterEach, describe, expect} = require("@jest/globals");
+import {afterEach, beforeEach, describe, expect, test} from "@jest/globals";
+import {MockResponse} from "./MockResponse";
+import {initialise} from "./script";
 
 const defaultHtml = `
     <div id="lang-selector-div"></div>
@@ -13,8 +15,6 @@ const defaultHtml = `
       <div id="tree"></div>
     </div>
 `;
-
-import {initialise} from "./script";
 
 const langSelectorLanguages = ["LArith", "LIf"];
 const optionsHtml = langSelectorLanguages.map(lang => {
@@ -35,35 +35,6 @@ function setDummyFetchResponse(response: any): void {
 
 function clearDummyFetchResponse(): void {
     dummyFetchResponse = null;
-}
-
-class MockResponse {
-    private body: string;
-    private status: number;
-    private statusText: string;
-    private headers: Map<string, string>;
-
-    constructor(body: string, init: any = {}) {
-        this.body = body;
-        this.status = init.status || 200;
-        this.statusText = init.statusText || 'OK';
-
-        const headersIterable = Object.entries(init.headers || {});
-        // @ts-ignore
-        this.headers = new Map(headersIterable);
-    }
-
-    async text(): Promise<string> {
-        return Promise.resolve(this.body);
-    }
-
-    async json(): Promise<any> {
-        try {
-            return Promise.resolve(JSON.parse(this.body));
-        } catch (e) {
-            return Promise.reject(e);
-        }
-    }
 }
 
 function fetchMock(url: string, request: any): Promise<Response> {
