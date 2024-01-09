@@ -35,8 +35,15 @@ module.exports = {
                     'css-loader', // The css-loader interprets @import and url() like import/require() and will resolve them
                 ],
             },
-            // Add other rules for other file types as needed
+            {
+                test: /\.tsx?$/,
+                use: 'ts-loader',
+                exclude: /node_modules/
+            },
         ],
+    },
+    resolve: {
+        extensions: ['.tsx', '.ts', '.js']
     },
 
     // Optional: Configuration for source maps (useful for debugging)

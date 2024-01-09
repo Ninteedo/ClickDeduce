@@ -107,9 +107,6 @@ object WebServer extends JsonSupport {
             } ~
             pathPrefix("images") {
               getFromDirectory("webapp/images")
-            } ~
-            pathPrefix("styles") {
-              getFromDirectory("webapp/styles")
             }
         }
     }

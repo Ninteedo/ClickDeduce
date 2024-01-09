@@ -1,3 +1,5 @@
+import '../styles/stylesheet.css';
+
 const panzoom = require('panzoom');
 
 let lastNodeString = "";
