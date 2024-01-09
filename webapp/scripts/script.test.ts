@@ -27,6 +27,7 @@ const langSelectorHtml = `
 `;
 
 
+let requestsReceived: { url: string, request: any }[] = [];
 let dummyFetchResponse: any = null;
 
 function setDummyFetchResponse(response: any): void {
@@ -38,6 +39,8 @@ function clearDummyFetchResponse(): void {
 }
 
 function fetchMock(url: string, request: any): Promise<Response> {
+    requestsReceived.push({ url, request });
+
     let responseJson: any = null;
     if (url === 'get-lang-selector') {
         if (request['method'] === 'GET') {
@@ -73,6 +76,7 @@ jest.mock('panzoom', () => ({
 }))
 
 beforeEach(() => {
+    requestsReceived = [];
     document.body.innerHTML = defaultHtml;
     initialise();
 });
@@ -88,17 +92,42 @@ describe("fetch is correctly mocked", () => {
         fetch('dummy-url', {}).then(response => response.json()).then(contents =>
             expect(contents).toEqual(data)
         );
-    })
+    });
 
     test("fetch returns correct language selector HTML", async () => {
         fetch('get-lang-selector', { method: 'GET' }).then(response => response.json()).then(contents =>
             expect(contents).toEqual({ langSelectorHtml })
         );
-    })
+    });
 
     test("fetch results in an error if using POST on get-lang-selector", async () => {
         fetch('get-lang-selector', { method: 'POST' }).then(response => response.json()).catch(error =>
             expect(error).toEqual("Error: Cannot use POST on get-lang-selector")
         );
-    })
+    });
 });
+
+describe("initialise behaves correctly", () => {
+    test("a request is made to get the language selector HTML", () => {
+        expect(requestsReceived).toContainEqual({url: 'get-lang-selector', request: {method: 'GET'}});
+    });
+
+    test("lang selector is populated correctly", () => {
+        expect(removeWhitespace(document.getElementById('lang-selector').innerHTML)).toEqual(
+            removeWhitespace(optionsHtml));
+    });
+
+    test("undo button is disabled", () => {
+        const undoButton = document.getElementById('undoButton') as HTMLButtonElement;
+        expect(undoButton.getAttributeNames()).toContain('disabled');
+    });
+
+    test("redo button is disabled", () => {
+        const redoButton = document.getElementById('redoButton') as HTMLButtonElement;
+        expect(redoButton.getAttributeNames()).toContain('disabled');
+    });
+});
+
+function removeWhitespace(str: string): string {
+    return str.replace(/\s/g, '');
+}
