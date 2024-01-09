@@ -100,9 +100,17 @@ object WebServer extends JsonSupport {
         } ~
         get {
           pathEndOrSingleSlash {
-            getFromDirectory("webapp/index.html")
+            getFromFile("webapp/pages/index.html")
           } ~
-            getFromDirectory("webapp")
+            pathPrefix("dist") {
+              getFromDirectory("webapp/dist")
+            } ~
+            pathPrefix("images") {
+              getFromDirectory("webapp/images")
+            } ~
+            pathPrefix("styles") {
+              getFromDirectory("webapp/styles")
+            }
         }
     }
 
