@@ -1,15 +1,16 @@
 import '../styles/stylesheet.css';
+import panzoom, {PanZoom} from "panzoom";
 
-const panzoom = require('panzoom');
+let lastNodeString: string = "";
 
-let lastNodeString = "";
+let treeHistory: { mode: string; html: string; nodeString: string; lang: string }[] = [];
+let treeHistoryIndex: number = 0;
 
-let treeHistory = [];
-let treeHistoryIndex = 0;
-
-let tree;
-let undoButton, redoButton;
-let modeRadios;
+let tree: HTMLDivElement;
+let undoButton: HTMLButtonElement
+let redoButton: HTMLButtonElement;
+let modeRadios: HTMLInputElement[];
+let langSelector: HTMLSelectElement;
 
 function getSelectedMode() {
     for (const radio of modeRadios) {
@@ -20,7 +21,7 @@ function getSelectedMode() {
     throw Error("No mode selected");
 }
 
-async function handleSubmit(event, url) {
+export async function handleSubmit(event: { preventDefault: () => void; }, url: string) {
     // prevent the form from submitting the old-fashioned way
     event.preventDefault();
 
@@ -56,11 +57,10 @@ async function loadLangSelector() {
 }
 
 function getSelectedLanguage() {
-    const langSelector = document.getElementById('lang-selector');
     return langSelector.value;
 }
 
-function handleDropdownChange(dropdown, kind) {
+export function handleDropdownChange(dropdown: HTMLSelectElement, kind: String) {
     const selectedValue = dropdown.value;
     const subtree = dropdown.parentElement.parentElement;
     const dataTreePath = subtree.getAttribute("data-tree-path");
@@ -73,11 +73,11 @@ function handleDropdownChange(dropdown, kind) {
     runAction(actionName, dataTreePath, [selectedValue]);
 }
 
-function handleLiteralChanged(textInput) {
+export function handleLiteralChanged(textInput: HTMLInputElement) {
     const literalValue = textInput.value;
     const treePath = textInput.getAttribute("data-tree-path");
 
-    let focusedTreePath = null;
+    let focusedTreePath: string = null;
     if (nextFocusElement != null) {
         focusedTreePath = nextFocusElement.getAttribute("data-tree-path");
     }
@@ -86,15 +86,17 @@ function handleLiteralChanged(textInput) {
         console.log(focusedTreePath);
         if (focusedTreePath == null) { return; }
         let focusedElement = document.querySelector(`[data-tree-path="${focusedTreePath}"]`);
-        if (focusedElement != null) {
+        if (focusedElement != null && focusedElement instanceof HTMLElement) {
             console.log(focusedElement);
             focusedElement.focus();
-            focusedElement.select();
+            if (focusedElement instanceof HTMLInputElement) {
+                focusedElement.select();
+            }
         }
     });
 }
 
-function runAction(actionName, treePath, extraArgs) {
+async function runAction(actionName: string, treePath: string, extraArgs: any[]): Promise<void> {
     const modeName = getSelectedMode();
     const langName = getSelectedLanguage();
     return fetch("/process-action", {
@@ -122,16 +124,16 @@ function runAction(actionName, treePath, extraArgs) {
     });
 }
 
-function updateTree(newTreeHtml, newNodeString, modeName, lang, addToHistory = false) {
+function updateTree(newTreeHtml: string, newNodeString: string, modeName: string, lang: string, addToHistory: boolean = false): void {
     tree.innerHTML = newTreeHtml;
     lastNodeString = newNodeString;
     treeCleanup();
     if (addToHistory && (treeHistory.length === 0 ||
-        (newTreeHtml !== treeHistory[treeHistoryIndex][0] || newNodeString !== treeHistory[treeHistoryIndex][1]))) {
+        (newTreeHtml !== treeHistory[treeHistoryIndex].html || newNodeString !== treeHistory[treeHistoryIndex].nodeString))) {
         if (treeHistoryIndex < treeHistory.length - 1) {
             treeHistory = treeHistory.slice(0, treeHistoryIndex + 1);
         }
-        const newEntry = {
+        const newEntry: { mode: string; html: string; nodeString: string; lang: string } = {
             html: newTreeHtml,
             nodeString: newNodeString,
             mode: modeName,
@@ -144,7 +146,6 @@ function updateTree(newTreeHtml, newNodeString, modeName, lang, addToHistory = f
     modeRadios.forEach(radio => {
         radio.checked = radio.value === modeName;
     });
-    const langSelector = document.getElementById('lang-selector');
     langSelector.value = lang;
 }
 
@@ -154,7 +155,7 @@ function treeCleanup() {
     makePhantomInputsReadOnly();
 }
 
-function useTreeFromHistory(newHistoryIndex) {
+function useTreeFromHistory(newHistoryIndex: number) {
     if (newHistoryIndex >= 0 && newHistoryIndex < treeHistory.length) {
         treeHistoryIndex = newHistoryIndex;
         const entry = treeHistory[newHistoryIndex];
@@ -167,19 +168,19 @@ function updateUndoRedoButtons() {
     redoButton.disabled = treeHistoryIndex >= treeHistory.length - 1;
 }
 
-function undo() {
+export function undo() {
     if (treeHistoryIndex >= 0 && treeHistoryIndex < treeHistory.length) {
         useTreeFromHistory(treeHistoryIndex - 1);
     }
 }
 
-function redo() {
+export function redo() {
     if (treeHistoryIndex >= 0 && treeHistoryIndex < treeHistory.length - 1) {
         useTreeFromHistory(treeHistoryIndex + 1);
     }
 }
 
-let activeInputs = [];
+let activeInputs: HTMLInputElement[] = [];
 
 function updateActiveInputsList() {
     activeInputs = Array.from(document.querySelectorAll('input[data-tree-path]:not([disabled]), select[data-tree-path]:not([disabled])'));
@@ -197,10 +198,10 @@ function updateActiveInputsList() {
     })
 }
 
-let nextFocusElement = null;
+let nextFocusElement: HTMLElement = null;
 
-async function handleTabPressed(e) {
-    if (e.code === 'Tab') {
+export async function handleTabPressed(e: { code: string; preventDefault: () => void; target: EventTarget; shiftKey: boolean; }) {
+    if (e.code === 'Tab' && e.target instanceof HTMLInputElement) {
         e.preventDefault();
         let activeElemIndex = activeInputs.indexOf(e.target);
         if (e.shiftKey) {
@@ -215,7 +216,7 @@ async function handleTabPressed(e) {
         }
         nextFocusElement = activeInputs[activeElemIndex];
         nextFocusElement.focus();
-        if (nextFocusElement.tagName === 'INPUT') {
+        if (nextFocusElement instanceof HTMLInputElement) {
             nextFocusElement.select();
         }
         // nextFocusElement = null;
@@ -223,7 +224,7 @@ async function handleTabPressed(e) {
 }
 
 // the text input width is updated to match the text width
-function updateTextInputWidth(textInput) {
+function updateTextInputWidth(textInput: HTMLInputElement) {
     const minWidth = 2;
     textInput.style.width = Math.max(minWidth, textInput.value.length) + "ch";
 }
@@ -238,11 +239,15 @@ function addHoverListeners() {
         div.addEventListener('mouseover', (event) => {
             // Stop the event from bubbling up to parent 'subtree' elements
             event.stopPropagation();
+            const target = event.currentTarget;
+
             // Remove the highlight from any other 'subtree' elements
             if (contextMenuSelectedElement === null) {
                 document.querySelectorAll('.subtree').forEach(el => el.classList.remove('highlight'));
-                // Add the highlight to the currently hovered over 'subtree'
-                event.currentTarget.classList.add('highlight');
+                if (target instanceof HTMLElement) {
+                    // Add the highlight to the currently hovered over 'subtree'
+                    target.classList.add('highlight');
+                }
             }
         });
         div.addEventListener('mouseout', (event) => {
@@ -258,28 +263,28 @@ function addHoverListeners() {
 
 function makeOrphanedInputsReadOnly() {
     document.querySelectorAll('#tree select:not([data-tree-path]), #tree input:not([data-tree-path])').forEach(el => {
-        el.setAttribute('readonly', true);
-        el.setAttribute('disabled', true);
+        el.setAttribute('readonly', "true");
+        el.setAttribute('disabled', "true");
     });
 }
 
 function makePhantomInputsReadOnly() {
     document.querySelectorAll('#tree select, #tree input').forEach(el => {
-        if (hasClassOrParentHasClass(el, 'phantom')) {
-            el.setAttribute('readonly', true);
-            el.setAttribute('disabled', true);
+        if (el instanceof HTMLElement && hasClassOrParentHasClass(el, 'phantom')) {
+            el.setAttribute('readonly', "true");
+            el.setAttribute('disabled', "true");
         }
     })
 }
 
-function hasClassOrParentHasClass(element, className) {
+function hasClassOrParentHasClass(element: HTMLElement, className: string): boolean {
     return element.classList.contains(className) ||
         (element.parentElement && hasClassOrParentHasClass(element.parentElement, className));
 }
 
-let contextMenuSelectedElement = null;
+let contextMenuSelectedElement: HTMLElement = null;
 
-function clearTreeNode(event) {
+export function clearTreeNode(event: Event): void {
     event.preventDefault();
     if (contextMenuSelectedElement) {
         const treePath = contextMenuSelectedElement.getAttribute("data-tree-path")
@@ -287,13 +292,13 @@ function clearTreeNode(event) {
     }
 }
 
-let copyCache = null;
+let copyCache: string = null;
 
-function copyTreeNode(event) {
+export function copyTreeNode(event: Event): void {
     copyCache = contextMenuSelectedElement.getAttribute("data-node-string");
 }
 
-function pasteTreeNode(event) {
+export function pasteTreeNode(event: Event): void {
     if (copyCache) {
         const treePath = contextMenuSelectedElement.getAttribute("data-tree-path");
         runAction("PasteAction", treePath, [copyCache]);
@@ -303,9 +308,9 @@ function pasteTreeNode(event) {
 // Tree Panning and Zooming
 
 // Initialize Panzoom
-let panzoomInstance;
+let panzoomInstance: PanZoom;
 
-function zoomToFit() {
+export function zoomToFit(): void {
     const tree = document.getElementById('tree');
     const container = document.getElementById('tree-container');
     const firstSubtree = tree.children[0];
@@ -319,7 +324,7 @@ function zoomToFit() {
     panzoomInstance.zoomAbs(0, 0, newScale);
 }
 
-function displayError(error) {
+function displayError(error: string): void {
     const errorDiv = document.getElementById('error-message');
     errorDiv.textContent = error;
     errorDiv.classList.add('fade-in');
@@ -330,11 +335,11 @@ function displayError(error) {
     }, 5000);
 }
 
-function initialise() {
-    undoButton = document.getElementById('undoButton');
-    redoButton = document.getElementById('redoButton');
-    tree = document.getElementById('tree');
-    modeRadios = document.querySelectorAll('input[name="mode"]');
+export function initialise() {
+    undoButton = <HTMLButtonElement>document.getElementById('undoButton');
+    redoButton = <HTMLButtonElement>document.getElementById('redoButton');
+    tree = <HTMLDivElement>document.getElementById('tree');
+    modeRadios = Array.from(document.querySelectorAll('input[name="mode"]'));
 
     for (const radio of modeRadios) {
         radio.addEventListener('change', () => {
@@ -342,17 +347,19 @@ function initialise() {
         });
     }
 
-    loadLangSelector();
+    loadLangSelector().then(() => {
+        langSelector = document.getElementById('lang-selector') as HTMLSelectElement;
+    });
     updateUndoRedoButtons();
 
-    document.addEventListener('contextmenu', function (e) {
-        let target = e.target;
+    document.addEventListener('contextmenu', function (e: MouseEvent) {
+        let target: EventTarget = e.target;
 
-        while (target && !target.classList.contains('highlight')) {
+        while (target instanceof HTMLElement && !target.classList.contains('highlight')) {
             target = target.parentElement;
         }
 
-        if (target && !hasClassOrParentHasClass(target, 'phantom')) {
+        if (target && target instanceof HTMLElement && !hasClassOrParentHasClass(target, 'phantom')) {
             e.preventDefault();
 
             contextMenuSelectedElement = target;
@@ -367,7 +374,7 @@ function initialise() {
         }
     });
 
-    document.addEventListener('click', function (e) {
+    document.addEventListener('click', function (e: MouseEvent) {
         document.getElementById('custom-context-menu').style.display = 'none';
         if (contextMenuSelectedElement !== null) {
             clearHighlight();
@@ -376,7 +383,7 @@ function initialise() {
 
     panzoomInstance = panzoom(tree, {
         bounds: false, boundsPadding: 0, zoomDoubleClickSpeed: 1,
-        onTouch: function (e) {
+        onTouch: function (e: Event) {
             // TODO: cannot use on mobile currently
             return false;  // tells the library to not preventDefault.
         },
@@ -386,13 +393,14 @@ function initialise() {
     });
 }
 
-window.initialise = initialise;
-window.handleSubmit = handleSubmit;
-window.undo = undo;
-window.redo = redo;
-window.zoomToFit = zoomToFit;
-window.clearTreeNode = clearTreeNode;
-window.copyTreeNode = copyTreeNode;
-window.pasteTreeNode = pasteTreeNode;
-window.handleDropdownChange = handleDropdownChange;
-window.handleLiteralChanged = handleLiteralChanged;
+(window as any).initialise = initialise;
+(window as any).handleSubmit = handleSubmit;
+(window as any).undo = undo;
+(window as any).redo = redo;
+(window as any).zoomToFit = zoomToFit;
+(window as any).handleTabPressed = handleTabPressed;
+(window as any).clearTreeNode = clearTreeNode;
+(window as any).copyTreeNode = copyTreeNode;
+(window as any).pasteTreeNode = pasteTreeNode;
+(window as any).handleDropdownChange = handleDropdownChange;
+(window as any).handleLiteralChanged = handleLiteralChanged;

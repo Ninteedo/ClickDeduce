@@ -57,7 +57,12 @@ val customExceptionHandler: ExceptionHandler = ExceptionHandler {
 
 
 object WebServer extends JsonSupport {
-  val buttonClickCount: AtomicInteger = new AtomicInteger(0)
+  private val webappDirectory: String = "webapp"
+  private val distDirectory: String = s"$webappDirectory/dist"
+  private val imagesDirectory: String = s"$webappDirectory/images"
+  private val indexPage: String = s"$distDirectory/index.html"
+
+  private val portNumber: Int = 27019
 
   def main(args: Array[String]): Unit = {
     implicit val system: ActorSystem = ActorSystem("my-system")
@@ -72,43 +77,34 @@ object WebServer extends JsonSupport {
             val response = NodeResponse(tree.toString, tree.toHtml(lang.DisplayMode.Edit).toString)
             complete(response)
           }
-        }
-      } ~
-        post {
-          path("process-action") {
-            entity(as[ActionRequest]) { request =>
-              val lang = getLanguage(request.langName)
-              val action = lang.createAction(
-                request.actionName, request.nodeString, request.treePath, request.extraArgs, request.modeName
-              )
-              val updatedTree = action.newTree
-              val displayMode: lang.DisplayMode = lang.DisplayMode.fromString(request.modeName)
-              val response = NodeResponse(updatedTree.toString, updatedTree.toHtml(displayMode).toString)
-              complete(response)
-            }
-          }
         } ~
-        get {
-          path("get-lang-selector") {
-            val langSelector: TypedTag[String] = select(
-              id := "lang-selector", name := "lang-name",
-              knownLanguages.map(lang => option(value := getLanguageName(lang), getLanguageName(lang)))
+        path("process-action") {
+          entity(as[ActionRequest]) { request =>
+            val lang = getLanguage(request.langName)
+            val action = lang.createAction(
+              request.actionName, request.nodeString, request.treePath, request.extraArgs, request.modeName
             )
-            val response = LangSelectorResponse(langSelector.toString)
+            val updatedTree = action.newTree
+            val displayMode: lang.DisplayMode = lang.DisplayMode.fromString(request.modeName)
+            val response = NodeResponse(updatedTree.toString, updatedTree.toHtml(displayMode).toString)
             complete(response)
           }
-        } ~
-        get {
-          pathEndOrSingleSlash {
-            getFromFile("webapp/pages/index.html")
-          } ~
-            pathPrefix("dist") {
-              getFromDirectory("webapp/dist")
-            } ~
-            pathPrefix("images") {
-              getFromDirectory("webapp/images")
-            }
         }
+      } ~
+      get {
+        path("get-lang-selector") {
+          val langSelector: TypedTag[String] = select(
+            id := "lang-selector", name := "lang-name",
+            knownLanguages.map(lang => option(value := getLanguageName(lang), getLanguageName(lang)))
+          )
+          val response = LangSelectorResponse(langSelector.toString)
+          complete(response)
+        } ~
+        pathEndOrSingleSlash { getFromFile(indexPage) } ~
+        pathPrefix("dist") { getFromDirectory(distDirectory) } ~
+        pathPrefix("images") { getFromDirectory(imagesDirectory) } ~
+        getFromDirectory(distDirectory)
+      }
     }
 
     if (!bundleScripts()) {
@@ -120,7 +116,6 @@ object WebServer extends JsonSupport {
 
     val defaultSettings = ServerSettings(system)
     val customSettings = defaultSettings.withTransparentHeadRequests(true)
-    val portNumber = 27019
 
     val bindingFuture = Http().newServerAt("0.0.0.0", portNumber).withSettings(customSettings).bind(route)
 

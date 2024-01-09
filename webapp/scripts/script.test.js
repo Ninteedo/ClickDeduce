@@ -14,7 +14,7 @@ const defaultHtml = `
     </div>
 `;
 
-const script = require("./script.js");
+const script = require("./script.ts");
 
 const langSelectorLanguages = ["LArith", "LIf"];
 const optionsHtml = langSelectorLanguages.map(lang => {

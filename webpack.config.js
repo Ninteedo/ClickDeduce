@@ -1,8 +1,9 @@
 const path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
     // The entry point of your application
-    entry: './webapp/scripts/script.js',
+    entry: './webapp/scripts/script.ts',
 
     // The output configuration of your bundle
     output: {
@@ -45,6 +46,12 @@ module.exports = {
     resolve: {
         extensions: ['.tsx', '.ts', '.js']
     },
+    plugins: [
+        new HtmlWebpackPlugin({
+            template: './webapp/pages/index.html',  // Path to your HTML file
+            filename: 'index.html'  // Output filename (optional)
+        })
+    ],
 
     // Optional: Configuration for source maps (useful for debugging)
     devtool: 'source-map',
