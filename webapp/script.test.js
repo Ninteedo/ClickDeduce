@@ -1,4 +1,4 @@
-const { test, beforeEach, afterEach, describe, expect } = require("@jest/globals");
+const { test, beforeEach, afterEach, describe, expect} = require("@jest/globals");
 
 const defaultHtml = `
     <div id="lang-selector-div"></div>
@@ -46,7 +46,7 @@ function fetchMock(url, request) {
                 })
             });
         } else {
-            return fail("get-lang-selector endpoint must be called with GET");
+            return Promise.reject("Error: Cannot use POST on get-lang-selector");
         }
     } else if (url === 'dummy-url') {
         return Promise.resolve({
@@ -80,6 +80,12 @@ describe("fetch is correctly mocked", () => {
     test("fetch returns correct language selector HTML", async () => {
         fetch('get-lang-selector', { method: 'GET' }).then(response => response.json()).then(contents =>
             expect(contents).toEqual({ langSelectorHtml })
+        );
+    })
+
+    test("fetch results in an error if using POST on get-lang-selector", async () => {
+        fetch('get-lang-selector', { method: 'POST' }).then(response => response.json()).catch(error =>
+            expect(error).toEqual("Error: Cannot use POST on get-lang-selector")
         );
     })
 });
