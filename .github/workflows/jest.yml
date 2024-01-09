@@ -19,8 +19,6 @@ jobs:
       with:
         node-version: '16'
     - name: Install dependencies
-      working-directory: ./webapp
       run: npm install
     - name: Run Jest tests
-      working-directory: ./webapp
       run: npm test
