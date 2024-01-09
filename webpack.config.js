@@ -2,17 +2,17 @@ const path = require('path');
 
 module.exports = {
     // The entry point of your application
-    entry: './script.js',
+    entry: './webapp/scripts/script.js',
 
     // The output configuration of your bundle
     output: {
-        path: path.resolve(__dirname, 'dist'), // Output directory
+        path: path.resolve(__dirname, 'webapp', 'dist'), // Output directory
         filename: 'bundle.js', // Name of the output bundle
     },
 
     // Configuration for the development server
     devServer: {
-        contentBase: '../dist',
+        contentBase: './webapp/dist',
     },
 
     // Module/rules configuration to tell Webpack how to handle different types of modules
