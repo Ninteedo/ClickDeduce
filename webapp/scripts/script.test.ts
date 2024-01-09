@@ -65,14 +65,25 @@ const invalidResourceResponse: MockResponse = new MockResponse("The requested re
 
 let requestsReceived: { url: string, request: any }[] = [];
 let dummyFetchResponse: any = null;
-let actionFetchResponse: { nodeString: string, treeHtml: string } = null;
+let actionFetchResponse: { nodeString: string, html: string } = null;
 
-function setDummyFetchResponse(response: any): void {
-    dummyFetchResponse = response;
-}
-
-function clearDummyFetchResponse(): void {
-    dummyFetchResponse = null;
+function checkActionRequestExecuted(actionName: string, langName: string, modeName: string, nodeString: string,
+                                    treePath: string, extraArgs: string[]): void {
+    const correctRequest = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            langName,
+            modeName,
+            actionName,
+            nodeString,
+            treePath,
+            extraArgs
+        })
+    }
+    expect(requestsReceived).toContainEqual({url: 'process-action', request: correctRequest});
 }
 
 function fetchMock(url: string, request: any): Promise<Response> {
@@ -92,12 +103,12 @@ function fetchMock(url: string, request: any): Promise<Response> {
         responseJson = dummyFetchResponse;
     } else if (url === 'start-node-blank') {
         if (request['method'] === 'POST') {
-            responseJson = {nodeString: "ExprChoiceNode()", treeHtml: startNodeBlankArithHTML};
+            responseJson = {nodeString: "ExprChoiceNode()", html: startNodeBlankArithHTML};
         }
     } else if (url === 'process-action') {
         if (request['method'] === 'POST') {
             if (actionFetchResponse === null) {
-                actionFetchResponse = {nodeString: "", treeHtml: ""};
+                actionFetchResponse = {nodeString: "", html: ""};
             }
             responseJson = actionFetchResponse;
             actionFetchResponse = null;
@@ -132,6 +143,10 @@ jest.mock('panzoom', () => ({
     }))
 }))
 
+function slightDelay(delay: number = 10): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, delay));
+}
+
 beforeEach(() => {
     requestsReceived = [];
     document.body.innerHTML = defaultHtml;
@@ -139,14 +154,14 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-    clearDummyFetchResponse();
+    dummyFetchResponse = null;
     actionFetchResponse = null;
 });
 
 describe("fetch is correctly mocked", () => {
     test("fetch returns the set response", async () => {
         let data = { test: "test" };
-        setDummyFetchResponse(data);
+        dummyFetchResponse = data;
         fetch('dummy-url', {}).then(response => response.json()).then(contents =>
             expect(contents).toEqual(data)
         );
@@ -204,10 +219,10 @@ describe("start new node button behaves correctly", () => {
         const startNodeButton = document.getElementById('start-node-button') as HTMLButtonElement;
         startNodeButton.click();
 
-        setTimeout(() => {
-            const tree = document.getElementById('tree');
-            expect(removeWhitespace(tree.innerHTML)).toEqual(removeWhitespace(startNodeBlankArithHTML));
-        }, 100);
+        await slightDelay();
+
+        const tree = document.getElementById('tree');
+        expect(removeWhitespace(tree.innerHTML)).toEqual(removeWhitespace(startNodeBlankArithHTML));
     });
 
     test("the request made respects the selected language", async () => {
@@ -223,9 +238,65 @@ describe("start new node button behaves correctly", () => {
             },
             body: JSON.stringify({langName: langSelectorLanguages[1]})
         }
-        setTimeout(() => {
-            expect(requestsReceived).toContainEqual({url: 'start-node-blank', request: correctRequest});
-        }, 100);
+
+        await slightDelay();
+
+        expect(requestsReceived).toContainEqual({url: 'start-node-blank', request: correctRequest});
+    });
+
+    test("changing the selected language causes an identity action", async () => {
+        const startNodeButton = document.getElementById('start-node-button') as HTMLButtonElement;
+        startNodeButton.click();
+
+        await slightDelay();
+
+        const langSelector = document.getElementById('lang-selector') as HTMLSelectElement;
+        console.log(langSelector.selectedIndex);
+        langSelector.selectedIndex = 1;
+        langSelector.dispatchEvent(new Event('change'));
+
+        await slightDelay();
+
+        checkActionRequestExecuted("IdentityAction", langSelectorLanguages[1], "edit",
+            "ExprChoiceNode()", "", []);
+    });
+});
+
+describe("selecting an option from the expr dropdown behaves correctly", () => {
+    beforeEach(() => {
+        const startNodeButton = document.getElementById('start-node-button') as HTMLButtonElement;
+        startNodeButton.click();
+    })
+
+    test("select expr dropdown is available", async () => {
+        await slightDelay();
+
+        const exprDropdown = document.getElementsByClassName('expr-dropdown')[0] as HTMLSelectElement;
+        expect(exprDropdown).toBeTruthy();
+    })
+
+    test("selecting an option makes a request to the server", async () => {
+        await slightDelay();
+
+        const exprDropdown = document.getElementsByClassName('expr-dropdown')[0] as HTMLSelectElement;
+        exprDropdown.selectedIndex = 1;
+        exprDropdown.dispatchEvent(new Event('change'));
+
+        checkActionRequestExecuted("SelectExprAction", langSelectorLanguages[0], "edit",
+            "ExprChoiceNode()", "", ["Num"]);
+    });
+
+    test("selecting the first option correctly requests a Num node", async () => {
+        expect.assertions(1);
+
+        await slightDelay();
+
+        const exprDropdown = document.getElementsByClassName('expr-dropdown')[0] as HTMLSelectElement;
+        exprDropdown.selectedIndex = 1;
+        exprDropdown.dispatchEvent(new Event('change'));
+
+        checkActionRequestExecuted("SelectExprAction", langSelectorLanguages[0], "edit",
+            "ExprChoiceNode()", "", ["Num"]);
     });
 });
 
