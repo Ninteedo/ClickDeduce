@@ -305,6 +305,35 @@ export async function pasteTreeNode(event: Event): Promise<void> {
     }
 }
 
+function openContextMenu(e: MouseEvent): void {
+    let target: EventTarget = e.target;
+
+    while (target instanceof HTMLElement && !target.classList.contains('highlight')) {
+        target = target.parentElement;
+    }
+
+    if (target && target instanceof HTMLElement && !hasClassOrParentHasClass(target, 'phantom')) {
+        e.preventDefault();
+
+        contextMenuSelectedElement = target;
+
+        const menu = document.getElementById('custom-context-menu');
+        menu.style.display = 'block';
+        menu.style.left = e.pageX + 'px';
+        menu.style.top = e.pageY + 'px';
+    } else {
+        document.getElementById('custom-context-menu').style.display = 'none';
+        clearHighlight();
+    }
+}
+
+function closeContextMenu(e: MouseEvent) {
+    document.getElementById('custom-context-menu').style.display = 'none';
+    if (contextMenuSelectedElement !== null) {
+        clearHighlight();
+    }
+}
+
 // Tree Panning and Zooming
 
 // Initialize Panzoom
@@ -351,34 +380,9 @@ export function initialise(): void {
     });
     updateUndoRedoButtons();
 
-    document.addEventListener('contextmenu', function (e: MouseEvent) {
-        let target: EventTarget = e.target;
+    document.addEventListener('contextmenu', openContextMenu);
 
-        while (target instanceof HTMLElement && !target.classList.contains('highlight')) {
-            target = target.parentElement;
-        }
-
-        if (target && target instanceof HTMLElement && !hasClassOrParentHasClass(target, 'phantom')) {
-            e.preventDefault();
-
-            contextMenuSelectedElement = target;
-
-            const menu = document.getElementById('custom-context-menu');
-            menu.style.display = 'block';
-            menu.style.left = e.pageX + 'px';
-            menu.style.top = e.pageY + 'px';
-        } else {
-            document.getElementById('custom-context-menu').style.display = 'none';
-            clearHighlight();
-        }
-    });
-
-    document.addEventListener('click', function (e: MouseEvent) {
-        document.getElementById('custom-context-menu').style.display = 'none';
-        if (contextMenuSelectedElement !== null) {
-            clearHighlight();
-        }
-    });
+    document.addEventListener('click', closeContextMenu);
 
     panzoomInstance = panzoom(tree, {
         bounds: false, boundsPadding: 0, zoomDoubleClickSpeed: 1,
