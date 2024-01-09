@@ -1,4 +1,4 @@
-module.exports = {
+{
     "compilerOptions": {
         "outDir": "./webapp/dist/",
         "sourceMap": true,
@@ -9,6 +9,6 @@ module.exports = {
         "allowJs": true
     },
     "include": [
-        "./webapp/**/*"
+        "./webapp/scripts/*"
     ]
 }
