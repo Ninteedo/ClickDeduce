@@ -559,6 +559,104 @@ describe("undo and redo buttons behave correctly", () => {
     });
 });
 
+describe("context menu behaves correctly", () => {
+    function contextMenuSelect(element: HTMLElement): void {
+        element.dispatchEvent(new MouseEvent('mouseover', {
+            bubbles: true,
+            cancelable: true,
+        }));
+
+        element.dispatchEvent(new MouseEvent('contextmenu', {
+            bubbles: true,
+            cancelable: true,
+            clientX: 0,
+            clientY: 0,
+            button: 2
+        }));
+    }
+
+    function leftClickOn(element: HTMLElement): void {
+        element.dispatchEvent(new MouseEvent('mouseover', {
+            bubbles: true,
+            cancelable: true,
+        }));
+
+        element.dispatchEvent(new MouseEvent('click', {
+            bubbles: true,
+            cancelable: true,
+            clientX: 0,
+            clientY: 0,
+            button: 0
+        }));
+    }
+
+    const nodeString2 = `VariableNode("Plus", List(SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode())))`;
+    const html2 = plusNodeArithHTML;
+
+    const nodeString3 = `VariableNode("Plus", List(SubExprNode(VariableNode("Num", List(LiteralNode("")))), SubExprNode(ExprChoiceNode())))`;
+    const html3 = `<div class="subtree" data-tree-path="" data-term="Times(Num(),BlankExprDropDown())" data-node-string="VariableNode(&quot;Times&quot;, List(SubExprNode(VariableNode(&quot;Num&quot;, List(LiteralNode(&quot;&quot;)))), SubExprNode(ExprChoiceNode())))"><div class="node"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><div class="expr"><div>(<div style="display: inline;"><input type="text" readonly="true" disabled="true" style="width: 1ch;" value=""></div> × <select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="1" data-tree-path="1" readonly="readonly" disabled="disabled"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select>)</div></div><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">Num can only accept LiteralInt, not </div></span></div></div><div class="args"><div class="subtree axiom" data-tree-path="0" data-term="Num()" data-node-string="VariableNode(&quot;Num&quot;, List(LiteralNode(&quot;&quot;)))"><div class="expr"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><div style="display: inline;"><input type="text" style="width: 2ch;" data-tree-path="0-0" value=""></div><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">Num can only accept LiteralInt, not </div></span></div></div><div class="annotation-axiom">Num</div></div><div class="subtree axiom" data-tree-path="1" data-term="BlankExprDropDown()" data-node-string="ExprChoiceNode()"><div class="expr"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="2" data-tree-path="1" style="display: inline;"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">BlankExprDropDown()</div></span></div></div><div class="annotation-axiom">ExprChoice</div></div><div class="annotation-new">Times</div></div></div>`
+
+    const nodeString4 = `VariableNode("Plus", List(SubExprNode(VariableNode("Num", List(LiteralNode("56")))), SubExprNode(ExprChoiceNode())))`;
+    const html4 = `<div class="subtree" data-tree-path="" data-term="Times(Num(4),BlankExprDropDown())" data-node-string="VariableNode(&quot;Times&quot;, List(SubExprNode(VariableNode(&quot;Num&quot;, List(LiteralNode(&quot;4&quot;)))), SubExprNode(ExprChoiceNode())))"><div class="node"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><div class="expr"><div>(<div style="display: inline;"><input type="text" readonly="true" disabled="true" style="width: 1ch;" value="4"></div> × <select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="3" data-tree-path="1" readonly="readonly" disabled="disabled"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select>)</div></div><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">BlankExprDropDown()</div></span></div></div><div class="args"><div class="subtree axiom" data-tree-path="0" data-term="Num(4)" data-node-string="VariableNode(&quot;Num&quot;, List(LiteralNode(&quot;4&quot;)))"><div class="expr"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><div style="display: inline;"><input type="text" style="width: 2ch;" data-tree-path="0-0" value="4"></div><span style="padding-left: 1ch; padding-right: 1ch;">⇓</span><div class="eval-result" style="display: inline;"><span class="tooltip"><div style="display: inline;">4: Int</div><div class="tooltiptext">NumV(4): IntType()</div></span></div></div><div class="annotation-axiom">Num</div></div><div class="subtree axiom" data-tree-path="1" data-term="BlankExprDropDown()" data-node-string="ExprChoiceNode()"><div class="expr"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="4" data-tree-path="1" style="display: inline;"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">BlankExprDropDown()</div></span></div></div><div class="annotation-axiom">ExprChoice</div></div><div class="annotation-new">Times</div></div></div>`
+
+    beforeEach(async () => {
+        await handleSubmit(mockEvent, '/start-node-blank');
+        actionFetchResponse = {nodeString: nodeString2, html: html2};
+        await handleDropdownChange(document.getElementsByClassName('expr-dropdown')[0] as HTMLSelectElement, 'expr');
+        actionFetchResponse = {nodeString: nodeString3, html: html3};
+        await handleDropdownChange(document.querySelectorAll('.expr-dropdown:not([readonly])')[0] as HTMLSelectElement, 'expr');
+        actionFetchResponse = {nodeString: nodeString4, html: html4};
+        await handleLiteralChanged(document.querySelector('input[type="text"]') as HTMLInputElement);
+    });
+
+    test("context menu is initially hidden", async () => {
+        expect(document.getElementById('custom-context-menu').style.display).toEqual('none');
+    });
+
+    test("right-clicking an element causes the context menu to appear", async () => {
+        const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
+        contextMenuSelect(element);
+        expect(document.getElementById('custom-context-menu').style.display).toEqual('block');
+    });
+
+    test("the selected element remains highlighted after the context menu appears", async () => {
+        const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
+        contextMenuSelect(element);
+        expect(element.classList).toContain('highlight');
+    });
+
+    test("the context menu disappears when clicking away", async () => {
+        const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
+        contextMenuSelect(element);
+        leftClickOn(document.querySelector('[data-tree-path=""]'))
+        expect(document.getElementById('custom-context-menu').style.display).toEqual('none');
+    });
+
+    test("right-clicking another element when the context menu is out causes the context menu to disappear", async () => {
+        const element1 = document.querySelector('[data-tree-path="0"]') as HTMLElement;
+        contextMenuSelect(element1);
+
+        const element2 = document.querySelector('[data-tree-path="1"]') as HTMLElement;
+        contextMenuSelect(element2);
+
+        expect(document.getElementById('custom-context-menu').style.display).toEqual('none');
+    });
+
+    test("right-clicking the context menu causes the context menu to disappear", async () => {
+        const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
+        contextMenuSelect(element);
+        contextMenuSelect(document.getElementById('custom-context-menu'));
+        expect(document.getElementById('custom-context-menu').style.display).toEqual('none');
+    });
+
+    test("right-clicking on the selected element again causes the context menu to disappear", async () => {
+        const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
+        contextMenuSelect(element);
+        contextMenuSelect(element);
+        expect(document.getElementById('custom-context-menu').style.display).toEqual('none');
+    });
+});
+
 function removeWhitespace(str: string): string {
     return str.replace(/\s/g, '');
 }
