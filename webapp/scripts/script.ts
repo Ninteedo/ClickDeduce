@@ -294,11 +294,11 @@ export async function clearTreeNode(event: Event): Promise<void> {
 
 let copyCache: string = null;
 
-export function copyTreeNode(event: Event): void {
+export function copyTreeNode(): void {
     copyCache = contextMenuSelectedElement.getAttribute("data-node-string");
 }
 
-export async function pasteTreeNode(event: Event): Promise<void> {
+export async function pasteTreeNode(): Promise<void> {
     if (copyCache) {
         const treePath = contextMenuSelectedElement.getAttribute("data-tree-path");
         await runAction("PasteAction", treePath, [copyCache]);

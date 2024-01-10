@@ -1,6 +1,6 @@
 import {afterEach, beforeEach, describe, expect, test} from "@jest/globals";
 import {MockResponse} from "./MockResponse";
-import {handleDropdownChange, handleLiteralChanged, handleSubmit, initialise, undo} from "./script";
+import {handleDropdownChange, handleLiteralChanged, handleSubmit, initialise, pasteTreeNode, undo} from "./script";
 
 const defaultHtml = `
     <div id="lang-selector-div"></div>
@@ -31,10 +31,10 @@ const defaultHtml = `
     
     <div id="custom-context-menu" class="custom-menu">
       <ul>
-        <li onclick="clearTreeNode(event)">Delete</li>
-        <li onclick="copyTreeNode(event)">Copy</li>
-        <li onclick="pasteTreeNode(event)">Paste</li>
-        <li onclick="zoomToFit()">Zoom to Fit</li>
+        <li id="delete-button" onclick="clearTreeNode(event)">Delete</li>
+        <li id="copy-button" onclick="copyTreeNode()">Copy</li>
+        <li id="paste-button" onclick="pasteTreeNode()">Paste</li>
+        <li id="zoom-button" onclick="zoomToFit()">Zoom to Fit</li>
       </ul>
     </div>
     
@@ -149,6 +149,44 @@ jest.mock('panzoom', () => ({
 
 function slightDelay(delay: number = 10): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, delay));
+}
+
+function contextMenuSelect(element: HTMLElement): void {
+    element.dispatchEvent(new MouseEvent('mouseover', {
+        bubbles: true,
+        cancelable: true,
+    }));
+
+    element.dispatchEvent(new MouseEvent('contextmenu', {
+        bubbles: true,
+        cancelable: true,
+        clientX: 0,
+        clientY: 0,
+        button: 2
+    }));
+}
+
+function leftClickOn(element: HTMLElement): void {
+    element.dispatchEvent(new MouseEvent('mouseover', {
+        bubbles: true,
+        cancelable: true,
+    }));
+
+    element.dispatchEvent(new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        clientX: 0,
+        clientY: 0,
+        button: 0
+    }));
+}
+
+function getContextMenuElement(): HTMLElement {
+    return document.getElementById('custom-context-menu');
+}
+
+function removeWhitespace(str: string): string {
+    return str.replace(/\s/g, '');
 }
 
 beforeEach(() => {
@@ -560,36 +598,6 @@ describe("undo and redo buttons behave correctly", () => {
 });
 
 describe("context menu behaves correctly", () => {
-    function contextMenuSelect(element: HTMLElement): void {
-        element.dispatchEvent(new MouseEvent('mouseover', {
-            bubbles: true,
-            cancelable: true,
-        }));
-
-        element.dispatchEvent(new MouseEvent('contextmenu', {
-            bubbles: true,
-            cancelable: true,
-            clientX: 0,
-            clientY: 0,
-            button: 2
-        }));
-    }
-
-    function leftClickOn(element: HTMLElement): void {
-        element.dispatchEvent(new MouseEvent('mouseover', {
-            bubbles: true,
-            cancelable: true,
-        }));
-
-        element.dispatchEvent(new MouseEvent('click', {
-            bubbles: true,
-            cancelable: true,
-            clientX: 0,
-            clientY: 0,
-            button: 0
-        }));
-    }
-
     const nodeString2 = `VariableNode("Plus", List(SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode())))`;
     const html2 = plusNodeArithHTML;
 
@@ -657,6 +665,110 @@ describe("context menu behaves correctly", () => {
     });
 });
 
-function removeWhitespace(str: string): string {
-    return str.replace(/\s/g, '');
-}
+describe("delete, copy, and paste buttons behave correctly", () => {
+    const nodeString2 = `VariableNode("Times", List(SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode())))`;
+    const html2 = plusNodeArithHTML;
+
+    const nodeString3 = `VariableNode("Times", List(SubExprNode(VariableNode("Num", List(LiteralNode("")))), SubExprNode(ExprChoiceNode())))`;
+    const html3 = `<div class="subtree highlight" data-tree-path="" data-term="Times(Num(),BlankExprDropDown())" data-node-string="VariableNode(&quot;Times&quot;, List(SubExprNode(VariableNode(&quot;Num&quot;, List(LiteralNode(&quot;&quot;)))), SubExprNode(ExprChoiceNode())))"><div class="node"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><div class="expr"><div>(<div style="display: inline;"><input type="text" readonly="true" disabled="true" style="width: 1ch;" value=""></div> × <select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="16" data-tree-path="1" readonly="readonly" disabled="disabled"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select>)</div></div><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">Num can only accept LiteralInt, not </div></span></div></div><div class="args"><div class="subtree axiom" data-tree-path="0" data-term="Num()" data-node-string="VariableNode(&quot;Num&quot;, List(LiteralNode(&quot;&quot;)))"><div class="expr"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><div style="display: inline;"><input type="text" style="width: 2ch;" data-tree-path="0-0" value=""></div><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">Num can only accept LiteralInt, not </div></span></div></div><div class="annotation-axiom">Num</div></div><div class="subtree axiom" data-tree-path="1" data-term="BlankExprDropDown()" data-node-string="ExprChoiceNode()"><div class="expr"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="17" data-tree-path="1" style="display: inline;"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">BlankExprDropDown()</div></span></div></div><div class="annotation-axiom">ExprChoice</div></div><div class="annotation-new">Times</div></div></div>`
+
+    const nodeString4 = `VariableNode("Times", List(SubExprNode(VariableNode("Num", List(LiteralNode("56")))), SubExprNode(ExprChoiceNode())))`;
+    const html4 = `<div class="subtree" data-tree-path="" data-term="Times(Num(56),BlankExprDropDown())" data-node-string="VariableNode(&quot;Times&quot;, List(SubExprNode(VariableNode(&quot;Num&quot;, List(LiteralNode(&quot;56&quot;)))), SubExprNode(ExprChoiceNode())))"><div class="node"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><div class="expr"><div>(<div style="display: inline;"><input type="text" readonly="true" disabled="true" style="width: 2ch;" value="56"></div> × <select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="18" data-tree-path="1" readonly="readonly" disabled="disabled"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select>)</div></div><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">BlankExprDropDown()</div></span></div></div><div class="args"><div class="subtree axiom" data-tree-path="0" data-term="Num(56)" data-node-string="VariableNode(&quot;Num&quot;, List(LiteralNode(&quot;56&quot;)))"><div class="expr"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><div style="display: inline;"><input type="text" style="width: 2ch;" data-tree-path="0-0" value="56"></div><span style="padding-left: 1ch; padding-right: 1ch;">⇓</span><div class="eval-result" style="display: inline;"><span class="tooltip"><div style="display: inline;">56: Int</div><div class="tooltiptext">NumV(56): IntType()</div></span></div></div><div class="annotation-axiom">Num</div></div><div class="subtree axiom" data-tree-path="1" data-term="BlankExprDropDown()" data-node-string="ExprChoiceNode()"><div class="expr"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="19" data-tree-path="1" style="display: inline;"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">BlankExprDropDown()</div></span></div></div><div class="annotation-axiom">ExprChoice</div></div><div class="annotation-new">Times</div></div></div>`
+
+    beforeEach(async () => {
+        await handleSubmit(mockEvent, '/start-node-blank');
+        actionFetchResponse = {nodeString: nodeString2, html: html2};
+        await handleDropdownChange(document.getElementsByClassName('expr-dropdown')[0] as HTMLSelectElement, 'expr');
+        actionFetchResponse = {nodeString: nodeString3, html: html3};
+        await handleDropdownChange(document.querySelectorAll('.expr-dropdown:not([readonly])')[0] as HTMLSelectElement, 'expr');
+        actionFetchResponse = {nodeString: nodeString4, html: html4};
+        await handleLiteralChanged(document.querySelector('input[type="text"]') as HTMLInputElement);
+    });
+
+    test("pressing delete makes the correct request to the server", async () => {
+        expect.assertions(1);
+
+        const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
+        contextMenuSelect(element);
+
+        const deleteButton = document.getElementById('delete-button');
+        deleteButton.click();
+
+        checkActionRequestExecuted("DeleteAction", langSelectorLanguages[0], "edit",
+            nodeString4, "0", []);
+    });
+
+    test("pressing copy does not make a request to the server", async () => {
+        expect.assertions(1);
+
+        const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
+        contextMenuSelect(element);
+
+        const initialRequestsReceived = requestsReceived.length;
+
+        const copyButton = document.getElementById('copy-button');
+        copyButton.click();
+
+        expect(requestsReceived.length).toEqual(initialRequestsReceived);
+    });
+
+    test("clicking paste has no effect before copying something", async () => {
+        expect.assertions(1);
+
+        const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
+        contextMenuSelect(element);
+
+        const initialRequestsReceived = requestsReceived.length;
+
+        const pasteButton = document.getElementById('paste-button');
+        pasteButton.click();
+
+        expect(requestsReceived.length).toEqual(initialRequestsReceived);
+    });
+
+    test("clicking paste on same element after copying it makes the correct request to the server", async () => {
+        const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
+        contextMenuSelect(element);
+
+        const copyButton = document.getElementById('copy-button');
+        copyButton.click();
+
+        contextMenuSelect(element);
+
+        const pasteButton = document.getElementById('paste-button');
+        pasteButton.click();
+
+        checkActionRequestExecuted("PasteAction", langSelectorLanguages[0], "edit",
+            nodeString4, "0", ["VariableNode(\"Num\", List(LiteralNode(\"56\")))"]);
+    });
+
+    test("clicking paste on another element after copying one makes the correct request to the server", async () => {
+        const element1 = document.querySelector('.subtree[data-tree-path="0"]') as HTMLElement;
+        contextMenuSelect(element1);
+
+        const copyButton = document.getElementById('copy-button');
+        copyButton.click();
+
+        const element2 = document.querySelector('.subtree[data-tree-path="1"]') as HTMLElement;
+        contextMenuSelect(element2);
+
+        const pasteButton = document.getElementById('paste-button');
+        pasteButton.click();
+
+        checkActionRequestExecuted("PasteAction", langSelectorLanguages[0], "edit",
+            nodeString4, "1", ["VariableNode(\"Num\", List(LiteralNode(\"56\")))"]);
+    });
+
+    test("clicking paste after changing tree state makes the correct request to the server", async () => {
+        contextMenuSelect(document.querySelector('[data-tree-path="0"]'));
+        document.getElementById('copy-button').click();
+
+        document.getElementById('undoButton').click();
+
+        contextMenuSelect(document.querySelector('[data-tree-path=""]'));
+        document.getElementById('paste-button').click();
+
+        checkActionRequestExecuted("PasteAction", langSelectorLanguages[0], "edit",
+            nodeString3, "", ["VariableNode(\"Num\", List(LiteralNode(\"56\")))"]);
+    });
+});
