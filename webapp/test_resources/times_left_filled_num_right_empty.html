@@ -1,0 +1,45 @@
+<div class="subtree" data-tree-path="" data-term="Times(Num(4),BlankExprDropDown())" data-node-string="VariableNode(&quot;Times&quot;, List(SubExprNode(VariableNode(&quot;Num&quot;, List(LiteralNode(&quot;4&quot;)))), SubExprNode(ExprChoiceNode())))">
+  <div class="node">
+    <div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div>
+    <div class="expr">
+      <div>(
+        <div style="display: inline;"><input type="text" readonly="true" disabled="true" style="width: 1ch;" value="4">
+        </div>
+        × <select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="3"
+                  data-tree-path="1" readonly="readonly" disabled="disabled">
+          <option value="">Select Expr...</option>
+          <option value="Num">Num</option>
+          <option value="Plus">Plus</option>
+          <option value="Times">Times</option>
+        </select>)
+      </div>
+    </div>
+    <span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span>
+    <div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">BlankExprDropDown()</div></span></div>
+  </div>
+  <div class="args">
+    <div class="subtree axiom" data-tree-path="0" data-term="Num(4)" data-node-string="VariableNode(&quot;Num&quot;, List(LiteralNode(&quot;4&quot;)))">
+      <div class="expr">
+        <div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div>
+        <div style="display: inline;"><input type="text" style="width: 2ch;" data-tree-path="0-0" value="4"></div>
+        <span style="padding-left: 1ch; padding-right: 1ch;">⇓</span>
+        <div class="eval-result" style="display: inline;"><span class="tooltip"><div style="display: inline;">4: Int</div><div class="tooltiptext">NumV(4): IntType()</div></span></div>
+      </div>
+      <div class="annotation-axiom">Num</div>
+    </div>
+    <div class="subtree axiom" data-tree-path="1" data-term="BlankExprDropDown()" data-node-string="ExprChoiceNode()">
+      <div class="expr">
+        <div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div>
+        <select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="4" data-tree-path="1" style="display: inline;">
+          <option value="">Select Expr...</option>
+          <option value="Num">Num</option>
+          <option value="Plus">Plus</option>
+          <option value="Times">Times</option>
+        </select><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span>
+        <div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">BlankExprDropDown()</div></span></div>
+      </div>
+      <div class="annotation-axiom">ExprChoice</div>
+    </div>
+    <div class="annotation-new">Times</div>
+  </div>
+</div>

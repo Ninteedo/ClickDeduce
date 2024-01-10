@@ -1,46 +1,18 @@
 import {afterEach, beforeEach, describe, expect, test} from "@jest/globals";
 import {MockResponse} from "./MockResponse";
-import {handleDropdownChange, handleLiteralChanged, handleSubmit, initialise, pasteTreeNode, undo} from "./script";
-import * as NS from "./test_resources/node_strings";
+import {handleDropdownChange, handleLiteralChanged, handleSubmit, initialise} from "./script";
+import * as NS from "../test_resources/node_strings";
 
-const defaultHtml = `
-    <div id="lang-selector-div"></div>
-    <div id="mode-selector-div">
-      <form>
-        <input type="radio" id="edit-mode-radio" name="mode" value="edit" checked="checked">
-        <label for="edit-mode-radio">Edit</label>
-        <input type="radio" id="type-check-mode-radio" name="mode" value="type-check">
-        <label for="type-check-mode-radio">Type-Check</label>
-        <input type="radio" id="eval-mode-radio" name="mode" value="eval">
-        <label for="eval-mode-radio">Evaluate</label>
-      </form>
-    </div>
-    
-    <form onsubmit="handleSubmit(event, '/start-node-blank')">
-      <input id="start-node-button" type="submit" value="Start Node Blank">
-    </form>
-    <button onclick="undo()" id="undoButton">Undo</button>
-    <button onclick="redo()" id="redoButton">Redo</button>
-    <div id="tree-container">
-      <div id="tree-buttons">
-        <button onclick="zoomToFit()">
-          <img src="images/zoom_to_fit.svg" alt="Zoom to Fit">
-        </button>
-      </div>
-      <div id="tree"></div>
-    </div>
-    
-    <div id="custom-context-menu" class="custom-menu">
-      <ul>
-        <li id="delete-button" onclick="clearTreeNode(event)">Delete</li>
-        <li id="copy-button" onclick="copyTreeNode()">Copy</li>
-        <li id="paste-button" onclick="pasteTreeNode()">Paste</li>
-        <li id="zoom-button" onclick="zoomToFit()">Zoom to Fit</li>
-      </ul>
-    </div>
-    
-    <div id="error-message" class="error-message fade-out"></div>
-`;
+import fs from 'fs';
+import path from 'path';
+
+function loadHtmlTemplate(filename: string): string {
+    const readResult: string = fs.readFileSync(path.resolve(__dirname, '../test_resources', `${filename}.html`), 'utf8');
+    const fixedLineEndings: string = readResult.replace(/\r\n/g, '\n');
+    return fixedLineEndings;
+}
+
+const defaultHtml = loadHtmlTemplate('../pages/index')
 
 const langSelectorLanguages = ["LArith", "LIf"];
 const optionsHtml = langSelectorLanguages.map(lang => {
@@ -52,11 +24,9 @@ const langSelectorHtml = `
     </select>
 `;
 
-const startNodeBlankArithHTML = `<div class="subtree axiom" data-tree-path="" data-term="BlankExprDropDown()" data-node-string="ExprChoiceNode()"><div class="expr"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="1" data-tree-path="" style="display: inline;"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">BlankExprDropDown()</div></span></div></div><div class="annotation-axiom">ExprChoice</div></div>`
-
-const plusNodeArithHTML = `<div class="subtree" data-tree-path="" data-term="Plus(BlankExprDropDown(),BlankExprDropDown())" data-node-string="VariableNode(&quot;Plus&quot;, List(SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode())))"><div class="node"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><div class="expr"><div>(<select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="7" data-tree-path="0" readonly="readonly" disabled="disabled"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select> + <select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="8" data-tree-path="1" readonly="readonly" disabled="disabled"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select>)</div></div><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">BlankExprDropDown()</div></span></div></div><div class="args"><div class="subtree axiom" data-tree-path="0" data-term="BlankExprDropDown()" data-node-string="ExprChoiceNode()"><div class="expr"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="9" data-tree-path="0" style="display: inline;"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">BlankExprDropDown()</div></span></div></div><div class="annotation-axiom">ExprChoice</div></div><div class="subtree axiom" data-tree-path="1" data-term="BlankExprDropDown()" data-node-string="ExprChoiceNode()"><div class="expr"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="10" data-tree-path="1" style="display: inline;"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">BlankExprDropDown()</div></span></div></div><div class="annotation-axiom">ExprChoice</div></div><div class="annotation-new">Plus</div></div></div>`
-
-const numNodeArithHTML = `<div class="subtree axiom" data-tree-path="" data-term="Num()" data-node-string="VariableNode(&quot;Num&quot;, List(LiteralNode(&quot;&quot;)))"><div class="expr"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><div style="display: inline;"><input type="text" style="width: 2ch;" data-tree-path="0" value=""></div><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">Num can only accept LiteralInt, not </div></span></div></div><div class="annotation-axiom">Num</div></div>`
+const startNodeBlankArithHTML = loadHtmlTemplate('start_node_blank_arith');
+const plusNodeArithHTML = loadHtmlTemplate('plus_node_arith');
+const numNodeArithHTML = loadHtmlTemplate('num_node_arith');
 
 const invalidResourceResponse: MockResponse = new MockResponse("The requested resource could not be found.", {
     status: 404,
@@ -600,7 +570,7 @@ describe("undo and redo buttons behave correctly", () => {
 
 describe("hovering over a node behaves correctly", () => {
     const nodeString = NS.PLUS_LEFT_NUM_RIGHT_EMPTY;
-    const html = `<div class="subtree" data-tree-path="" data-term="Times(Num(),BlankExprDropDown())" data-node-string="VariableNode(&quot;Times&quot;, List(SubExprNode(VariableNode(&quot;Num&quot;, List(LiteralNode(&quot;&quot;)))), SubExprNode(ExprChoiceNode())))"><div class="node"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><div class="expr"><div>(<div style="display: inline;"><input type="text" readonly="true" disabled="true" style="width: 1ch;" value=""></div> × <select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="1" data-tree-path="1" readonly="readonly" disabled="disabled"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select>)</div></div><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">Num can only accept LiteralInt, not </div></span></div></div><div class="args"><div class="subtree axiom" data-tree-path="0" data-term="Num()" data-node-string="VariableNode(&quot;Num&quot;, List(LiteralNode(&quot;&quot;)))"><div class="expr"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><div style="display: inline;"><input type="text" style="width: 2ch;" data-tree-path="0-0" value=""></div><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">Num can only accept LiteralInt, not </div></span></div></div><div class="annotation-axiom">Num</div></div><div class="subtree axiom" data-tree-path="1" data-term="BlankExprDropDown()" data-node-string="ExprChoiceNode()"><div class="expr"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="2" data-tree-path="1" style="display: inline;"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">BlankExprDropDown()</div></span></div></div><div class="annotation-axiom">ExprChoice</div></div><div class="annotation-new">Times</div></div></div>`
+    const html = loadHtmlTemplate('plus_left_num_right_empty');
 
     beforeEach(async () => {
         await handleSubmit(mockEvent, '/start-node-blank');
@@ -649,14 +619,14 @@ describe("hovering over a node behaves correctly", () => {
 });
 
 describe("context menu behaves correctly", () => {
-    const nodeString2 = NS.PLUS_EMPTY;
+    const nodeString2 = NS.TIMES_EMPTY;
     const html2 = plusNodeArithHTML;
 
-    const nodeString3 = NS.PLUS_LEFT_NUM_RIGHT_EMPTY;
-    const html3 = `<div class="subtree" data-tree-path="" data-term="Times(Num(),BlankExprDropDown())" data-node-string="VariableNode(&quot;Times&quot;, List(SubExprNode(VariableNode(&quot;Num&quot;, List(LiteralNode(&quot;&quot;)))), SubExprNode(ExprChoiceNode())))"><div class="node"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><div class="expr"><div>(<div style="display: inline;"><input type="text" readonly="true" disabled="true" style="width: 1ch;" value=""></div> × <select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="1" data-tree-path="1" readonly="readonly" disabled="disabled"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select>)</div></div><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">Num can only accept LiteralInt, not </div></span></div></div><div class="args"><div class="subtree axiom" data-tree-path="0" data-term="Num()" data-node-string="VariableNode(&quot;Num&quot;, List(LiteralNode(&quot;&quot;)))"><div class="expr"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><div style="display: inline;"><input type="text" style="width: 2ch;" data-tree-path="0-0" value=""></div><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">Num can only accept LiteralInt, not </div></span></div></div><div class="annotation-axiom">Num</div></div><div class="subtree axiom" data-tree-path="1" data-term="BlankExprDropDown()" data-node-string="ExprChoiceNode()"><div class="expr"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="2" data-tree-path="1" style="display: inline;"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">BlankExprDropDown()</div></span></div></div><div class="annotation-axiom">ExprChoice</div></div><div class="annotation-new">Times</div></div></div>`
+    const nodeString3 = NS.TIMES_LEFT_NUM_RIGHT_EMPTY;
+    const html3 = loadHtmlTemplate('times_left_num_right_empty');
 
-    const nodeString4 = NS.PLUS_LEFT_FILLED_NUM_RIGHT_EMPTY;
-    const html4 = `<div class="subtree" data-tree-path="" data-term="Times(Num(4),BlankExprDropDown())" data-node-string="VariableNode(&quot;Times&quot;, List(SubExprNode(VariableNode(&quot;Num&quot;, List(LiteralNode(&quot;4&quot;)))), SubExprNode(ExprChoiceNode())))"><div class="node"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><div class="expr"><div>(<div style="display: inline;"><input type="text" readonly="true" disabled="true" style="width: 1ch;" value="4"></div> × <select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="3" data-tree-path="1" readonly="readonly" disabled="disabled"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select>)</div></div><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">BlankExprDropDown()</div></span></div></div><div class="args"><div class="subtree axiom" data-tree-path="0" data-term="Num(4)" data-node-string="VariableNode(&quot;Num&quot;, List(LiteralNode(&quot;4&quot;)))"><div class="expr"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><div style="display: inline;"><input type="text" style="width: 2ch;" data-tree-path="0-0" value="4"></div><span style="padding-left: 1ch; padding-right: 1ch;">⇓</span><div class="eval-result" style="display: inline;"><span class="tooltip"><div style="display: inline;">4: Int</div><div class="tooltiptext">NumV(4): IntType()</div></span></div></div><div class="annotation-axiom">Num</div></div><div class="subtree axiom" data-tree-path="1" data-term="BlankExprDropDown()" data-node-string="ExprChoiceNode()"><div class="expr"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="4" data-tree-path="1" style="display: inline;"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">BlankExprDropDown()</div></span></div></div><div class="annotation-axiom">ExprChoice</div></div><div class="annotation-new">Times</div></div></div>`
+    const nodeString4 = NS.TIMES_LEFT_FILLED_NUM_RIGHT_EMPTY;
+    const html4 = loadHtmlTemplate('times_left_filled_num_right_empty');
 
     beforeEach(async () => {
         await handleSubmit(mockEvent, '/start-node-blank');
@@ -721,10 +691,10 @@ describe("delete, copy, and paste buttons behave correctly", () => {
     const html2 = plusNodeArithHTML;
 
     const nodeString3 = NS.TIMES_LEFT_NUM_RIGHT_EMPTY;
-    const html3 = `<div class="subtree highlight" data-tree-path="" data-term="Times(Num(),BlankExprDropDown())" data-node-string="VariableNode(&quot;Times&quot;, List(SubExprNode(VariableNode(&quot;Num&quot;, List(LiteralNode(&quot;&quot;)))), SubExprNode(ExprChoiceNode())))"><div class="node"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><div class="expr"><div>(<div style="display: inline;"><input type="text" readonly="true" disabled="true" style="width: 1ch;" value=""></div> × <select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="16" data-tree-path="1" readonly="readonly" disabled="disabled"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select>)</div></div><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">Num can only accept LiteralInt, not </div></span></div></div><div class="args"><div class="subtree axiom" data-tree-path="0" data-term="Num()" data-node-string="VariableNode(&quot;Num&quot;, List(LiteralNode(&quot;&quot;)))"><div class="expr"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><div style="display: inline;"><input type="text" style="width: 2ch;" data-tree-path="0-0" value=""></div><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">Num can only accept LiteralInt, not </div></span></div></div><div class="annotation-axiom">Num</div></div><div class="subtree axiom" data-tree-path="1" data-term="BlankExprDropDown()" data-node-string="ExprChoiceNode()"><div class="expr"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="17" data-tree-path="1" style="display: inline;"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">BlankExprDropDown()</div></span></div></div><div class="annotation-axiom">ExprChoice</div></div><div class="annotation-new">Times</div></div></div>`
+    const html3 = loadHtmlTemplate('times_left_num_right_empty');
 
     const nodeString4 = NS.TIMES_LEFT_FILLED_NUM_RIGHT_EMPTY;
-    const html4 = `<div class="subtree" data-tree-path="" data-term="Times(Num(56),BlankExprDropDown())" data-node-string="VariableNode(&quot;Times&quot;, List(SubExprNode(VariableNode(&quot;Num&quot;, List(LiteralNode(&quot;56&quot;)))), SubExprNode(ExprChoiceNode())))"><div class="node"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><div class="expr"><div>(<div style="display: inline;"><input type="text" readonly="true" disabled="true" style="width: 2ch;" value="56"></div> × <select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="18" data-tree-path="1" readonly="readonly" disabled="disabled"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select>)</div></div><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">BlankExprDropDown()</div></span></div></div><div class="args"><div class="subtree axiom" data-tree-path="0" data-term="Num(56)" data-node-string="VariableNode(&quot;Num&quot;, List(LiteralNode(&quot;56&quot;)))"><div class="expr"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><div style="display: inline;"><input type="text" style="width: 2ch;" data-tree-path="0-0" value="56"></div><span style="padding-left: 1ch; padding-right: 1ch;">⇓</span><div class="eval-result" style="display: inline;"><span class="tooltip"><div style="display: inline;">56: Int</div><div class="tooltiptext">NumV(56): IntType()</div></span></div></div><div class="annotation-axiom">Num</div></div><div class="subtree axiom" data-tree-path="1" data-term="BlankExprDropDown()" data-node-string="ExprChoiceNode()"><div class="expr"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="19" data-tree-path="1" style="display: inline;"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">BlankExprDropDown()</div></span></div></div><div class="annotation-axiom">ExprChoice</div></div><div class="annotation-new">Times</div></div></div>`
+    const html4 = loadHtmlTemplate('times_left_filled_num_right_empty');
 
     beforeEach(async () => {
         await handleSubmit(mockEvent, '/start-node-blank');
@@ -790,7 +760,7 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         pasteButton.click();
 
         checkActionRequestExecuted("PasteAction", langSelectorLanguages[0], "edit",
-            nodeString4, "0", ["VariableNode(\"Num\", List(LiteralNode(\"56\")))"]);
+            nodeString4, "0", ["VariableNode(\"Num\", List(LiteralNode(\"4\")))"]);
     });
 
     test("clicking paste on another element after copying one makes the correct request to the server", async () => {
@@ -807,7 +777,7 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         pasteButton.click();
 
         checkActionRequestExecuted("PasteAction", langSelectorLanguages[0], "edit",
-            nodeString4, "1", ["VariableNode(\"Num\", List(LiteralNode(\"56\")))"]);
+            nodeString4, "1", ["VariableNode(\"Num\", List(LiteralNode(\"4\")))"]);
     });
 
     test("clicking paste after changing tree state makes the correct request to the server", async () => {
@@ -820,7 +790,7 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         document.getElementById('paste-button').click();
 
         checkActionRequestExecuted("PasteAction", langSelectorLanguages[0], "edit",
-            nodeString3, "", ["VariableNode(\"Num\", List(LiteralNode(\"56\")))"]);
+            nodeString3, "", ["VariableNode(\"Num\", List(LiteralNode(\"4\")))"]);
     });
 });
 

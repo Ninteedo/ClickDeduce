@@ -1,11 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!--<link rel="stylesheet" href="../styles/stylesheet.css">-->
   <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
   <title>ClickDeduce</title>
-  <!--<script src='https://unpkg.com/panzoom@9.4.0/dist/panzoom.min.js'></script>-->
-<!--  <script src="../scripts/script.ts"></script>-->
 </head>
 
 <body onload="initialise()">
@@ -28,7 +25,7 @@
 
 <form onsubmit="handleSubmit(event, '/start-node-blank')">
   <input type="hidden" id="nodeUserInput" value="">
-  <input type="submit" value="Start Node Blank">
+  <input type="submit" id="start-node-button" value="Start Node Blank">
 </form>
 <br>
 <button onclick="undo()" id="undoButton">Undo</button>
@@ -45,10 +42,10 @@
 
 <div id="custom-context-menu" class="custom-menu">
   <ul>
-    <li onclick="clearTreeNode(event)">Delete</li>
-    <li onclick="copyTreeNode()">Copy</li>
-    <li onclick="pasteTreeNode()">Paste</li>
-    <li onclick="zoomToFit()">Zoom to Fit</li>
+    <li id="delete-button" onclick="clearTreeNode(event)">Delete</li>
+    <li id="copy-button" onclick="copyTreeNode()">Copy</li>
+    <li id="paste-button" onclick="pasteTreeNode()">Paste</li>
+    <li id="zoom-button" onclick="zoomToFit()">Zoom to Fit</li>
   </ul>
 </div>
 
