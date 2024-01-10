@@ -364,6 +364,9 @@ function displayError(error: any): void {
 }
 
 export function initialise(): void {
+    treeHistory = [];
+    treeHistoryIndex = 0;
+
     undoButton = <HTMLButtonElement>document.getElementById('undoButton');
     redoButton = <HTMLButtonElement>document.getElementById('redoButton');
     tree = <HTMLDivElement>document.getElementById('tree');
