@@ -307,6 +307,10 @@ export async function pasteTreeNode(event: Event): Promise<void> {
 
 function openContextMenu(e: MouseEvent): void {
     let target: EventTarget = e.target;
+    if (contextMenuSelectedElement !== null) {
+        // closes context menu if it is already open
+        target = null;
+    }
 
     while (target instanceof HTMLElement && !target.classList.contains('highlight')) {
         target = target.parentElement;
@@ -322,8 +326,7 @@ function openContextMenu(e: MouseEvent): void {
         menu.style.left = e.pageX + 'px';
         menu.style.top = e.pageY + 'px';
     } else {
-        document.getElementById('custom-context-menu').style.display = 'none';
-        clearHighlight();
+        closeContextMenu(e);
     }
 }
 
@@ -371,9 +374,9 @@ export function initialise(): void {
     nextFocusElement = null;
     copyCache = null;
 
-    undoButton = <HTMLButtonElement>document.getElementById('undoButton');
-    redoButton = <HTMLButtonElement>document.getElementById('redoButton');
-    tree = <HTMLDivElement>document.getElementById('tree');
+    undoButton = document.getElementById('undoButton') as HTMLButtonElement;
+    redoButton = document.getElementById('redoButton') as HTMLButtonElement;
+    tree = document.getElementById('tree') as HTMLDivElement;
     modeRadios = Array.from(document.querySelectorAll('input[name="mode"]'));
 
     for (const radio of modeRadios) {
@@ -387,8 +390,8 @@ export function initialise(): void {
     });
     updateUndoRedoButtons();
 
+    document.getElementById('custom-context-menu').style.display = 'none';
     document.addEventListener('contextmenu', openContextMenu);
-
     document.addEventListener('click', closeContextMenu);
 
     panzoomInstance = panzoom(tree, {
