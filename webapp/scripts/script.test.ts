@@ -1,6 +1,6 @@
 import {afterEach, beforeEach, describe, expect, test} from "@jest/globals";
 import {MockResponse} from "./MockResponse";
-import {initialise} from "./script";
+import {handleDropdownChange, handleSubmit, initialise} from "./script";
 
 const defaultHtml = `
     <div id="lang-selector-div"></div>
@@ -51,9 +51,11 @@ const langSelectorHtml = `
     </select>
 `;
 
-const startNodeBlankArithHTML = `
-    <div class="subtree axiom" data-tree-path="" data-term="BlankExprDropDown()" data-node-string="ExprChoiceNode()"><div class="expr"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="1" data-tree-path="" style="display: inline;"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">BlankExprDropDown()</div></span></div></div><div class="annotation-axiom">ExprChoice</div></div>
-`
+const startNodeBlankArithHTML = `<div class="subtree axiom" data-tree-path="" data-term="BlankExprDropDown()" data-node-string="ExprChoiceNode()"><div class="expr"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="1" data-tree-path="" style="display: inline;"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">BlankExprDropDown()</div></span></div></div><div class="annotation-axiom">ExprChoice</div></div>`
+
+const plusNodeArithHTML = `<div class="subtree" data-tree-path="" data-term="Plus(BlankExprDropDown(),BlankExprDropDown())" data-node-string="VariableNode(&quot;Plus&quot;, List(SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode())))"><div class="node"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><div class="expr"><div>(<select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="7" data-tree-path="0" readonly="readonly" disabled="disabled"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select> + <select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="8" data-tree-path="1" readonly="readonly" disabled="disabled"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select>)</div></div><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">BlankExprDropDown()</div></span></div></div><div class="args"><div class="subtree axiom" data-tree-path="0" data-term="BlankExprDropDown()" data-node-string="ExprChoiceNode()"><div class="expr"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="9" data-tree-path="0" style="display: inline;"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">BlankExprDropDown()</div></span></div></div><div class="annotation-axiom">ExprChoice</div></div><div class="subtree axiom" data-tree-path="1" data-term="BlankExprDropDown()" data-node-string="ExprChoiceNode()"><div class="expr"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="10" data-tree-path="1" style="display: inline;"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">BlankExprDropDown()</div></span></div></div><div class="annotation-axiom">ExprChoice</div></div><div class="annotation-new">Plus</div></div></div>`
+
+const numNodeArithHTML = `<div class="subtree axiom" data-tree-path="" data-term="Num()" data-node-string="VariableNode(&quot;Num&quot;, List(LiteralNode(&quot;&quot;)))"><div class="expr"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><div style="display: inline;"><input type="text" style="width: 2ch;" data-tree-path="0" value=""></div><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">Num can only accept LiteralInt, not </div></span></div></div><div class="annotation-axiom">Num</div></div>`
 
 const invalidResourceResponse: MockResponse = new MockResponse("The requested resource could not be found.", {
     status: 404,
@@ -134,6 +136,8 @@ function fetchMock(url: string, request: any): Promise<Response> {
 }
 
 global.fetch = jest.fn(fetchMock);
+
+const mockEvent = { preventDefault: jest.fn() } as unknown as Event;
 
 // mock panzoom module, doesn't need to do anything
 jest.mock('panzoom', () => ({
@@ -262,42 +266,94 @@ describe("start new node button behaves correctly", () => {
     });
 });
 
-describe("selecting an option from the expr dropdown behaves correctly", () => {
-    beforeEach(() => {
-        const startNodeButton = document.getElementById('start-node-button') as HTMLButtonElement;
-        startNodeButton.click();
-    })
+describe("selecting an option from the root expr dropdown behaves correctly", () => {
+    beforeEach(async () => {
+        await handleSubmit(mockEvent, '/start-node-blank');
+    });
 
     test("select expr dropdown is available", async () => {
-        await slightDelay();
+        expect.assertions(1);
 
         const exprDropdown = document.getElementsByClassName('expr-dropdown')[0] as HTMLSelectElement;
         expect(exprDropdown).toBeTruthy();
-    })
-
-    test("selecting an option makes a request to the server", async () => {
-        await slightDelay();
-
-        const exprDropdown = document.getElementsByClassName('expr-dropdown')[0] as HTMLSelectElement;
-        exprDropdown.selectedIndex = 1;
-        exprDropdown.dispatchEvent(new Event('change'));
-
-        checkActionRequestExecuted("SelectExprAction", langSelectorLanguages[0], "edit",
-            "ExprChoiceNode()", "", ["Num"]);
     });
 
-    test("selecting the first option correctly requests a Num node", async () => {
-        expect.assertions(1);
+    function selectOptionResultsInCorrectRequest(index: number, exprName: string) {
+        test("selecting the " + exprName + " option makes the correct request to the server", async () => {
+            expect.assertions(1);
 
-        await slightDelay();
+            const exprDropdown = document.getElementsByClassName('expr-dropdown')[0] as HTMLSelectElement;
+            exprDropdown.selectedIndex = index;
+            exprDropdown.dispatchEvent(new Event('change'));
+
+            checkActionRequestExecuted("SelectExprAction", langSelectorLanguages[0], "edit",
+                "ExprChoiceNode()", "", [exprName]);
+        });
+    }
+
+    selectOptionResultsInCorrectRequest(1, "Num");
+    selectOptionResultsInCorrectRequest(2, "Plus");
+    selectOptionResultsInCorrectRequest(3, "Times");
+});
+
+describe("selecting an option from a non-root expr dropdown behaves correctly", () => {
+    const dummyNodeString: string = 'VariableNode("Plus", List(SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode())))';
+
+    beforeEach(async () => {
+        await handleSubmit(mockEvent, '/start-node-blank');
+
+        actionFetchResponse = {nodeString: dummyNodeString, html: plusNodeArithHTML};
 
         const exprDropdown = document.getElementsByClassName('expr-dropdown')[0] as HTMLSelectElement;
-        exprDropdown.selectedIndex = 1;
-        exprDropdown.dispatchEvent(new Event('change'));
+        exprDropdown.selectedIndex = 2;
 
-        checkActionRequestExecuted("SelectExprAction", langSelectorLanguages[0], "edit",
-            "ExprChoiceNode()", "", ["Num"]);
+        await handleDropdownChange(exprDropdown, 'expr');
     });
+
+    test("left and right dropdowns are available", async () => {
+        expect.assertions(9);
+
+        const dropdowns = document.querySelectorAll('.expr-dropdown:not([readonly])');
+        expect(dropdowns).toHaveLength(2);
+
+        dropdowns.forEach(dropdown => {
+            expect(dropdown).toBeTruthy();
+            expect(dropdown).toBeInstanceOf(HTMLSelectElement);
+
+            if (dropdown instanceof HTMLSelectElement) {
+                expect(dropdown.selectedIndex).toEqual(0);
+                expect(dropdown.children).toHaveLength(4);
+            }
+        });
+    });
+
+    function selectOptionResultsInCorrectRequest(index: number, exprName: string) {
+        test("selecting the left " + exprName + " option makes the correct request to the server", async () => {
+            expect.assertions(1);
+
+            const leftDropdown = document.querySelectorAll('.expr-dropdown:not([readonly])').item(0) as HTMLSelectElement;
+            leftDropdown.selectedIndex = index;
+            leftDropdown.dispatchEvent(new Event('change'));
+
+            checkActionRequestExecuted("SelectExprAction", langSelectorLanguages[0], "edit",
+                dummyNodeString, "0", [exprName]);
+        });
+
+        test("selecting the right " + exprName + " option makes the correct request to the server", async () => {
+            expect.assertions(1);
+
+            const rightDropdown = document.querySelectorAll('.expr-dropdown:not([readonly])').item(1) as HTMLSelectElement;
+            rightDropdown.selectedIndex = index;
+            rightDropdown.dispatchEvent(new Event('change'));
+
+            checkActionRequestExecuted("SelectExprAction", langSelectorLanguages[0], "edit",
+                dummyNodeString, "1", [exprName]);
+        });
+    }
+
+    selectOptionResultsInCorrectRequest(1, "Num");
+    selectOptionResultsInCorrectRequest(2, "Plus");
+    selectOptionResultsInCorrectRequest(3, "Times");
 });
 
 function removeWhitespace(str: string): string {
