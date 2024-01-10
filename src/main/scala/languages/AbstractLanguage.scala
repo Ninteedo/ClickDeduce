@@ -72,7 +72,7 @@ trait AbstractLanguage {
       try {
         evalInner(env)
       } catch {
-        case e: Throwable => EvalException(e)
+        case e: StackOverflowError => stackOverflowEvalError
       }
     }
 
@@ -88,7 +88,7 @@ trait AbstractLanguage {
       try {
         typeCheckInner(tEnv)
       } catch {
-        case e: Exception => TypeException(e)
+        case e: StackOverflowError => stackOverflowTypeError
       }
     }
 
@@ -163,12 +163,14 @@ trait AbstractLanguage {
     override val typ: Type = UnexpectedExprType(message)
   }
 
-  case class EvalException(exception: Throwable) extends EvalError {
-    override val message: String = exception.getMessage
+  case class EvalException(override val message: String) extends EvalError {
+//    override val message: String = exception.getMessage
 
-    override val typ: Type = TypeException(exception)
+    override val typ: Type = TypeException(message)
   }
 
+  val stackOverflowEvalError: EvalError = EvalException("Stack overflow")
+  val stackOverflowTypeError: TypeError = TypeException("Stack overflow")
 
   /**
    * An error resulting from an expression being type checked.
@@ -192,8 +194,8 @@ trait AbstractLanguage {
    */
   case class UnexpectedExprType(override val message: String) extends TypeError
 
-  case class TypeException(exception: Throwable) extends TypeError {
-    override val message: String = exception.getMessage
+  case class TypeException(override val message: String) extends TypeError {
+//    override val message: String = exception.getMessage
   }
 
   abstract class Literal extends Term {

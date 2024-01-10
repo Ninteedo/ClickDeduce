@@ -12,7 +12,7 @@ import org.scalatest.time.{Millis, Span}
 import scala.collection.immutable.Map
 import scala.util.Random
 
-class LRecTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhenThen {
+class LRecTest extends TestTemplate[Expr, Value, Type] {
   val factorialFunction: Expr = Rec("factorial", "n", IntType(), IntType(),
     IfThenElse(Eq(Var("n"), Num(0)), Num(1), Times(Var("n"), Apply(Var("factorial"), Plus(Var("n"), Num(-1))))))
 
@@ -63,11 +63,11 @@ class LRecTest extends AnyPropSpec with TableDrivenPropertyChecks with GivenWhen
   }
 
   property("Infinite recursion results in a stack overflow error") {
-    val infiniteRec = Rec("f", "x", IntType(), IntType(), Apply(Var("f"), Var("x")))
     failAfter(Span(1000, Millis)) {
+      val infiniteRec = Rec("f", "x", IntType(), IntType(), Apply(Var("f"), Var("x")))
       Apply(infiniteRec, Num(1)).eval(Map()) shouldBe a[EvalException]
       Apply(infiniteRec, Num(1)).eval(Map()) match {
-        case EvalException(exception) => exception shouldBe a[StackOverflowError]
+        case EvalException(message) => message shouldEqual "Stack overflow"
       }
     }
   }
