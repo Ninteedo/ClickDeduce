@@ -366,6 +366,10 @@ function displayError(error: any): void {
 export function initialise(): void {
     treeHistory = [];
     treeHistoryIndex = 0;
+    contextMenuSelectedElement = null;
+    activeInputs = [];
+    nextFocusElement = null;
+    copyCache = null;
 
     undoButton = <HTMLButtonElement>document.getElementById('undoButton');
     redoButton = <HTMLButtonElement>document.getElementById('redoButton');
