@@ -41,3 +41,5 @@ build/
 node_modules/
 webapp/dist
 package-lock.json
+
+coverage/
