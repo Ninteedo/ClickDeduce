@@ -356,6 +356,73 @@ describe("selecting an option from a non-root expr dropdown behaves correctly", 
     selectOptionResultsInCorrectRequest(3, "Times");
 });
 
+describe("entering text into a literal input behaves correctly", () => {
+    const dummyNodeString: string = 'VariableNode("Num", List(LiteralNode("")))';
+
+    beforeEach(async () => {
+        await handleSubmit(mockEvent, '/start-node-blank');
+
+        actionFetchResponse = {nodeString: dummyNodeString, html: numNodeArithHTML};
+
+        const exprDropdown = document.getElementsByClassName('expr-dropdown')[0] as HTMLSelectElement;
+        exprDropdown.selectedIndex = 1;
+
+        await handleDropdownChange(exprDropdown, 'expr');
+    });
+
+    test("input is available", async () => {
+        expect.assertions(1);
+
+        const input = document.querySelector('input[type="text"]');
+        expect(input).toBeInstanceOf(HTMLInputElement);
+    });
+
+    test("entering text makes the correct request to the server", async () => {
+        expect.assertions(1);
+
+        const input = document.querySelector('input[type="text"]') as HTMLInputElement;
+        input.value = "foo";
+        input.dispatchEvent(new Event('change'));
+
+        checkActionRequestExecuted("EditLiteralAction", langSelectorLanguages[0], "edit",
+            dummyNodeString, "0", ["foo"]);
+    });
+
+    test("entering text multiple times makes the correct requests to the server", async () => {
+        expect.assertions(3);
+
+        const foo = "foo";
+        const bar = "bar";
+
+        const newNodeString = `VariableNode(\"Num\", List(LiteralNode(\"${foo}\")))`;
+
+        actionFetchResponse = {
+            nodeString: newNodeString,
+            html: numNodeArithHTML.replace(`LiteralNode(&quot;&quot;)`, `LiteralNode(&quot;${foo}&quot;)`)
+                .replace(`<input type="text" style="width: 2ch;" data-tree-path="0" value=""></div>`, `<input type="text" style="width: 2ch;" data-tree-path="0" value="${foo}"></div>`)
+        };
+
+        let input = document.querySelector('input[type="text"]') as HTMLInputElement;
+        input.value = foo;
+        input.dispatchEvent(new Event('change'));
+
+        checkActionRequestExecuted("EditLiteralAction", langSelectorLanguages[0], "edit",
+            dummyNodeString, "0", [foo]);
+
+        await slightDelay();
+
+        input = document.querySelector('input[type="text"]') as HTMLInputElement;
+
+        expect(input.value).toEqual(foo);
+
+        input.value = bar;
+        input.dispatchEvent(new Event('change'));
+
+        checkActionRequestExecuted("EditLiteralAction", langSelectorLanguages[0], "edit",
+            newNodeString, "0", [bar]);
+    });
+});
+
 function removeWhitespace(str: string): string {
     return str.replace(/\s/g, '');
 }
