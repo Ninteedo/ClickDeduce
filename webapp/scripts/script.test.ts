@@ -597,6 +597,56 @@ describe("undo and redo buttons behave correctly", () => {
     });
 });
 
+describe("hovering over a node behaves correctly", () => {
+    const nodeString = `VariableNode("Plus", List(SubExprNode(VariableNode("Num", List(LiteralNode("")))), SubExprNode(ExprChoiceNode())))`;
+    const html = `<div class="subtree" data-tree-path="" data-term="Times(Num(),BlankExprDropDown())" data-node-string="VariableNode(&quot;Times&quot;, List(SubExprNode(VariableNode(&quot;Num&quot;, List(LiteralNode(&quot;&quot;)))), SubExprNode(ExprChoiceNode())))"><div class="node"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><div class="expr"><div>(<div style="display: inline;"><input type="text" readonly="true" disabled="true" style="width: 1ch;" value=""></div> × <select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="1" data-tree-path="1" readonly="readonly" disabled="disabled"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select>)</div></div><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">Num can only accept LiteralInt, not </div></span></div></div><div class="args"><div class="subtree axiom" data-tree-path="0" data-term="Num()" data-node-string="VariableNode(&quot;Num&quot;, List(LiteralNode(&quot;&quot;)))"><div class="expr"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><div style="display: inline;"><input type="text" style="width: 2ch;" data-tree-path="0-0" value=""></div><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">Num can only accept LiteralInt, not </div></span></div></div><div class="annotation-axiom">Num</div></div><div class="subtree axiom" data-tree-path="1" data-term="BlankExprDropDown()" data-node-string="ExprChoiceNode()"><div class="expr"><div class="scoped-variables" style="display: inline; padding-right: 0ch;"></div><select class="expr-dropdown" onchange="handleDropdownChange(this, &quot;expr&quot;)" name="2" data-tree-path="1" style="display: inline;"><option value="">Select Expr...</option><option value="Num">Num</option><option value="Plus">Plus</option><option value="Times">Times</option></select><span style="padding-left: 0.5ch; padding-right: 0.5ch;">:</span><div class="type-check-result" style="display: inline;"><span class="tooltip error-origin"><div style="display: inline;">?</div><div class="tooltiptext">BlankExprDropDown()</div></span></div></div><div class="annotation-axiom">ExprChoice</div></div><div class="annotation-new">Times</div></div></div>`
+
+    beforeEach(async () => {
+        await handleSubmit(mockEvent, '/start-node-blank');
+        actionFetchResponse = {nodeString, html};
+        await handleDropdownChange(document.getElementsByClassName('expr-dropdown')[0] as HTMLSelectElement, 'expr');
+    });
+
+    test("mousing over a node highlights it", async () => {
+        expect.assertions(1);
+        const node = document.querySelector('.subtree[data-tree-path="0"]') as HTMLElement;
+        node.dispatchEvent(new MouseEvent('mouseover', {
+            bubbles: true,
+            cancelable: true,
+        }));
+        expect(node.classList).toContain('highlight');
+    });
+
+    test("mousing out from a highlighted node unhighlights it", async () => {
+        expect.assertions(1);
+        const node = document.querySelector('.subtree[data-tree-path="0"]') as HTMLElement;
+        node.dispatchEvent(new MouseEvent('mouseover', {
+            bubbles: true,
+            cancelable: true,
+        }));
+        node.dispatchEvent(new MouseEvent('mouseout', {
+            bubbles: true,
+            cancelable: true,
+        }));
+        expect(node.classList).not.toContain('highlight');
+    });
+
+    test("mousing out from a highlighted node while it is focused by the context menu does not unhighlight it", async () => {
+        expect.assertions(1);
+        const node = document.querySelector('.subtree[data-tree-path="0"]') as HTMLElement;
+        node.dispatchEvent(new MouseEvent('mouseover', {
+            bubbles: true,
+            cancelable: true,
+        }));
+        contextMenuSelect(node);
+        node.dispatchEvent(new MouseEvent('mouseout', {
+            bubbles: true,
+            cancelable: true,
+        }));
+        expect(node.classList).toContain('highlight');
+    });
+});
+
 describe("context menu behaves correctly", () => {
     const nodeString2 = `VariableNode("Plus", List(SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode())))`;
     const html2 = plusNodeArithHTML;
