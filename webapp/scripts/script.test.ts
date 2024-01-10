@@ -822,3 +822,46 @@ describe("delete, copy, and paste buttons behave correctly", () => {
             nodeString3, "", ["VariableNode(\"Num\", List(LiteralNode(\"56\")))"]);
     });
 });
+
+describe("mode radio buttons behave correctly", () => {
+    beforeEach(async () => {
+        await handleSubmit(mockEvent, '/start-node-blank');
+    });
+
+    test("the initial mode is edit", async () => {
+        expect(document.getElementById('edit-mode-radio').getAttributeNames()).toContain('checked');
+    });
+
+    test("clicking the type-check mode button makes the correct request to the server", async () => {
+        document.getElementById('type-check-mode-radio').click();
+
+        checkActionRequestExecuted("IdentityAction", langSelectorLanguages[0], "type-check",
+            "ExprChoiceNode()", "", []);
+    });
+
+    test("clicking the eval mode button makes the correct request to the server", async () => {
+        document.getElementById('eval-mode-radio').click();
+
+        checkActionRequestExecuted("IdentityAction", langSelectorLanguages[0], "eval",
+            "ExprChoiceNode()", "", []);
+    });
+
+    test("clicking the edit mode button makes the correct request to the server", async () => {
+        document.getElementById('type-check-mode-radio').click();
+        document.getElementById('edit-mode-radio').click();
+
+        checkActionRequestExecuted("IdentityAction", langSelectorLanguages[0], "edit",
+            "ExprChoiceNode()", "", []);
+    });
+
+    test("after selecting a mode, future requests are made with that mode", async () => {
+        document.getElementById('type-check-mode-radio').click();
+
+        const dropdown = document.getElementsByClassName('expr-dropdown')[0] as HTMLSelectElement;
+        dropdown.selectedIndex = 1;
+        await handleDropdownChange(dropdown, 'expr');
+
+        checkActionRequestExecuted("SelectExprAction", langSelectorLanguages[0], "type-check",
+            "ExprChoiceNode()", "", ["Num"]);
+    });
+});
