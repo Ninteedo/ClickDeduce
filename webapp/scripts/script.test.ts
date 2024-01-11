@@ -923,7 +923,7 @@ describe("input focus is preserved when the tree is updated", () => {
             html: loadHtmlTemplate('times_left_filled_num_right_empty_alt')
         };
         input.value = "8";
-        input.blur();
+        input.dispatchEvent(new Event('blur'));
 
         await slightDelay();
         const newInput = document.querySelector('input[data-tree-path="0-0"]') as HTMLInputElement;

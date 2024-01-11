@@ -194,6 +194,7 @@ function updateActiveInputsList(): void {
         if (input.tagName === 'INPUT') {
             input.addEventListener('change', () => handleLiteralChanged(input));
             input.addEventListener('input', () => updateTextInputWidth(input));
+            input.addEventListener('blur', () => handleLiteralChanged(input));
         }
     })
 }
