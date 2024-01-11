@@ -83,11 +83,11 @@ export async function handleLiteralChanged(textInput: HTMLInputElement): Promise
     }
 
     await runAction("EditLiteralAction", treePath, [literalValue]).then(() => {
-        console.log(focusedTreePath);
+        console.log("Focus path: " + focusedTreePath);
         if (focusedTreePath == null) { return; }
         let focusedElement: HTMLElement = document.querySelector(`[data-tree-path="${focusedTreePath}"]`);
         if (focusedElement != null && focusedElement instanceof HTMLElement) {
-            console.log(focusedElement);
+            console.log("Focus: " + focusedElement.outerHTML);
             focusedElement.focus();
             if (focusedElement instanceof HTMLInputElement) {
                 focusedElement.select();
@@ -190,7 +190,7 @@ function updateActiveInputsList(): void {
         return aPath.localeCompare(bPath, undefined, {numeric: true, sensitivity: 'base'});
     })
     activeInputs.forEach(input => {
-        input.addEventListener('keydown', handleTabPressed);
+        input.addEventListener('keydown', handleKeyDown);
         if (input.tagName === 'INPUT') {
             input.addEventListener('change', () => handleLiteralChanged(input));
             input.addEventListener('input', () => updateTextInputWidth(input));
@@ -200,8 +200,18 @@ function updateActiveInputsList(): void {
 
 let nextFocusElement: HTMLElement = null;
 
+export async function handleKeyDown(e: KeyboardEvent): Promise<void> {
+    if (e.key === 'Tab' && e.target instanceof HTMLInputElement) {
+        await handleTabPressed(e);
+    } else if (e.key === 'Enter' && e.target instanceof HTMLInputElement) {
+        e.preventDefault();
+        nextFocusElement = e.target;
+        await handleLiteralChanged(e.target);
+    }
+}
+
 export async function handleTabPressed(e: KeyboardEvent): Promise<void> {
-    if (e.code === 'Tab' && e.target instanceof HTMLInputElement) {
+    if (e.key === 'Tab' && e.target instanceof HTMLInputElement) {
         e.preventDefault();
         let activeElemIndex = activeInputs.indexOf(e.target);
         if (e.shiftKey) {

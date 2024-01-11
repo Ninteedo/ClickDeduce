@@ -160,6 +160,25 @@ function removeWhitespace(str: string): string {
     return str.replace(/\s/g, '');
 }
 
+async function prepareExampleTimesTree(): Promise<void> {
+    const nodeString2 = NS.TIMES_EMPTY;
+    const html2 = plusNodeArithHTML;
+
+    const nodeString3 = NS.TIMES_LEFT_NUM_RIGHT_EMPTY;
+    const html3 = loadHtmlTemplate('times_left_num_right_empty');
+
+    const nodeString4 = NS.TIMES_LEFT_FILLED_NUM_RIGHT_EMPTY;
+    const html4 = loadHtmlTemplate('times_left_filled_num_right_empty');
+
+    await handleSubmit(mockEvent, '/start-node-blank');
+    actionFetchResponse = {nodeString: nodeString2, html: html2};
+    await handleDropdownChange(document.getElementsByClassName('expr-dropdown')[0] as HTMLSelectElement, 'expr');
+    actionFetchResponse = {nodeString: nodeString3, html: html3};
+    await handleDropdownChange(document.querySelectorAll('.expr-dropdown:not([readonly])')[0] as HTMLSelectElement, 'expr');
+    actionFetchResponse = {nodeString: nodeString4, html: html4};
+    await handleLiteralChanged(document.querySelector('input[type="text"]') as HTMLInputElement);
+}
+
 beforeEach(() => {
     requestsReceived = [];
     document.body.innerHTML = defaultHtml;
@@ -619,23 +638,8 @@ describe("hovering over a node behaves correctly", () => {
 });
 
 describe("context menu behaves correctly", () => {
-    const nodeString2 = NS.TIMES_EMPTY;
-    const html2 = plusNodeArithHTML;
-
-    const nodeString3 = NS.TIMES_LEFT_NUM_RIGHT_EMPTY;
-    const html3 = loadHtmlTemplate('times_left_num_right_empty');
-
-    const nodeString4 = NS.TIMES_LEFT_FILLED_NUM_RIGHT_EMPTY;
-    const html4 = loadHtmlTemplate('times_left_filled_num_right_empty');
-
     beforeEach(async () => {
-        await handleSubmit(mockEvent, '/start-node-blank');
-        actionFetchResponse = {nodeString: nodeString2, html: html2};
-        await handleDropdownChange(document.getElementsByClassName('expr-dropdown')[0] as HTMLSelectElement, 'expr');
-        actionFetchResponse = {nodeString: nodeString3, html: html3};
-        await handleDropdownChange(document.querySelectorAll('.expr-dropdown:not([readonly])')[0] as HTMLSelectElement, 'expr');
-        actionFetchResponse = {nodeString: nodeString4, html: html4};
-        await handleLiteralChanged(document.querySelector('input[type="text"]') as HTMLInputElement);
+        await prepareExampleTimesTree();
     });
 
     test("context menu is initially hidden", async () => {
@@ -687,23 +691,8 @@ describe("context menu behaves correctly", () => {
 });
 
 describe("delete, copy, and paste buttons behave correctly", () => {
-    const nodeString2 = NS.TIMES_EMPTY;
-    const html2 = plusNodeArithHTML;
-
-    const nodeString3 = NS.TIMES_LEFT_NUM_RIGHT_EMPTY;
-    const html3 = loadHtmlTemplate('times_left_num_right_empty');
-
-    const nodeString4 = NS.TIMES_LEFT_FILLED_NUM_RIGHT_EMPTY;
-    const html4 = loadHtmlTemplate('times_left_filled_num_right_empty');
-
     beforeEach(async () => {
-        await handleSubmit(mockEvent, '/start-node-blank');
-        actionFetchResponse = {nodeString: nodeString2, html: html2};
-        await handleDropdownChange(document.getElementsByClassName('expr-dropdown')[0] as HTMLSelectElement, 'expr');
-        actionFetchResponse = {nodeString: nodeString3, html: html3};
-        await handleDropdownChange(document.querySelectorAll('.expr-dropdown:not([readonly])')[0] as HTMLSelectElement, 'expr');
-        actionFetchResponse = {nodeString: nodeString4, html: html4};
-        await handleLiteralChanged(document.querySelector('input[type="text"]') as HTMLInputElement);
+        await prepareExampleTimesTree();
     });
 
     test("pressing delete makes the correct request to the server", async () => {
@@ -716,7 +705,7 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         deleteButton.click();
 
         checkActionRequestExecuted("DeleteAction", langSelectorLanguages[0], "edit",
-            nodeString4, "0", []);
+            NS.TIMES_LEFT_FILLED_NUM_RIGHT_EMPTY, "0", []);
     });
 
     test("pressing copy does not make a request to the server", async () => {
@@ -760,7 +749,7 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         pasteButton.click();
 
         checkActionRequestExecuted("PasteAction", langSelectorLanguages[0], "edit",
-            nodeString4, "0", ["VariableNode(\"Num\", List(LiteralNode(\"4\")))"]);
+            NS.TIMES_LEFT_FILLED_NUM_RIGHT_EMPTY, "0", ["VariableNode(\"Num\", List(LiteralNode(\"4\")))"]);
     });
 
     test("clicking paste on another element after copying one makes the correct request to the server", async () => {
@@ -777,7 +766,7 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         pasteButton.click();
 
         checkActionRequestExecuted("PasteAction", langSelectorLanguages[0], "edit",
-            nodeString4, "1", ["VariableNode(\"Num\", List(LiteralNode(\"4\")))"]);
+            NS.TIMES_LEFT_FILLED_NUM_RIGHT_EMPTY, "1", ["VariableNode(\"Num\", List(LiteralNode(\"4\")))"]);
     });
 
     test("clicking paste after changing tree state makes the correct request to the server", async () => {
@@ -790,7 +779,7 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         document.getElementById('paste-button').click();
 
         checkActionRequestExecuted("PasteAction", langSelectorLanguages[0], "edit",
-            nodeString3, "", ["VariableNode(\"Num\", List(LiteralNode(\"4\")))"]);
+            NS.TIMES_LEFT_NUM_RIGHT_EMPTY, "", ["VariableNode(\"Num\", List(LiteralNode(\"4\")))"]);
     });
 });
 
@@ -835,4 +824,116 @@ describe("mode radio buttons behave correctly", () => {
         checkActionRequestExecuted("SelectExprAction", langSelectorLanguages[0], "type-check",
             "ExprChoiceNode()", "", ["Num"]);
     });
+});
+
+describe("tab cycling between input elements behaves correctly", () => {
+    const nodeString = NS.TABBING_EXAMPLE;
+    const html = loadHtmlTemplate('tabbing_example');
+
+    beforeEach(async () => {
+        await handleSubmit(mockEvent, '/start-node-blank');
+        actionFetchResponse = {nodeString, html};
+        await handleDropdownChange(document.getElementsByClassName('expr-dropdown')[0] as HTMLSelectElement, 'expr');
+    });
+
+    function getTabbableElements(): HTMLElement[] {
+        const elements = Array.from(document.querySelectorAll('input[data-tree-path]:not([disabled]), select[data-tree-path]:not([disabled])')) as HTMLElement[];
+        elements.sort((a, b) => {
+            const aPath = a.getAttribute("data-tree-path");
+            const bPath = b.getAttribute("data-tree-path");
+            return aPath.localeCompare(bPath, undefined, {numeric: true, sensitivity: 'base'});
+        });
+        return elements;
+    }
+
+    test("test can find a list of tabbable elements", async () => {
+        const tabbableElements = getTabbableElements();
+        expect(tabbableElements).toHaveLength(5);
+
+        const paths = ["0-0-0", "0-1-0", "1-0-0-0", "1-0-1-0", "1-1-0"];
+
+        tabbableElements.forEach((element, index) => {
+            expect(element.getAttribute("data-tree-path")).toEqual(paths[index]);
+            expect(element).toBeInstanceOf(HTMLInputElement);
+            expect(element.attributes).not.toContain('disabled');
+        });
+    });
+
+    test("tabbing through the elements in order works", async () => {
+        const tabbableElements = getTabbableElements();
+
+        tabbableElements[0].focus();
+        expect(document.activeElement).toEqual(tabbableElements[0]);
+
+        tabbableElements.forEach((element, index) => {
+            element.dispatchEvent(new KeyboardEvent('keydown', {
+                key: 'Tab'
+            }));
+            expect(document.activeElement).toEqual(tabbableElements[(index + 1) % tabbableElements.length]);
+        });
+    });
+
+    test("tabbing through the elements in reverse order works", async () => {
+        const tabbableElements = getTabbableElements();
+
+        tabbableElements[0].focus();
+        expect(document.activeElement).toEqual(tabbableElements[0]);
+
+        tabbableElements.forEach((element, index) => {
+            element.dispatchEvent(new KeyboardEvent('keydown', {
+                key: 'Tab',
+                shiftKey: true
+            }));
+            expect(document.activeElement).toEqual(tabbableElements[(index - 1 + tabbableElements.length) % tabbableElements.length]);
+        });
+    });
+});
+
+describe("input focus is preserved when the tree is updated", () => {
+    beforeEach(async () => {
+        await prepareExampleTimesTree();
+    });
+
+    test("input focus is preserved when a literal is edited and ENTER is pressed", async () => {
+        const input = document.querySelector('input[data-tree-path="0-0"]') as HTMLInputElement;
+        input.focus();
+        input.dispatchEvent(new KeyboardEvent('keydown', {
+            key: '8'
+        }));
+        actionFetchResponse = {
+            nodeString: NS.TIMES_LEFT_NUM_RIGHT_EMPTY.replace(`LiteralNode("4")`, `LiteralNode("8")`),
+            html: loadHtmlTemplate('times_left_filled_num_right_empty_alt')
+        };
+        await slightDelay();
+        input.dispatchEvent(new KeyboardEvent('keydown', {
+            key: 'Enter'
+        }));
+        await slightDelay();
+        const newInput = document.querySelector('input[data-tree-path="0-0"]') as HTMLInputElement;
+        expect(newInput).not.toEqual(input);
+        expect(newInput.value).toEqual("8");
+        expect(document.activeElement).toEqual(newInput);
+    });
+
+    test("input focus is not preserved when a literal is edited and then something else is clicked", async () => {
+        const input = document.querySelector('input[data-tree-path="0-0"]') as HTMLInputElement;
+        input.focus();
+        actionFetchResponse = {
+            nodeString: NS.TIMES_LEFT_NUM_RIGHT_EMPTY.replace(`LiteralNode("4")`, `LiteralNode("8")`),
+            html: loadHtmlTemplate('times_left_filled_num_right_empty_alt')
+        };
+        input.value = "8";
+        input.blur();
+
+        await slightDelay();
+        const newInput = document.querySelector('input[data-tree-path="0-0"]') as HTMLInputElement;
+        expect(newInput.value).toEqual("8");
+        expect(document.activeElement).not.toEqual(newInput);
+        expect(document.activeElement).not.toEqual(input);
+        expect(document.activeElement).toEqual(document.body);
+    });
+});
+
+describe("responses to server errors are appropriate", () => {
+
 });
