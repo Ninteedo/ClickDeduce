@@ -386,6 +386,19 @@ describe("selecting an option from a non-root expr dropdown behaves correctly", 
 
 describe("entering text into a literal input behaves correctly", () => {
     const dummyNodeString: string = 'VariableNode("Num", List(LiteralNode("")))';
+    const foo = "foo";
+
+    const fooActionFetchResponse = {
+        nodeString: `VariableNode(\"Num\", List(LiteralNode(\"${foo}\")))`,
+        html: numNodeArithHTML.replace(
+            `LiteralNode(&quot;&quot;)`,
+            `LiteralNode(&quot;${foo}&quot;)`
+        )
+            .replace(
+                `<input type="text" style="width: 2ch;" data-tree-path="0" value=""></div>`,
+                `<input type="text" style="width: 2ch;" data-tree-path="0" value="${foo}"></div>`
+            )
+    };
 
     beforeEach(async () => {
         await handleSubmit(mockEvent, '/start-node-blank');
@@ -419,16 +432,9 @@ describe("entering text into a literal input behaves correctly", () => {
     test("entering text multiple times makes the correct requests to the server", async () => {
         expect.assertions(3);
 
-        const foo = "foo";
         const bar = "bar";
 
-        const newNodeString = `VariableNode(\"Num\", List(LiteralNode(\"${foo}\")))`;
-
-        actionFetchResponse = {
-            nodeString: newNodeString,
-            html: numNodeArithHTML.replace(`LiteralNode(&quot;&quot;)`, `LiteralNode(&quot;${foo}&quot;)`)
-                .replace(`<input type="text" style="width: 2ch;" data-tree-path="0" value=""></div>`, `<input type="text" style="width: 2ch;" data-tree-path="0" value="${foo}"></div>`)
-        };
+        actionFetchResponse = fooActionFetchResponse;
 
         let input = document.querySelector('input[type="text"]') as HTMLInputElement;
         input.value = foo;
@@ -447,7 +453,55 @@ describe("entering text into a literal input behaves correctly", () => {
         input.dispatchEvent(new Event('change'));
 
         checkActionRequestExecuted("EditLiteralAction", langSelectorLanguages[0], "edit",
-            newNodeString, "0", [bar]);
+            fooActionFetchResponse.nodeString, "0", [bar]);
+    });
+
+    test("if the input text is the same as it was before (blank), no server request is made", async () => {
+        expect.assertions(2);
+
+        const input = document.querySelector('input[type="text"]') as HTMLInputElement;
+        input.value = "";
+        input.dispatchEvent(new Event('change'));
+
+        const initialRequestsReceived = requestsReceived.length;
+
+        input.dispatchEvent(new Event('change'));
+
+        expect(requestsReceived).toHaveLength(initialRequestsReceived);
+
+        input.value = "foo";
+        input.dispatchEvent(new Event('input'));
+        input.value = "";
+
+        input.dispatchEvent(new Event('change'));
+
+        expect(requestsReceived).toHaveLength(initialRequestsReceived);
+    });
+
+    test("if the input text is the same as it was before (not blank), no server request is made", async () => {
+        expect.assertions(2);
+
+        actionFetchResponse = fooActionFetchResponse;
+
+        const input = document.querySelector('input[type="text"]') as HTMLInputElement;
+        input.value = foo;
+        input.dispatchEvent(new Event('change'));
+
+        await slightDelay();
+
+        const initialRequestsReceived = requestsReceived.length;
+
+        input.dispatchEvent(new Event('change'));
+
+        expect(requestsReceived).toHaveLength(initialRequestsReceived);
+
+        input.value = "bar";
+        input.dispatchEvent(new Event('input'));
+        input.value = foo;
+
+        input.dispatchEvent(new Event('change'));
+
+        expect(requestsReceived).toHaveLength(initialRequestsReceived);
     });
 });
 
@@ -837,7 +891,7 @@ describe("tab cycling between input elements behaves correctly", () => {
     });
 
     function getTabbableElements(): HTMLElement[] {
-        const elements = Array.from(document.querySelectorAll('input[data-tree-path]:not([disabled]), select[data-tree-path]:not([disabled])')) as HTMLElement[];
+        const elements = Array.from(document.querySelectorAll('input[data-tree-path]:not([disabled])')) as HTMLElement[];
         elements.sort((a, b) => {
             const aPath = a.getAttribute("data-tree-path");
             const bPath = b.getAttribute("data-tree-path");
@@ -889,6 +943,66 @@ describe("tab cycling between input elements behaves correctly", () => {
     });
 });
 
+describe("tab cycling between input and select elements behaves correctly", () => {
+    beforeEach(async () => {
+        await prepareExampleTimesTree();
+    });
+
+    function getTabbableElements(): HTMLElement[] {
+        const elements = Array.from(document.querySelectorAll('input[data-tree-path]:not([disabled]), select[data-tree-path]:not([disabled])')) as HTMLElement[];
+        elements.sort((a, b) => {
+            const aPath = a.getAttribute("data-tree-path");
+            const bPath = b.getAttribute("data-tree-path");
+            return aPath.localeCompare(bPath, undefined, {numeric: true, sensitivity: 'base'});
+        });
+        return elements;
+    }
+
+    test("test can find a list of tabbable elements", async () => {
+        const tabbableElements = getTabbableElements();
+        expect(tabbableElements).toHaveLength(2);
+
+        expect(tabbableElements[0]).toBeInstanceOf(HTMLInputElement);
+        expect(tabbableElements[1]).toBeInstanceOf(HTMLSelectElement);
+
+        const paths = ["0-0", "1"];
+
+        tabbableElements.forEach((element, index) => {
+            expect(element.getAttribute("data-tree-path")).toEqual(paths[index]);
+            expect(element.attributes).not.toContain('disabled');
+        });
+    });
+
+    test("tabbing through the elements in order works", async () => {
+        const tabbableElements = getTabbableElements();
+
+        tabbableElements[0].focus();
+        expect(document.activeElement).toEqual(tabbableElements[0]);
+
+        tabbableElements.forEach((element, index) => {
+            element.dispatchEvent(new KeyboardEvent('keydown', {
+                key: 'Tab'
+            }));
+            expect(document.activeElement).toEqual(tabbableElements[(index + 1) % tabbableElements.length]);
+        });
+    });
+
+    test("tabbing through the elements in reverse order works", async () => {
+        const tabbableElements = getTabbableElements();
+
+        tabbableElements[0].focus();
+        expect(document.activeElement).toEqual(tabbableElements[0]);
+
+        tabbableElements.forEach((element, index) => {
+            element.dispatchEvent(new KeyboardEvent('keydown', {
+                key: 'Tab',
+                shiftKey: true
+            }));
+            expect(document.activeElement).toEqual(tabbableElements[(index - 1 + tabbableElements.length) % tabbableElements.length]);
+        });
+    });
+});
+
 describe("input focus is preserved when the tree is updated", () => {
     beforeEach(async () => {
         await prepareExampleTimesTree();
@@ -897,22 +1011,20 @@ describe("input focus is preserved when the tree is updated", () => {
     test("input focus is preserved when a literal is edited and ENTER is pressed", async () => {
         const input = document.querySelector('input[data-tree-path="0-0"]') as HTMLInputElement;
         input.focus();
-        input.dispatchEvent(new KeyboardEvent('keydown', {
-            key: '8'
-        }));
+        input.value = "8";
         actionFetchResponse = {
             nodeString: NS.TIMES_LEFT_NUM_RIGHT_EMPTY.replace(`LiteralNode("4")`, `LiteralNode("8")`),
             html: loadHtmlTemplate('times_left_filled_num_right_empty_alt')
         };
-        await slightDelay();
+        expect(input.value).toEqual("8");
         input.dispatchEvent(new KeyboardEvent('keydown', {
             key: 'Enter'
         }));
         await slightDelay();
         const newInput = document.querySelector('input[data-tree-path="0-0"]') as HTMLInputElement;
-        expect(newInput).not.toEqual(input);
         expect(newInput.value).toEqual("8");
         expect(document.activeElement).toEqual(newInput);
+        expect(newInput).not.toEqual(input);
     });
 
     test("input focus is not preserved when a literal is edited and then something else is clicked", async () => {

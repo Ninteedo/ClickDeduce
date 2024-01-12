@@ -77,6 +77,10 @@ export async function handleLiteralChanged(textInput: HTMLInputElement): Promise
     const literalValue: string = textInput.value;
     const treePath: string = textInput.getAttribute("data-tree-path");
 
+    if (initialValues.find(([path, value]) => path === treePath && value === literalValue)) {
+        return;
+    }
+
     let focusedTreePath: string = null;
     if (nextFocusElement != null) {
         focusedTreePath = nextFocusElement.getAttribute("data-tree-path");
@@ -153,6 +157,7 @@ function treeCleanup(): void {
     addHoverListeners();
     makeOrphanedInputsReadOnly();
     makePhantomInputsReadOnly();
+    setLiteralInitialValues();
 }
 
 function useTreeFromHistory(newHistoryIndex: number): void {
@@ -180,7 +185,17 @@ export function redo(): void {
     }
 }
 
-let activeInputs: HTMLInputElement[] = [];
+let initialValues: [string, string][] = [];
+
+function setLiteralInitialValues() {
+    document.querySelectorAll('input[data-tree-path]').forEach(input => {
+        if (input instanceof HTMLInputElement) {
+            initialValues.push([input.getAttribute('data-tree-path'), input.value]);
+        }
+    });
+}
+
+let activeInputs: HTMLElement[] = [];
 
 function updateActiveInputsList(): void {
     activeInputs = Array.from(document.querySelectorAll('input[data-tree-path]:not([disabled]), select[data-tree-path]:not([disabled])'));
@@ -191,7 +206,7 @@ function updateActiveInputsList(): void {
     })
     activeInputs.forEach(input => {
         input.addEventListener('keydown', handleKeyDown);
-        if (input.tagName === 'INPUT') {
+        if (input instanceof HTMLInputElement) {
             input.addEventListener('change', () => handleLiteralChanged(input));
             input.addEventListener('input', () => updateTextInputWidth(input));
             input.addEventListener('blur', () => handleLiteralChanged(input));
@@ -202,7 +217,7 @@ function updateActiveInputsList(): void {
 let nextFocusElement: HTMLElement = null;
 
 export async function handleKeyDown(e: KeyboardEvent): Promise<void> {
-    if (e.key === 'Tab' && e.target instanceof HTMLInputElement) {
+    if (e.key === 'Tab' && (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement)) {
         await handleTabPressed(e);
     } else if (e.key === 'Enter' && e.target instanceof HTMLInputElement) {
         e.preventDefault();
@@ -212,7 +227,7 @@ export async function handleKeyDown(e: KeyboardEvent): Promise<void> {
 }
 
 export async function handleTabPressed(e: KeyboardEvent): Promise<void> {
-    if (e.key === 'Tab' && e.target instanceof HTMLInputElement) {
+    if (e.key === 'Tab' && (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement)) {
         e.preventDefault();
         let activeElemIndex = activeInputs.indexOf(e.target);
         if (e.shiftKey) {
@@ -381,6 +396,7 @@ export function initialise(): void {
     treeHistory = [];
     treeHistoryIndex = 0;
     contextMenuSelectedElement = null;
+    initialValues = [];
     activeInputs = [];
     nextFocusElement = null;
     copyCache = null;
