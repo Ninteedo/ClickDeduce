@@ -155,14 +155,14 @@ object WebServer extends JsonSupport {
 
   private val knownLanguages: List[ClickDeduceLanguage] = List(LArith, LIf, LLet, LLam, LRec)
 
-  def getLanguage(langName: String): ClickDeduceLanguage = knownLanguages.find(getLanguageName(_) == langName) match {
+  private def getLanguage(langName: String): ClickDeduceLanguage = knownLanguages.find(getLanguageName(_) == langName) match {
     case Some(lang) => lang
     case None => throw new IllegalArgumentException(s"Unknown language: $langName")
   }
 
-  def getLanguageName(lang: ClickDeduceLanguage): String = lang.getClass.getSimpleName.stripSuffix("$")
+  private def getLanguageName(lang: ClickDeduceLanguage): String = lang.getClass.getSimpleName.stripSuffix("$")
 
-  def bundleScripts(): Boolean = {
+  private def bundleScripts(): Boolean = {
     println("Bundling scripts...")
     val processBuilder = new ProcessBuilder("cmd.exe", "/c", "npm run build")
 
