@@ -62,9 +62,14 @@ object WebServer extends JsonSupport {
   private val imagesDirectory: String = s"$webappDirectory/images"
   private val indexPage: String = s"$distDirectory/index.html"
 
-  private val portNumber: Int = 27019
+  private var portNumber: Int = 27019
+  private var bindingAddress: String = "0.0.0.0"
+
+  private var skipBundleScripts: Boolean = false
 
   def main(args: Array[String]): Unit = {
+    parseArgs(args)
+
     implicit val system: ActorSystem = ActorSystem("my-system")
     implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
@@ -107,17 +112,20 @@ object WebServer extends JsonSupport {
       }
     }
 
-    if (!bundleScripts()) {
-      println("Failed to bundle scripts")
-      return
+    if (skipBundleScripts) {
+      println("Script bundling was skipped\n")
+    } else {
+      if (!bundleScripts()) {
+        println("Failed to bundle scripts")
+        return
+      }
+      println("\nSuccessfully bundled scripts\n\n")
     }
-
-    println("\nSuccessfully bundled scripts\n\n")
 
     val defaultSettings = ServerSettings(system)
     val customSettings = defaultSettings.withTransparentHeadRequests(true)
 
-    val bindingFuture = Http().newServerAt("0.0.0.0", portNumber).withSettings(customSettings).bind(route)
+    val bindingFuture = Http().newServerAt(bindingAddress, portNumber).withSettings(customSettings).bind(route)
 
     println(s"Server online at http://localhost:$portNumber/\nPress RETURN to stop...")
     StdIn.readLine()
@@ -125,6 +133,24 @@ object WebServer extends JsonSupport {
     bindingFuture
       .flatMap(_.unbind())
       .onComplete(_ => system.terminate())
+  }
+
+  private def parseArgs(args: Array[String]): Unit = {
+    val parser = new scopt.OptionParser[Unit]("WebServer") {
+      opt[Int]("port")
+        .action((x, _) => portNumber = x)
+        .text("Port number to bind")
+
+      opt[String]("address")
+        .action((x, _) => bindingAddress = x)
+        .text("Binding address")
+
+      opt[Unit]("skip-bundle-scripts")
+        .action((_, _) => skipBundleScripts = true)
+        .text("Skip bundling scripts")
+    }
+
+    parser.parse(args, ())
   }
 
   private val knownLanguages: List[ClickDeduceLanguage] = List(LArith, LIf, LLet, LLam, LRec)
