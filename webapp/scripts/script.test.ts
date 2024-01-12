@@ -514,8 +514,14 @@ describe("undo and redo buttons behave correctly", () => {
     const html1 = startNodeBlankArithHTML;
     const html2 = plusNodeArithHTML;
     const html3 = numNodeArithHTML;
-    const html4 = numNodeArithHTML.replace(`LiteralNode(&quot;&quot;)`, `LiteralNode(&quot;foo&quot;)`)
-        .replace(`<input type="text" style="width: 2ch;" data-tree-path="0" value=""></div>`, `<input type="text" style="width: 2ch;" data-tree-path="0" value="foo"></div>`);
+    const html4 = numNodeArithHTML.replace(
+        `LiteralNode(&quot;&quot;)`,
+        `LiteralNode(&quot;foo&quot;)`
+    )
+        .replace(
+            `<input type="text" style="width: 2ch;" data-tree-path="0" value=""></div>`,
+            `<input type="text" style="width: 2ch;" data-tree-path="0" value="foo"></div>`
+        );
 
     function getUndoButton(): HTMLButtonElement {
         return document.getElementById('undoButton') as HTMLButtonElement;
@@ -949,7 +955,9 @@ describe("tab cycling between input and select elements behaves correctly", () =
     });
 
     function getTabbableElements(): HTMLElement[] {
-        const elements = Array.from(document.querySelectorAll('input[data-tree-path]:not([disabled]), select[data-tree-path]:not([disabled])')) as HTMLElement[];
+        const elements = Array.from(
+            document.querySelectorAll('input[data-tree-path]:not([disabled]), select[data-tree-path]:not([disabled])')
+        ) as HTMLElement[];
         elements.sort((a, b) => {
             const aPath = a.getAttribute("data-tree-path");
             const bPath = b.getAttribute("data-tree-path");
@@ -1043,6 +1051,34 @@ describe("input focus is preserved when the tree is updated", () => {
         expect(document.activeElement).not.toEqual(newInput);
         expect(document.activeElement).not.toEqual(input);
         expect(document.activeElement).toEqual(document.body);
+    });
+});
+
+describe("input focus is preserved when tabbing as the tree is updated", () => {
+
+});
+
+describe("phantom inputs are made read-only and disabled", () => {
+    const html = loadHtmlTemplate('phantom_example');
+
+    const selector = `input[name="eg"], select[name="77"]`;
+
+    beforeEach(async () => {
+        await handleSubmit(mockEvent, '/start-node-blank');
+
+        actionFetchResponse = {nodeString: NS.PHANTOM_EXAMPLE, html};
+
+        document.getElementById("eval-mode-radio").click();
+        await slightDelay();
+    });
+
+    test("phantom inputs are made read-only and disabled", async () => {
+        const inputs = document.querySelectorAll(selector);
+        expect(inputs).toHaveLength(2);
+        inputs.forEach(input => {
+            expect(input.getAttributeNames()).toContain('readonly');
+            expect(input.getAttributeNames()).toContain('disabled');
+        });
     });
 });
 
