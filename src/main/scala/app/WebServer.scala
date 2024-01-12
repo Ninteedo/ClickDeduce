@@ -115,10 +115,7 @@ object WebServer extends JsonSupport {
     if (skipBundleScripts) {
       println("Script bundling was skipped\n")
     } else {
-      if (!bundleScripts()) {
-        println("Failed to bundle scripts")
-        return
-      }
+      bundleScripts()
       println("\nSuccessfully bundled scripts\n\n")
     }
 
@@ -162,7 +159,7 @@ object WebServer extends JsonSupport {
 
   private def getLanguageName(lang: ClickDeduceLanguage): String = lang.getClass.getSimpleName.stripSuffix("$")
 
-  private def bundleScripts(): Boolean = {
+  private def bundleScripts(): Unit = {
     println("Bundling scripts...")
     val processBuilder = new ProcessBuilder("cmd.exe", "/c", "npm run build")
 
@@ -181,6 +178,8 @@ object WebServer extends JsonSupport {
     }
 
     val exitCode = process.waitFor()
-    exitCode == 0
+    if (exitCode != 0) {
+      System.exit(exitCode)
+    }
   }
 }
