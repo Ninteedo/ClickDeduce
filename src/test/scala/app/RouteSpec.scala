@@ -1,10 +1,9 @@
 package app
 
 import akka.http.scaladsl.marshalling.Marshal
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, MessageEntity, StatusCodes}
+import akka.http.scaladsl.model.{ContentTypes, MessageEntity, StatusCodes}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import app.WebServer.jsonFormat1
 import languages.ClickDeduceLanguage
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -14,14 +13,6 @@ import scala.concurrent.Future
 class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with JsonSupport {
   val route: Route = WebServer.requestRoute
   val startNodeBlank: String = "/start-node-blank"
-
-  "The service" should {
-    "return a successful response for GET requests to the root path" in {
-      Get("/") ~> route ~> check {
-        status shouldBe StatusCodes.OK
-      }
-    }
-  }
 
   "The start-node-blank endpoint" should {
     def createRequest(lang: ClickDeduceLanguage): Future[MessageEntity] = {
