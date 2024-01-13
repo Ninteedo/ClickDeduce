@@ -3,20 +3,17 @@ package app
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
+import akka.http.scaladsl.model.{HttpEntity, HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import akka.http.scaladsl.settings.ServerSettings
 import languages.*
+import scalatags.Text.TypedTag
 import scalatags.Text.all.*
-import scalatags.Text.{TypedTag, attrs}
 import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
-import java.util.concurrent.atomic.AtomicInteger
 import scala.concurrent.ExecutionContextExecutor
 import scala.io.StdIn
-import scala.sys.process.Process
-import scala.util.{Failure, Success, Try}
 
 case class EvalRequest(langName: String)
 
