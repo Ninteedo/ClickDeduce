@@ -309,17 +309,19 @@ class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with J
   }
 
   "The GET requests should return appropriate files" should {
-    def checkIsIndexHtml(path: String): Unit = {
-      Get(path) ~> route ~> check {
+    def createDistFile(fileName: String, contents: String): Unit = {
+      Files.createDirectories(Paths.get("webapp/dist/"))
+      Files.write(Paths.get(s"webapp/dist/$fileName"), contents.getBytes(StandardCharsets.UTF_8))
+    }
+
+    "return the index.html file for the '/' path" in {
+      createDistFile("index.html", "<title>ClickDeduce</title>")
+      Get("/") ~> route ~> check {
         status shouldBe StatusCodes.OK
         contentType shouldBe ContentTypes.`text/html(UTF-8)`
 
         responseAs[String] should include("<title>ClickDeduce</title>")
       }
-    }
-
-    "return the index.html file for the '/' path" in {
-      checkIsIndexHtml("/")
     }
 
     "return the 'images/zoom_to_fit.svg' file" in {
@@ -331,7 +333,7 @@ class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with J
 
     "return the contents of 'dist/bundle.js'" in {
       val testBundleJs = "alert('test bundle.js');"
-      Files.write(Paths.get("webapp/dist/bundle.js"), testBundleJs.getBytes(StandardCharsets.UTF_8))
+      createDistFile("bundle.js", testBundleJs)
       Get("/dist/bundle.js") ~> route ~> check {
         status shouldBe StatusCodes.OK
         contentType.toString shouldBe "application/javascript; charset=UTF-8"
@@ -341,7 +343,7 @@ class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with J
 
     "return 'dist/bundle.js' when requesting 'bundle.js'" in {
       val testBundleJs = "alert('test bundle.js 2');"
-      Files.write(Paths.get("webapp/dist/bundle.js"), testBundleJs.getBytes(StandardCharsets.UTF_8))
+      createDistFile("bundle.js", testBundleJs)
       Get("/bundle.js") ~> route ~> check {
         status shouldBe StatusCodes.OK
         contentType.toString shouldBe "application/javascript; charset=UTF-8"
