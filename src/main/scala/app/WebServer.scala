@@ -122,7 +122,7 @@ class WebServer extends JsonSupport {
       System.exit(1)
     }
 
-    implicit val system: ActorSystem = ActorSystem("my-system")
+    implicit val system: ActorSystem = ActorSystem("ClickDeduceWebServer")
     implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
     if (skipBundleScripts) {

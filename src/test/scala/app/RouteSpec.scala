@@ -263,6 +263,18 @@ class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with J
       )
     }
 
+    "accept requests with 'edit', 'type-check', and 'eval' modes" in {
+      val modes = List("edit", "type-check", "eval")
+      for (mode <- modes) {
+        val request = createRequest(LArith, mode, "IdentityAction", "ExprChoiceNode()", List(), List())
+        checkOnRequest(
+          request, request => {
+            status shouldBe StatusCodes.OK
+          }
+        )
+      }
+    }
+
     def errorOnInvalidRequest(request: ActionRequest): Unit = {
       checkOnRequest(
         Marshal(request).to[MessageEntity], response => {
