@@ -131,4 +131,69 @@ class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with J
       }
     }
   }
+
+  "The get-lang-selector endpoint should handle GET requests" should {
+    val getLangSelector: String = "/get-lang-selector"
+
+    def checkOnRequest(test: LangSelectorResponse => Unit): Unit = {
+      Get(getLangSelector) ~> route ~> check {
+        test(responseAs[LangSelectorResponse])
+      }
+    }
+
+    "return a successful response" in {
+      checkOnRequest { response =>
+        status shouldBe StatusCodes.OK
+      }
+    }
+
+    "return a response with langSelectorHtml field" in {
+      checkOnRequest{ response =>
+        contentType shouldBe ContentTypes.`application/json`
+        responseAs[LangSelectorResponse].langSelectorHtml should not be empty
+      }
+    }
+
+    "return a response with a valid langSelectorHtml field" should {
+      def checkHtmlDoc(test: Document => Unit): Unit = {
+        checkOnRequest { response =>
+          val browser = JsoupBrowser()
+          val doc: Document = browser.parseString(responseAs[LangSelectorResponse].langSelectorHtml)
+
+          test(doc)
+        }
+      }
+
+      "has no divs" in {
+        checkHtmlDoc { doc =>
+          doc >> elementList("div") shouldBe empty
+        }
+      }
+
+      "has a single select element" in {
+        checkHtmlDoc { doc =>
+          (doc >> elementList("select")).size shouldBe 1
+        }
+      }
+
+      "the select element has an option for each language" in {
+        checkHtmlDoc { doc =>
+          val select = (doc >> elementList("select")).head
+          val options = select >> elementList("option")
+          options.size shouldBe WebServer.knownLanguages.size
+        }
+      }
+
+      "each option in the select has value and text matching the languages in order" in {
+        checkHtmlDoc { doc =>
+          val select = (doc >> elementList("select")).head
+          val options = select >> elementList("option")
+          options.zipWithIndex.foreach { case (option, index) =>
+            option.attr("value") shouldBe WebServer.getLanguageName(WebServer.knownLanguages(index))
+            option.text shouldBe WebServer.getLanguageName(WebServer.knownLanguages(index))
+          }
+        }
+      }
+    }
+  }
 }
