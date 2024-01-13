@@ -148,7 +148,7 @@ class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with J
     }
 
     "return a response with langSelectorHtml field" in {
-      checkOnRequest{ response =>
+      checkOnRequest { response =>
         contentType shouldBe ContentTypes.`application/json`
         responseAs[LangSelectorResponse].langSelectorHtml should not be empty
       }
@@ -194,6 +194,68 @@ class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with J
           }
         }
       }
+    }
+  }
+
+  "The process-action endpoint should handle POST requests" should {
+    val processAction: String = "/process-action"
+
+    def createRequest(
+      lang: ClickDeduceLanguage, modeName: String, actionKind: String, nodeString: String,
+      treePath: List[Int], extraArgs: List[String]
+    ): Future[MessageEntity] = {
+      val treePathString = treePath.mkString("-")
+      val request = ActionRequest(
+        WebServer.getLanguageName(lang), modeName, actionKind, nodeString,
+        treePathString, extraArgs
+      )
+      Marshal(request).to[MessageEntity]
+    }
+
+    def checkOnRequest(request: Future[MessageEntity], test: Future[MessageEntity] => Unit): Unit = {
+      Post(processAction, request) ~> route ~> check {
+        test(request)
+      }
+    }
+
+    val simpleIdentityRequest = createRequest(LArith, "edit", "IdentityAction", "ExprChoiceNode()", List(), List())
+
+    "return a successful response" in {
+      checkOnRequest(
+        simpleIdentityRequest, request => {
+          status shouldBe StatusCodes.OK
+        }
+      )
+    }
+
+    "return a response with nodeString and html fields" in {
+      checkOnRequest(
+        simpleIdentityRequest, request => {
+          contentType shouldBe ContentTypes.`application/json`
+          responseAs[NodeResponse].nodeString should not be empty
+          responseAs[NodeResponse].html should not be empty
+        }
+      )
+    }
+
+    "return a response with correct nodeString" in {
+      checkOnRequest(
+        simpleIdentityRequest, request => {
+          responseAs[NodeResponse].nodeString shouldBe LArith.ExprChoiceNode().toString
+        }
+      )
+    }
+
+    "return consistent responses" in {
+      checkOnRequest(
+        simpleIdentityRequest, request1 => {
+          val firstResponse = responseAs[NodeResponse]
+          checkOnRequest(simpleIdentityRequest, request2 => {
+            val secondResponse = responseAs[NodeResponse]
+            firstResponse shouldBe secondResponse
+          })
+        }
+      )
     }
   }
 }
