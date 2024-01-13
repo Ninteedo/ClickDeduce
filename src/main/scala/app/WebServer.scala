@@ -60,14 +60,11 @@ val customExceptionHandler: ExceptionHandler = ExceptionHandler {
   }
 }
 
-
-object WebServer extends JsonSupport {
+class WebServer extends JsonSupport {
   private val webappDirectory: String = "webapp"
   private val distDirectory: String = s"$webappDirectory/dist"
   private val imagesDirectory: String = s"$webappDirectory/images"
   private val indexPage: String = s"$distDirectory/index.html"
-
-  private var skipBundleScripts: Boolean = false
 
   private var _isOnline: Boolean = false
 
@@ -81,8 +78,8 @@ object WebServer extends JsonSupport {
 
   def portNumber_=(value: Int): Unit = {
     if (isOnline) throw new IllegalStateException("Cannot change port number while server is online")
-    if (value < 0 || value > 65535) {
-      throw new IllegalArgumentException("Port number must be between 0 and 65535")
+    if (value <= 0 || value > 65535) {
+      throw new IllegalArgumentException("Port number must be between 1 and 65535")
     }
     _portNumber = value
   }
@@ -92,12 +89,38 @@ object WebServer extends JsonSupport {
   def bindingAddress: String = _bindingAddress
 
   def bindingAddress_=(value: String): Unit = {
+    def invalidOctet(octet: Int): Boolean = {
+      octet < 0 || octet > 255 || octet.toString.toInt != octet
+    }
+
     if (isOnline) throw new IllegalStateException("Cannot change binding address while server is online")
-    _bindingAddress = value
+    val ipAddressPattern = """^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$""".r
+    ipAddressPattern.findFirstMatchIn(value) match {
+      case Some(matchResult) =>
+        val octets = matchResult.subgroups.map(_.toInt)
+        if (octets.exists(invalidOctet)) {
+          throw new IllegalArgumentException("Invalid IP address")
+        }
+        _bindingAddress = s"${octets.mkString(".")}"
+      case None => throw new IllegalArgumentException("Invalid IP address")
+    }
   }
 
-  def main(args: Array[String]): Unit = {
-    parseArgs(args)
+  private var _skipBundleScripts: Boolean = false
+
+  def skipBundleScripts: Boolean = _skipBundleScripts
+
+  def skipBundleScripts_=(value: Boolean): Unit = {
+    if (isOnline) throw new IllegalStateException("Cannot change skipBundleScripts while server is online")
+    _skipBundleScripts = value
+  }
+
+  def runServer(args: Array[String]): Unit = {
+    val parseSuccess: Boolean = parseArgs(args)
+    if (!parseSuccess) {
+      println("Failed to parse arguments")
+      System.exit(1)
+    }
 
     implicit val system: ActorSystem = ActorSystem("my-system")
     implicit val executionContext: ExecutionContextExecutor = system.dispatcher
@@ -124,7 +147,7 @@ object WebServer extends JsonSupport {
     isOnline = false
   }
 
-  private def parseArgs(args: Array[String]): Unit = {
+  def parseArgs(args: Array[String]): Boolean = {
     val parser = new scopt.OptionParser[Unit]("WebServer") {
       opt[Int]("port")
         .action((x, _) => portNumber = x)
@@ -139,7 +162,7 @@ object WebServer extends JsonSupport {
         .text("Skip bundling scripts")
     }
 
-    parser.parse(args, ())
+    parser.parse(args, ()).isDefined
   }
 
   val knownLanguages: List[ClickDeduceLanguage] = List(LArith(), LIf(), LLet(), LLam(), LRec())
@@ -221,5 +244,12 @@ object WebServer extends JsonSupport {
           pathPrefix("pages") {complete(resourceNotFoundResponse)} ~
           getFromDirectory(distDirectory)
       }
+  }
+}
+
+object WebServer {
+  def main(args: Array[String]): Unit = {
+    val server = new WebServer()
+    server.runServer(args)
   }
 }
