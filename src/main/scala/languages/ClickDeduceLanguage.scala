@@ -1,8 +1,8 @@
 package languages
 
 import app.{FontWidthCalculator, UtilityFunctions}
+import scalatags.Text.TypedTag
 import scalatags.Text.all.{div, raw, s, *}
-import scalatags.Text.{TypedTag, attrs}
 
 import java.awt.Font
 import java.util.concurrent.atomic.AtomicInteger
@@ -16,7 +16,12 @@ import scala.util.parsing.combinator.*
 trait ClickDeduceLanguage extends AbstractLanguage {
   lang =>
 
-  val blankIdCount: AtomicInteger = new AtomicInteger(0)
+  def createNewInstance(): ClickDeduceLanguage = {
+    val constructor = lang.getClass.getConstructors()(0)
+    constructor.newInstance().asInstanceOf[ClickDeduceLanguage]
+  }
+
+  private val blankIdCount: AtomicInteger = new AtomicInteger(0)
 
   trait BlankSpace extends Term {
     lazy val id: Int = blankIdCount.incrementAndGet()

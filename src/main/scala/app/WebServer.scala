@@ -108,10 +108,10 @@ object WebServer extends JsonSupport {
     parser.parse(args, ())
   }
 
-  val knownLanguages: List[ClickDeduceLanguage] = List(LArith, LIf, LLet, LLam, LRec)
+  val knownLanguages: List[ClickDeduceLanguage] = List(LArith(), LIf(), LLet(), LLam(), LRec())
 
   private def getLanguage(langName: String): ClickDeduceLanguage = knownLanguages.find(getLanguageName(_) == langName) match {
-    case Some(lang) => lang
+    case Some(lang) => lang.createNewInstance()
     case None => throw new IllegalArgumentException(s"Unknown language: $langName")
   }
 
@@ -151,18 +151,18 @@ object WebServer extends JsonSupport {
           complete(response)
         }
       } ~
-        path("process-action") {
-          entity(as[ActionRequest]) { request =>
-            val lang = getLanguage(request.langName)
-            val action = lang.createAction(
-              request.actionName, request.nodeString, request.treePath, request.extraArgs, request.modeName
-            )
-            val updatedTree = action.newTree
-            val displayMode: lang.DisplayMode = lang.DisplayMode.fromString(request.modeName)
-            val response = NodeResponse(updatedTree.toString, updatedTree.toHtml(displayMode).toString)
-            complete(response)
-          }
+      path("process-action") {
+        entity(as[ActionRequest]) { request =>
+          val lang = getLanguage(request.langName)
+          val action = lang.createAction(
+            request.actionName, request.nodeString, request.treePath, request.extraArgs, request.modeName
+          )
+          val updatedTree = action.newTree
+          val displayMode: lang.DisplayMode = lang.DisplayMode.fromString(request.modeName)
+          val response = NodeResponse(updatedTree.toString, updatedTree.toHtml(displayMode).toString)
+          complete(response)
         }
+      }
     } ~
     get {
       path("get-lang-selector") {
