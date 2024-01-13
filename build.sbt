@@ -20,6 +20,8 @@ libraryDependencies += "com.typesafe.akka" %% "akka-http-spray-json" % AkkaHttpV
 libraryDependencies += "com.typesafe.akka" %% "akka-http-testkit" % AkkaHttpVersion
 libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % "2.8.0" % Test
 
+libraryDependencies += "net.ruippeixotog" %% "scala-scraper" % "3.1.1"
+
 lazy val root = (project in file("."))
   .settings(
     name := "ClickDeduce"
