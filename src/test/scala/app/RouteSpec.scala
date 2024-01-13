@@ -12,6 +12,8 @@ import net.ruippeixotog.scalascraper.model.*
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
+import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Paths}
 import scala.concurrent.Future
 
 class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with JsonSupport {
@@ -302,6 +304,66 @@ class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with J
       for (nodeString <- invalidNodeStrings) {
         val request = ActionRequest(WebServer.getLanguageName(LArith), "edit", "IdentityAction", nodeString, "", List())
         errorOnInvalidRequest(request)
+      }
+    }
+  }
+
+  "The GET requests should return appropriate files" should {
+    def checkIsIndexHtml(path: String): Unit = {
+      Get(path) ~> route ~> check {
+        status shouldBe StatusCodes.OK
+        contentType shouldBe ContentTypes.`text/html(UTF-8)`
+
+        responseAs[String] should include("<title>ClickDeduce</title>")
+      }
+    }
+
+    "return the index.html file for the '/' path" in {
+      checkIsIndexHtml("/")
+    }
+
+    "return the 'images/zoom_to_fit.svg' file" in {
+      Get("/images/zoom_to_fit.svg") ~> route ~> check {
+        status shouldBe StatusCodes.OK
+        contentType.toString shouldBe "image/svg+xml"
+      }
+    }
+
+    "return the contents of 'dist/bundle.js'" in {
+      val testBundleJs = "alert('test bundle.js');"
+      Files.write(Paths.get("webapp/dist/bundle.js"), testBundleJs.getBytes(StandardCharsets.UTF_8))
+      Get("/dist/bundle.js") ~> route ~> check {
+        status shouldBe StatusCodes.OK
+        contentType.toString shouldBe "application/javascript; charset=UTF-8"
+        responseAs[String] shouldBe testBundleJs
+      }
+    }
+
+    "return 'dist/bundle.js' when requesting 'bundle.js'" in {
+      val testBundleJs = "alert('test bundle.js 2');"
+      Files.write(Paths.get("webapp/dist/bundle.js"), testBundleJs.getBytes(StandardCharsets.UTF_8))
+      Get("/bundle.js") ~> route ~> check {
+        status shouldBe StatusCodes.OK
+        contentType.toString shouldBe "application/javascript; charset=UTF-8"
+        responseAs[String] shouldBe testBundleJs
+      }
+    }
+
+    "does not return contents from '/scripts/'" in {
+      Get("/scripts/script.js") ~> route ~> check {
+        status shouldBe StatusCodes.NotFound
+      }
+    }
+
+    "does not return contents from '/styles/'" in {
+      Get("/styles/stylesheet.css") ~> route ~> check {
+        status shouldBe StatusCodes.NotFound
+      }
+    }
+
+    "does not return contents from '/pages/'" in {
+      Get("/pages/index.html") ~> route ~> check {
+        status shouldBe StatusCodes.NotFound
       }
     }
   }

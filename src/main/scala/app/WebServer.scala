@@ -176,6 +176,11 @@ object WebServer extends JsonSupport {
     }
   }
 
+  private def resourceNotFoundResponse: HttpResponse = HttpResponse(
+    StatusCodes.NotFound,
+    entity = HttpEntity("The requested resource could not be found.")
+  )
+
   val requestRoute: Route = handleExceptions(customExceptionHandler) {
     post {
       path("start-node-blank") {
@@ -211,6 +216,9 @@ object WebServer extends JsonSupport {
           pathEndOrSingleSlash {getFromFile(indexPage)} ~
           pathPrefix("dist") {getFromDirectory(distDirectory)} ~
           pathPrefix("images") {getFromDirectory(imagesDirectory)} ~
+          pathPrefix("scripts") {complete(resourceNotFoundResponse)} ~
+          pathPrefix("styles") {complete(resourceNotFoundResponse)} ~
+          pathPrefix("pages") {complete(resourceNotFoundResponse)} ~
           getFromDirectory(distDirectory)
       }
   }
