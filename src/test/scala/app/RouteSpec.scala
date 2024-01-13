@@ -250,12 +250,59 @@ class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with J
       checkOnRequest(
         simpleIdentityRequest, request1 => {
           val firstResponse = responseAs[NodeResponse]
-          checkOnRequest(simpleIdentityRequest, request2 => {
-            val secondResponse = responseAs[NodeResponse]
-            firstResponse shouldBe secondResponse
-          })
+          checkOnRequest(
+            simpleIdentityRequest, request2 => {
+              val secondResponse = responseAs[NodeResponse]
+              firstResponse shouldBe secondResponse
+            }
+          )
         }
       )
+    }
+
+    def errorOnInvalidRequest(request: ActionRequest): Unit = {
+      checkOnRequest(
+        Marshal(request).to[MessageEntity], response => {
+          status shouldBe StatusCodes.BadRequest
+        }
+      )
+    }
+
+    "return an error response for an invalid language" in {
+      val request = ActionRequest(
+        "NonsenseLanguageName", "edit", "IdentityAction", "ExprChoiceNode()", "", List()
+      )
+      errorOnInvalidRequest(request)
+    }
+
+    "return an error response for an invalid display mode" in {
+      val request = ActionRequest(
+        WebServer.getLanguageName(LArith), "nonsense", "IdentityAction", "ExprChoiceNode()", "", List()
+      )
+      errorOnInvalidRequest(request)
+    }
+
+    "return an error response for an invalid action kind" in {
+      val request = ActionRequest(
+        WebServer.getLanguageName(LArith), "edit", "NonsenseAction", "ExprChoiceNode()", "", List()
+      )
+      errorOnInvalidRequest(request)
+    }
+
+    "return an error response for an invalid node string" in {
+      val invalidNodeStrings = List(
+        "NonsenseNode()",
+        "ExprChoiceNode",
+        "ExprChoiceNode(ExprChoiceNode())",
+        "ExprChoiceNode(1, 2, 3)",
+        """VariableNode("Num")""",
+        """VariableNode("Num", "Num")""",
+        """VariableNode("Num", List(SubExprNode(ExprChoiceNode())))"""
+      )
+      for (nodeString <- invalidNodeStrings) {
+        val request = ActionRequest(WebServer.getLanguageName(LArith), "edit", "IdentityAction", nodeString, "", List())
+        errorOnInvalidRequest(request)
+      }
     }
   }
 }

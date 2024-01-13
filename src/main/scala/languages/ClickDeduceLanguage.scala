@@ -1089,6 +1089,7 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     case "PasteAction" => classOf[PasteAction]
     case "IdentityAction" => classOf[IdentityAction]
     case "SelectTypeAction" => classOf[SelectTypeAction]
+    case _ => throw new IllegalArgumentException(s"Unknown action name: $actionName")
   }).asInstanceOf[Class[Action]]
 
   def createAction(
@@ -1098,7 +1099,10 @@ trait ClickDeduceLanguage extends AbstractLanguage {
     extraArgs: List[String],
     modeName: String = "edit",
   ): Action = {
-    val node = Node.read(nodeString).get
+    val node = Node.read(nodeString) match {
+      case Some(n: OuterNode) => n
+      case _ => throw new IllegalArgumentException(s"Could not parse node string: $nodeString")
+    }
     val treePath = Node.readPathString(treePathString)
     val actionClass = getActionClass(actionName)
     val constructor = actionClass.getConstructors()(0)

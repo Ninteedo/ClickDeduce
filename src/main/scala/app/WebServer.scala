@@ -37,15 +37,23 @@ trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val nodeResponseFormat: RootJsonFormat[NodeResponse] = jsonFormat2(NodeResponse.apply)
   implicit val actionRequestFormat: RootJsonFormat[ActionRequest] = jsonFormat6(ActionRequest.apply)
   implicit val langSelectorRequestFormat: RootJsonFormat[LangSelectorRequest] = jsonFormat0(LangSelectorRequest.apply)
-  implicit val langSelectorResponseFormat: RootJsonFormat[LangSelectorResponse] = jsonFormat1(LangSelectorResponse.apply)
+  implicit val langSelectorResponseFormat: RootJsonFormat[LangSelectorResponse] = jsonFormat1(
+    LangSelectorResponse.apply
+  )
 }
 
 val customExceptionHandler: ExceptionHandler = ExceptionHandler {
   case exception: Exception => extractUri { uri =>
     exception.printStackTrace()
+
+    val statusCode = exception match {
+      case _: IllegalArgumentException => StatusCodes.BadRequest
+      case _ => StatusCodes.InternalServerError
+    }
+
     complete(
       HttpResponse(
-        StatusCodes.InternalServerError,
+        statusCode,
         entity = exception.toString
       )
     )
@@ -59,10 +67,34 @@ object WebServer extends JsonSupport {
   private val imagesDirectory: String = s"$webappDirectory/images"
   private val indexPage: String = s"$distDirectory/index.html"
 
-  private var portNumber: Int = 27019
-  private var bindingAddress: String = "0.0.0.0"
-
   private var skipBundleScripts: Boolean = false
+
+  private var _isOnline: Boolean = false
+
+  def isOnline: Boolean = _isOnline
+
+  private def isOnline_=(value: Boolean): Unit = _isOnline = value
+
+  private var _portNumber: Int = 27019
+
+  def portNumber: Int = _portNumber
+
+  def portNumber_=(value: Int): Unit = {
+    if (isOnline) throw new IllegalStateException("Cannot change port number while server is online")
+    if (value < 0 || value > 65535) {
+      throw new IllegalArgumentException("Port number must be between 0 and 65535")
+    }
+    _portNumber = value
+  }
+
+  private var _bindingAddress: String = "0.0.0.0"
+
+  def bindingAddress: String = _bindingAddress
+
+  def bindingAddress_=(value: String): Unit = {
+    if (isOnline) throw new IllegalStateException("Cannot change binding address while server is online")
+    _bindingAddress = value
+  }
 
   def main(args: Array[String]): Unit = {
     parseArgs(args)
@@ -80,6 +112,7 @@ object WebServer extends JsonSupport {
     val defaultSettings = ServerSettings(system)
     val customSettings = defaultSettings.withTransparentHeadRequests(true)
 
+    isOnline = true
     val bindingFuture = Http().newServerAt(bindingAddress, portNumber).withSettings(customSettings).bind(requestRoute)
 
     println(s"Server online at http://localhost:$portNumber/\nPress RETURN to stop...")
@@ -88,6 +121,7 @@ object WebServer extends JsonSupport {
     bindingFuture
       .flatMap(_.unbind())
       .onComplete(_ => system.terminate())
+    isOnline = false
   }
 
   private def parseArgs(args: Array[String]): Unit = {
@@ -110,7 +144,8 @@ object WebServer extends JsonSupport {
 
   val knownLanguages: List[ClickDeduceLanguage] = List(LArith(), LIf(), LLet(), LLam(), LRec())
 
-  private def getLanguage(langName: String): ClickDeduceLanguage = knownLanguages.find(getLanguageName(_) == langName) match {
+  private def getLanguage(langName: String): ClickDeduceLanguage = knownLanguages
+    .find(getLanguageName(_) == langName) match {
     case Some(lang) => lang.createNewInstance()
     case None => throw new IllegalArgumentException(s"Unknown language: $langName")
   }
@@ -131,7 +166,7 @@ object WebServer extends JsonSupport {
     val reader = new java.io.BufferedReader(new java.io.InputStreamReader(inputStream))
 
     var line: String = ""
-    while ({line = reader.readLine(); line != null}) {
+    while ( {line = reader.readLine(); line != null}) {
       println(line)
     }
 
@@ -151,32 +186,32 @@ object WebServer extends JsonSupport {
           complete(response)
         }
       } ~
-      path("process-action") {
-        entity(as[ActionRequest]) { request =>
-          val lang = getLanguage(request.langName)
-          val action = lang.createAction(
-            request.actionName, request.nodeString, request.treePath, request.extraArgs, request.modeName
-          )
-          val updatedTree = action.newTree
-          val displayMode: lang.DisplayMode = lang.DisplayMode.fromString(request.modeName)
-          val response = NodeResponse(updatedTree.toString, updatedTree.toHtml(displayMode).toString)
-          complete(response)
+        path("process-action") {
+          entity(as[ActionRequest]) { request =>
+            val lang = getLanguage(request.langName)
+            val action = lang.createAction(
+              request.actionName, request.nodeString, request.treePath, request.extraArgs, request.modeName
+            )
+            val updatedTree = action.newTree
+            val displayMode: lang.DisplayMode = lang.DisplayMode.fromString(request.modeName)
+            val response = NodeResponse(updatedTree.toString, updatedTree.toHtml(displayMode).toString)
+            complete(response)
+          }
         }
-      }
     } ~
-    get {
-      path("get-lang-selector") {
-        val langSelector: TypedTag[String] = select(
-          id := "lang-selector", name := "lang-name",
-          knownLanguages.map(lang => option(value := getLanguageName(lang), getLanguageName(lang)))
-        )
-        val response = LangSelectorResponse(langSelector.toString)
-        complete(response)
-      } ~
-      pathEndOrSingleSlash {getFromFile(indexPage)} ~
-      pathPrefix("dist") {getFromDirectory(distDirectory)} ~
-      pathPrefix("images") {getFromDirectory(imagesDirectory)} ~
-      getFromDirectory(distDirectory)
-    }
+      get {
+        path("get-lang-selector") {
+          val langSelector: TypedTag[String] = select(
+            id := "lang-selector", name := "lang-name",
+            knownLanguages.map(lang => option(value := getLanguageName(lang), getLanguageName(lang)))
+          )
+          val response = LangSelectorResponse(langSelector.toString)
+          complete(response)
+        } ~
+          pathEndOrSingleSlash {getFromFile(indexPage)} ~
+          pathPrefix("dist") {getFromDirectory(distDirectory)} ~
+          pathPrefix("images") {getFromDirectory(imagesDirectory)} ~
+          getFromDirectory(distDirectory)
+      }
   }
 }

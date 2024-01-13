@@ -293,6 +293,7 @@ trait AbstractLanguage {
       case "edit" => Edit
       case "eval" => Evaluation
       case "type-check" => TypeCheck
+      case _ => throw new IllegalArgumentException(s"Unknown display mode: $s")
     }
   }
 }
