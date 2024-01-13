@@ -11,7 +11,6 @@
       <list>
         <option value="app.RouteSpec" />
         <option value="app.ArgsHandlingSpec" />
-        <option value="app.ExpressionTreeTest" />
         <option value="languages.LIfTest" />
         <option value="languages.LLamTest" />
         <option value="languages.LLetTest" />
