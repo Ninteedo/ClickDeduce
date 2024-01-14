@@ -3,11 +3,11 @@ package languages
 trait AbstractActionLanguage extends AbstractNodeLanguage {
   private def getActionClass(actionName: String): Class[Action] = (actionName match {
     case "SelectExprAction"  => classOf[SelectExprAction]
+    case "SelectTypeAction"  => classOf[SelectTypeAction]
     case "EditLiteralAction" => classOf[EditLiteralAction]
     case "DeleteAction"      => classOf[DeleteAction]
     case "PasteAction"       => classOf[PasteAction]
     case "IdentityAction"    => classOf[IdentityAction]
-    case "SelectTypeAction"  => classOf[SelectTypeAction]
     case _                   => throw new IllegalArgumentException(s"Unknown action name: $actionName")
   }).asInstanceOf[Class[Action]]
 
@@ -57,14 +57,6 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
     }
   }
 
-  case class EditLiteralAction(
-    override val originalTree: OuterNode,
-    override val treePath: List[Int],
-    newLiteralText: String
-  ) extends Action(originalTree, treePath) {
-    override lazy val newTree: OuterNode = originalTree.replace(treePath, LiteralNode(newLiteralText))
-  }
-
   case class SelectTypeAction(
     override val originalTree: OuterNode,
     override val treePath: List[Int],
@@ -74,6 +66,17 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
       case Some(typeChoiceNode: TypeChoiceNode) =>
         originalTree.replace(treePath, TypeNode.fromTypeName(typeChoiceName))
       case other => throw new InvalidSelectTargetException(other)
+    }
+  }
+
+  case class EditLiteralAction(
+    override val originalTree: OuterNode,
+    override val treePath: List[Int],
+    newLiteralText: String
+  ) extends Action(originalTree, treePath) {
+    override lazy val newTree: OuterNode = originalTree.findChild(treePath) match {
+      case Some(literalNode: LiteralNode) => originalTree.replace(treePath, LiteralNode(newLiteralText))
+      case other => throw new InvalidEditTargetException(other)
     }
   }
 
@@ -98,4 +101,6 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
   }
 
   class InvalidSelectTargetException(found: Option[Node]) extends Exception(s"Invalid select target: $found")
+
+  class InvalidEditTargetException(found: Option[Node]) extends Exception(s"Invalid literal edit target: $found")
 }

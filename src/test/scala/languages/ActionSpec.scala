@@ -209,4 +209,58 @@ class ActionSpec extends AnyWordSpec with Matchers {
       }
     }
   }
+
+  "EditLiteralAction" should {
+    "replace the contents of a nested LiteralNode" in {
+      val trees: TableFor4[ExprNode, List[Int], String, ExprNode] = TableFor4(
+        ("tree", "treePath", "newLiteralText", "result"),
+        (VariableNode.fromExpr(Plus(Num(1), Num(2))), List(0, 0), "3", VariableNode.fromExpr(Plus(Num(3), Num(2)))),
+        (
+          VariableNode.fromExpr(
+            Times(Num(61), IfThenElse(Eq(Num(5), Bool(Literal.fromString("foo"))), Num(1), Num(-62)))
+          ),
+          List(1, 0, 1, 0),
+          "bar",
+          VariableNode.fromExpr(
+            Times(Num(61), IfThenElse(Eq(Num(5), Bool(Literal.fromString("bar"))), Num(1), Num(-62)))
+          )
+        ),
+        (
+          VariableNode.fromExpr(Lambda("", IntType(), Plus(Var("eg"), Num(1)))),
+          List(0),
+          "be123",
+          VariableNode.fromExpr(Lambda("be123", IntType(), Plus(Var("eg"), Num(1))))
+        ),
+        (
+          VariableNode.fromExpr(Lambda("be123", IntType(), Plus(Var("eg"), Num(1)))),
+          List(2, 0, 0),
+          "",
+          VariableNode.fromExpr(Lambda("be123", IntType(), Plus(Var(""), Num(1))))
+        )
+      )
+
+      forAll(trees) { (tree, treePath, newLiteralText, result) =>
+        val action = EditLiteralAction(tree, treePath, newLiteralText)
+        action.newTree shouldBe a[VariableNode]
+        action.newTree shouldEqual result
+      }
+    }
+
+    "throw an error when attempting to replace something other than a LiteralNode" in {
+      val trees: TableFor3[ExprNode, List[Int], String] = TableFor3(
+        ("tree", "treePath", "newLiteralText"),
+        (VariableNode.fromExpr(Num(1)), List(), "st"),
+        (VariableNode.fromExpr(Plus(Num(1), Num(2))), List(0), "tj461"),
+        (
+          VariableNode.fromExpr(IfThenElse(Bool(true), Lambda("z", IntType(), Bool(LiteralAny("hi"))), Num(2))),
+          List(1, 2),
+          "err"
+        )
+      )
+
+      forAll(trees) { (tree, treePath, newLiteralText) =>
+        an[InvalidEditTargetException] should be thrownBy EditLiteralAction(tree, treePath, newLiteralText).newTree
+      }
+    }
+  }
 }

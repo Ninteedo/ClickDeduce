@@ -360,17 +360,18 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       */
     def findChild(path: List[Int]): Option[Node] = path match {
       case Nil => Some(this)
-      case head :: tail =>
+      case head :: tail => if (!args.indices.contains(head)) throw new InvalidTreePathException(path) else {
         args(head) match {
           case SubExprNode(node) => node.findChild(tail)
           case SubTypeNode(node) => node.findChild(tail)
           case n: LiteralNode =>
             tail match {
               case Nil => Some(n)
-              case _   => throw new Exception(s"LiteralNode has no children, but path is not empty: $path")
+              case _   => throw new InvalidTreePathException(path)
             }
           case _ => None
         }
+      }
     }
 
     def indexOf(node: Node): Int = node match {
@@ -379,7 +380,10 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     }
 
     def replace(path: List[Int], replacement: Node): OuterNode = path match {
-      case Nil => replacement match { case n: OuterNode => n }
+      case Nil =>
+        replacement match {
+          case n: OuterNode => n
+        }
       case head :: tail =>
         val updatedArgs = args.updated(
           head,
@@ -961,7 +965,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
   protected val depthLimit: Int = 100
 
-  class DepthLimitExceededException extends Exception {
-    override def getMessage: String = s"Depth limit exceeded: $depthLimit"
-  }
+  class DepthLimitExceededException extends Exception(s"Depth limit ($depthLimit) exceeded")
+
+  class InvalidTreePathException(treePath: List[Int]) extends Exception(s"Invalid tree path: $treePath")
 }
