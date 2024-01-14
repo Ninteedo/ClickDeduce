@@ -908,9 +908,9 @@ trait AbstractNodeLanguage extends AbstractLanguage {
           val constructor = typ.getConstructors()(0)
           val arguments = constructor.getParameterTypes
             .map({
-              case c if classOf[Type] isAssignableFrom c                 => Some(SubTypeNode(TypeChoiceNode()))
-              case c if classOf[Literal] isAssignableFrom c              => Some(LiteralNode(""))
-              case c if classOf[AbstractNodeLanguage] isAssignableFrom c => None
+              case c if classOf[Type] isAssignableFrom c             => Some(SubTypeNode(TypeChoiceNode()))
+              case c if classOf[Literal] isAssignableFrom c          => Some(LiteralNode(""))
+              case c if classOf[AbstractLanguage] isAssignableFrom c => None
             })
             .filter(_.isDefined)
             .map(_.get)
@@ -921,20 +921,22 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       }
     }
 
-    def fromType(typ: Type): TypeNode = {
-      val typeClass = typ.getClass
-      val constructor = typeClass.getConstructors()(0)
-      val innerNodes = typ match {
-        case e0: Product =>
-          val values = e0.productIterator.toList
-          values.collect({
-            case c: Literal => LiteralNode(c.toString)
-            case c: Type    => SubTypeNode(TypeNode.fromType(c))
-          })
-      }
-      val result = TypeNode(typ.getClass.getSimpleName, innerNodes)
-      innerNodes.foreach(_.setParent(Some(result)))
-      result
+    def fromType(typ: Type): TypeNodeParent = typ match {
+      case blank: BlankTypeDropDown => TypeChoiceNode()
+      case _ =>
+        val typeClass = typ.getClass
+        val constructor = typeClass.getConstructors()(0)
+        val innerNodes = typ match {
+          case e0: Product =>
+            val values = e0.productIterator.toList
+            values.collect({
+              case c: Literal => LiteralNode(c.toString)
+              case c: Type    => SubTypeNode(TypeNode.fromType(c))
+            })
+        }
+        val result = TypeNode(typ.getClass.getSimpleName, innerNodes)
+        innerNodes.foreach(_.setParent(Some(result)))
+        result
     }
   }
 

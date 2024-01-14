@@ -24,15 +24,6 @@ class ActionSpec extends AnyWordSpec with Matchers {
       action.asInstanceOf[SelectExprAction].exprChoiceName shouldBe "Eq"
     }
 
-    "create an EditLiteralAction" in {
-      val tree = VariableNode.fromExpr(Num(1))
-      val action = createAction("EditLiteralAction", tree.toString, "0", List("hello"))
-      action shouldBe an[EditLiteralAction]
-      action.originalTree shouldBe tree
-      action.treePath shouldBe List(0)
-      action.asInstanceOf[EditLiteralAction].newLiteralText shouldBe "hello"
-    }
-
     "create a SelectTypeAction" in {
       val tree = VariableNode.fromExpr(Lambda("x", UnknownType(), Plus(Var("x"), Num(1))))
       val action = createAction("SelectTypeAction", tree.toString, "1", List("IntType"))
@@ -40,6 +31,15 @@ class ActionSpec extends AnyWordSpec with Matchers {
       action.originalTree shouldBe tree
       action.treePath shouldBe List(1)
       action.asInstanceOf[SelectTypeAction].typeChoiceName shouldBe "IntType"
+    }
+
+    "create an EditLiteralAction" in {
+      val tree = VariableNode.fromExpr(Num(1))
+      val action = createAction("EditLiteralAction", tree.toString, "0", List("hello"))
+      action shouldBe an[EditLiteralAction]
+      action.originalTree shouldBe tree
+      action.treePath shouldBe List(0)
+      action.asInstanceOf[EditLiteralAction].newLiteralText shouldBe "hello"
     }
 
     "create a DeleteAction" in {
@@ -126,6 +126,86 @@ class ActionSpec extends AnyWordSpec with Matchers {
       )
       forAll(trees) { (tree, treePath, exprChoiceName) =>
         an[InvalidSelectTargetException] should be thrownBy SelectExprAction(tree, treePath, exprChoiceName).newTree
+      }
+    }
+  }
+
+  "SelectTypeAction" should {
+    "replace a root TypeChoiceNode with selection" in {
+      val selectOptions = TableFor1("typeChoiceName", "IntType", "BoolType", "UnknownType", "Func")
+
+      val tree = TypeChoiceNode()
+      forAll(selectOptions) { typeChoiceName =>
+        val action = SelectTypeAction(tree, List(), typeChoiceName)
+        action.newTree shouldBe a[TypeNode]
+        action.newTree.asInstanceOf[TypeNode].typeName shouldBe typeChoiceName
+        typeChoiceName match {
+          case "Func" =>
+            action.newTree shouldEqual TypeNode(
+              typeChoiceName,
+              List(SubTypeNode(TypeChoiceNode()), SubTypeNode(TypeChoiceNode()))
+            )
+          case _ => action.newTree shouldEqual TypeNode(typeChoiceName, List())
+        }
+      }
+    }
+
+    "replace a nested TypeChoiceNode with selection" in {
+      val trees: TableFor4[ExprNode, List[Int], String, ExprNode] = TableFor4(
+        ("tree", "treePath", "typeChoiceName", "result"),
+        (
+          VariableNode.fromExpr(Lambda("x", BlankTypeDropDown(), Var("x"))),
+          List(1),
+          "IntType",
+          VariableNode.fromExpr(Lambda("x", IntType(), Var("x")))
+        ),
+        (
+          VariableNode.fromExpr(
+            IfThenElse(
+              Bool(false),
+              Lambda("foo2", BlankTypeDropDown(), Num(3)),
+              Lambda("foo2", Func(IntType(), BlankTypeDropDown()), Var("foo2"))
+            )
+          ),
+          List(2, 1, 1),
+          "BoolType",
+          VariableNode.fromExpr(
+            IfThenElse(
+              Bool(false),
+              Lambda("foo2", BlankTypeDropDown(), Num(3)),
+              Lambda("foo2", Func(IntType(), BoolType()), Var("foo2"))
+            )
+          )
+        )
+      )
+
+      forAll(trees) { (tree, treePath, typeChoiceName, result) =>
+        val action = SelectTypeAction(tree, treePath, typeChoiceName)
+        action.newTree shouldBe a[VariableNode]
+        action.newTree shouldEqual result
+      }
+    }
+
+    "throw an error when attempting to replace something other than a TypeChoiceNode" in {
+      val trees: TableFor3[ExprNode, List[Int], String] = TableFor3(
+        ("tree", "treePath", "typeChoiceName"),
+        (VariableNode.fromExpr(Num(1)), List(), "IntType"),
+        (VariableNode.fromExpr(Lambda("x", IntType(), Num(1))), List(0), "BoolType"),
+        (
+          VariableNode.fromExpr(
+            IfThenElse(
+              Bool(false),
+              Lambda("foo2", BlankTypeDropDown(), Num(3)),
+              Lambda("foo2", Func(IntType(), BoolType()), Var("foo2"))
+            )
+          ),
+          List(2, 1),
+          "Func"
+        )
+      )
+
+      forAll(trees) { (tree, treePath, typeChoiceName) =>
+        an[InvalidSelectTargetException] should be thrownBy SelectTypeAction(tree, treePath, typeChoiceName).newTree
       }
     }
   }
