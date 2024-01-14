@@ -14,24 +14,26 @@ class LArithTest extends TestTemplate[Expr, Value, Type] {
   }
 
   property("Num type-checks to IntType") {
-    forAll(nums)(n =>
-      Num(n).typeCheck(Map()) shouldBe IntType()
-    )
+    forAll(nums)(n => Num(n).typeCheck(Map()) shouldBe IntType())
   }
 
   property("Num correctly evaluates to NumV") {
-    forAll(nums)(n =>
-      Num(n).eval(Map()) shouldBe NumV(n)
-    )
+    forAll(nums)(n => Num(n).eval(Map()) shouldBe NumV(n))
   }
 
-  /**
-   * Run tests for binary arithmetic operations.
-   * @param op the operation to test
-   * @param opEval the correct evaluation result of the operation
-   * @param opName the name of the operation
-   */
-  private def arithmeticOperationTests(op: (Num, Num) => Expr, opEval: (BigInt, BigInt) => BigInt, opName: String): Unit = {
+  /** Run tests for binary arithmetic operations.
+    * @param op
+    *   the operation to test
+    * @param opEval
+    *   the correct evaluation result of the operation
+    * @param opName
+    *   the name of the operation
+    */
+  private def arithmeticOperationTests(
+    op: (Num, Num) => Expr,
+    opEval: (BigInt, BigInt) => BigInt,
+    opName: String
+  ): Unit = {
     val table: TableFor3[Expr, Value, Type] = {
       val valuePairs = for {
         a <- intValues
@@ -49,11 +51,12 @@ class LArithTest extends TestTemplate[Expr, Value, Type] {
   arithmeticOperationTests(Plus.apply, _ + _, "Plus")
   arithmeticOperationTests(Times.apply, _ * _, "Times")
 
-  /**
-   * Generate a random expression of the given depth.
-   * @param depth the maximum remaining depth of the expression
-   * @return a tuple of the expression and its correct evaluation result
-   */
+  /** Generate a random expression of the given depth.
+    * @param depth
+    *   the maximum remaining depth of the expression
+    * @return
+    *   a tuple of the expression and its correct evaluation result
+    */
   private def generateExpression(depth: Int): (Expr, BigInt) = {
     if (depth == 0) {
       val n = genRandInt()
@@ -94,23 +97,25 @@ class LArithTest extends TestTemplate[Expr, Value, Type] {
 
   private val nested3DepthExpressions = (0 until 10).map(_ => generateExpression(3))
   private val nested3DepthExpressionsTable: TableFor3[Expr, Value, Type] = createExprTable(
-    nested3DepthExpressions.map(_._1), nested3DepthExpressions.map { case (_, n) => NumV(n) },
+    nested3DepthExpressions.map(_._1),
+    nested3DepthExpressions.map { case (_, n) => NumV(n) },
     nested3DepthExpressions.map(_ => IntType())
   )
 
   property("Commutativity of expressions") {
     forAll(nested3DepthExpressionsTable) {
-      case (Plus(e1, e2), _, _) => Plus(e1, e2).eval(Map()) shouldBe Plus(e2, e1).eval(Map())
+      case (Plus(e1, e2), _, _)  => Plus(e1, e2).eval(Map()) shouldBe Plus(e2, e1).eval(Map())
       case (Times(e1, e2), _, _) => Times(e1, e2).eval(Map()) shouldBe Times(e2, e1).eval(Map())
     }
   }
 
   property("Identity expressions have no effect") {
     forAll(nested3DepthExpressionsTable) {
-      if (Random.nextBoolean()) {
-        case (e, res, _) => Plus(e, Num(0)).eval(Map()) shouldBe res
-      } else {
-        case (e, res, _) => Times(e, Num(1)).eval(Map()) shouldBe res
+      if (Random.nextBoolean()) { case (e, res, _) =>
+        Plus(e, Num(0)).eval(Map()) shouldBe res
+      }
+      else { case (e, res, _) =>
+        Times(e, Num(1)).eval(Map()) shouldBe res
       }
     }
   }
@@ -137,17 +142,27 @@ class LArithTest extends TestTemplate[Expr, Value, Type] {
     getChildrenExpressions(Times(Num(15), Num(20))) shouldBe List(Num(15), Num(20))
     getChildrenExpressions(Plus(Num(15), Times(Num(20), Num(25)))) shouldBe List(Num(15), Times(Num(20), Num(25)))
     getChildrenExpressions(Times(Plus(Num(15), Num(20)), Num(25))) shouldBe List(Plus(Num(15), Num(20)), Num(25))
-    getChildrenExpressions(Times(Plus(Num(15), Num(20)), Plus(Num(25), Num(30)))) shouldBe List(Plus(Num(15), Num(20)), Plus(Num(25), Num(30)))
+    getChildrenExpressions(Times(Plus(Num(15), Num(20)), Plus(Num(25), Num(30)))) shouldBe List(
+      Plus(Num(15), Num(20)),
+      Plus(Num(25), Num(30))
+    )
   }
 
   property("Num with non-integer literal inputs results in errors") {
     val invalidNumLiterals = List(
-      LiteralString("a"), LiteralBool(true), LiteralBool(false), LiteralString("5"), LiteralString("45j"),
-      LiteralAny("--1"), LiteralAny("5O"), LiteralAny("34.1"), LiteralAny("\"0\"")
+      LiteralString("a"),
+      LiteralBool(true),
+      LiteralBool(false),
+      LiteralString("5"),
+      LiteralString("45j"),
+      LiteralAny("--1"),
+      LiteralAny("5O"),
+      LiteralAny("34.1"),
+      LiteralAny("\"0\"")
     )
     val invalidNumLiteralsTable = Table("InvalidNumLiterals", invalidNumLiterals: _*)
-    forAll(invalidNumLiteralsTable) {
-      literal => {
+    forAll(invalidNumLiteralsTable) { literal =>
+      {
         Num(literal).eval(Map()) shouldBe an[EvalError]
         Num(literal).typeCheck(Map()) shouldBe an[TypeError]
       }
@@ -155,8 +170,8 @@ class LArithTest extends TestTemplate[Expr, Value, Type] {
   }
 
   property("Num with integer literal inputs is correctly interpreted") {
-    forAll(nums) {
-      num => {
+    forAll(nums) { num =>
+      {
         Num(Literal.fromString(num.toString)).eval(Map()) shouldBe NumV(num)
         Num(LiteralInt(num)).eval(Map()) shouldBe NumV(num)
       }

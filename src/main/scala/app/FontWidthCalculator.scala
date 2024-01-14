@@ -12,10 +12,7 @@ object FontWidthCalculator {
   }
 
   def replaceHtmlCharacterCodes(text: String): String = {
-    val mapping = Map(
-      "&DoubleDownArrow;" -> "⇓",
-      "&#x22a2;" -> "⊢"
-    )
+    val mapping = Map("&DoubleDownArrow;" -> "⇓", "&#x22a2;" -> "⊢")
     mapping.foldLeft(text) { case (s, (code, replacement)) =>
       s.replace(code, replacement)
     }

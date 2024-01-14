@@ -28,22 +28,21 @@ class NodeSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChecks 
       val nodes = TableFor1(
         "node",
         VariableNode(
-          "Root", List(
-            SubExprNode(VariableNode(
-              "Level1", List(
-                SubExprNode(VariableNode("Level2", Nil)),
-                SubExprNode(VariableNode("Level2", Nil))
+          "Root",
+          List(
+            SubExprNode(
+              VariableNode(
+                "Level1",
+                List(SubExprNode(VariableNode("Level2", Nil)), SubExprNode(VariableNode("Level2", Nil)))
               )
-            ))
+            )
           )
         )
       )
 
       forAll(nodes) { node =>
         node.children.foreach(firstLevel =>
-          firstLevel.children.foreach(secondLevel =>
-            secondLevel.getParent shouldBe Some(firstLevel)
-          )
+          firstLevel.children.foreach(secondLevel => secondLevel.getParent shouldBe Some(firstLevel))
         )
       }
     }

@@ -6,12 +6,12 @@ class LLet extends LIf {
   case class Var(v: Literal) extends Expr {
     override def evalInner(env: Env): Value = v match {
       case LiteralIdentifier(identifier) => env.getOrElse(identifier, UnknownVariableEvalError(v))
-      case _ => InvalidIdentifierEvalError(v)
+      case _                             => InvalidIdentifierEvalError(v)
     }
 
     override def typeCheckInner(tEnv: TypeEnv): Type = v match {
       case LiteralIdentifier(identifier) => tEnv.getOrElse(identifier, UnknownVariableTypeError(v))
-      case _ => InvalidIdentifierTypeError(v)
+      case _                             => InvalidIdentifierTypeError(v)
     }
   }
 
@@ -38,7 +38,7 @@ class LLet extends LIf {
         if (assign_type.isError) {
           assign_type
         } else {
-          bound_expr.typeCheck(tEnv + (identifier -> assign_type) )
+          bound_expr.typeCheck(tEnv + (identifier -> assign_type))
         }
       }
       case _ => InvalidIdentifierTypeError(v)
@@ -47,19 +47,16 @@ class LLet extends LIf {
     override def getChildrenBase(env: Env): List[(Term, Env)] =
       List((v, env), (assign_expr, env), (bound_expr, env + (v.toString -> assign_expr.eval(env))))
 
-    override def getChildrenEval(env: Env): List[(Term, Env)] = List(
-      (assign_expr, env), (bound_expr, env + (v.toString -> assign_expr.eval(env)))
-    )
+    override def getChildrenEval(env: Env): List[(Term, Env)] =
+      List((assign_expr, env), (bound_expr, env + (v.toString -> assign_expr.eval(env))))
 
-    override def getChildrenTypeCheck(tenv: TypeEnv): List[(Term, TypeEnv)] = List(
-      (assign_expr, tenv), (bound_expr, tenv + (v.toString -> assign_expr.typeCheck(tenv)))
-    )
+    override def getChildrenTypeCheck(tenv: TypeEnv): List[(Term, TypeEnv)] =
+      List((assign_expr, tenv), (bound_expr, tenv + (v.toString -> assign_expr.typeCheck(tenv))))
   }
 
   object Let {
-    def apply(v: Variable, assign_expr: Expr, bound_expr: Expr): Let = new Let(
-      Literal.fromString(v), assign_expr, bound_expr
-    )
+    def apply(v: Variable, assign_expr: Expr, bound_expr: Expr): Let =
+      new Let(Literal.fromString(v), assign_expr, bound_expr)
   }
 
   // errors
@@ -85,14 +82,14 @@ class LLet extends LIf {
   }
 
   override def prettyPrint(e: Expr): String = e match {
-    case Var(v) => v.toString
+    case Var(v)                          => v.toString
     case Let(v, assign_expr, bound_expr) => s"let $v = ${prettyPrint(assign_expr)} in ${prettyPrint(bound_expr)}"
-    case _ => super.prettyPrint(e)
+    case _                               => super.prettyPrint(e)
   }
 
   override def prettyPrint(t: Type): String = t match {
     case UnknownVariableTypeError(v) => s"UnknownVariable($v)"
-    case _ => super.prettyPrint(t)
+    case _                           => super.prettyPrint(t)
   }
 
   override def calculateExprClassList: List[Class[Expr]] = {

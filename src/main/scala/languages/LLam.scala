@@ -11,34 +11,33 @@ class LLam extends LLet {
   case class Apply(e1: Expr, e2: Expr) extends Expr {
     override def evalInner(env: Env): Value = e1.eval(env) match {
       case v1: FunctionValue => v1.evalApply(e2.eval(env))
-      case v1 => ApplyToNonFunctionError(v1)
+      case v1                => ApplyToNonFunctionError(v1)
     }
 
     override def typeCheckInner(tEnv: TypeEnv): Type = e1.typeCheck(tEnv) match {
       case t1: FunctionType => t1.typeOfApply(e2.typeCheck(tEnv))
-      case t1 => ApplyToNonFunctionErrorType(t1)
+      case t1               => ApplyToNonFunctionErrorType(t1)
     }
 
     override def getChildrenEval(env: Env = Map()): List[(Term, Env)] = (e1.eval(env), e2.eval(env)) match {
-      case (v1: FunctionValue, v2) => List(
-        (e1, env), (e2, env), v1.getFunctionEvaluation(v2)
-      )
-      case _ => List((e1, env), (e2, env))
+      case (v1: FunctionValue, v2) => List((e1, env), (e2, env), v1.getFunctionEvaluation(v2))
+      case _                       => List((e1, env), (e2, env))
     }
   }
 
   case class Lambda(v: Literal, typ: Type, e: Expr) extends Expr {
     override def evalInner(env: Env): Value = v match {
       case LiteralIdentifier(identifier) => LambdaV(identifier, typ, e, env)
-      case _ => InvalidIdentifierEvalError(v)
+      case _                             => InvalidIdentifierEvalError(v)
     }
 
     override def typeCheckInner(tEnv: TypeEnv): Type = v match {
       case LiteralIdentifier(identifier) => Func(typ, e.typeCheck(tEnv + (identifier -> typ)))
-      case _ => InvalidIdentifierTypeError(v)
+      case _                             => InvalidIdentifierTypeError(v)
     }
 
-    override def getChildrenBase(env: Env): List[(Term, Env)] = List((v, env), (typ, env), (e, env + (v.toString -> PlaceholderValue(typ))))
+    override def getChildrenBase(env: Env): List[(Term, Env)] =
+      List((v, env), (typ, env), (e, env + (v.toString -> PlaceholderValue(typ))))
 
     override def getChildrenEval(env: Env): List[(Term, Env)] = Nil
 
@@ -61,11 +60,7 @@ class LLam extends LLet {
       IncompatibleTypeErrorType(in, argType)
     }
 
-    override lazy val valueText: TypedTag[String] = div(
-      in.toHtml,
-      raw(" → "),
-      out.toHtml
-    )
+    override lazy val valueText: TypedTag[String] = div(in.toHtml, raw(" → "), out.toHtml)
   }
 
   case class ApplyToNonFunctionErrorType(wrongType: Type) extends TypeError {
@@ -91,12 +86,7 @@ class LLam extends LLet {
     override def evalApply(value: Value): Value = e.eval(env + (v -> value))
 
     override lazy val valueText: TypedTag[String] = {
-      div(
-        raw(s"λ$v. "),
-        e.toHtml,
-        raw(s" : "),
-        typ.toHtml
-      )
+      div(raw(s"λ$v. "), e.toHtml, raw(s" : "), typ.toHtml)
     }
   }
 
@@ -112,8 +102,8 @@ class LLam extends LLet {
 
   override def prettyPrint(e: Expr): String = e match {
     case Lambda(v, typ, e) => s"λ$v:${prettyPrint(typ)}. ${prettyPrint(e)}"
-    case Apply(e1, e2) => s"${prettyPrint(e1)} ${prettyPrint(e2)}"
-    case _ => super.prettyPrint(e)
+    case Apply(e1, e2)     => s"${prettyPrint(e1)} ${prettyPrint(e2)}"
+    case _                 => super.prettyPrint(e)
   }
 
   override def prettyPrint(v: Value): String = v match {
@@ -122,14 +112,14 @@ class LLam extends LLet {
       s"λ$v. $eString"
     }
     case PlaceholderValue(typ) => "?"
-    case _ => super.prettyPrint(v)
+    case _                     => super.prettyPrint(v)
   }
 
   override def prettyPrint(t: Type): String = t match {
-    case Func(in, out) => s"${prettyPrint(in)} → ${prettyPrint(out)}"
-    case ApplyToNonFunctionErrorType(typ) => s"CannotApplyError(${prettyPrint(typ)})"
+    case Func(in, out)                         => s"${prettyPrint(in)} → ${prettyPrint(out)}"
+    case ApplyToNonFunctionErrorType(typ)      => s"CannotApplyError(${prettyPrint(typ)})"
     case IncompatibleTypeErrorType(typ1, typ2) => s"IncompatibleTypes(${prettyPrint(typ1)}, ${prettyPrint(typ2)})"
-    case _ => super.prettyPrint(t)
+    case _                                     => super.prettyPrint(t)
   }
 
   override def calculateExprClassList: List[Class[Expr]] = {

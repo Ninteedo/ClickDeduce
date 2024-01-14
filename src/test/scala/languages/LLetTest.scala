@@ -1,9 +1,8 @@
 package languages
 
 import languages.LLet.*
-import org.scalatest.GivenWhenThen
 import org.scalatest.matchers.should.Matchers.{an, shouldBe, shouldEqual}
-import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor1, TableFor3}
+import org.scalatest.prop.TableFor1
 import org.scalatest.propspec.AnyPropSpec
 
 import scala.util.Random
@@ -14,8 +13,8 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
   def randomElement[A](l: List[A]): A = l(Random.nextInt(l.length))
 
   property("Var correctly type-checks with simple environment") {
-    forAll(assortedValues) {
-      value => {
+    forAll(assortedValues) { value =>
+      {
         val v = randomElement(variableNames)
         Var(v).typeCheck(Map(v -> value.typ)) shouldEqual value.typ
       }
@@ -23,8 +22,8 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
   }
 
   property("Var correctly type-checks with big environment") {
-    forAll(assortedValues) {
-      value => {
+    forAll(assortedValues) { value =>
+      {
         var env: TypeEnv = Map()
         for (i <- 0 until Math.min(assortedValues.length, variableNames.length)) {
           val v = randomElement(variableNames)
@@ -46,7 +45,7 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
       (Let("gri3hga3", Bool(true), IfThenElse(Var("gri3hga3"), Num(1), Num(2))), NumV(1), IntType()),
       (Let("iou", Plus(Num(1), Num(5)), Times(Var("iou"), Var("iou"))), NumV(36), IntType()),
       (Eq(Num(0), Let("abc", Num(3), Plus(Num(-3), Var("abc")))), BoolV(true), BoolType()),
-      (Plus(Num(1), Let("x", Num(2), Plus(Var("x"), Num(3)))), NumV(6), IntType()),
+      (Plus(Num(1), Let("x", Num(2), Plus(Var("x"), Num(3)))), NumV(6), IntType())
     )
   )
 
@@ -54,15 +53,28 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
     "Let with multiple Lets in expression",
     createExprTable(
       (Let("x", Num(43), Let("y", Num(12), Plus(Var("x"), Var("y")))), NumV(55), IntType()),
-      (Let("hello", Plus(Let("world", Num(2), Times(Var("world"), Num(-1))), Num(6)), Eq(Num(4), Var("hello"))), BoolV(true), BoolType()),
-      (Let("x", Num(1), Let("y", Num(2), Let("z", Num(3), Plus(Plus(Var("z"), Var("y")), Var("x"))))), NumV(6), IntType()),
-      (Plus(Let("x", Num(20), Plus(Var("x"), Num(1))), Let("x", Num(34), Times(Var("x"), Num(-1)))), NumV(-13), IntType()),
-      (Let("x", Num(1), Let("x", Num(2), Var("x"))), NumV(2), IntType()),
+      (
+        Let("hello", Plus(Let("world", Num(2), Times(Var("world"), Num(-1))), Num(6)), Eq(Num(4), Var("hello"))),
+        BoolV(true),
+        BoolType()
+      ),
+      (
+        Let("x", Num(1), Let("y", Num(2), Let("z", Num(3), Plus(Plus(Var("z"), Var("y")), Var("x"))))),
+        NumV(6),
+        IntType()
+      ),
+      (
+        Plus(Let("x", Num(20), Plus(Var("x"), Num(1))), Let("x", Num(34), Times(Var("x"), Num(-1)))),
+        NumV(-13),
+        IntType()
+      ),
+      (Let("x", Num(1), Let("x", Num(2), Var("x"))), NumV(2), IntType())
     )
   )
 
   property("Var results an error when variable not found") {
-    Var("x").typeCheck(Map("y" -> IntType(), "xx" -> IntType(), "w" -> BoolType())) shouldBe an[UnknownVariableTypeError]
+    Var("x")
+      .typeCheck(Map("y" -> IntType(), "xx" -> IntType(), "w" -> BoolType())) shouldBe an[UnknownVariableTypeError]
     Var("x").eval(Map("y" -> NumV(4), "xx" -> NumV(1), "w" -> BoolV(true))) shouldBe an[UnknownVariableEvalError]
 
     Plus(Var("foo"), Let("foo", Num(1), Var("foo"))).eval(Map()) shouldBe an[UnknownVariableEvalError]
@@ -135,7 +147,8 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
     val cond = VariableNode("Bool", List(LiteralNode("true")))
     val thenExpr = VariableNode("Var", List(LiteralNode("x")))
     val elseExpr = VariableNode("Var", List(LiteralNode("x")))
-    val ifThenElseNode = VariableNode("IfThenElse", List(SubExprNode(cond), SubExprNode(thenExpr), SubExprNode(elseExpr)))
+    val ifThenElseNode =
+      VariableNode("IfThenElse", List(SubExprNode(cond), SubExprNode(thenExpr), SubExprNode(elseExpr)))
     val numNode = VariableNode("Num", List(LiteralNode("1")))
     val tree = VariableNode("Let", List(LiteralNode("x"), SubExprNode(numNode), SubExprNode(ifThenElseNode)))
 

@@ -1,25 +1,32 @@
 package languages
 
 import languages.LLam.*
-import org.scalatest.GivenWhenThen
 import org.scalatest.matchers.should.Matchers.{an, shouldBe, shouldEqual}
-import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor1, TableFor3}
+import org.scalatest.prop.TableFor1
 import org.scalatest.propspec.AnyPropSpec
 
 import scala.collection.immutable.Map
-import scala.util.Random
 
 class LLamTest extends TestTemplate[Expr, Value, Type] {
   val incrementFunction: Lambda = Lambda("x", IntType(), Plus(Var("x"), Num(1)))
-  val twiceFunction: Lambda = Lambda("f", Func(IntType(), IntType()), Lambda("x", IntType(), Apply(Var("f"), Apply(Var("f"), Var("x")))))
+  val twiceFunction: Lambda =
+    Lambda("f", Func(IntType(), IntType()), Lambda("x", IntType(), Apply(Var("f"), Apply(Var("f"), Var("x")))))
   val incrementTwiceFunction: Apply = Apply(twiceFunction, incrementFunction)
 
   testExpression(
     "Lambda",
     createExprTable(
       (incrementFunction, LambdaV("x", IntType(), Plus(Var("x"), Num(1)), Map()), Func(IntType(), IntType())),
-      (Lambda("x", BoolType(), Eq(Var("x"), Bool(true))), LambdaV("x", BoolType(), Eq(Var("x"), Bool(true)), Map()), Func(BoolType(), BoolType())),
-      (twiceFunction, LambdaV("f", twiceFunction.typ, twiceFunction.e, Map()), Func(Func(IntType(), IntType()), Func(IntType(), IntType()))),
+      (
+        Lambda("x", BoolType(), Eq(Var("x"), Bool(true))),
+        LambdaV("x", BoolType(), Eq(Var("x"), Bool(true)), Map()),
+        Func(BoolType(), BoolType())
+      ),
+      (
+        twiceFunction,
+        LambdaV("f", twiceFunction.typ, twiceFunction.e, Map()),
+        Func(Func(IntType(), IntType()), Func(IntType(), IntType()))
+      )
     )
   )
 
@@ -37,15 +44,18 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
     Apply(incrementFunction, Num(24)).typeCheck(Map()) shouldEqual IntType()
     Apply(incrementFunction, Num(24)).typeCheck(Map("x" -> BoolType(), "y" -> IntType())) shouldEqual IntType()
 
-    Apply(Lambda("a", BoolType(), IfThenElse(Var("a"), Num(5), Num(10))), Bool(true)).typeCheck(Map()) shouldEqual IntType()
-    Apply(IfThenElse(Bool(false), incrementFunction, Lambda("b", IntType(), Times(Var("b"), Num(-1)))), Num(-3)).typeCheck(Map()) shouldEqual IntType()
+    Apply(Lambda("a", BoolType(), IfThenElse(Var("a"), Num(5), Num(10))), Bool(true))
+      .typeCheck(Map()) shouldEqual IntType()
+    Apply(IfThenElse(Bool(false), incrementFunction, Lambda("b", IntType(), Times(Var("b"), Num(-1)))), Num(-3))
+      .typeCheck(Map()) shouldEqual IntType()
   }
 
   property("Apply correctly evaluates") {
     Apply(incrementFunction, Num(24)).eval(Map()) shouldEqual NumV(25)
     Apply(incrementFunction, Num(78)).eval(Map("x" -> NumV(2))) shouldEqual NumV(79)
 
-    Apply(IfThenElse(Bool(false), incrementFunction, Lambda("b", IntType(), Times(Var("b"), Num(-1)))), Num(-3)).eval(Map()) shouldEqual NumV(3)
+    Apply(IfThenElse(Bool(false), incrementFunction, Lambda("b", IntType(), Times(Var("b"), Num(-1)))), Num(-3))
+      .eval(Map()) shouldEqual NumV(3)
 
     Apply(Apply(twiceFunction, incrementFunction), Num(4)).eval(Map()) shouldEqual NumV(6)
   }
@@ -57,16 +67,14 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
       IfThenElse(Apply(incrementFunction, Num(4)), Num(2), Num(3)),
       Apply(incrementFunction, Num(8))
     )
-    leftExpressions.foreach {l =>
+    leftExpressions.foreach { l =>
       Apply(l, Num(4)).typeCheck(Map()) shouldBe an[ApplyToNonFunctionErrorType]
       Apply(l, Num(4)).eval(Map()) shouldBe an[ApplyToNonFunctionError]
     }
   }
 
   property("Lambda has appropriate children expressions in type-check mode") {
-    incrementFunction.getChildrenTypeCheck(Map()) shouldEqual List(
-      (incrementFunction.e, Map("x" -> IntType()))
-    )
+    incrementFunction.getChildrenTypeCheck(Map()) shouldEqual List((incrementFunction.e, Map("x" -> IntType())))
 
     incrementFunction.getChildrenTypeCheck(Map("y" -> BoolType())) shouldEqual List(
       (incrementFunction.e, Map("x" -> IntType(), "y" -> BoolType()))
@@ -75,11 +83,7 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
 
   property("Lambda node behaves appropriately with simple argument type") {
     val initialTree = VariableNode.createFromExprName("Lambda")
-    initialTree.args shouldEqual List(
-      LiteralNode(""),
-      SubTypeNode(TypeChoiceNode()),
-      SubExprNode(ExprChoiceNode())
-    )
+    initialTree.args shouldEqual List(LiteralNode(""), SubTypeNode(TypeChoiceNode()), SubExprNode(ExprChoiceNode()))
 
     val argName: String = "foo"
     val editVarNameAction = EditLiteralAction(initialTree, List(0), argName)
@@ -115,11 +119,7 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
 
   property("Lambda node behaves appropriately with complex argument type") {
     val initialTree = VariableNode.createFromExprName("Lambda")
-    initialTree.args shouldEqual List(
-      LiteralNode(""),
-      SubTypeNode(TypeChoiceNode()),
-      SubExprNode(ExprChoiceNode())
-    )
+    initialTree.args shouldEqual List(LiteralNode(""), SubTypeNode(TypeChoiceNode()), SubExprNode(ExprChoiceNode()))
 
     val argName: String = "bar"
     val editVarNameAction = EditLiteralAction(initialTree, List(0), argName)
@@ -181,21 +181,23 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
     val node1 = VariableNode(
       "Apply",
       List(
-        SubExprNode(VariableNode(
-          "Lambda",
-          List(
-            LiteralNode("x"),
-            SubTypeNode(TypeNode("IntType", Nil)),
-            SubExprNode(VariableNode(
-              "Plus",
-              List(
-                SubExprNode(VariableNode("Var", List(LiteralNode("x")))),
-                SubExprNode(VariableNode("Num", List(LiteralNode("1"))))
+        SubExprNode(
+          VariableNode(
+            "Lambda",
+            List(
+              LiteralNode("x"),
+              SubTypeNode(TypeNode("IntType", Nil)),
+              SubExprNode(
+                VariableNode(
+                  "Plus",
+                  List(
+                    SubExprNode(VariableNode("Var", List(LiteralNode("x")))),
+                    SubExprNode(VariableNode("Num", List(LiteralNode("1"))))
+                  )
+                )
               )
             )
-            )
           )
-        )
         ),
         SubExprNode(VariableNode("Num", List(LiteralNode("3"))))
       )
@@ -203,14 +205,7 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
 
     val node2 = VariableNode(
       "Lambda",
-      List(
-        LiteralNode(""),
-        SubTypeNode(TypeChoiceNode()),
-        SubExprNode(VariableNode(
-          "Var",
-          List(LiteralNode("bar"))
-        ))
-      )
+      List(LiteralNode(""), SubTypeNode(TypeChoiceNode()), SubExprNode(VariableNode("Var", List(LiteralNode("bar")))))
     )
 
     val nodes: TableFor1[VariableNode] = Table("node", node1, node2)
@@ -225,11 +220,7 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
 
   property("Lambda node createAction behaves appropriately with complex argument type") {
     val initialTree = VariableNode.createFromExprName("Lambda")
-    initialTree.args shouldEqual List(
-      LiteralNode(""),
-      SubTypeNode(TypeChoiceNode()),
-      SubExprNode(ExprChoiceNode())
-    )
+    initialTree.args shouldEqual List(LiteralNode(""), SubTypeNode(TypeChoiceNode()), SubExprNode(ExprChoiceNode()))
 
     val argName: String = "super1984"
     val editVarNameAction = createAction("EditLiteralAction", initialTree.toString, "0", List(argName))
@@ -300,7 +291,8 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
     phantomTree.getEnv shouldEqual Map("x" -> NumV(8))
     phantomTree.getValue shouldEqual NumV(9)
 
-    val exprChoicePhantomExpr = Apply(Lambda(LiteralIdentifier("x"), BlankTypeDropDown(), BlankExprDropDown()), BlankExprDropDown())
+    val exprChoicePhantomExpr =
+      Apply(Lambda(LiteralIdentifier("x"), BlankTypeDropDown(), BlankExprDropDown()), BlankExprDropDown())
     val exprChoicePhantomTree = VariableNode.fromExpr(exprChoicePhantomExpr)
     exprChoicePhantomTree.getVisibleChildren(DisplayMode.Evaluation) shouldEqual
       exprChoicePhantomTree.children :+ ExprChoiceNode()
@@ -314,13 +306,14 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
       List(
         LiteralNode("x"),
         SubTypeNode(TypeNode("IntType", Nil)),
-        SubExprNode(VariableNode(
-          "Plus",
-          List(
-            SubExprNode(VariableNode("Var", List(LiteralNode("x")))),
-            SubExprNode(VariableNode("Num", List(LiteralNode("1"))))
+        SubExprNode(
+          VariableNode(
+            "Plus",
+            List(
+              SubExprNode(VariableNode("Var", List(LiteralNode("x")))),
+              SubExprNode(VariableNode("Num", List(LiteralNode("1"))))
+            )
           )
-        )
         )
       )
     )

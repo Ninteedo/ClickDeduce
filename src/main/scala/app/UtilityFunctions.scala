@@ -4,7 +4,7 @@ object UtilityFunctions {
   // String escaping
   // https://stackoverflow.com/a/40073137
 
-  def quote (s: String): String = "\"" + escape(s) + "\""
+  def quote(s: String): String = "\"" + escape(s) + "\""
   def escape(s: String): String = s.flatMap(escapedChar)
 
   def escapedChar(ch: Char): String = ch match {
@@ -16,8 +16,9 @@ object UtilityFunctions {
     case '"'  => "\\\""
     case '\'' => "\\\'"
     case '\\' => "\\\\"
-    case _    => if (ch.isControl) "\\0" + Integer.toOctalString(ch.toInt)
-    else              String.valueOf(ch)
+    case _ =>
+      if (ch.isControl) "\\0" + Integer.toOctalString(ch.toInt)
+      else String.valueOf(ch)
   }
 
 //  def unquote(s: String): String

@@ -10,19 +10,21 @@ import scala.collection.immutable.Map
 
 class LRecTest extends TestTemplate[Expr, Value, Type] {
   val factorialFunction: Expr = Rec(
-    "factorial", "n", IntType(), IntType(),
+    "factorial",
+    "n",
+    IntType(),
+    IntType(),
     IfThenElse(Eq(Var("n"), Num(0)), Num(1), Times(Var("n"), Apply(Var("factorial"), Plus(Var("n"), Num(-1)))))
   )
 
-  val nestedOverridingRecFunction1: Expr = Rec(
-    "f", "x", IntType(), IntType(),
-    Apply(Rec("f", "x", IntType(), IntType(), Num(1)), Var("x"))
-  )
+  val nestedOverridingRecFunction1: Expr =
+    Rec("f", "x", IntType(), IntType(), Apply(Rec("f", "x", IntType(), IntType(), Num(1)), Var("x")))
 
   property("Rec type-checks correctly") {
     Rec("f", "x", IntType(), IntType(), Num(1)).typeCheck(Map()) shouldEqual Func(IntType(), IntType())
     Rec("f", "x", IntType(), IntType(), Num(1)).typeCheck(Map("f" -> IntType(), "x" -> IntType())) shouldEqual Func(
-      IntType(), IntType()
+      IntType(),
+      IntType()
     )
     Rec("f", "x", IntType(), Func(IntType(), BoolType()), Lambda("y", IntType(), Eq(Var("y"), Num(0))))
       .typeCheck(Map("f" -> IntType(), "x" -> BoolType())) shouldEqual Func(IntType(), Func(IntType(), BoolType()))
@@ -44,9 +46,8 @@ class LRecTest extends TestTemplate[Expr, Value, Type] {
     Apply(factorialFunction, Num(5))
       .eval(Map("factorial" -> factorialFunction.eval(Map()), "n" -> NumV(6))) shouldEqual NumV(120)
 
-    val recWithLambda = Rec(
-      "f", "x", IntType(), Func(IntType(), BoolType()), Lambda("y", IntType(), Eq(Var("y"), Num(0)))
-    )
+    val recWithLambda =
+      Rec("f", "x", IntType(), Func(IntType(), BoolType()), Lambda("y", IntType(), Eq(Var("y"), Num(0))))
     Apply(recWithLambda, Num(5)).eval(Map()) shouldEqual
       LambdaV("y", IntType(), Eq(Var("y"), Num(0)), Map("f" -> recWithLambda.eval(Map()), "x" -> NumV(5)))
   }
@@ -84,18 +85,26 @@ class LRecTest extends TestTemplate[Expr, Value, Type] {
     val node = VariableNode(
       "Apply",
       List(
-        SubExprNode(VariableNode(
-          "Rec", List(
-            LiteralNode("f"),
-            LiteralNode("x"),
-            SubTypeNode(TypeNode("IntType", Nil)),
-            SubTypeNode(TypeNode("IntType", Nil)),
-            SubExprNode(VariableNode("Apply", List(
-              SubExprNode(VariableNode("Var", List(LiteralNode("f")))),
-              SubExprNode(VariableNode("Var", List(LiteralNode("x"))))
-            )))
+        SubExprNode(
+          VariableNode(
+            "Rec",
+            List(
+              LiteralNode("f"),
+              LiteralNode("x"),
+              SubTypeNode(TypeNode("IntType", Nil)),
+              SubTypeNode(TypeNode("IntType", Nil)),
+              SubExprNode(
+                VariableNode(
+                  "Apply",
+                  List(
+                    SubExprNode(VariableNode("Var", List(LiteralNode("f")))),
+                    SubExprNode(VariableNode("Var", List(LiteralNode("x"))))
+                  )
+                )
+              )
+            )
           )
-        )),
+        ),
         SubExprNode(VariableNode("Num", List(LiteralNode("1"))))
       )
     )

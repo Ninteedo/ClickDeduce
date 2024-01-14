@@ -204,14 +204,16 @@ class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with J
     val processAction: String = "/process-action"
 
     def createRequest(
-      lang: ClickDeduceLanguage, modeName: String, actionKind: String, nodeString: String,
-      treePath: List[Int], extraArgs: List[String]
+      lang: ClickDeduceLanguage,
+      modeName: String,
+      actionKind: String,
+      nodeString: String,
+      treePath: List[Int],
+      extraArgs: List[String]
     ): Future[MessageEntity] = {
       val treePathString = treePath.mkString("-")
-      val request = ActionRequest(
-        server.getLanguageName(lang), modeName, actionKind, nodeString,
-        treePathString, extraArgs
-      )
+      val request =
+        ActionRequest(server.getLanguageName(lang), modeName, actionKind, nodeString, treePathString, extraArgs)
       Marshal(request).to[MessageEntity]
     }
 
@@ -225,7 +227,8 @@ class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with J
 
     "return a successful response" in {
       checkOnRequest(
-        simpleIdentityRequest, request => {
+        simpleIdentityRequest,
+        request => {
           status shouldBe StatusCodes.OK
         }
       )
@@ -233,7 +236,8 @@ class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with J
 
     "return a response with nodeString and html fields" in {
       checkOnRequest(
-        simpleIdentityRequest, request => {
+        simpleIdentityRequest,
+        request => {
           contentType shouldBe ContentTypes.`application/json`
           responseAs[NodeResponse].nodeString should not be empty
           responseAs[NodeResponse].html should not be empty
@@ -243,7 +247,8 @@ class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with J
 
     "return a response with correct nodeString" in {
       checkOnRequest(
-        simpleIdentityRequest, request => {
+        simpleIdentityRequest,
+        request => {
           responseAs[NodeResponse].nodeString shouldBe LArith.ExprChoiceNode().toString
         }
       )
@@ -251,10 +256,12 @@ class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with J
 
     "return consistent responses" in {
       checkOnRequest(
-        simpleIdentityRequest, request1 => {
+        simpleIdentityRequest,
+        request1 => {
           val firstResponse = responseAs[NodeResponse]
           checkOnRequest(
-            simpleIdentityRequest, request2 => {
+            simpleIdentityRequest,
+            request2 => {
               val secondResponse = responseAs[NodeResponse]
               firstResponse shouldBe secondResponse
             }
@@ -268,7 +275,8 @@ class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with J
       for (mode <- modes) {
         val request = createRequest(LArith, mode, "IdentityAction", "ExprChoiceNode()", List(), List())
         checkOnRequest(
-          request, request => {
+          request,
+          request => {
             status shouldBe StatusCodes.OK
           }
         )
@@ -277,30 +285,27 @@ class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with J
 
     def errorOnInvalidRequest(request: ActionRequest): Unit = {
       checkOnRequest(
-        Marshal(request).to[MessageEntity], response => {
+        Marshal(request).to[MessageEntity],
+        response => {
           status shouldBe StatusCodes.BadRequest
         }
       )
     }
 
     "return an error response for an invalid language" in {
-      val request = ActionRequest(
-        "NonsenseLanguageName", "edit", "IdentityAction", "ExprChoiceNode()", "", List()
-      )
+      val request = ActionRequest("NonsenseLanguageName", "edit", "IdentityAction", "ExprChoiceNode()", "", List())
       errorOnInvalidRequest(request)
     }
 
     "return an error response for an invalid display mode" in {
-      val request = ActionRequest(
-        server.getLanguageName(LArith), "nonsense", "IdentityAction", "ExprChoiceNode()", "", List()
-      )
+      val request =
+        ActionRequest(server.getLanguageName(LArith), "nonsense", "IdentityAction", "ExprChoiceNode()", "", List())
       errorOnInvalidRequest(request)
     }
 
     "return an error response for an invalid action kind" in {
-      val request = ActionRequest(
-        server.getLanguageName(LArith), "edit", "NonsenseAction", "ExprChoiceNode()", "", List()
-      )
+      val request =
+        ActionRequest(server.getLanguageName(LArith), "edit", "NonsenseAction", "ExprChoiceNode()", "", List())
       errorOnInvalidRequest(request)
     }
 

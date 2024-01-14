@@ -42,21 +42,16 @@ trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   )
 }
 
-val customExceptionHandler: ExceptionHandler = ExceptionHandler {
-  case exception: Exception => extractUri { uri =>
+val customExceptionHandler: ExceptionHandler = ExceptionHandler { case exception: Exception =>
+  extractUri { uri =>
     exception.printStackTrace()
 
     val statusCode = exception match {
       case _: IllegalArgumentException => StatusCodes.BadRequest
-      case _ => StatusCodes.InternalServerError
+      case _                           => StatusCodes.InternalServerError
     }
 
-    complete(
-      HttpResponse(
-        statusCode,
-        entity = exception.toString
-      )
-    )
+    complete(HttpResponse(statusCode, entity = exception.toString))
   }
 }
 
@@ -170,7 +165,7 @@ class WebServer extends JsonSupport {
   private def getLanguage(langName: String): ClickDeduceLanguage = knownLanguages
     .find(getLanguageName(_) == langName) match {
     case Some(lang) => lang.createNewInstance()
-    case None => throw new IllegalArgumentException(s"Unknown language: $langName")
+    case None       => throw new IllegalArgumentException(s"Unknown language: $langName")
   }
 
   def getLanguageName(lang: ClickDeduceLanguage): String = lang.getClass.getSimpleName.stripSuffix("$")
@@ -189,7 +184,7 @@ class WebServer extends JsonSupport {
     val reader = new java.io.BufferedReader(new java.io.InputStreamReader(inputStream))
 
     var line: String = ""
-    while ( {line = reader.readLine(); line != null}) {
+    while ({ line = reader.readLine(); line != null }) {
       println(line)
     }
 
@@ -199,10 +194,8 @@ class WebServer extends JsonSupport {
     }
   }
 
-  private def resourceNotFoundResponse: HttpResponse = HttpResponse(
-    StatusCodes.NotFound,
-    entity = HttpEntity("The requested resource could not be found.")
-  )
+  private def resourceNotFoundResponse: HttpResponse =
+    HttpResponse(StatusCodes.NotFound, entity = HttpEntity("The requested resource could not be found."))
 
   val requestRoute: Route = handleExceptions(customExceptionHandler) {
     post {
@@ -218,7 +211,11 @@ class WebServer extends JsonSupport {
           entity(as[ActionRequest]) { request =>
             val lang = getLanguage(request.langName)
             val action = lang.createAction(
-              request.actionName, request.nodeString, request.treePath, request.extraArgs, request.modeName
+              request.actionName,
+              request.nodeString,
+              request.treePath,
+              request.extraArgs,
+              request.modeName
             )
             val updatedTree = action.newTree
             val displayMode: lang.DisplayMode = lang.DisplayMode.fromString(request.modeName)
@@ -230,18 +227,19 @@ class WebServer extends JsonSupport {
       get {
         path("get-lang-selector") {
           val langSelector: TypedTag[String] = select(
-            id := "lang-selector", name := "lang-name",
+            id := "lang-selector",
+            name := "lang-name",
             knownLanguages.map(lang => option(value := getLanguageName(lang), getLanguageName(lang)))
           )
           val response = LangSelectorResponse(langSelector.toString)
           complete(response)
         } ~
-          pathEndOrSingleSlash {getFromFile(indexPage)} ~
-          pathPrefix("dist") {getFromDirectory(distDirectory)} ~
-          pathPrefix("images") {getFromDirectory(imagesDirectory)} ~
-          pathPrefix("scripts") {complete(resourceNotFoundResponse)} ~
-          pathPrefix("styles") {complete(resourceNotFoundResponse)} ~
-          pathPrefix("pages") {complete(resourceNotFoundResponse)} ~
+          pathEndOrSingleSlash { getFromFile(indexPage) } ~
+          pathPrefix("dist") { getFromDirectory(distDirectory) } ~
+          pathPrefix("images") { getFromDirectory(imagesDirectory) } ~
+          pathPrefix("scripts") { complete(resourceNotFoundResponse) } ~
+          pathPrefix("styles") { complete(resourceNotFoundResponse) } ~
+          pathPrefix("pages") { complete(resourceNotFoundResponse) } ~
           getFromDirectory(distDirectory)
       }
   }

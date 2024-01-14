@@ -43,9 +43,8 @@ class ArgsHandlingSpec extends AnyWordSpec with Matchers {
 
     "cause an error with invalid command line argument" in {
       val server = WebServer()
-      val invalidPorts = TableFor1(
-        "port", "-1", "0", "65536", "65537", "-10561857", "7985668", "x", "test", "123test", "test123", "2e3"
-      )
+      val invalidPorts =
+        TableFor1("port", "-1", "0", "65536", "65537", "-10561857", "7985668", "x", "test", "123test", "test123", "2e3")
       forAll(invalidPorts) { port =>
         server.parseArgs(Array("--port", port)) shouldBe false
       }
@@ -53,14 +52,8 @@ class ArgsHandlingSpec extends AnyWordSpec with Matchers {
   }
 
   "Binding address" should {
-    val validAddresses: TableFor1[String] = TableFor1(
-      "address",
-      "0.0.0.0",
-      "255.255.255.255",
-      "127.0.0.1",
-      "56.132.245.78",
-      "21.76.236.85"
-    )
+    val validAddresses: TableFor1[String] =
+      TableFor1("address", "0.0.0.0", "255.255.255.255", "127.0.0.1", "56.132.245.78", "21.76.236.85")
 
     val invalidAddresses: TableFor1[String] = TableFor1(
       "address",

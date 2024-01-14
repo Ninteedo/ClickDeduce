@@ -1,9 +1,8 @@
 package languages
 
 import languages.LIf.*
-import org.scalatest.GivenWhenThen
 import org.scalatest.matchers.should.Matchers.*
-import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor1, TableFor3}
+import org.scalatest.prop.TableFor1
 import org.scalatest.propspec.AnyPropSpec
 
 import scala.util.Random
@@ -23,14 +22,9 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
     IfThenElse(Bool(true), Num(1), Num(2)),
     IfThenElse(Bool(false), Num(1), Num(2)),
     IfThenElse(Eq(Num(1), Num(2)), Num(1), Num(2)),
-    IfThenElse(Eq(Num(1), Num(1)), IfThenElse(Bool(false), Num(5), Plus(Num(1), Num(-1))), Num(2)),
+    IfThenElse(Eq(Num(1), Num(1)), IfThenElse(Bool(false), Num(5), Plus(Num(1), Num(-1))), Num(2))
   )
-  val newExprClasses: TableFor1[String] = Table(
-    "newExprClasses",
-    "Bool",
-    "Eq",
-    "IfThenElse"
-  )
+  val newExprClasses: TableFor1[String] = Table("newExprClasses", "Bool", "Eq", "IfThenElse")
 
   testExpression(
     "Bool",
@@ -49,7 +43,7 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
       (IfThenElse(Bool(true), Num(1), Num(2)), NumV(1), IntType()),
       (IfThenElse(Bool(true), Bool(true), Bool(false)), BoolV(true), BoolType()),
       (IfThenElse(Bool(false), Num(1), Num(2)), NumV(2), IntType()),
-      (IfThenElse(Bool(false), Bool(true), Bool(false)), BoolV(false), BoolType()),
+      (IfThenElse(Bool(false), Bool(true), Bool(false)), BoolV(false), BoolType())
     )
   )
 
@@ -86,7 +80,7 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
       (Eq(Num(1), Num(2)), BoolV(false), BoolType()),
       (Eq(Bool(true), Bool(false)), BoolV(false), BoolType()),
       (Eq(Bool(true), Bool(true)), BoolV(true), BoolType()),
-      (Eq(Num(1), Num(1)), BoolV(true), BoolType()),
+      (Eq(Num(1), Num(1)), BoolV(true), BoolType())
     )
   )
 
@@ -116,28 +110,34 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
 
     val selectIfThenElseAction = createAction("SelectExprAction", initialTree.toString, "", List("IfThenElse"))
     selectIfThenElseAction.newTree shouldEqual VariableNode(
-      "IfThenElse", List(SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode()))
+      "IfThenElse",
+      List(SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode()))
     )
 
     val selectCondAction = createAction("SelectExprAction", selectIfThenElseAction.newTree.toString, "0", List("Bool"))
     selectCondAction.newTree shouldEqual VariableNode(
-      "IfThenElse", List(
-        SubExprNode(VariableNode("Bool", List(LiteralNode("")))), SubExprNode(ExprChoiceNode()),
+      "IfThenElse",
+      List(
+        SubExprNode(VariableNode("Bool", List(LiteralNode("")))),
+        SubExprNode(ExprChoiceNode()),
         SubExprNode(ExprChoiceNode())
       )
     )
 
     val enterBoolAction = createAction("EditLiteralAction", selectCondAction.newTree.toString, "0-0", List("true"))
     enterBoolAction.newTree shouldEqual VariableNode(
-      "IfThenElse", List(
-        SubExprNode(VariableNode("Bool", List(LiteralNode("true")))), SubExprNode(ExprChoiceNode()),
+      "IfThenElse",
+      List(
+        SubExprNode(VariableNode("Bool", List(LiteralNode("true")))),
+        SubExprNode(ExprChoiceNode()),
         SubExprNode(ExprChoiceNode())
       )
     )
 
     val selectThenExprAction = createAction("SelectExprAction", enterBoolAction.newTree.toString, "1", List("Num"))
     selectThenExprAction.newTree shouldEqual VariableNode(
-      "IfThenElse", List(
+      "IfThenElse",
+      List(
         SubExprNode(VariableNode("Bool", List(LiteralNode("true")))),
         SubExprNode(VariableNode("Num", List(LiteralNode("")))),
         SubExprNode(ExprChoiceNode())
@@ -146,7 +146,8 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
 
     val enterThenExprAction = createAction("EditLiteralAction", selectThenExprAction.newTree.toString, "1-0", List("1"))
     enterThenExprAction.newTree shouldEqual VariableNode(
-      "IfThenElse", List(
+      "IfThenElse",
+      List(
         SubExprNode(VariableNode("Bool", List(LiteralNode("true")))),
         SubExprNode(VariableNode("Num", List(LiteralNode("1")))),
         SubExprNode(ExprChoiceNode())
@@ -155,7 +156,8 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
 
     val selectElseExprAction = createAction("SelectExprAction", enterThenExprAction.newTree.toString, "2", List("Num"))
     selectElseExprAction.newTree shouldEqual VariableNode(
-      "IfThenElse", List(
+      "IfThenElse",
+      List(
         SubExprNode(VariableNode("Bool", List(LiteralNode("true")))),
         SubExprNode(VariableNode("Num", List(LiteralNode("1")))),
         SubExprNode(VariableNode("Num", List(LiteralNode(""))))
@@ -164,7 +166,8 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
 
     val enterElseExprAction = createAction("EditLiteralAction", selectElseExprAction.newTree.toString, "2-0", List("2"))
     enterElseExprAction.newTree shouldEqual VariableNode(
-      "IfThenElse", List(
+      "IfThenElse",
+      List(
         SubExprNode(VariableNode("Bool", List(LiteralNode("true")))),
         SubExprNode(VariableNode("Num", List(LiteralNode("1")))),
         SubExprNode(VariableNode("Num", List(LiteralNode("2"))))
@@ -178,7 +181,8 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
 
   property("IfThenElse tree can be converted to HTML without error") {
     val tree = VariableNode(
-      "IfThenElse", List(
+      "IfThenElse",
+      List(
         SubExprNode(VariableNode("Bool", List(LiteralNode("true")))),
         SubExprNode(VariableNode("Num", List(LiteralNode("1")))),
         SubExprNode(VariableNode("Num", List(LiteralNode("2"))))

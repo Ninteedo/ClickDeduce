@@ -2,9 +2,8 @@ package languages
 
 import scala.reflect.runtime.universe as ru
 
-/**
- * Parent trait for all languages designed to be loaded in ClickDeduce.
- */
+/** Parent trait for all languages designed to be loaded in ClickDeduce.
+  */
 trait ClickDeduceLanguage extends AbstractActionLanguage {
   lang =>
 
@@ -31,7 +30,7 @@ trait ClickDeduceLanguage extends AbstractActionLanguage {
         val blankClass = blankClassList.find(_.getSimpleName == name)
         blankClass match {
           case Some(value) => MissingExpr()
-          case None => MissingExpr()
+          case None        => MissingExpr()
         }
       }
     }
@@ -44,8 +43,8 @@ trait ClickDeduceLanguage extends AbstractActionLanguage {
         val constructor = value.getConstructors()(0)
         val arguments = constructor.getParameterTypes.map {
           case c if classOf[ClickDeduceLanguage].isAssignableFrom(c) => lang
-          case c if classOf[Expr].isAssignableFrom(c) => BlankChildPlaceholder()
-          case _ => BlankLiteral()
+          case c if classOf[Expr].isAssignableFrom(c)                => BlankChildPlaceholder()
+          case _                                                     => BlankLiteral()
         }
         constructor.newInstance(arguments: _*).asInstanceOf[Expr]
       }
@@ -53,7 +52,7 @@ trait ClickDeduceLanguage extends AbstractActionLanguage {
         val blankClass = blankClassList.find(_.getSimpleName == name)
         blankClass match {
           case Some(value) => MissingExpr()
-          case None => MissingExpr()
+          case None        => MissingExpr()
         }
       }
     }
