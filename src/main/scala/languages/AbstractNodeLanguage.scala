@@ -192,16 +192,25 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   abstract class Node {
     val children: List[OuterNode] = Nil
 
-    private var parent: Option[OuterNode] = None
+    private var parent: Option[Option[OuterNode]] = None
 
-    def getParent: Option[OuterNode] = parent
+    private var parentInitialised = false
 
-    def setParent(parentNode: OuterNode): Unit = getParent match {
-      case None => parent = Some(parentNode)
-      case Some(value) => parent = Some(parentNode)
-      //        if (!(value eq parentNode))
-      //          throw new Exception("Cannot initialise parent multiple times")
+    def getParent: Option[OuterNode] = parent match {
+      case Some(value) => value
+      case None => throw new Exception("Parent not initialised")
     }
+
+    def setParent(parentNode: Option[OuterNode]): Unit = if (!parentInitialised || true) {
+      parent = Some(parentNode)
+      markParentInitialised()
+    }
+
+    protected def markParentInitialised(): Unit = {
+      parentInitialised = true
+    }
+
+    def isParentInitialised: Boolean = parentInitialised
 
     def toHtmlLine(mode: DisplayMode): TypedTag[String]
 
@@ -251,7 +260,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
               val node = makeNode(name, args)
               node match {
                 case Some(n: OuterNode) => {
-                  n.children.foreach(_.setParent(n))
+                  n.children.foreach(_.setParent(Some(n)))
                   Some(n)
                 }
                 case _ => throw new Exception("Unexpected error in outerNode")
@@ -309,14 +318,14 @@ trait AbstractNodeLanguage extends AbstractLanguage {
           def parentify(node: Node): Unit = node match {
             case n: OuterNode => {
               n.children.foreach({ c =>
-                c.setParent(n)
+                c.setParent(Some(n))
                 parentify(c)
               }
               )
             }
             case n: InnerNode => {
               n.children.foreach({ c =>
-                c.setParent(n.getParent.get)
+                c.setParent(n.getParent)
                 parentify(c)
               }
               )
@@ -324,6 +333,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
           }
 
           parentify(matched)
+          matched.setParent(None)
           Some(matched)
         }
         case x =>
@@ -339,6 +349,10 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
   abstract class OuterNode extends Node {
     val args: List[InnerNode]
+
+    def markRoot(): Unit = {
+      setParent(None)
+    }
 
     def toHtml(mode: DisplayMode): TypedTag[String] = if (children.isEmpty) toHtmlAxiom(mode) else toHtmlSubtree(mode)
 
@@ -423,18 +437,22 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   }
 
   abstract class ExprNode extends OuterNode {
-    override def setParent(parentNode: OuterNode): Unit = parentNode match {
-      case n: ExprNode => {
+    override def setParent(parentNode: Option[OuterNode]): Unit = parentNode match {
+      case Some(n: ExprNode) => {
         val parentDepth = n.depth
         if (parentDepth >= depthLimit) throw new DepthLimitExceededException()
-        super.setParent(n)
+        super.setParent(Some(n))
       }
+      case None => super.setParent(None)
     }
 
-    override def getParent: Option[ExprNode] = super.getParent match {
-      case Some(n: ExprNode) => Some(n)
-      case None => None
-      case Some(n) => throw new Exception(s"Unexpected parent type: ${n.getClass.getSimpleName}")
+    override def getParent: Option[ExprNode] = {
+      if (!isParentInitialised) markRoot()
+      super.getParent match {
+        case Some(n: ExprNode) => Some(n)
+        case None => None
+        case Some(n) => throw new Exception(s"Unexpected parent type: ${n.getClass.getSimpleName}")
+      }
     }
 
     def depth: Int = getParent match {
@@ -605,7 +623,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
               }
               case None => {
                 val newNode = VariableNode.fromExpr(expr)
-                newNode.setParent(this)
+                newNode.setParent(Some(this))
                 newNode.markPhantom()
                 Some(newNode)
               }
@@ -648,7 +666,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     override def getExpr: Expr = expr
 
-    children.foreach(_.setParent(this))
+    children.foreach(_.setParent(Some(this)))
   }
 
   case class VariableNode(exprName: String, args: List[InnerNode] = Nil) extends ExprNode {
@@ -712,8 +730,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       case _ => true
     }
 
-    children.foreach(_.setParent(this))
-    args.foreach(_.setParent(this))
+    children.foreach(_.setParent(Some(this)))
+    args.foreach(_.setParent(Some(this)))
   }
 
   object VariableNode {
@@ -728,7 +746,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
         case c => throw new Exception(s"Unexpected parameter type in createFromExpr: $c")
       }.filter(_.isDefined).map(_.get)
       val result = VariableNode(exprName, innerNodes.toList)
-      innerNodes.foreach(_.setParent(result))
+      innerNodes.foreach(_.setParent(Some(result)))
+      result.markRoot()
       result
     }
 
@@ -753,7 +772,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
         }
         val result = VariableNode(e.getClass.getSimpleName, innerNodes)
         result.overrideExpr(e)
-        innerNodes.foreach(_.setParent(result))
+        innerNodes.foreach(_.setParent(Some(result)))
+        result.markRoot()
         result
       }
     }
@@ -779,8 +799,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   }
 
   case class SubExprNode(node: ExprNode) extends InnerNode {
-    override def setParent(parentNode: OuterNode): Unit = parentNode match {
-      case n: ExprNode => super.setParent(n)
+    override def setParent(parentNode: Option[OuterNode]): Unit = parentNode match {
+      case Some(n: ExprNode) => super.setParent(Some(n))
     }
 
     override def getParent: Option[ExprNode] = super.getParent match {
@@ -915,8 +935,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       prettyPrint(constructor.newInstance(arguments: _*).asInstanceOf[Expr])
     }
 
-    children.foreach(_.setParent(this))
-    args.foreach(_.setParent(this))
+    children.foreach(_.setParent(Some(this)))
+    args.foreach(_.setParent(Some(this)))
   }
 
   object TypeNode {
@@ -952,7 +972,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
         }
       }
       val result = TypeNode(typ.getClass.getSimpleName, innerNodes)
-      innerNodes.foreach(_.setParent(result))
+      innerNodes.foreach(_.setParent(Some(result)))
       result
     }
   }

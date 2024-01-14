@@ -1,12 +1,8 @@
 package languages
 
-import languages.LArith
 import languages.LArith.*
-import org.scalatest.GivenWhenThen
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers.*
-
-import scala.util.Random
 
 class NodeTreeTest extends AnyFunSuite {
   test("Can correctly represent a complete simple addition tree") {
@@ -14,7 +10,7 @@ class NodeTreeTest extends AnyFunSuite {
     val children = List(ConcreteNode(Num(1).toString), ConcreteNode(Num(2).toString))
     val args = children.map(SubExprNode(_))
     val tree = ConcreteNode(expr.toString, args)
-    children.foreach(_.setParent(tree))
+    children.foreach(_.setParent(Some(tree)))
     tree.exprName shouldEqual "Plus"
     children(0).exprName shouldEqual "Num"
     children(1).exprName shouldEqual "Num"
@@ -31,7 +27,7 @@ class NodeTreeTest extends AnyFunSuite {
     val variableChild = SubExprNode(variableChildInner)
     val children = List(concreteChild, variableChild)
     val tree = VariableNode("Times", children)
-    children.foreach(_.node.setParent(tree))
+    children.foreach(_.node.setParent(Some(tree)))
     tree.exprName shouldEqual "Times"
     //    children(0).node.exprName shouldBe "Num"
     //    children(1).node.exprName shouldBe "Num"
