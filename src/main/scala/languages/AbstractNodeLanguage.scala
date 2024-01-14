@@ -2,7 +2,7 @@ package languages
 
 import app.UtilityFunctions
 import scalatags.Text.TypedTag
-import scalatags.Text.all.{div, raw, s, *}
+import scalatags.Text.all.*
 
 import java.util.concurrent.atomic.AtomicInteger
 import scala.annotation.tailrec
@@ -424,12 +424,22 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
   abstract class ExprNode extends OuterNode {
     override def setParent(parentNode: OuterNode): Unit = parentNode match {
-      case n: ExprNode => super.setParent(n)
+      case n: ExprNode => {
+        val parentDepth = n.depth
+        if (parentDepth >= depthLimit) throw new DepthLimitExceededException()
+        super.setParent(n)
+      }
     }
 
     override def getParent: Option[ExprNode] = super.getParent match {
       case Some(n: ExprNode) => Some(n)
       case None => None
+      case Some(n) => throw new Exception(s"Unexpected parent type: ${n.getClass.getSimpleName}")
+    }
+
+    def depth: Int = getParent match {
+      case Some(value) => value.depth + 1
+      case None => 0
     }
 
     val exprName: String
@@ -576,6 +586,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     def getVisibleChildren(mode: DisplayMode): List[OuterNode] = mode match {
       case DisplayMode.Edit => children
+      case DisplayMode.TypeCheck => children
       case DisplayMode.Evaluation => {
         val childExprs = getExpr.getChildrenEval(getEnv).map(_._1)
         var unconsumedChildren = children
@@ -603,7 +614,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
         }
         )
       }
-      case DisplayMode.TypeCheck => children
     }
 
     var isPhantomStore = false
@@ -969,4 +979,9 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       toHtmlLine(mode)(readonly, disabled)
   }
 
+  protected val depthLimit: Int = 100
+
+  class DepthLimitExceededException extends Exception {
+    override def getMessage: String = s"Depth limit exceeded: $depthLimit"
+  }
 }
