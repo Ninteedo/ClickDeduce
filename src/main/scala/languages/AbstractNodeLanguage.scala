@@ -216,12 +216,12 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String]
 
-    def treePath: List[Int] = getParent match {
+    lazy val treePath: List[Int] = getParent match {
       case Some(value) => value.treePath :+ value.args.indexWhere(_ eq this)
       case None => Nil
     }
 
-    def treePathString: String = treePath.mkString("-")
+    lazy val treePathString: String = treePath.mkString("-")
   }
 
   object Node {
@@ -418,7 +418,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       }
     }
 
-    override def treePath: List[Int] = getParent match {
+    override lazy val treePath: List[Int] = getParent match {
       case Some(value) => {
         val index: Int = value.args.indexWhere({
           case SubExprNode(node) => node eq this
@@ -455,7 +455,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       }
     }
 
-    def depth: Int = getParent match {
+    lazy val depth: Int = getParent match {
       case Some(value) => value.depth + 1
       case None => 0
     }
@@ -464,13 +464,13 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     def getExpr: Expr
 
-    def getEditValueResult: Value = getExpr.eval(getEditEnv)
+    lazy val getEditValueResult: Value = getExpr.eval(getEditEnv)
 
-    def getValue: Value = getExpr.eval(getEnv)
+    lazy val getValue: Value = getExpr.eval(getEnv)
 
-    def getType: Type = getExpr.typeCheck(getTypeEnv)
+    lazy val getType: Type = getExpr.typeCheck(getTypeEnv)
 
-    def getEditEnv: Env = getParent match {
+    lazy val getEditEnv: Env = getParent match {
       case Some(value) => {
         val parentExpressions: List[(Term, Env)] = value.getExpr.getChildrenBase(value.getEditEnv)
         parentExpressions.find(_._1 eq getExpr).map(_._2).getOrElse(Map())
@@ -478,7 +478,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       case None => Map()
     }
 
-    def getEnv: Env = getParent match {
+    lazy val getEnv: Env = getParent match {
       case Some(value) => {
         val parentExpressions: List[(Term, Env)] = value.getExpr.getChildrenEval(value.getEnv)
         parentExpressions.find(_._1 eq getExpr).map(_._2).getOrElse(Map())
@@ -486,7 +486,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       case None => Map()
     }
 
-    def getTypeEnv: TypeEnv = getParent match {
+    lazy val getTypeEnv: TypeEnv = getParent match {
       case Some(value) => {
         val parentExpressions: List[(Term, TypeEnv)] = value.getExpr.getChildrenTypeCheck(value.getTypeEnv)
         parentExpressions.find(_._1 eq getExpr).map(_._2).getOrElse(Map())
@@ -573,15 +573,15 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       evalResultDiv
     )
 
-    def typeCheckTurnstileSpan: TypedTag[String] = span(paddingLeft := "0.5ch", paddingRight := "0.5ch", raw(":"))
+    lazy val typeCheckTurnstileSpan: TypedTag[String] = span(paddingLeft := "0.5ch", paddingRight := "0.5ch", raw(":"))
 
-    def typeCheckResultDiv: TypedTag[String] = div(cls := "type-check-result", display := "inline", getType.toHtml)
+    lazy val typeCheckResultDiv: TypedTag[String] = div(cls := "type-check-result", display := "inline", getType.toHtml)
 
-    def evalArrowSpan: TypedTag[String] = span(paddingLeft := "1ch", paddingRight := "1ch", raw("&DoubleDownArrow;"))
+    lazy val evalArrowSpan: TypedTag[String] = span(paddingLeft := "1ch", paddingRight := "1ch", raw("&DoubleDownArrow;"))
 
-    def evalResultDiv: TypedTag[String] = div(cls := "eval-result", display := "inline", getValue.toHtml)
+    lazy val evalResultDiv: TypedTag[String] = div(cls := "eval-result", display := "inline", getValue.toHtml)
 
-    def editEvalResultDiv: TypedTag[String] = div(cls := "eval-result", display := "inline", getEditValueResult.toHtml)
+    lazy val editEvalResultDiv: TypedTag[String] = div(cls := "eval-result", display := "inline", getEditValueResult.toHtml)
 
     def envDiv(mode: DisplayMode): TypedTag[String] = {
       val env: Env | TypeEnv = mode match {
@@ -725,7 +725,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       prettyPrint(constructor.newInstance(arguments: _*).asInstanceOf[Expr])
     }
 
-    def nonErrorEvalResult: Boolean = getValue match {
+    lazy val nonErrorEvalResult: Boolean = getValue match {
       case _: EvalError => false
       case _ => true
     }
@@ -844,18 +844,18 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       s"LiteralNode(${UtilityFunctions.quote(literalText)})"
     }
 
-    override def treePath: List[Int] = getParent match {
+    override lazy val treePath: List[Int] = getParent match {
       case Some(value: VariableNode) => value.treePath :+ value.args.indexWhere(_ eq this)
       case _ => Nil
     }
 
-    def getLiteral: Literal = Literal.fromString(literalText)
+    lazy val getLiteral: Literal = Literal.fromString(literalText)
   }
 
   abstract class TypeNodeParent extends OuterNode {
-    def getType: Type
+    lazy val getType: Type
 
-    def getTypeName: String = getType.getClass.getSimpleName
+    lazy val getTypeName: String = getType.getClass.getSimpleName
 
     def toHtmlAxiom(mode: DisplayMode): TypedTag[String] = {
       div(
@@ -891,7 +891,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   }
 
   case class TypeNode(typeName: String, args: List[InnerNode]) extends TypeNodeParent {
-    override def getType: Type = {
+    override lazy val getType: Type = {
       val constructor = typeClass.getConstructors()(0)
       val arguments = lang +: args.map {
         case tn: SubTypeNode => tn.node.getType
@@ -986,7 +986,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] =
       toHtmlLine(mode)(readonly, disabled)
 
-    override def getType: Type = UnknownType()
+    override lazy val getType: Type = UnknownType()
   }
 
   case class SubTypeNode(node: TypeNodeParent) extends InnerNode {
