@@ -288,7 +288,7 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
 
     val phantomTree = tree.getVisibleChildren(DisplayMode.Evaluation).last.asInstanceOf[ExprNode]
     phantomTree.getExpr shouldEqual Plus(Var("x"), Num(1))
-    phantomTree.getEnv shouldEqual Map("x" -> NumV(8))
+    phantomTree.getEvalEnv shouldEqual Map("x" -> NumV(8))
     phantomTree.getValue shouldEqual NumV(9)
 
     val exprChoicePhantomExpr =

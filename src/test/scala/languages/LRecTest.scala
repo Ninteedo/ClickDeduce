@@ -67,7 +67,7 @@ class LRecTest extends TestTemplate[Expr, Value, Type] {
     children(2) shouldBe a[VariableNode]
     val phantomNode = children(2).asInstanceOf[VariableNode]
     phantomNode.isPhantom shouldEqual true
-    phantomNode.getEnv shouldEqual Map("factorial" -> factorialFunction.eval(Map()), "n" -> NumV(3))
+    phantomNode.getEvalEnv shouldEqual Map("factorial" -> factorialFunction.eval(Map()), "n" -> NumV(3))
     phantomNode.getValue shouldEqual NumV(6)
   }
 

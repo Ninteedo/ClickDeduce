@@ -124,9 +124,9 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
     val finalTree = boundExprValueAction.newTree.asInstanceOf[ExprNode]
 
     finalTree.getExpr shouldEqual Let(v, Num(assignValue), Var(v))
-    finalTree.getEnv shouldEqual Map()
-    finalTree.findChild(List(1)).get.asInstanceOf[ExprNode].getEnv shouldEqual Map()
-    finalTree.findChild(List(2)).get.asInstanceOf[ExprNode].getEnv shouldEqual Map(v -> NumV(assignValue))
+    finalTree.getEvalEnv shouldEqual Map()
+    finalTree.findChild(List(1)).get.asInstanceOf[ExprNode].getEvalEnv shouldEqual Map()
+    finalTree.findChild(List(2)).get.asInstanceOf[ExprNode].getEvalEnv shouldEqual Map(v -> NumV(assignValue))
   }
 
   property("Invalid variable names result in an error") {
