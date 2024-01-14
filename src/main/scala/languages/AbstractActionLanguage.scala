@@ -1,11 +1,10 @@
 package languages
 
 trait AbstractActionLanguage extends AbstractNodeLanguage {
-  def getActionClass(actionName: String): Class[Action] = (actionName match {
+  private def getActionClass(actionName: String): Class[Action] = (actionName match {
     case "SelectExprAction"  => classOf[SelectExprAction]
     case "EditLiteralAction" => classOf[EditLiteralAction]
     case "DeleteAction"      => classOf[DeleteAction]
-    case "InsertAction"      => classOf[InsertAction]
     case "PasteAction"       => classOf[PasteAction]
     case "IdentityAction"    => classOf[IdentityAction]
     case "SelectTypeAction"  => classOf[SelectTypeAction]
@@ -43,7 +42,7 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
   }
 
   abstract class Action(val originalTree: OuterNode, val treePath: List[Int]) {
-    val newTree: OuterNode
+    lazy val newTree: OuterNode
   }
 
   case class SelectExprAction(
@@ -51,7 +50,11 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
     override val treePath: List[Int],
     exprChoiceName: String
   ) extends Action(originalTree, treePath) {
-    override val newTree: OuterNode = originalTree.replace(treePath, VariableNode.createFromExprName(exprChoiceName))
+    override lazy val newTree: OuterNode = originalTree.findChild(treePath) match {
+      case Some(exprChoiceNode: ExprChoiceNode) =>
+        originalTree.replace(treePath, VariableNode.createFromExprName(exprChoiceName))
+      case other => throw new InvalidSelectTargetException(other)
+    }
   }
 
   case class EditLiteralAction(
@@ -59,7 +62,7 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
     override val treePath: List[Int],
     newLiteralText: String
   ) extends Action(originalTree, treePath) {
-    override val newTree: OuterNode = originalTree.replace(treePath, LiteralNode(newLiteralText))
+    override lazy val newTree: OuterNode = originalTree.replace(treePath, LiteralNode(newLiteralText))
   }
 
   case class SelectTypeAction(
@@ -67,30 +70,16 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
     override val treePath: List[Int],
     typeChoiceName: String
   ) extends Action(originalTree, treePath) {
-    override val newTree: OuterNode = originalTree.replace(treePath, TypeNode.fromTypeName(typeChoiceName))
+    override lazy val newTree: OuterNode = originalTree.findChild(treePath) match {
+      case Some(typeChoiceNode: TypeChoiceNode) =>
+        originalTree.replace(treePath, TypeNode.fromTypeName(typeChoiceName))
+      case other => throw new InvalidSelectTargetException(other)
+    }
   }
-
-  //  case class CompleteEvaluationAction(override val originalTree: OuterNode, override val treePath: List[Int])
-  //    extends Action(originalTree, treePath) {
-  //    override val newTree: OuterNode = {
-  //      originalTree match {
-  //        case ConcreteNode(exprString, args) => {
-  //          val expr = readExpr(exprString).get
-  //          ???
-  //          ConcreteNode(exprString, newArgs)
-  //        }
-  //      }
-  //    }
-  //  }
 
   case class DeleteAction(override val originalTree: OuterNode, override val treePath: List[Int])
       extends Action(originalTree, treePath) {
-    override val newTree: OuterNode = originalTree.replace(treePath, ExprChoiceNode())
-  }
-
-  case class InsertAction(override val originalTree: OuterNode, override val treePath: List[Int], insertTree: OuterNode)
-      extends Action(originalTree, treePath) {
-    override val newTree: OuterNode = originalTree.replace(treePath, insertTree)
+    override lazy val newTree: OuterNode = originalTree.replace(treePath, ExprChoiceNode())
   }
 
   case class PasteAction(
@@ -100,14 +89,13 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
   ) extends Action(originalTree, treePath) {
     private val pasteNode: Node = Node.read(pasteNodeString).get
 
-    override val newTree: OuterNode = pasteNode match {
-      case n: OuterNode => originalTree.replace(treePath, n)
-      case n: InnerNode => originalTree.replace(treePath, n)
-    }
+    override lazy val newTree: OuterNode = originalTree.replace(treePath, pasteNode)
   }
 
   case class IdentityAction(override val originalTree: OuterNode, override val treePath: List[Int])
       extends Action(originalTree, treePath) {
-    override val newTree: OuterNode = originalTree
+    override lazy val newTree: OuterNode = originalTree
   }
+
+  class InvalidSelectTargetException(found: Option[Node]) extends Exception(s"Invalid select target: $found")
 }
