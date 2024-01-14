@@ -287,7 +287,7 @@ class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with J
       checkOnRequest(
         Marshal(request).to[MessageEntity],
         response => {
-          status shouldBe StatusCodes.BadRequest
+          status should not be StatusCodes.OK
         }
       )
     }

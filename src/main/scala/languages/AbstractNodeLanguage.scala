@@ -968,4 +968,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   class DepthLimitExceededException extends Exception(s"Depth limit ($depthLimit) exceeded")
 
   class InvalidTreePathException(treePath: List[Int]) extends Exception(s"Invalid tree path: $treePath")
+
+  class NodeStringParseException(nodeString: String) extends Exception(s"Could not parse node string: $nodeString")
 }

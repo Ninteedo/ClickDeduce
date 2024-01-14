@@ -8,7 +8,7 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
     case "DeleteAction"      => classOf[DeleteAction]
     case "PasteAction"       => classOf[PasteAction]
     case "IdentityAction"    => classOf[IdentityAction]
-    case _                   => throw new IllegalArgumentException(s"Unknown action name: $actionName")
+    case _                   => throw new ActionInvocationException(s"Unknown action name: $actionName")
   }).asInstanceOf[Class[Action]]
 
   def createAction(
@@ -20,25 +20,32 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
   ): Action = {
     val node = Node.read(nodeString) match {
       case Some(n: OuterNode) => n
-      case _                  => throw new IllegalArgumentException(s"Could not parse node string: $nodeString")
+      case Some(n)            => throw new ActionInvocationException(s"Expected OuterNode, got $n")
+      case _                  => throw new NodeStringParseException(nodeString)
     }
     val treePath = Node.readPathString(treePathString)
     val actionClass = getActionClass(actionName)
-    val constructor = actionClass.getConstructors()(0)
+    val constructor = actionClass.getConstructors.headOption match {
+      case Some(c) => c
+      case None    => throw new ActionInvocationException(s"No constructor found for $actionClass")
+    }
     var remainingExtraArgs = extraArgs
     val arguments = constructor.getParameterTypes.map {
       case c if classOf[AbstractActionLanguage] isAssignableFrom c => this
       case c if classOf[Node] isAssignableFrom c                   => node
       case c if classOf[List[Int]] isAssignableFrom c              => treePath
-      case c if classOf[String] isAssignableFrom c => {
+      case c if classOf[String] isAssignableFrom c =>
         val arg = remainingExtraArgs.head
         remainingExtraArgs = remainingExtraArgs.tail
         arg
-      }
-      case c => throw new Exception(s"Unexpected parameter type in createAction: $c")
+      case c => throw new ActionInvocationException(s"Unexpected parameter type in createAction: $c")
     }
-    val result = constructor.newInstance(arguments: _*)
-    result.asInstanceOf[Action]
+    try {
+      val result = constructor.newInstance(arguments: _*)
+      result.asInstanceOf[Action]
+    } catch {
+      case e: Exception => throw new ActionInvocationException(s"Error invoking constructor for $actionClass: $e")
+    }
   }
 
   abstract class Action(val originalTree: OuterNode, val treePath: List[Int]) {
@@ -76,7 +83,7 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
   ) extends Action(originalTree, treePath) {
     override lazy val newTree: OuterNode = originalTree.findChild(treePath) match {
       case Some(literalNode: LiteralNode) => originalTree.replace(treePath, LiteralNode(newLiteralText))
-      case other => throw new InvalidEditTargetException(other)
+      case other                          => throw new InvalidEditTargetException(other)
     }
   }
 
@@ -103,4 +110,6 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
   class InvalidSelectTargetException(found: Option[Node]) extends Exception(s"Invalid select target: $found")
 
   class InvalidEditTargetException(found: Option[Node]) extends Exception(s"Invalid literal edit target: $found")
+
+  class ActionInvocationException(message: String) extends Exception(message)
 }
