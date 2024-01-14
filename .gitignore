@@ -43,3 +43,5 @@ webapp/dist
 package-lock.json
 
 coverage/
+
+.bsp/sbt.json
