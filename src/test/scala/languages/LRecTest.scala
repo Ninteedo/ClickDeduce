@@ -111,7 +111,13 @@ class LRecTest extends TestTemplate[Expr, Value, Type] {
 
     failAfter(Span(100, Millis)) {
       noException should be thrownBy node.toHtml(DisplayMode.Edit)
+    }
+
+    failAfter(Span(100, Millis)) {
       noException should be thrownBy node.toHtml(DisplayMode.TypeCheck)
+    }
+
+    failAfter(Span(100, Millis)) {
       a[DepthLimitExceededException] should be thrownBy node.toHtml(DisplayMode.Evaluation)
     }
   }

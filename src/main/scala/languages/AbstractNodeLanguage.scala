@@ -122,22 +122,17 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
       val exprClass = exprClassList.find(_.getSimpleName == name)
       exprClass match {
-        case Some(value) => {
-          Some(constructTermFromArgs(value))
-        }
-        case None => {
+        case Some(value) => Some(constructTermFromArgs(value))
+        case None =>
           val blankClass = blankClassList.find(_.getSimpleName == name)
           blankClass match {
             case Some(value) => makeTerm("MissingExpr", Nil)
             case None =>
               typeClassList.find(_.getSimpleName == name) match {
-                case Some(value) => {
-                  Some(constructTermFromArgs(value))
-                }
-                case None => None
+                case Some(value) => Some(constructTermFromArgs(value))
+                case None        => None
               }
           }
-        }
       }
     }
 
@@ -191,6 +186,14 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     typeClassList.find(_.getSimpleName == name)
   }
 
+  def cacheQuery[A, B](cache: collection.mutable.Map[A, B], key: A, value: => B): B = cache.get(key) match {
+    case Some(value) => value
+    case None =>
+      val result = value
+      cache += (key -> result)
+      result
+  }
+
   abstract class Node {
     val children: List[OuterNode] = Nil
 
@@ -236,7 +239,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       def makeNode(name: String, args: List[Any], env: Env | TypeEnv = Map()): Option[Node] = {
         val nodeClass = nodeClassList.find(_.getSimpleName == name)
         nodeClass match {
-          case Some(value) => {
+          case Some(value) =>
             val constructor = value.getConstructors()(0)
             var arguments = AbstractNodeLanguage.this +: args.map {
               case LiteralString(s) => s.stripPrefix("\"").stripSuffix("\"")
@@ -247,7 +250,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
               arguments = arguments :+ env
             }
             Some(constructor.newInstance(arguments: _*).asInstanceOf[Node])
-          }
           case None => None
         }
       }
@@ -255,14 +257,13 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       object NodeParser extends JavaTokenParsers {
         def outerNode: Parser[Option[OuterNode | Expr | Type]] =
           outerNodeName ~ "(" ~ repsep(outerNodeArg, "\\s*,\\s*".r) ~ ")" ^^ {
-            case name ~ "(" ~ args ~ ")" => {
+            case name ~ "(" ~ args ~ ")" =>
               if (name.endsWith("Node")) {
                 val node = makeNode(name, args)
                 node match {
-                  case Some(n: OuterNode) => {
+                  case Some(n: OuterNode) =>
                     n.children.foreach(_.setParent(Some(n)))
                     Some(n)
-                  }
                   case _ => throw new Exception("Unexpected error in outerNode")
                 }
               } else {
@@ -272,7 +273,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
                   case None       => readType(exprString)
                 }
               }
-            }
             case _ => None
           }
 
@@ -312,7 +312,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       }
 
       NodeParser.parseNode(s) match {
-        case NodeParser.Success(Some(matched: Node), _) => {
+        case NodeParser.Success(Some(matched: Node), _) =>
           def parentify(node: Node): Unit = node match {
             case n: OuterNode =>
               n.children.foreach({ c =>
@@ -328,7 +328,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
           parentify(matched)
           Some(matched)
-        }
         case x => None
       }
     }
@@ -361,7 +360,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       */
     def findChild(path: List[Int]): Option[Node] = path match {
       case Nil => Some(this)
-      case head :: tail => {
+      case head :: tail =>
         args(head) match {
           case SubExprNode(node) => node.findChild(tail)
           case SubTypeNode(node) => node.findChild(tail)
@@ -372,7 +371,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
             }
           case _ => None
         }
-      }
     }
 
     def indexOf(node: Node): Int = node match {
@@ -382,7 +380,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     def replace(path: List[Int], replacement: Node): OuterNode = path match {
       case Nil => replacement match { case n: OuterNode => n }
-      case head :: tail => {
+      case head :: tail =>
         val updatedArgs = args.updated(
           head,
           args(head) match {
@@ -410,11 +408,10 @@ trait AbstractNodeLanguage extends AbstractLanguage {
           case ConcreteNode(exprString, _) => ConcreteNode(exprString, updatedArgs)
           case TypeNode(typeName, _)       => TypeNode(typeName, updatedArgs)
         }
-      }
     }
 
     override lazy val treePath: List[Int] = getParent match {
-      case Some(value) => {
+      case Some(value) =>
         val index: Int = value.args.indexWhere({
           case SubExprNode(node) => node eq this
           case SubTypeNode(node) => node eq this
@@ -423,7 +420,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
         if (index == -1) {
           if (isPhantom) Nil else throw new Exception("Could not find self in parent node's args")
         } else value.treePath :+ index
-      }
       case None => Nil
     }
 
@@ -432,11 +428,10 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
   abstract class ExprNode extends OuterNode {
     override def setParent(parentNode: Option[OuterNode]): Unit = parentNode match {
-      case Some(n: ExprNode) => {
+      case Some(n: ExprNode) =>
         val parentDepth = n.depth
         if (parentDepth >= depthLimit) throw new DepthLimitExceededException()
         super.setParent(Some(n))
-      }
       case None    => super.setParent(None)
       case Some(n) => throw new Exception(s"ExprNode can only have ExprNode parent, not ${n.getClass.getSimpleName}")
     }
@@ -455,6 +450,15 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       case None        => 0
     }
 
+    private def checkDepthLimitWillBeExceeded(currDepth: Int = 0): Unit = {
+      if (currDepth + 1 >= depthLimit) throw new DepthLimitExceededException()
+
+      getVisibleChildren(DisplayMode.Evaluation).foreach({
+        case n: ExprNode => n.checkDepthLimitWillBeExceeded(currDepth + 1)
+        case _           =>
+      })
+    }
+
     val exprName: String
 
     def getExpr: Expr
@@ -469,12 +473,11 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       childrenFunction: Expr => Map[Variable, T] => List[(Term, Map[Variable, T])],
       parentEnvFunction: ExprNode => Map[Variable, T]
     ): Map[Variable, T] = getParent match {
-      case Some(value) => {
+      case Some(value) =>
         val parentEnv = parentEnvFunction(value)
         val parentExpr = value.getExpr
         val parentChildren = childrenFunction(parentExpr)(parentEnv)
         parentChildren.find(_._1 eq getExpr).map(_._2).getOrElse(parentEnv)
-      }
       case None => Map()
     }
 
@@ -496,6 +499,11 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     }
 
     def toHtmlSubtree(mode: DisplayMode): TypedTag[String] = {
+      if (mode == DisplayMode.Evaluation && getParent.isEmpty) {
+        // check whether depth limit will be exceeded
+        checkDepthLimitWillBeExceeded()
+      }
+
       div(
         cls := "subtree" + phantomClassName,
         data("tree-path") := treePathString,
@@ -506,11 +514,17 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       )
     }
 
-    def divByMode(mode: DisplayMode, isAxiom: Boolean): TypedTag[String] = mode match {
-      case DisplayMode.Edit       => editDiv(isAxiom)
-      case DisplayMode.Evaluation => evalDiv(isAxiom)
-      case DisplayMode.TypeCheck  => typeCheckDiv(isAxiom)
-    }
+    private val divByModeCache = collection.mutable.Map[(DisplayMode, Boolean), TypedTag[String]]()
+
+    def divByMode(mode: DisplayMode, isAxiom: Boolean): TypedTag[String] = cacheQuery(
+      divByModeCache,
+      (mode, isAxiom),
+      mode match {
+        case DisplayMode.Edit       => editDiv(isAxiom)
+        case DisplayMode.Evaluation => evalDiv(isAxiom)
+        case DisplayMode.TypeCheck  => typeCheckDiv(isAxiom)
+      }
+    )
 
     def editDiv(isAxiom: Boolean): TypedTag[String] = div(
       cls := (if (isAxiom) "expr" else "node"),
@@ -584,36 +598,37 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       )
     }
 
-    def getVisibleChildren(mode: DisplayMode): List[OuterNode] = mode match {
-      case DisplayMode.Edit      => children
-      case DisplayMode.TypeCheck => children
-      case DisplayMode.Evaluation => {
-        val childExprList = getExpr.getChildrenEval(getEvalEnv).map(_._1)
-        var unconsumedChildren = children
+    private val visibleChildrenCache = collection.mutable.Map[DisplayMode, List[OuterNode]]()
 
-        childExprList.flatMap({
-          case expr: Expr => {
+    def getVisibleChildren(mode: DisplayMode): List[OuterNode] = cacheQuery(
+      visibleChildrenCache,
+      mode,
+      mode match {
+        case DisplayMode.Edit      => children
+        case DisplayMode.TypeCheck => children
+        case DisplayMode.Evaluation =>
+          val childExprList = getExpr.getChildrenEval(getEvalEnv).map(_._1)
+          var unconsumedChildren = children
+
+          childExprList.flatMap({ case expr: Expr =>
             val matchingChild = unconsumedChildren.collectFirst {
               case c: ExprNode if c.getExpr eq expr                       => c
               case c: ExprChoiceNode if c.getExpr == expr && !c.isPhantom => c
             }
 
             matchingChild match {
-              case Some(childNode) => {
+              case Some(childNode) =>
                 unconsumedChildren = unconsumedChildren.filter(_ ne childNode)
                 Some(childNode)
-              }
-              case None => {
+              case None =>
                 val newNode = VariableNode.fromExpr(expr)
                 newNode.setParent(Some(this))
                 newNode.markPhantom()
                 Some(newNode)
-              }
             }
-          }
-        })
+          })
       }
-    }
+    )
 
     private var isPhantomStore = false
 
@@ -647,20 +662,21 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   }
 
   case class VariableNode(exprName: String, args: List[InnerNode] = Nil) extends ExprNode {
-    override def toHtmlLine(mode: DisplayMode): TypedTag[String] = div(raw(getExprHtmlLine(mode)))
+    override val children: List[OuterNode] = args.flatMap(_.children)
 
-    override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] =
-      div(display := "inline", raw(getExprHtmlLineReadOnly(mode)))
+    override def getExpr: Expr = exprOverride.getOrElse(expr)
+
+    private var exprOverride: Option[Expr] = None
+
+    def overrideExpr(e: Expr): Unit = {
+      exprOverride = Some(e)
+    }
 
     lazy val exprClass: Class[Expr] = exprNameToClass(exprName) match {
       case Some(value) => value
       case None =>
         throw new IllegalArgumentException(s"Unknown expression type for ${lang.getClass.getSimpleName}: $exprName")
     }
-
-    override val children: List[OuterNode] = args.flatMap(_.children)
-
-    override def toString: String = s"VariableNode(${UtilityFunctions.quote(exprName)}, $args)"
 
     lazy val expr: Expr = {
       val constructor = exprClass.getConstructors.head
@@ -672,15 +688,16 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       constructor.newInstance(arguments: _*).asInstanceOf[Expr]
     }
 
-    var exprOverride: Option[Expr] = None
+    private val htmlLineCache = collection.mutable.Map[DisplayMode, TypedTag[String]]()
+    private val htmlLineReadOnlyCache = collection.mutable.Map[DisplayMode, TypedTag[String]]()
 
-    override def getExpr: Expr = exprOverride.getOrElse(expr)
+    override def toHtmlLine(mode: DisplayMode): TypedTag[String] =
+      cacheQuery(htmlLineCache, mode, div(raw(getExprHtmlLine(mode))))
 
-    def overrideExpr(e: Expr): Unit = {
-      exprOverride = Some(e)
-    }
+    override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] =
+      cacheQuery(htmlLineReadOnlyCache, mode, div(display := "inline", raw(getExprHtmlLineReadOnly(mode))))
 
-    def getExprHtmlLine(mode: DisplayMode): String = {
+    private def getExprHtmlLine(mode: DisplayMode): String = {
       val constructor = exprClass.getConstructors.head
       val arguments = lang +: args.map {
         case n: SubExprNode => ExprPlaceholder(n.toHtmlLineReadOnly(mode).toString)
@@ -690,7 +707,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       prettyPrint(constructor.newInstance(arguments: _*).asInstanceOf[Expr])
     }
 
-    def getExprHtmlLineReadOnly(mode: DisplayMode): String = {
+    private def getExprHtmlLineReadOnly(mode: DisplayMode): String = {
       val constructor = exprClass.getConstructors.head
       val arguments = lang +: args.map {
         case n: SubExprNode => ExprPlaceholder(n.toHtmlLineReadOnly(mode).toString)
@@ -700,7 +717,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       prettyPrint(constructor.newInstance(arguments: _*).asInstanceOf[Expr])
     }
 
-    lazy val nonErrorEvalResult: Boolean = !getValue.isError
+    override def toString: String = s"VariableNode(${UtilityFunctions.quote(exprName)}, $args)"
 
     children.foreach(_.setParent(Some(this)))
     args.foreach(_.setParent(Some(this)))
@@ -727,24 +744,22 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     def fromExpr(e: Expr): ExprNode = e match {
       case blank: BlankExprDropDown => ExprChoiceNode()
-      case e => {
+      case e =>
         val exprClass = e.getClass
         val constructor = exprClass.getConstructors()(0)
         val innerNodes = e match {
-          case e0: Product => {
+          case e0: Product =>
             val values = e0.productIterator.toList
             values.collect({
               case c: Expr    => SubExprNode(VariableNode.fromExpr(c))
               case c: Literal => LiteralNode(c.toString)
               case c: Type    => SubTypeNode(TypeNode.fromType(c))
             })
-          }
         }
         val result = VariableNode(e.getClass.getSimpleName, innerNodes)
         result.overrideExpr(e)
         innerNodes.foreach(_.setParent(Some(result)))
         result
-      }
     }
   }
 
@@ -889,7 +904,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   object TypeNode {
     def fromTypeName(typeName: String): TypeNode = {
       typeNameToClass(typeName) match {
-        case Some(typ) => {
+        case Some(typ) =>
           val constructor = typ.getConstructors()(0)
           val arguments = constructor.getParameterTypes
             .map({
@@ -901,7 +916,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
             .map(_.get)
             .toList
           TypeNode(typeName, arguments)
-        }
         case None =>
           throw new IllegalArgumentException(s"Unknown expression type for ${lang.getClass.getSimpleName}: $typeName")
       }
@@ -911,13 +925,12 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       val typeClass = typ.getClass
       val constructor = typeClass.getConstructors()(0)
       val innerNodes = typ match {
-        case e0: Product => {
+        case e0: Product =>
           val values = e0.productIterator.toList
           values.collect({
             case c: Literal => LiteralNode(c.toString)
             case c: Type    => SubTypeNode(TypeNode.fromType(c))
           })
-        }
       }
       val result = TypeNode(typ.getClass.getSimpleName, innerNodes)
       innerNodes.foreach(_.setParent(Some(result)))
