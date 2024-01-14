@@ -3,7 +3,7 @@ package languages
 import languages.LLam.*
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.TableDrivenPropertyChecks.forAll
-import org.scalatest.prop.{TableFor1, TableFor3, TableFor4}
+import org.scalatest.prop.{TableFor1, TableFor2, TableFor3, TableFor4}
 import org.scalatest.wordspec.AnyWordSpec
 
 class ActionSpec extends AnyWordSpec with Matchers {
@@ -260,6 +260,99 @@ class ActionSpec extends AnyWordSpec with Matchers {
 
       forAll(trees) { (tree, treePath, newLiteralText) =>
         an[InvalidEditTargetException] should be thrownBy EditLiteralAction(tree, treePath, newLiteralText).newTree
+      }
+    }
+  }
+
+  "DeleteAction" should {
+    "delete an expr node from a tree" in {
+      val trees: TableFor3[ExprNode, List[Int], ExprNode] = TableFor3(
+        ("tree", "treePath", "result"),
+        (VariableNode.fromExpr(Num(1)), List(), ExprChoiceNode()),
+        (
+          VariableNode.fromExpr(Let("x", Plus(Num(54), Num(-1)), Var("x"))),
+          List(1, 0),
+          VariableNode.fromExpr(Let("x", Plus(BlankExprDropDown(), Num(-1)), Var("x")))
+        ),
+        (
+          VariableNode.fromExpr(Let("x", Plus(Num(54), Num(-1)), Var("x"))),
+          List(1),
+          VariableNode.fromExpr(Let("x", BlankExprDropDown(), Var("x")))
+        ),
+        (
+          VariableNode.fromExpr(Let("x", Plus(Num(54), Num(-1)), Var("x"))),
+          List(2),
+          VariableNode.fromExpr(Let("x", Plus(Num(54), Num(-1)), BlankExprDropDown()))
+        ),
+        (
+          VariableNode.fromExpr(Apply(Lambda("x", IntType(), Plus(Var("x"), Num(1))), Num(65))),
+          List(0, 2),
+          VariableNode.fromExpr(Apply(Lambda("x", IntType(), BlankExprDropDown()), Num(65)))
+        ),
+        (
+          VariableNode.fromExpr(Apply(Lambda("x", IntType(), Plus(Var("x"), Num(1))), Num(65))),
+          List(1),
+          VariableNode.fromExpr(Apply(Lambda("x", IntType(), Plus(Var("x"), Num(1))), BlankExprDropDown()))
+        )
+      )
+
+      forAll(trees) { (tree, treePath, result) =>
+        val action = DeleteAction(tree, treePath)
+        action.newTree shouldEqual result
+      }
+    }
+
+    "delete a type node from a tree" in {
+      val equalsZeroFunction = Lambda("value", Func(IntType(), BoolType()), Eq(Var("value"), Num(0)))
+
+      val trees: TableFor3[ExprNode, List[Int], ExprNode] = TableFor3(
+        ("tree", "treePath", "result"),
+        (
+          VariableNode.fromExpr(Lambda("x", IntType(), Plus(Var("x"), Num(1)))),
+          List(1),
+          VariableNode.fromExpr(Lambda("x", BlankTypeDropDown(), Plus(Var("x"), Num(1))))
+        ),
+        (
+          VariableNode.fromExpr(Apply(Lambda("x", IntType(), Plus(Var("x"), Num(1))), Num(65))),
+          List(0, 1),
+          VariableNode.fromExpr(Apply(Lambda("x", BlankTypeDropDown(), Plus(Var("x"), Num(1))), Num(65)))
+        ),
+        (
+          VariableNode.fromExpr(equalsZeroFunction),
+          List(1),
+          VariableNode.fromExpr(Lambda("value", BlankTypeDropDown(), Eq(Var("value"), Num(0))))
+        ),
+        (
+          VariableNode.fromExpr(equalsZeroFunction),
+          List(1, 0),
+          VariableNode.fromExpr(Lambda("value", Func(BlankTypeDropDown(), BoolType()), Eq(Var("value"), Num(0))))
+        ),
+        (
+          VariableNode.fromExpr(equalsZeroFunction),
+          List(1, 1),
+          VariableNode.fromExpr(Lambda("value", Func(IntType(), BlankTypeDropDown()), Eq(Var("value"), Num(0))))
+        )
+      )
+
+      forAll(trees) { (tree, treePath, result) =>
+        val action = DeleteAction(tree, treePath)
+        action.newTree shouldEqual result
+      }
+    }
+
+    "throws an error when attempting to delete a literal node" in {
+      val f = Lambda("x", IntType(), Plus(Var("x"), Num(1)))
+
+      val trees: TableFor2[ExprNode, List[Int]] = TableFor2(
+        ("tree", "treePath"),
+        (VariableNode.fromExpr(Num(1)), List(0)),
+        (VariableNode.fromExpr(f), List(0)),
+        (VariableNode.fromExpr(f), List(2, 0, 0)),
+        (VariableNode.fromExpr(f), List(2, 1, 0))
+      )
+
+      forAll(trees) { (tree, treePath) =>
+        an[InvalidDeleteTargetException] should be thrownBy DeleteAction(tree, treePath).newTree
       }
     }
   }
