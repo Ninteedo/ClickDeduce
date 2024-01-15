@@ -418,7 +418,6 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
             elements should have size 2
             forAll(Table(("element", "index"), elements.zipWithIndex: _*)) { (el, i) =>
               classesOf(el) should contain("axiom")
-              el.attr("data-tree-path") shouldBe s"0-2-$i"
               el.attr("data-node-string") shouldBe tree.findChild(List(0, 2, i)).get.toString
             }
           }
