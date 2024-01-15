@@ -1,12 +1,11 @@
 package app
 
-import akka.stream.ConnectionException
 import org.scalatest.concurrent.TimeLimits.failAfter
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Span}
 
-import java.net.Socket
+import java.net.{ConnectException, Socket}
 
 class ServerHostTest extends AnyFunSuite with Matchers {
   test("Server binds to correct address and port and can be connected to") {
@@ -21,7 +20,7 @@ class ServerHostTest extends AnyFunSuite with Matchers {
 
       Thread.sleep(1000) // allows time for the server to start
     } catch {
-      case e: ConnectionException =>
+      case e: ConnectException =>
         serverThread.interrupt()
         cancel("Unable to host a server on this environment. Test skipped.")
     }
