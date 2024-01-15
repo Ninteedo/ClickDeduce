@@ -332,13 +332,32 @@ class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with J
       Files.write(Paths.get(s"webapp/dist/$fileName"), contents.getBytes(StandardCharsets.UTF_8))
     }
 
-    "return the index.html file for the '/' path" in {
-      createDistFile("index.html", "<title>ClickDeduce</title>")
-      Get("/") ~> route ~> check {
-        status shouldBe StatusCodes.OK
-        contentType shouldBe ContentTypes.`text/html(UTF-8)`
+    def withTempDistFile(fileName: String, contents: String)(test: => Unit): Unit = {
+      Files.createDirectories(Paths.get("webapp/dist/"))
+      val original: Option[String] =
+        if (Files.exists(Paths.get(s"webapp/dist/$fileName")))
+          Some(Files.readString(Paths.get(s"webapp/dist/$fileName")))
+        else None
+      Files.write(Paths.get(s"webapp/dist/$fileName"), contents.getBytes(StandardCharsets.UTF_8))
+      try {
+        test
+      } finally {
+        original match {
+          case Some(originalContents) =>
+            Files.write(Paths.get(s"webapp/dist/$fileName"), originalContents.getBytes(StandardCharsets.UTF_8))
+          case None => Files.delete(Paths.get(s"webapp/dist/$fileName"))
+        }
+      }
+    }
 
-        responseAs[String] should include("<title>ClickDeduce</title>")
+    "return the index.html file for the '/' path" in {
+      withTempDistFile("index.html", "<title>ClickDeduce</title>") {
+        Get("/") ~> route ~> check {
+          status shouldBe StatusCodes.OK
+          contentType shouldBe ContentTypes.`text/html(UTF-8)`
+
+          responseAs[String] should include("<title>ClickDeduce</title>")
+        }
       }
     }
 
@@ -351,21 +370,23 @@ class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with J
 
     "return the contents of 'dist/bundle.js'" in {
       val testBundleJs = "alert('test bundle.js');"
-      createDistFile("bundle.js", testBundleJs)
-      Get("/dist/bundle.js") ~> route ~> check {
-        status shouldBe StatusCodes.OK
-        contentType.toString shouldBe "application/javascript; charset=UTF-8"
-        responseAs[String] shouldBe testBundleJs
+      withTempDistFile("bundle.js", testBundleJs) {
+        Get("/dist/bundle.js") ~> route ~> check {
+          status shouldBe StatusCodes.OK
+          contentType.toString shouldBe "application/javascript; charset=UTF-8"
+          responseAs[String] shouldBe testBundleJs
+        }
       }
     }
 
     "return 'dist/bundle.js' when requesting 'bundle.js'" in {
       val testBundleJs = "alert('test bundle.js 2');"
-      createDistFile("bundle.js", testBundleJs)
-      Get("/bundle.js") ~> route ~> check {
-        status shouldBe StatusCodes.OK
-        contentType.toString shouldBe "application/javascript; charset=UTF-8"
-        responseAs[String] shouldBe testBundleJs
+      withTempDistFile("bundle.js", testBundleJs) {
+        Get("/bundle.js") ~> route ~> check {
+          status shouldBe StatusCodes.OK
+          contentType.toString shouldBe "application/javascript; charset=UTF-8"
+          responseAs[String] shouldBe testBundleJs
+        }
       }
     }
 
