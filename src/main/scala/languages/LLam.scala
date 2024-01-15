@@ -41,7 +41,7 @@ class LLam extends LLet {
 
     override def getChildrenEval(env: Env): List[(Term, Env)] = Nil
 
-    override def getChildrenTypeCheck(tenv: TypeEnv): List[(Term, TypeEnv)] = List((e, tenv + (v.toString -> typ)))
+    override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] = List((e, tEnv + (v.toString -> typ)))
   }
 
   object Lambda {

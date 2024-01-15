@@ -45,18 +45,15 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     override lazy val toHtml: TypedTag[String] = typeClassListDropdownHtml(name := id.toString)
   }
 
-  lazy val exprClassList: List[Class[Expr]] = calculateExprClassList
+  private lazy val exprClassList: List[Class[Expr]] = calculateExprClassList
 
   protected def calculateExprClassList: List[Class[Expr]]
 
-  lazy val typeClassList: List[Class[Type]] = calculateTypeClassList
+  private lazy val typeClassList: List[Class[Type]] = calculateTypeClassList
 
   protected def calculateTypeClassList: List[Class[Type]] = List(classOf[UnknownType]).map(_.asInstanceOf[Class[Type]])
 
-  protected lazy val blankClassList: List[Class[BlankSpace]] = {
-    //    getClass.getClasses.filter(c => classOf[BlankSpace].isAssignableFrom(c)).map(_
-    //    .asInstanceOf[Class[BlankSpace]]).toList
-    //    getSubclassesOf(classOf[BlankSpace]).map(_.asInstanceOf[Class[BlankSpace]])
+  private lazy val blankClassList: List[Class[BlankSpace]] = {
     List(
       classOf[BlankExprDropDown],
       classOf[BlankChildPlaceholder],
@@ -66,9 +63,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     ).map(_.asInstanceOf[Class[BlankSpace]])
   }
 
-  protected lazy val nodeClassList: List[Class[Node]] = {
-    //    getClass.getClasses.filter(c => classOf[Node].isAssignableFrom(c)).map(_.asInstanceOf[Class[Node]]).toList
-    //    getSubclassesOf(classOf[Node]).map(_.asInstanceOf[Class[Node]])
+  private lazy val nodeClassList: List[Class[Node]] = {
     List(
       classOf[VariableNode],
       classOf[ExprChoiceNode],
@@ -177,13 +172,9 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     case _             => None
   }
 
-  def exprNameToClass(name: String): Option[Class[Expr]] = {
-    exprClassList.find(_.getSimpleName == name)
-  }
+  private def exprNameToClass(name: String): Option[Class[Expr]] = exprClassList.find(_.getSimpleName == name)
 
-  def typeNameToClass(name: String): Option[Class[Type]] = {
-    typeClassList.find(_.getSimpleName == name)
-  }
+  private def typeNameToClass(name: String): Option[Class[Type]] = typeClassList.find(_.getSimpleName == name)
 
   def cacheQuery[A, B](cache: collection.mutable.Map[A, B], key: A, value: => B): B = cache.get(key) match {
     case Some(value) => value
@@ -285,13 +276,9 @@ trait AbstractNodeLanguage extends AbstractLanguage {
             }
           }
 
-        def outerNodeName: Parser[String] = "ExprChoiceNode" | "ConcreteNode" | "VariableNode" | "TypeChoiceNode" |
-          "TypeNode" // outerNodeClasses
-        // .map(_.getSimpleName.stripSuffix("$")).mkString("|").r
+        def outerNodeName: Parser[String] = "ExprChoiceNode" | "VariableNode" | "TypeChoiceNode" | "TypeNode"
 
-        def innerNodeName: Parser[String] = "SubExprNode" | "LiteralNode" | "SubTypeNode" //
-        // innerNodeClasses.map(_.getSimpleName
-        // .stripSuffix("$")).mkString("|").r
+        def innerNodeName: Parser[String] = "SubExprNode" | "LiteralNode" | "SubTypeNode"
 
         def outerNodeArg: Parser[Any] = outerListParse | innerNode | stringLiteral ^^ (s => LiteralString(s))
 
@@ -412,8 +399,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
         )
 
         this match {
-          case VariableNode(exprName, _)   => VariableNode(exprName, updatedArgs)
-          case TypeNode(typeName, _)       => TypeNode(typeName, updatedArgs)
+          case VariableNode(exprName, _) => VariableNode(exprName, updatedArgs)
+          case TypeNode(typeName, _)     => TypeNode(typeName, updatedArgs)
         }
     }
 
@@ -523,7 +510,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     private val divByModeCache = collection.mutable.Map[(DisplayMode, Boolean), TypedTag[String]]()
 
-    def divByMode(mode: DisplayMode, isAxiom: Boolean): TypedTag[String] = cacheQuery(
+    private def divByMode(mode: DisplayMode, isAxiom: Boolean): TypedTag[String] = cacheQuery(
       divByModeCache,
       (mode, isAxiom),
       mode match {
@@ -533,7 +520,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       }
     )
 
-    def editDiv(isAxiom: Boolean): TypedTag[String] = div(
+    private def editDiv(isAxiom: Boolean): TypedTag[String] = div(
       cls := (if (isAxiom) "expr" else "node"),
       envDiv(DisplayMode.Edit),
       if (isAxiom)
@@ -545,7 +532,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       }
     )
 
-    def typeCheckDiv(isAxiom: Boolean): TypedTag[String] = div(
+    private def typeCheckDiv(isAxiom: Boolean): TypedTag[String] = div(
       cls := (if (isAxiom) "expr" else "node"),
       envDiv(DisplayMode.TypeCheck),
       if (isAxiom) toHtmlLine(DisplayMode.TypeCheck)(display := "inline")
@@ -554,7 +541,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       typeCheckResultDiv
     )
 
-    def evalDiv(isAxiom: Boolean): TypedTag[String] = div(
+    private def evalDiv(isAxiom: Boolean): TypedTag[String] = div(
       cls := (if (isAxiom) "expr" else "node"),
       envDiv(DisplayMode.Evaluation),
       if (isAxiom) {
@@ -571,19 +558,19 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       evalResultDiv
     )
 
-    lazy val typeCheckTurnstileSpan: TypedTag[String] = span(paddingLeft := "0.5ch", paddingRight := "0.5ch", raw(":"))
+    private lazy val typeCheckTurnstileSpan: TypedTag[String] = span(paddingLeft := "0.5ch", paddingRight := "0.5ch", raw(":"))
 
-    lazy val typeCheckResultDiv: TypedTag[String] = div(cls := "type-check-result", display := "inline", getType.toHtml)
+    private lazy val typeCheckResultDiv: TypedTag[String] = div(cls := "type-check-result", display := "inline", getType.toHtml)
 
-    lazy val evalArrowSpan: TypedTag[String] =
+    private lazy val evalArrowSpan: TypedTag[String] =
       span(paddingLeft := "1ch", paddingRight := "1ch", raw("&DoubleDownArrow;"))
 
-    lazy val evalResultDiv: TypedTag[String] = div(cls := "eval-result", display := "inline", getValue.toHtml)
+    private lazy val evalResultDiv: TypedTag[String] = div(cls := "eval-result", display := "inline", getValue.toHtml)
 
-    lazy val editEvalResultDiv: TypedTag[String] =
+    private lazy val editEvalResultDiv: TypedTag[String] =
       div(cls := "eval-result", display := "inline", getEditValueResult.toHtml)
 
-    def envDiv(mode: DisplayMode): TypedTag[String] = {
+    private def envDiv(mode: DisplayMode): TypedTag[String] = {
       val env: Env | TypeEnv = mode match {
         case DisplayMode.Edit       => getEditEnv
         case DisplayMode.Evaluation => getEvalEnv
@@ -639,13 +626,13 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     private var isPhantomStore = false
 
-    def markPhantom(): Unit = {
+    private def markPhantom(): Unit = {
       isPhantomStore = true
     }
 
     override def isPhantom: Boolean = isPhantomStore
 
-    def phantomClassName: String = if (isPhantom) " phantom" else ""
+    private def phantomClassName: String = if (isPhantom) " phantom" else ""
   }
 
   case class VariableNode(exprName: String, args: List[InnerNode] = Nil) extends ExprNode {
@@ -659,7 +646,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       exprOverride = Some(e)
     }
 
-    lazy val exprClass: Class[Expr] = exprNameToClass(exprName) match {
+    private lazy val exprClass: Class[Expr] = exprNameToClass(exprName) match {
       case Some(value) => value
       case None =>
         throw new IllegalArgumentException(s"Unknown expression type for ${lang.getClass.getSimpleName}: $exprName")
@@ -854,7 +841,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       constructor.newInstance(arguments: _*).asInstanceOf[Type]
     }
 
-    protected lazy val typeClass: Class[Type] = typeNameToClass(typeName) match {
+    private lazy val typeClass: Class[Type] = typeNameToClass(typeName) match {
       case Some(value) => value
       case None =>
         throw new IllegalArgumentException(s"Unknown expression type for ${lang.getClass.getSimpleName}: $typeName")
@@ -950,7 +937,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] = toHtmlLine(mode)(readonly, disabled)
   }
 
-  protected val depthLimit: Int = 100
+  private val depthLimit: Int = 100
 
   class DepthLimitExceededException extends Exception(s"Depth limit ($depthLimit) exceeded")
 

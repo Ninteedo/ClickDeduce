@@ -50,8 +50,8 @@ class LLet extends LIf {
     override def getChildrenEval(env: Env): List[(Term, Env)] =
       List((assign_expr, env), (bound_expr, env + (v.toString -> assign_expr.eval(env))))
 
-    override def getChildrenTypeCheck(tenv: TypeEnv): List[(Term, TypeEnv)] =
-      List((assign_expr, tenv), (bound_expr, tenv + (v.toString -> assign_expr.typeCheck(tenv))))
+    override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] =
+      List((assign_expr, tEnv), (bound_expr, tEnv + (v.toString -> assign_expr.typeCheck(tEnv))))
   }
 
   object Let {

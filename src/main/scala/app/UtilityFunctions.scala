@@ -5,9 +5,9 @@ object UtilityFunctions {
   // https://stackoverflow.com/a/40073137
 
   def quote(s: String): String = "\"" + escape(s) + "\""
-  def escape(s: String): String = s.flatMap(escapedChar)
+  private def escape(s: String): String = s.flatMap(escapedChar)
 
-  def escapedChar(ch: Char): String = ch match {
+  private def escapedChar(ch: Char): String = ch match {
     case '\b' => "\\b"
     case '\t' => "\\t"
     case '\n' => "\\n"
@@ -20,7 +20,4 @@ object UtilityFunctions {
       if (ch.isControl) "\\0" + Integer.toOctalString(ch.toInt)
       else String.valueOf(ch)
   }
-
-//  def unquote(s: String): String
-//  def unescape(s: String): String
 }

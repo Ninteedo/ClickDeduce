@@ -32,7 +32,7 @@ trait AbstractLanguage {
 
     def getChildrenEval(env: Env = Map()): List[(Term, Env)] = Nil
 
-    def getChildrenTypeCheck(tenv: TypeEnv = Map()): List[(Term, TypeEnv)] = Nil
+    def getChildrenTypeCheck(tEnv: TypeEnv = Map()): List[(Term, TypeEnv)] = Nil
 
     def isPlaceholder: Boolean = false
   }
@@ -55,8 +55,8 @@ trait AbstractLanguage {
     override def getChildrenEval(env: Env = Map()): List[(Term, Env)] =
       getExprFields(this).zip(LazyList.continually(env))
 
-    override def getChildrenTypeCheck(tenv: TypeEnv): List[(Term, TypeEnv)] =
-      getExprFields(this).zip(LazyList.continually(tenv))
+    override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] =
+      getExprFields(this).zip(LazyList.continually(tEnv))
 
     lazy val childVersion: Expr = this
 
@@ -158,13 +158,11 @@ trait AbstractLanguage {
   }
 
   case class EvalException(override val message: String) extends EvalError {
-//    override val message: String = exception.getMessage
-
     override val typ: Type = TypeException(message)
   }
 
-  val stackOverflowEvalError: EvalError = EvalException("Stack overflow")
-  val stackOverflowTypeError: TypeError = TypeException("Stack overflow")
+  private val stackOverflowEvalError: EvalError = EvalException("Stack overflow")
+  private val stackOverflowTypeError: TypeError = TypeException("Stack overflow")
 
   /** An error resulting from an expression being type checked.
     */
@@ -190,9 +188,7 @@ trait AbstractLanguage {
     */
   case class UnexpectedExprType(override val message: String) extends TypeError
 
-  case class TypeException(override val message: String) extends TypeError {
-//    override val message: String = exception.getMessage
-  }
+  case class TypeException(override val message: String) extends TypeError
 
   abstract class Literal extends Term {
     val value: Any
@@ -278,7 +274,7 @@ trait AbstractLanguage {
       case e: Expr  => prettyPrint(e)
       case t: Type  => prettyPrint(t)
       case v: Value => prettyPrint(v)
-      case _        => "Unknown Term"
+      case x        => throw new IllegalArgumentException(s"Unknown term: $x")
     }
   }
 
