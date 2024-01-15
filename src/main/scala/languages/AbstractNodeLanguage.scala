@@ -70,7 +70,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     //    getClass.getClasses.filter(c => classOf[Node].isAssignableFrom(c)).map(_.asInstanceOf[Class[Node]]).toList
     //    getSubclassesOf(classOf[Node]).map(_.asInstanceOf[Class[Node]])
     List(
-      classOf[ConcreteNode],
       classOf[VariableNode],
       classOf[ExprChoiceNode],
       classOf[SubExprNode],
@@ -233,7 +232,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     val innerNodeClasses: List[Class[_ <: Object]] =
       List(ExprChoiceNode.getClass, SubExprNode.getClass, LiteralNode.getClass)
 
-    val outerNodeClasses: List[Class[_ <: Object]] = List(ConcreteNode.getClass, VariableNode.getClass)
+    val outerNodeClasses: List[Class[_ <: Object]] = List(VariableNode.getClass)
 
     def read(s: String): Option[Node] = {
       def makeNode(name: String, args: List[Any], env: Env | TypeEnv = Map()): Option[Node] = {
@@ -414,7 +413,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
         this match {
           case VariableNode(exprName, _)   => VariableNode(exprName, updatedArgs)
-          case ConcreteNode(exprString, _) => ConcreteNode(exprString, updatedArgs)
           case TypeNode(typeName, _)       => TypeNode(typeName, updatedArgs)
         }
     }
@@ -648,26 +646,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     override def isPhantom: Boolean = isPhantomStore
 
     def phantomClassName: String = if (isPhantom) " phantom" else ""
-  }
-
-  case class ConcreteNode(exprString: String, override val args: List[InnerNode] = Nil) extends ExprNode {
-    lazy val expr: Expr = readExpr(exprString).get
-
-    override def toHtmlLine(mode: DisplayMode): TypedTag[String] = expr.toHtml
-
-    override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] = toHtmlLine(mode)
-
-    override val exprName: String = expr.getClass.getSimpleName
-
-    override def toString: String = s"ConcreteNode(${UtilityFunctions.quote(exprString)}, $args)"
-
-    override def toHtml(mode: DisplayMode): TypedTag[String] = super.toHtml(mode)(data("term") := expr.toString)
-
-    override val children: List[OuterNode] = args.flatMap(_.children)
-
-    override def getExpr: Expr = expr
-
-    children.foreach(_.setParent(Some(this)))
   }
 
   case class VariableNode(exprName: String, args: List[InnerNode] = Nil) extends ExprNode {

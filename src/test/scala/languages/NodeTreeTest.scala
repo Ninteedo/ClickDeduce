@@ -7,37 +7,31 @@ import org.scalatest.matchers.should.Matchers.*
 class NodeTreeTest extends AnyFunSuite {
   test("Can correctly represent a complete simple addition tree") {
     val expr = Plus(Num(1), Num(2))
-    val children = List(ConcreteNode(Num(1).toString), ConcreteNode(Num(2).toString))
-    val args = children.map(SubExprNode(_))
-    val tree = ConcreteNode(expr.toString, args)
-    children.foreach(_.setParent(Some(tree)))
+    val tree = VariableNode.fromExpr(expr)
     tree.exprName shouldEqual "Plus"
-    children(0).exprName shouldEqual "Num"
-    children(1).exprName shouldEqual "Num"
-    children(0).treePath shouldEqual List(0)
-    children(1).treePath shouldEqual List(1)
+    tree.children.zipWithIndex.foreach { (child, i) =>
+      child shouldBe a[VariableNode]
+      child.asInstanceOf[VariableNode].exprName shouldEqual "Num"
+      child.treePath shouldEqual List(i)
+    }
     tree.treePath shouldEqual List()
     println(tree.toHtml)
   }
 
   test("Can correctly represent a simple arithmetic tree with a literal field open") {
     val expr = Times(Num(-3), Num(5))
-    val concreteChild = SubExprNode(ConcreteNode(Num(-3).toString))
+    val concreteChild = SubExprNode(VariableNode(Num(-3).toString))
     val variableChildInner = VariableNode("Num", List(LiteralNode("5")))
     val variableChild = SubExprNode(variableChildInner)
     val children = List(concreteChild, variableChild)
     val tree = VariableNode("Times", children)
     children.foreach(_.node.setParent(Some(tree)))
     tree.exprName shouldEqual "Times"
-    //    children(0).node.exprName shouldBe "Num"
-    //    children(1).node.exprName shouldBe "Num"
     children(0).node.treePath shouldEqual List(0)
     children(1).node.treePath shouldEqual List(1)
     tree.treePath shouldEqual List()
     tree.children shouldEqual children.map(_.node)
     variableChild.children shouldEqual List(variableChildInner)
-    //    tree.toHtml should include (concreteChild.toHtmlLine)
-    //    tree.toHtml should include (variableChild.toHtmlLine)
     println(tree.toHtml)
   }
 
@@ -48,11 +42,10 @@ class NodeTreeTest extends AnyFunSuite {
       List(
         SubExprNode(ExprChoiceNode()),
         SubExprNode(
-          VariableNode("Times", List(SubExprNode(ConcreteNode(Num(2).toString)), SubExprNode(ExprChoiceNode())))
+          VariableNode("Times", List(SubExprNode(VariableNode(Num(2).toString)), SubExprNode(ExprChoiceNode())))
         )
       )
     )
-    //    tree.exprName shouldEqual "Plus"
     println(tree.toHtml)
   }
 
@@ -62,19 +55,19 @@ class NodeTreeTest extends AnyFunSuite {
     nodeRead shouldEqual node
   }
 
-  test("Can correctly read a VariableNode with 2 ConcreteNode children from a String") {
+  test("Can correctly read a VariableNode with 2 VariableNode children from a String") {
     val tree =
-      VariableNode("Plus", List(SubExprNode(ConcreteNode(Num(1).toString)), SubExprNode(ConcreteNode(Num(2).toString))))
+      VariableNode("Plus", List(SubExprNode(VariableNode(Num(1).toString)), SubExprNode(VariableNode(Num(2).toString))))
     correctNodeRead(tree)
   }
 
   test(
-    "Can correctly read a VariableNode with a ConcreteNode and a VariableNode with a ExprChoiceNode child from a String"
+    "Can correctly read a VariableNode with a VariableNode and a VariableNode with a ExprChoiceNode child from a String"
   ) {
     val tree = VariableNode(
       "Plus",
       List(
-        SubExprNode(ConcreteNode(Num(1).toString)),
+        SubExprNode(VariableNode(Num(1).toString)),
         SubExprNode(VariableNode("Times", List(SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode()))))
       )
     )
@@ -122,7 +115,7 @@ class NodeTreeTest extends AnyFunSuite {
     val tree = VariableNode(
       "Plus",
       List(
-        SubExprNode(ConcreteNode(Num(1).toString)),
+        SubExprNode(VariableNode(Num(1).toString)),
         SubExprNode(VariableNode("Times", List(SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode()))))
       )
     )
@@ -133,7 +126,7 @@ class NodeTreeTest extends AnyFunSuite {
     val tree = VariableNode(
       "Plus",
       List(
-        SubExprNode(ConcreteNode(Num(1).toString)),
+        SubExprNode(VariableNode(Num(1).toString)),
         SubExprNode(
           VariableNode(
             "Times",
@@ -157,7 +150,7 @@ class NodeTreeTest extends AnyFunSuite {
     val originalTree = VariableNode(
       "Plus",
       List(
-        SubExprNode(ConcreteNode(Num(1).toString)),
+        SubExprNode(VariableNode(Num(1).toString)),
         SubExprNode(
           VariableNode(
             "Times",
@@ -178,7 +171,7 @@ class NodeTreeTest extends AnyFunSuite {
     updated shouldEqual VariableNode(
       "Plus",
       List(
-        SubExprNode(ConcreteNode(Num(1).toString)),
+        SubExprNode(VariableNode(Num(1).toString)),
         SubExprNode(
           VariableNode(
             "Times",
@@ -255,14 +248,6 @@ class NodeTreeTest extends AnyFunSuite {
       )
     )
     tree2.getExpr shouldEqual Times(Num(LiteralBool(true)), Plus(Num(LiteralInt(2)), Num(LiteralString("3"))))
-  }
-
-  test("ConcreteNode correctly reads its expression") {
-    val tree1 = ConcreteNode(Num(1).toString)
-    tree1.getExpr shouldEqual Num(1)
-
-    val tree2 = ConcreteNode(Times(Plus(Num(5), Num(2)), Num(3)).toString)
-    tree2.getExpr shouldEqual Times(Plus(Num(5), Num(2)), Num(3))
   }
 
   test("Nested TypeNodes have correct tree paths") {
