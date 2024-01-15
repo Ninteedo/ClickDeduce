@@ -368,7 +368,7 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
         }
 
         "have an input for the lambda variable name" in {
-          val inputSelector = selector + " > div.node > div.expr > div > input"
+          val inputSelector = selector + " > div.expr > div > input"
           checkHtmlDoc(tree)(mode) { doc =>
             doc >> elementList(inputSelector) should have size 1
             val element = (doc >> elementList(inputSelector)).head

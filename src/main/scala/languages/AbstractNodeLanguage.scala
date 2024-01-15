@@ -345,11 +345,14 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       setParent(None)
     }
 
-    def toHtml(mode: DisplayMode): TypedTag[String] = if (children.isEmpty) toHtmlAxiom(mode) else toHtmlSubtree(mode)
+    def toHtml(mode: DisplayMode): TypedTag[String] =
+      if (getVisibleChildren(mode).isEmpty) toHtmlAxiom(mode) else toHtmlSubtree(mode)
 
     def toHtmlAxiom(mode: DisplayMode): TypedTag[String]
 
     def toHtmlSubtree(mode: DisplayMode): TypedTag[String]
+
+    def getVisibleChildren(mode: DisplayMode): List[OuterNode] = children
 
     /** Find the child of this expression tree at the given path.
       *
@@ -606,7 +609,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     private val visibleChildrenCache = collection.mutable.Map[DisplayMode, List[OuterNode]]()
 
-    def getVisibleChildren(mode: DisplayMode): List[OuterNode] = cacheQuery(
+    override def getVisibleChildren(mode: DisplayMode): List[OuterNode] = cacheQuery(
       visibleChildrenCache,
       mode,
       mode match {
