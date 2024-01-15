@@ -103,7 +103,19 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
   ) extends Action(originalTree, treePath) {
     private val pasteNode: Node = Node.read(pasteNodeString).get
 
-    override lazy val newTree: OuterNode = originalTree.replace(treePath, pasteNode)
+    override lazy val newTree: OuterNode = originalTree.findChild(treePath) match {
+      case Some(_: ExprNode) =>
+        pasteNode match {
+          case _: ExprNode => originalTree.replace(treePath, pasteNode)
+          case _           => throw new InvalidPasteTargetException(Some(pasteNode))
+        }
+      case Some(_: TypeNodeParent) =>
+        pasteNode match {
+          case _: TypeNodeParent => originalTree.replace(treePath, pasteNode)
+          case _                 => throw new InvalidPasteTargetException(Some(pasteNode))
+        }
+      case other => throw new InvalidPasteTargetException(other)
+    }
   }
 
   case class IdentityAction(override val originalTree: OuterNode, override val treePath: List[Int])
@@ -118,4 +130,6 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
   class InvalidEditTargetException(found: Option[Node]) extends Exception(s"Invalid literal edit target: $found")
 
   class InvalidDeleteTargetException(found: Option[Node]) extends Exception(s"Invalid delete target: $found")
+
+  class InvalidPasteTargetException(found: Option[Node]) extends Exception(s"Invalid paste target: $found")
 }

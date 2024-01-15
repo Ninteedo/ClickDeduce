@@ -356,4 +356,135 @@ class ActionSpec extends AnyWordSpec with Matchers {
       }
     }
   }
+
+  "PasteAction" should {
+    "correctly paste an expr node string into a tree" in {
+      val trees: TableFor4[ExprNode, List[Int], String, ExprNode] = TableFor4(
+        ("tree", "treePath", "pasteNodeString", "result"),
+        (
+          VariableNode.fromExpr(Plus(Num(1), Num(2))),
+          List(0),
+          VariableNode.fromExpr(IfThenElse(Bool(true), Num(-1), Num(2))).toString,
+          VariableNode.fromExpr(Plus(IfThenElse(Bool(true), Num(-1), Num(2)), Num(2)))
+        ),
+        (
+          VariableNode.fromExpr(Plus(Num(1), IfThenElse(Bool(true), BlankExprDropDown(), Bool(false)))),
+          List(1, 1),
+          VariableNode.fromExpr(Var("hello")).toString,
+          VariableNode.fromExpr(Plus(Num(1), IfThenElse(Bool(true), Var("hello"), Bool(false))))
+        ),
+        (
+          VariableNode.fromExpr(Plus(Num(1), Num(2))),
+          List(1),
+          VariableNode.fromExpr(Let("x", Num(1), Num(2))).toString,
+          VariableNode.fromExpr(Plus(Num(1), Let("x", Num(1), Num(2))))
+        ),
+        (
+          VariableNode.fromExpr(Let("x", Let("y", Num(6), Num(0)), Var("x"))),
+          List(1, 2),
+          VariableNode.fromExpr(Plus(Var("y"), Num(1))).toString,
+          VariableNode.fromExpr(Let("x", Let("y", Num(6), Plus(Var("y"), Num(1))), Var("x")))
+        )
+      )
+
+      forAll(trees) { (tree, treePath, pasteNodeString, result) =>
+        val action = PasteAction(tree, treePath, pasteNodeString)
+        action.newTree shouldEqual result
+      }
+    }
+
+    "correctly paste a type node string into a tree" in {
+      val trees: TableFor4[ExprNode, List[Int], String, ExprNode] = TableFor4(
+        ("tree", "treePath", "pasteNodeString", "result"),
+        (
+          VariableNode.fromExpr(Lambda("x", IntType(), Plus(Var("x"), Num(1)))),
+          List(1),
+          TypeNode.fromType(BoolType()).toString,
+          VariableNode.fromExpr(Lambda("x", BoolType(), Plus(Var("x"), Num(1))))
+        ),
+        (
+          VariableNode.fromExpr(Lambda("x", Func(BlankTypeDropDown(), IntType()), Plus(Var("x"), Num(1)))),
+          List(1, 1),
+          TypeNode.fromType(BlankTypeDropDown()).toString,
+          VariableNode.fromExpr(Lambda("x", Func(BlankTypeDropDown(), BlankTypeDropDown()), Plus(Var("x"), Num(1))))
+        ),
+        (
+          VariableNode.fromExpr(Lambda("x", Func(BlankTypeDropDown(), IntType()), Plus(Var("x"), Num(1)))),
+          List(1),
+          TypeNode.fromType(Func(Func(BoolType(), BoolType()), IntType())).toString,
+          VariableNode.fromExpr(Lambda("x", Func(Func(BoolType(), BoolType()), IntType()), Plus(Var("x"), Num(1))))
+        )
+      )
+
+      forAll(trees) { (tree, treePath, pasteNodeString, result) =>
+        val action = PasteAction(tree, treePath, pasteNodeString)
+        action.newTree shouldEqual result
+      }
+    }
+
+    "throws an error when attempting to paste a type node into an expr node" in {
+      val trees: TableFor3[ExprNode, List[Int], String] = TableFor3(
+        ("tree", "treePath", "pasteNodeString"),
+        (VariableNode.fromExpr(Num(1)), List(), TypeNode.fromType(IntType()).toString),
+        (VariableNode.fromExpr(Plus(Num(1), Num(2))), List(0), TypeNode.fromType(BoolType()).toString),
+        (
+          VariableNode.fromExpr(Lambda("x", IntType(), Plus(Var("x"), Num(1)))),
+          List(2),
+          TypeNode.fromType(BoolType()).toString
+        ),
+        (VariableNode.fromExpr(Num(1)), List(), TypeNode.fromType(BlankTypeDropDown()).toString)
+      )
+
+      forAll(trees) { (tree, treePath, pasteNodeString) =>
+        an[InvalidPasteTargetException] should be thrownBy PasteAction(tree, treePath, pasteNodeString).newTree
+      }
+    }
+
+    "throws an error when attempting to paste an expr node into a type node" in {
+      val trees: TableFor3[ExprNode, List[Int], String] = TableFor3(
+        ("tree", "treePath", "pasteNodeString"),
+        (
+          VariableNode.fromExpr(Lambda("x", IntType(), Plus(Var("x"), Num(1)))),
+          List(1),
+          VariableNode.fromExpr(Num(1)).toString
+        ),
+        (
+          VariableNode.fromExpr(Lambda("gee", Func(BoolType(), IntType()), Num(73))),
+          List(1, 1),
+          VariableNode.fromExpr(Bool(true)).toString
+        ),
+        (
+          VariableNode.fromExpr(Lambda("gee", Func(BoolType(), IntType()), Num(73))),
+          List(1, 0),
+          VariableNode.fromExpr(BlankExprDropDown()).toString
+        )
+      )
+
+      forAll(trees) { (tree, treePath, pasteNodeString) =>
+        an[InvalidPasteTargetException] should be thrownBy PasteAction(tree, treePath, pasteNodeString).newTree
+      }
+    }
+
+    "throws an error when attempting to paste into a literal node" in {
+      val trees: TableFor3[ExprNode, List[Int], String] = TableFor3(
+        ("tree", "treePath", "pasteNodeString"),
+        (VariableNode.fromExpr(Num(1)), List(0), VariableNode.fromExpr(Num(1)).toString),
+        (VariableNode.fromExpr(Plus(Num(1), Num(2))), List(0, 0), VariableNode.fromExpr(Num(1)).toString),
+        (
+          VariableNode.fromExpr(Lambda("x", IntType(), Plus(Var("x"), Num(1)))),
+          List(0),
+          VariableNode.fromExpr(Num(1)).toString
+        ),
+        (
+          VariableNode.fromExpr(Lambda("x", IntType(), Plus(Var("x"), Num(1)))),
+          List(2, 0, 0),
+          TypeNode.fromType(IntType()).toString
+        )
+      )
+
+      forAll(trees) { (tree, treePath, pasteNodeString) =>
+        an[InvalidPasteTargetException] should be thrownBy PasteAction(tree, treePath, pasteNodeString).newTree
+      }
+    }
+  }
 }
