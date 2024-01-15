@@ -7,7 +7,7 @@ import org.scalatest.wordspec.AnyWordSpec
 
 class NodeSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChecks {
   "Node parent" should {
-    val nodes: TableFor1[Node] = TableFor1(
+    val nodes: TableFor1[OuterNode] = TableFor1(
       "node",
       VariableNode("Test", Nil),
       VariableNode("Test", List(SubExprNode(VariableNode("Test", Nil)), SubExprNode(VariableNode("Test", Nil)))),
@@ -35,7 +35,7 @@ class NodeSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChecks 
       TypeNode.fromType(Func(Func(IntType(), IntType()), BoolType())),
       TypeNode.fromType(Func(Func(Func(IntType(), IntType()), Func(IntType(), BoolType())), BoolType())),
       TypeNode.fromType(BlankTypeDropDown()),
-      TypeNode.fromType(Func(BlankTypeDropDown(), BlankTypeDropDown())),
+      TypeNode.fromType(Func(BlankTypeDropDown(), BlankTypeDropDown()))
     )
 
     "be none for root node" in {

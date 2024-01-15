@@ -824,11 +824,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     override def toString: String = s"LiteralNode(${UtilityFunctions.quote(literalText)})"
 
-    override lazy val treePath: List[Int] = getParent match {
-      case Some(value: VariableNode) => value.treePath :+ value.args.indexWhere(_ eq this)
-      case _                         => Nil
-    }
-
     lazy val getLiteral: Literal = Literal.fromString(literalText)
   }
 

@@ -18,6 +18,7 @@
         <option value="languages.NodeSpec" />
         <option value="languages.ActionSpec" />
         <option value="languages.LArithTest" />
+        <option value="languages.NodeHTMLSpec" />
         <option value="languages.NodeTreeTest" />
         <option value="languages.ReadExprTest" />
       </list>
