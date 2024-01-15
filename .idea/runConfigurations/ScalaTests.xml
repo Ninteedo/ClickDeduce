@@ -10,6 +10,7 @@
     <option name="classBuf">
       <list>
         <option value="app.RouteSpec" />
+        <option value="app.ServerHostTest" />
         <option value="app.ArgsHandlingSpec" />
         <option value="languages.LIfTest" />
         <option value="languages.LLamTest" />
