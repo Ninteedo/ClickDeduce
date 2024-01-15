@@ -486,5 +486,23 @@ class ActionSpec extends AnyWordSpec with Matchers {
         an[InvalidPasteTargetException] should be thrownBy PasteAction(tree, treePath, pasteNodeString).newTree
       }
     }
+
+    "throws an error when attempting to paste an invalid node string" in {
+      val trees: TableFor3[ExprNode, List[Int], String] = TableFor3(
+        ("tree", "treePath", "pasteNodeString"),
+        (VariableNode.fromExpr(Num(1)), List(0), "Num(5)"),
+        (VariableNode.fromExpr(Plus(Num(1), Num(2))), List(0, 0), "VariableNode()"),
+        (
+          VariableNode.fromExpr(Lambda("x", IntType(), Plus(Var("x"), Num(1)))),
+          List(0),
+          "VariableNode(\"Num\", List())"
+        ),
+        (VariableNode.fromExpr(Lambda("x", IntType(), Plus(Var("x"), Num(1)))), List(1), "TypeNode(BoolType(), List())")
+      )
+
+      forAll(trees) { (tree, treePath, pasteNodeString) =>
+        an[Exception] should be thrownBy PasteAction(tree, treePath, pasteNodeString).newTree
+      }
+    }
   }
 }
