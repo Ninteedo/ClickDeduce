@@ -264,7 +264,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
                   case Some(n: OuterNode) =>
                     n.children.foreach(_.setParent(Some(n)))
                     Some(n)
-                  case _ => throw new Exception("Unexpected error in outerNode")
+                  case _ => throw new NodeStringParseException(s"$name(${args.mkString(", ")})")
                 }
               } else {
                 val exprString = s"$name(${args.mkString(", ")})"
@@ -303,9 +303,9 @@ trait AbstractNodeLanguage extends AbstractLanguage {
             val node = makeNode(name, args)
             node match {
               case Some(n: InnerNode) => n
-              case _                  => throw new Exception("Unexpected error in innerNode")
+              case _                  => throw new NodeStringParseException(s"$name(${args.mkString(", ")})")
             }
-          case _ => throw new Exception("Unexpected error in innerNode")
+          case other => throw new NodeStringParseException(other.toString)
         }
 
         def parseNode(s: String): ParseResult[Option[Node | Expr | Type]] = parseAll(outerNode, s.strip())
@@ -360,18 +360,20 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       */
     def findChild(path: List[Int]): Option[Node] = path match {
       case Nil => Some(this)
-      case head :: tail => if (!args.indices.contains(head)) throw new InvalidTreePathException(path) else {
-        args(head) match {
-          case SubExprNode(node) => node.findChild(tail)
-          case SubTypeNode(node) => node.findChild(tail)
-          case n: LiteralNode =>
-            tail match {
-              case Nil => Some(n)
-              case _   => throw new InvalidTreePathException(path)
-            }
-          case _ => None
+      case head :: tail =>
+        if (!args.indices.contains(head)) throw new InvalidTreePathException(path)
+        else {
+          args(head) match {
+            case SubExprNode(node) => node.findChild(tail)
+            case SubTypeNode(node) => node.findChild(tail)
+            case n: LiteralNode =>
+              tail match {
+                case Nil => Some(n)
+                case _   => throw new InvalidTreePathException(path)
+              }
+            case _ => None
+          }
         }
-      }
     }
 
     def indexOf(node: Node): Int = node match {
@@ -402,7 +404,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
                   replacement match {
                     case n: InnerNode => n
                   }
-                case _ => throw new Exception(s"LiteralNode has no children, but path is not empty: $path")
+                case _ => throw new InvalidTreePathException(path)
               }
           }
         )
@@ -787,13 +789,14 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   case class SubExprNode(node: ExprNode) extends InnerNode {
     override def setParent(parentNode: Option[OuterNode]): Unit = parentNode match {
       case Some(n: ExprNode) => super.setParent(Some(n))
-      case _                 => throw new Exception("SubExprNode must have ExprNode parent")
+      case None              => throw new InnerNodeCannotBeRootException()
+      case Some(n)           => throw new NodeParentWrongTypeException(classOf[ExprNode], n.getClass)
     }
 
     override def getParent: Option[ExprNode] = super.getParent match {
       case Some(n: ExprNode) => Some(n)
       case None              => None
-      case _                 => throw new Exception("SubExprNode must have ExprNode parent")
+      case Some(n)           => throw new NodeParentWrongTypeException(classOf[ExprNode], n.getClass)
     }
 
     override def toHtmlLine(mode: DisplayMode): TypedTag[String] =
@@ -838,7 +841,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       if (!isParentInitialised) markRoot()
       super.getParent match {
         case Some(n) => Some(n)
-        case None => None
+        case None    => None
       }
     }
 
@@ -981,5 +984,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
   class NodeParentNotInitialisedException extends Exception("Node parent not initialised")
 
-  class NodeParentWrongTypeException(expected: Class[_ <: OuterNode], actual: Class[_ <: OuterNode]) extends Exception(s"Node parent has wrong type: expected $expected, got $actual")
+  class NodeParentWrongTypeException(expected: Class[_ <: OuterNode], actual: Class[_ <: OuterNode])
+      extends Exception(s"Node parent has wrong type: expected $expected, got $actual")
+
+  class InnerNodeCannotBeRootException extends Exception("Inner node cannot be root")
 }
