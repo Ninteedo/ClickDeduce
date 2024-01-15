@@ -1,48 +1,30 @@
 package app
 
+import akka.stream.ConnectionException
 import org.scalatest.concurrent.TimeLimits.failAfter
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Span}
 
-import java.net.{ServerSocket, Socket}
+import java.net.Socket
 
 class ServerHostTest extends AnyFunSuite with Matchers {
-  def canEstablishConnections: Boolean = {
-    try {
-      val socket = new Socket("8.8.8.8", 53)
-      socket.close()
-      true
-    } catch {
-      case e: Exception => false
-    }
-  }
-
-  def canHostServer: Boolean = {
-    var serverSocket: ServerSocket = null
-    try {
-      serverSocket = new ServerSocket(0) // 0 lets the system pick an available port
-      true
-    } catch {
-      case e: Exception => false
-    } finally {
-      if (serverSocket != null) serverSocket.close()
-    }
-  }
-
   test("Server binds to correct address and port and can be connected to") {
-    if (!canHostServer || !canEstablishConnections) {
-      cancel("Unable to host a server on this environment. Test skipped.")
-    }
 
     val port = 27019
     val args: Array[String] = Array("--address", "0.0.0.0", "--port", port.toString, "--skip-bundle-scripts")
 
     val server = new WebServer()
     val serverThread = new Thread(() => server.runServer(args))
-    serverThread.start()
+    try {
+      serverThread.start()
 
-    Thread.sleep(1000) // allows time for the server to start
+      Thread.sleep(1000) // allows time for the server to start
+    } catch {
+      case e: ConnectionException =>
+        serverThread.interrupt()
+        cancel("Unable to host a server on this environment. Test skipped.")
+    }
 
     failAfter(Span(1000, Millis)) {
       noException should be thrownBy {
