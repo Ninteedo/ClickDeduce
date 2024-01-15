@@ -203,7 +203,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     def getParent: Option[OuterNode] = parent match {
       case Some(value) => value
-      case None        => throw new Exception("Parent not initialised")
+      case None        => throw new NodeParentNotInitialisedException()
     }
 
     def setParent(parentNode: Option[OuterNode]): Unit = {
@@ -437,7 +437,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
         if (parentDepth >= depthLimit) throw new DepthLimitExceededException()
         super.setParent(Some(n))
       case None    => super.setParent(None)
-      case Some(n) => throw new Exception(s"ExprNode can only have ExprNode parent, not ${n.getClass.getSimpleName}")
+      case Some(n) => throw new NodeParentWrongTypeException(classOf[ExprNode], n.getClass)
     }
 
     override def getParent: Option[ExprNode] = {
@@ -445,7 +445,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       super.getParent match {
         case Some(n: ExprNode) => Some(n)
         case None              => None
-        case Some(n)           => throw new Exception(s"Unexpected parent type: ${n.getClass.getSimpleName}")
+        case Some(n)           => throw new NodeParentWrongTypeException(classOf[ExprNode], n.getClass)
       }
     }
 
@@ -834,6 +834,14 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     lazy val getTypeName: String = getType.getClass.getSimpleName
 
+    override def getParent: Option[OuterNode] = {
+      if (!isParentInitialised) markRoot()
+      super.getParent match {
+        case Some(n) => Some(n)
+        case None => None
+      }
+    }
+
     def toHtmlAxiom(mode: DisplayMode): TypedTag[String] = {
       div(
         cls := "subtree axiom",
@@ -970,4 +978,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   class InvalidTreePathException(treePath: List[Int]) extends Exception(s"Invalid tree path: $treePath")
 
   class NodeStringParseException(nodeString: String) extends Exception(s"Could not parse node string: $nodeString")
+
+  class NodeParentNotInitialisedException extends Exception("Node parent not initialised")
+
+  class NodeParentWrongTypeException(expected: Class[_ <: OuterNode], actual: Class[_ <: OuterNode]) extends Exception(s"Node parent has wrong type: expected $expected, got $actual")
 }
