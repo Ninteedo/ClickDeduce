@@ -4,31 +4,24 @@ import app.UtilityFunctions
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
-import java.util.concurrent.atomic.AtomicInteger
 import scala.annotation.tailrec
 import scala.util.parsing.combinator.*
 
 trait AbstractNodeLanguage extends AbstractLanguage {
   lang =>
 
-  private val blankIdCount: AtomicInteger = new AtomicInteger(0)
-
   trait BlankSpace extends Term {
-    lazy val id: Int = blankIdCount.incrementAndGet()
-
     override lazy val toHtml: TypedTag[String] = {
-      input(name := id.toString, `type` := "text", placeholder := "Term")
+      input(`type` := "text", placeholder := "Term")
     }
   }
 
   case class BlankExprDropDown() extends Expr, BlankSpace {
-    override lazy val toHtml: TypedTag[String] = exprClassListDropdownHtml(name := id.toString)
+    override lazy val toHtml: TypedTag[String] = exprClassListDropdownHtml()
   }
 
   case class BlankChildPlaceholder() extends Expr, BlankSpace {
-    override lazy val toHtml: TypedTag[String] = {
-      span(cls := "blank-child-placeholder", data("blank-id") := id.toString, "?")
-    }
+    override lazy val toHtml: TypedTag[String] = span(cls := "blank-child-placeholder")
 
     override lazy val childVersion: Expr = BlankExprDropDown()
   }
@@ -42,7 +35,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   }
 
   case class BlankTypeDropDown() extends Type, BlankSpace {
-    override lazy val toHtml: TypedTag[String] = typeClassListDropdownHtml(name := id.toString)
+    override lazy val toHtml: TypedTag[String] = typeClassListDropdownHtml()
   }
 
   private lazy val exprClassList: List[Class[Expr]] = calculateExprClassList
@@ -558,9 +551,11 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       evalResultDiv
     )
 
-    private lazy val typeCheckTurnstileSpan: TypedTag[String] = span(paddingLeft := "0.5ch", paddingRight := "0.5ch", raw(":"))
+    private lazy val typeCheckTurnstileSpan: TypedTag[String] =
+      span(paddingLeft := "0.5ch", paddingRight := "0.5ch", raw(":"))
 
-    private lazy val typeCheckResultDiv: TypedTag[String] = div(cls := "type-check-result", display := "inline", getType.toHtml)
+    private lazy val typeCheckResultDiv: TypedTag[String] =
+      div(cls := "type-check-result", display := "inline", getType.toHtml)
 
     private lazy val evalArrowSpan: TypedTag[String] =
       span(paddingLeft := "1ch", paddingRight := "1ch", raw("&DoubleDownArrow;"))

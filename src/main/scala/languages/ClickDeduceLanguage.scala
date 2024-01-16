@@ -5,8 +5,4 @@ package languages
 trait ClickDeduceLanguage extends AbstractActionLanguage {
   lang =>
 
-  def createNewInstance(): ClickDeduceLanguage = {
-    val constructor = lang.getClass.getConstructors()(0)
-    constructor.newInstance().asInstanceOf[ClickDeduceLanguage]
-  }
 }

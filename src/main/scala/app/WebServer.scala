@@ -164,7 +164,7 @@ class WebServer extends JsonSupport {
 
   private def getLanguage(langName: String): ClickDeduceLanguage = knownLanguages
     .find(getLanguageName(_) == langName) match {
-    case Some(lang) => lang.createNewInstance()
+    case Some(lang) => lang
     case None       => throw new IllegalArgumentException(s"Unknown language: $langName")
   }
 
