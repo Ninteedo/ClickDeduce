@@ -1,61 +1,46 @@
-import {exec} from 'child_process';
+import {spawn} from 'child_process';
 import {afterAll, beforeAll, describe, expect, test} from "@jest/globals";
 import http from "http";
 import net from "net";
 
-const port = 9000;
+const port = 9005;
 const command = `sbt "run --port ${port}"`;
 let online = false;
-const serverThread = exec(command, async (err, stdout, stderr) => {
-    if (err) {
-        console.error(err);
-        return;
-    }
-    console.log(stdout);
-    console.log(stderr);
-    online = true;
-
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    console.log("Still online");
-});
+// const serverThread = exec(command, async (err, stdout, stderr) => {
+//     if (err) {
+//         console.error(err);
+//         return;
+//     }
+//     console.log(stdout);
+//     console.log(stderr);
+//     online = true;
+//
+//     await new Promise(resolve => setTimeout(resolve, 1000));
+//     console.log("Still online");
+// });
 // online = true;
 const url = `http://localhost:${port}/`
 
-jest.setTimeout(30000);
+jest.setTimeout(60000);
 
-// let serverThread = spawn('sbt', [`"run --port ${port}"`], {shell: true});
+let serverThread = spawn('sbt', [`"run --port ${port}"`], {shell: true});
 
 beforeAll(async () => {
-    serverThread.stdout.on('data', (data) => {
-        console.log(`stdout: ${data}`);
-        if (data.includes('Server online')) {
-            online = true;
-        }
-    });
-
-    serverThread.stderr.on('data', (data) => {
-        console.error(`stderr: ${data}`);
-    });
-
-    serverThread.on('close', (code) => {
-        console.log(`child process exited with code ${code}`);
-    });
-
-    const maxAttempts = 20;
+    const maxAttempts = 30;
     let attempts = 0;
 
     while (attempts < maxAttempts && !online) {
-        // try {
-        //     await new Promise((resolve, reject) => {
-        //         http.get(url, (res: any) => {
-        //             console.log(`Server is online. Attempt ${attempts + 1} of ${maxAttempts}`);
-        //             online = true;
-        //             resolve(null);
-        //         }).on('error', reject);
-        //     });
-        // } catch (error) {
-        //     console.log(`Server not online, received ${error}`)
-        // }
+        try {
+            await new Promise((resolve, reject) => {
+                http.get(url, (res: any) => {
+                    console.log(`Server is online. Attempt ${attempts + 1} of ${maxAttempts}`);
+                    online = true;
+                    resolve(null);
+                }).on('error', reject);
+            });
+        } catch (error) {
+            console.log(`Server not online, received ${error}`)
+        }
 
         if (!online) {
             console.log(`Server not online. Attempt ${attempts + 1} of ${maxAttempts}`);
@@ -111,11 +96,16 @@ afterAll(() => {
             console.error(`Server thread was not killed, exited with code ${code} and signal ${signal}`);
         }
     });
-    serverThread.kill('SIGINT');
+    serverThread.kill('SIGKILL');
 
     if (serverThread.killed) {
         console.log('Server thread was killed');
     } else {
         console.error('Server thread was not killed');
     }
+
+    setTimeout(() => {
+        process.exit(0);
+    }, 1000);
+
 });

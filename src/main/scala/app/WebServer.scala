@@ -132,7 +132,7 @@ class WebServer extends JsonSupport {
     isOnline = true
     val bindingFuture = Http().newServerAt(bindingAddress, portNumber).withSettings(customSettings).bind(requestRoute)
 
-    println(s"Server online at http://localhost:$portNumber/\nPress RETURN to stop...")
+    println(s"Server online at http://localhost:$portNumber/")
     // StdIn.readLine()
 
     while (isOnline) {
