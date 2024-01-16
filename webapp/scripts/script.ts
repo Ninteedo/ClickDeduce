@@ -1,5 +1,6 @@
 import '../styles/stylesheet.css';
 import panzoom, {PanZoom} from "panzoom";
+import {ClickDeduceResponseError} from "./ClickDeduceResponseError";
 
 let lastNodeString: string = "";
 
@@ -115,7 +116,7 @@ async function runAction(actionName: string, treePath: string, extraArgs: any[])
     }).then(response => {
         if (!response.ok) {
             return response.text().then(text => {
-                throw Error(response.statusText + "\n" + text)
+                throw new ClickDeduceResponseError(text);
             });
         }
         return response;
@@ -124,7 +125,7 @@ async function runAction(actionName: string, treePath: string, extraArgs: any[])
     }).catch(error => {
         displayError(error);
         useTreeFromHistory(treeHistoryIndex);
-        throw error;
+        throw new ClickDeduceResponseError(error.message);
     });
 }
 
@@ -383,7 +384,7 @@ export function zoomToFit(): void {
 
 function displayError(error: any): void {
     const errorDiv: HTMLDivElement = document.getElementById('error-message') as HTMLDivElement;
-    errorDiv.textContent = error.toString();
+    errorDiv.textContent = error.message;
     errorDiv.classList.add('fade-in');
     errorDiv.classList.remove('fade-out');
     setTimeout(() => {

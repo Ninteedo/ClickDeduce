@@ -5,6 +5,7 @@ import * as NS from "../test_resources/node_strings";
 
 import fs from 'fs';
 import path from 'path';
+import {ClickDeduceResponseError} from "./ClickDeduceResponseError";
 
 function loadHtmlTemplate(filename: string): string {
     const readResult: string = fs.readFileSync(path.resolve(__dirname, '../test_resources', `${filename}.html`), 'utf8');
@@ -39,6 +40,7 @@ const invalidResourceResponse: MockResponse = new MockResponse("The requested re
 let requestsReceived: { url: string, request: any }[] = [];
 let dummyFetchResponse: any = null;
 let actionFetchResponse: { nodeString: string, html: string } = null;
+let actionErrorMessage: string = null;
 
 function checkActionRequestExecuted(actionName: string, langName: string, modeName: string, nodeString: string,
                                     treePath: string, extraArgs: string[]): void {
@@ -63,7 +65,7 @@ function fetchMock(url: string, request: any): Promise<Response> {
     if (url.startsWith('/')) {
         url = url.substring(1);
     }
-    requestsReceived.push({ url, request });
+    requestsReceived.push({url, request});
 
     console.log("fetchMock called with url: " + url + " and request: " + JSON.stringify(request));
 
@@ -81,7 +83,13 @@ function fetchMock(url: string, request: any): Promise<Response> {
     } else if (url === 'process-action') {
         if (request['method'] === 'POST') {
             if (actionFetchResponse === null) {
-                actionFetchResponse = {nodeString: "", html: ""};
+                if (actionErrorMessage !== null) {
+                    // @ts-ignore
+                    return Promise.resolve(new MockResponse(actionErrorMessage,
+                        {status: 400, statusText: 'Bad Request'}));
+                } else {
+                    actionFetchResponse = {nodeString: "", html: ""};
+                }
             }
             responseJson = actionFetchResponse;
             actionFetchResponse = null;
@@ -108,14 +116,12 @@ function fetchMock(url: string, request: any): Promise<Response> {
 
 global.fetch = jest.fn(fetchMock);
 
-const mockEvent = { preventDefault: jest.fn() } as unknown as Event;
+const mockEvent = {preventDefault: jest.fn()} as unknown as Event;
 
 // mock panzoom module, doesn't need to do anything
 jest.mock('panzoom', () => ({
     __esModule: true,
-    default: jest.fn().mockImplementation(() => ({
-
-    }))
+    default: jest.fn().mockImplementation(() => ({}))
 }))
 
 function slightDelay(delay: number = 10): Promise<void> {
@@ -192,7 +198,7 @@ afterEach(() => {
 
 describe("fetch is correctly mocked", () => {
     test("fetch returns the set response", async () => {
-        let data = { test: "test" };
+        let data = {test: "test"};
         dummyFetchResponse = data;
         fetch('dummy-url', {}).then(response => response.json()).then(contents =>
             expect(contents).toEqual(data)
@@ -200,13 +206,13 @@ describe("fetch is correctly mocked", () => {
     });
 
     test("fetch returns correct language selector HTML", async () => {
-        fetch('get-lang-selector', { method: 'GET' }).then(response => response.json()).then(contents =>
-            expect(contents).toEqual({ langSelectorHtml })
+        fetch('get-lang-selector', {method: 'GET'}).then(response => response.json()).then(contents =>
+            expect(contents).toEqual({langSelectorHtml})
         );
     });
 
     test("fetch results in an error if using POST on get-lang-selector", async () => {
-        fetch('get-lang-selector', { method: 'POST' }).then(response => response.ok).then(ok =>
+        fetch('get-lang-selector', {method: 'POST'}).then(response => response.ok).then(ok =>
             expect(ok).toEqual(false)
         );
     });
@@ -1083,5 +1089,66 @@ describe("phantom inputs are made read-only and disabled", () => {
 });
 
 describe("responses to server errors are appropriate", () => {
+    async function triggerError(message: string): Promise<void> {
+        const input = document.querySelector('input[type="text"]') as HTMLInputElement;
+        input.value = input.value + " foo";
+        actionErrorMessage = message;
+        await handleLiteralChanged(input);
+    }
 
+    function getErrorDiv(): HTMLElement {
+        return document.getElementById('error-message');
+    }
+
+    beforeEach(async () => {
+        await prepareExampleTimesTree();
+    });
+
+    test("an error is thrown in the console", async () => {
+        const message = "test";
+        try {
+            await triggerError(message)
+        } catch (e) {
+            expect(e).toBeInstanceOf(ClickDeduceResponseError);
+        }
+    });
+
+    test("error div becomes visible", async () => {
+        try {
+            await triggerError("test");
+        } catch (e) {
+        }
+        expect(getErrorDiv().classList).toContain('fade-in');
+        expect(getErrorDiv().classList).not.toContain('fade-out');
+    });
+
+    test("error div contains the error message", async () => {
+        let message = "test";
+        try {
+            await triggerError(message);
+        } catch (e) {
+        }
+        expect(getErrorDiv().textContent).toEqual(message);
+
+        message = "Stack overflow exception";
+        try {
+            await triggerError(message);
+        } catch (e) {
+        }
+        expect(getErrorDiv().textContent).toEqual(message);
+    });
+
+    test("error div becomes invisible after a timeout", async () => {
+        jest.useFakeTimers();
+
+        try {
+            await triggerError("test");
+        } catch (e) {
+        }
+
+        jest.advanceTimersByTime(10000);
+
+        expect(getErrorDiv().classList).not.toContain('fade-in');
+        expect(getErrorDiv().classList).toContain('fade-out');
+    });
 });
