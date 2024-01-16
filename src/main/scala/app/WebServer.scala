@@ -13,7 +13,6 @@ import scalatags.Text.all.*
 import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 import scala.concurrent.ExecutionContextExecutor
-import scala.io.StdIn
 
 case class EvalRequest(langName: String)
 
@@ -134,7 +133,11 @@ class WebServer extends JsonSupport {
     val bindingFuture = Http().newServerAt(bindingAddress, portNumber).withSettings(customSettings).bind(requestRoute)
 
     println(s"Server online at http://localhost:$portNumber/\nPress RETURN to stop...")
-    StdIn.readLine()
+    // StdIn.readLine()
+
+    while (isOnline) {
+      Thread.sleep(1000)
+    }
 
     bindingFuture
       .flatMap(_.unbind())
