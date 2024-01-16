@@ -13,6 +13,16 @@ let redoButton: HTMLButtonElement;
 let modeRadios: HTMLInputElement[];
 let langSelector: HTMLSelectElement;
 
+let initialValues: [string, string][] = [];
+
+let nextFocusElement: HTMLElement = null;
+
+let contextMenuSelectedElement: HTMLElement = null;
+
+let copyCache: string = null;
+
+let panzoomInstance: PanZoom;
+
 function getSelectedMode(): string {
     for (const radio of modeRadios) {
         if (radio.checked) {
@@ -89,7 +99,9 @@ export async function handleLiteralChanged(textInput: HTMLInputElement): Promise
 
     await runAction("EditLiteralAction", treePath, [literalValue]).then(() => {
         console.log("Focus path: " + focusedTreePath);
-        if (focusedTreePath == null) { return; }
+        if (focusedTreePath == null) {
+            return;
+        }
         let focusedElement: HTMLElement = document.querySelector(`[data-tree-path="${focusedTreePath}"]`);
         if (focusedElement != null && focusedElement instanceof HTMLElement) {
             console.log("Focus: " + focusedElement.outerHTML);
@@ -186,8 +198,6 @@ export function redo(): void {
     }
 }
 
-let initialValues: [string, string][] = [];
-
 function setLiteralInitialValues() {
     document.querySelectorAll('input[data-tree-path]').forEach(input => {
         if (input instanceof HTMLInputElement) {
@@ -214,8 +224,6 @@ function updateActiveInputsList(): void {
         }
     })
 }
-
-let nextFocusElement: HTMLElement = null;
 
 export async function handleKeyDown(e: KeyboardEvent): Promise<void> {
     if (e.key === 'Tab' && (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement)) {
@@ -309,8 +317,6 @@ function hasClassOrParentHasClass(element: HTMLElement, className: string): bool
         (element.parentElement && hasClassOrParentHasClass(element.parentElement, className));
 }
 
-let contextMenuSelectedElement: HTMLElement = null;
-
 export async function clearTreeNode(event: Event): Promise<void> {
     event.preventDefault();
     if (contextMenuSelectedElement) {
@@ -318,8 +324,6 @@ export async function clearTreeNode(event: Event): Promise<void> {
         await runAction("DeleteAction", treePath, [])
     }
 }
-
-let copyCache: string = null;
 
 export function copyTreeNode(): void {
     copyCache = contextMenuSelectedElement.getAttribute("data-node-string");
@@ -363,11 +367,6 @@ function closeContextMenu(e: MouseEvent) {
         clearHighlight();
     }
 }
-
-// Tree Panning and Zooming
-
-// Initialize Panzoom
-let panzoomInstance: PanZoom;
 
 export function zoomToFit(): void {
     const container: HTMLElement = document.getElementById('tree-container');
