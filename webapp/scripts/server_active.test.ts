@@ -73,6 +73,7 @@ describe('server is online', () => {
     });
 
     test("response validation", done => {
+        expect.assertions(1);
         http.get(url, (res: any) => {
             let data = '';
 
@@ -81,6 +82,7 @@ describe('server is online', () => {
             });
 
             res.on('end', () => {
+                console.log(data);
                 expect(data).toContain('<title>ClickDeduce</title>');
                 done();
             });
@@ -93,7 +95,7 @@ describe('server is online', () => {
 afterAll(() => {
     console.log('Killing server thread');
     kill(serverThread.pid, 'SIGKILL');
-
+    serverThread.kill();
 
     if (serverThread.killed) {
         console.log('Server thread was killed');
