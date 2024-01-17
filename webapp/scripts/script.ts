@@ -65,6 +65,8 @@ async function loadLangSelector(): Promise<void> {
             }
         })
     });
+
+    console.log("done here")
 }
 
 function getSelectedLanguage(): string {
@@ -392,7 +394,7 @@ function displayError(error: any): void {
     }, 5000);
 }
 
-export function initialise(): void {
+export async function initialise(): Promise<void> {
     treeHistory = [];
     treeHistoryIndex = 0;
     contextMenuSelectedElement = null;
@@ -412,7 +414,7 @@ export function initialise(): void {
         });
     }
 
-    loadLangSelector().then(() => {
+    await loadLangSelector().then(() => {
         langSelector = document.getElementById('lang-selector') as HTMLSelectElement;
     });
     updateUndoRedoButtons();

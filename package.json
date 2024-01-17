@@ -17,10 +17,11 @@
     "ts-loader": "~9.5.1",
     "typescript": "~5.3.3",
     "webpack": "~5.89.0",
-    "webpack-cli": "~5.1.4"
+    "webpack-cli": "~5.1.4",
+    "node-fetch": "~2.6.1"
   },
   "scripts": {
-    "test": "jest",
+    "test": "jest --runInBand --detectOpenHandles",
     "build": "webpack --mode=development",
     "server-test": "jest server_active.test.ts --detectOpenHandles"
   },

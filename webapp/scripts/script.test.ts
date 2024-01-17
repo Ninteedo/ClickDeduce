@@ -7,7 +7,7 @@ import fs from 'fs';
 import path from 'path';
 import {ClickDeduceResponseError} from "./ClickDeduceResponseError";
 
-function loadHtmlTemplate(filename: string): string {
+export function loadHtmlTemplate(filename: string): string {
     const readResult: string = fs.readFileSync(path.resolve(__dirname, '../test_resources', `${filename}.html`), 'utf8');
     const fixedLineEndings: string = readResult.replace(/\r\n/g, '\n');
     return fixedLineEndings;
@@ -124,7 +124,7 @@ jest.mock('panzoom', () => ({
     default: jest.fn().mockImplementation(() => ({}))
 }))
 
-function slightDelay(delay: number = 10): Promise<void> {
+export function slightDelay(delay: number = 10): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, delay));
 }
 
@@ -185,16 +185,20 @@ async function prepareExampleTimesTree(): Promise<void> {
     await handleLiteralChanged(document.querySelector('input[type="text"]') as HTMLInputElement);
 }
 
-beforeEach(() => {
+beforeEach(async () => {
     requestsReceived = [];
     document.body.innerHTML = defaultHtml;
-    initialise();
+    await initialise();
 });
 
 afterEach(() => {
     dummyFetchResponse = null;
     actionFetchResponse = null;
 });
+
+afterAll(() => {
+    jest.clearAllMocks();
+})
 
 describe("fetch is correctly mocked", () => {
     test("fetch returns the set response", async () => {
