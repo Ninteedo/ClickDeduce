@@ -1,5 +1,15 @@
 # Glossary
 
+## Action
+
+Represents a single modification to an [evaluation tree](#evaluation-tree) or [type-checking tree](#type-checking-tree).
+
+While editing the tree, each change the user makes a request to the server to perform an action.
+The server returns the new tree, which is updated according to the action.
+
+All actions require the original node tree, a [tree path](#tree-path) to the node being modified,
+and then whatever additional arguments that specific action requires.
+
 ## Axiom
 
 An expression which cannot be reduced further.
@@ -99,6 +109,10 @@ An [inner node](#inner-node) which contains an [outer node](#outer-node).
 
 A part of an [evaluation](#evaluation)/[type-checking tree](#type-checking-tree).
 For example, in the expression `(3 + 5) * 2`, the subtree `(3 + 5)` is the left child of the root node.
+
+## Tree Path
+
+A list of zero-indexed indices which describes the path from the root of a tree to a specific node.
 
 ## Type
 
