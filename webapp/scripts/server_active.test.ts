@@ -2,11 +2,12 @@ import {spawn} from 'child_process';
 import {afterAll, beforeAll, describe, expect, test} from "@jest/globals";
 import http from "http";
 import net from "net";
+import kill from "tree-kill";
 
 const port = 9005;
 const command = `sbt "run --port ${port}"`;
 let online = false;
-// const serverThread = exec(command, async (err, stdout, stderr) => {
+// let serverThread = exec(command, async (err, stdout, stderr) => {
 //     if (err) {
 //         console.error(err);
 //         return;
@@ -63,9 +64,11 @@ describe('server is online', () => {
 
     test("can connect to server", () => {
         const client = new net.Socket();
-        client.connect(port, 'localhost', function() {
+        client.connect(port, 'localhost', function () {
             console.log('Connected');
             client.write('Hello, server! Love, Client.');
+            client.end();
+            client.destroySoon();
         });
     });
 
@@ -89,20 +92,15 @@ describe('server is online', () => {
 
 afterAll(() => {
     console.log('Killing server thread');
-    serverThread.on('exit', (code, signal) => {
-        if (signal === 'SIGINT') {
-            console.log('Server thread was killed');
-        } else {
-            console.error(`Server thread was not killed, exited with code ${code} and signal ${signal}`);
-        }
-    });
-    serverThread.kill('SIGKILL');
+    kill(serverThread.pid, 'SIGKILL');
+
 
     if (serverThread.killed) {
         console.log('Server thread was killed');
     } else {
         console.error('Server thread was not killed');
     }
+    serverThread = null;
 
     setTimeout(() => {
         process.exit(0);
