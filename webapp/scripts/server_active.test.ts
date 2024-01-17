@@ -3,9 +3,10 @@ import {afterAll, beforeAll, beforeEach, describe, expect, test} from "@jest/glo
 import http from "http";
 import net from "net";
 import kill from "tree-kill";
-import {handleSubmit, initialise} from "./script";
+import {handleDropdownChange, handleSubmit, initialise} from "./script";
 import fs from "fs";
 import path from "path";
+import {ClickDeduceResponseError} from "./ClickDeduceResponseError";
 
 const port = 9005;
 const command = `sbt "run --port ${port}"`;
@@ -96,9 +97,11 @@ describe('server is online', () => {
     });
 });
 
-afterAll(() => {
+afterAll(async () => {
     console.log('Killing server thread');
     kill(serverThread.pid, 'SIGKILL');
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
 });
 
 function loadHtmlTemplate(filename: string): string {
@@ -135,17 +138,39 @@ describe('fetch works correctly', () => {
 beforeEach(async () => {
     document.body.innerHTML = indexHtml;
     await initialise();
-    console.log('Initialised');
-    console.log(document.body.innerHTML);
 });
+
+function getStartNodeButton() {
+    return document.getElementById('start-node-button');
+}
+
+async function pressStartNodeButton() {
+    await handleSubmit(new Event(""), '/start-node-blank')
+}
+
+function getLangSelector() {
+    return document.getElementById('lang-selector') as HTMLSelectElement;
+}
+
+async function changeLanguage(langIndex: number): Promise<void> {
+    const langSelector = getLangSelector();
+    langSelector.selectedIndex = langIndex;
+    langSelector.dispatchEvent(new Event('change'));
+    await new Promise(resolve => setTimeout(resolve, 50));
+}
+
+function getLeftmostExprDropdown(): HTMLSelectElement {
+    return document.querySelector('select.expr-dropdown:not([disabled])') as HTMLSelectElement;
+}
+
+async function selectExprOption(dropdown: HTMLSelectElement, optionIndex: number): Promise<void> {
+    dropdown.selectedIndex = optionIndex;
+    await handleDropdownChange(dropdown, 'expr');
+}
 
 describe('lang selector is correctly initialised on load', () => {
     function getLangSelectorDiv() {
         return document.getElementById('lang-selector-div');
-    }
-
-    function getLangSelector() {
-        return document.getElementById('lang-selector');
     }
 
     function getLangSelectorOptions() {
@@ -196,14 +221,6 @@ describe('lang selector is correctly initialised on load', () => {
 });
 
 describe('start node button has correct effect', () => {
-    function getStartNodeButton() {
-        return document.getElementById('start-node-button');
-    }
-
-    async function pressStartNodeButton() {
-        await handleSubmit(new Event(""), '/start-node-blank')
-    }
-
     test('start node button is present', () => {
         expect(getStartNodeButton()).toBeTruthy();
     });
@@ -216,5 +233,149 @@ describe('start node button has correct effect', () => {
         expect(tree.innerHTML).not.toBe(treeContent);
         expect(tree.children).toHaveLength(1);
         expect(tree.querySelectorAll('.subtree')).toHaveLength(1);
+    });
+
+    test('the added node has the correct content', async () => {
+        await pressStartNodeButton();
+        expect(document.querySelectorAll('.subtree.axiom')).toHaveLength(1);
+        expect(document.querySelectorAll('select.expr-dropdown')).toHaveLength(1);
+        expect(document.querySelectorAll('select.expr-dropdown option')).toHaveLength(4);
+        expect(document.querySelectorAll('.annotation-axiom')).toHaveLength(1);
+    });
+});
+
+describe('selecting an option from the expression choice dropdown has the correct effect', () => {
+    beforeEach(async () => {
+        await pressStartNodeButton();
+    });
+
+    test('selecting the "Num" option has correct effect', async () => {
+        await selectExprOption(getLeftmostExprDropdown(), 1);
+
+        expect(document.querySelectorAll('.subtree')).toHaveLength(1);
+        expect(document.querySelectorAll('.subtree.axiom')).toHaveLength(1);
+        expect(document.querySelectorAll('select.expr-dropdown')).toHaveLength(0);
+        expect(document.querySelectorAll('.annotation-axiom')).toHaveLength(1);
+        expect(document.querySelectorAll('.expr')).toHaveLength(1);
+
+        const node = document.querySelector('.subtree.axiom') as HTMLElement;
+        expect(node.getAttribute('data-node-string')).toBe('VariableNode(\"Num\", List(LiteralNode(\"\")))');
+        expect(node.getAttribute('data-tree-path')).toBe('');
+
+        expect(node.querySelectorAll('input')).toHaveLength(1);
+        const input = node.querySelector('input') as HTMLInputElement;
+        expect(input.value).toBe('');
+        expect(input.getAttribute('data-tree-path')).toBe('0');
+    });
+
+    test('selecting the "Plus" option has correct effect', async () => {
+        await selectExprOption(getLeftmostExprDropdown(), 2);
+
+        expect(document.querySelectorAll('.subtree')).toHaveLength(3);
+        expect(document.querySelectorAll('.subtree.axiom')).toHaveLength(2);
+        expect(document.querySelectorAll('select.expr-dropdown:not([disabled])')).toHaveLength(2);
+        expect(document.querySelectorAll('.expr')).toHaveLength(3);
+    });
+
+    test('selecting the "Times" option then the "Plus" and "Num" options has correct effect', async () => {
+        await selectExprOption(getLeftmostExprDropdown(), 3);
+
+        expect(document.querySelectorAll('.subtree')).toHaveLength(3);
+        expect(document.querySelectorAll('.subtree.axiom')).toHaveLength(2);
+        expect(document.querySelectorAll('select.expr-dropdown:not([disabled])')).toHaveLength(2);
+        expect(document.querySelectorAll('.expr')).toHaveLength(3);
+
+        await selectExprOption(getLeftmostExprDropdown(), 2);
+        expect(document.querySelectorAll('.subtree')).toHaveLength(5);
+        expect(document.querySelectorAll('.subtree.axiom')).toHaveLength(3);
+        expect(document.querySelectorAll('select.expr-dropdown:not([disabled])')).toHaveLength(3);
+        expect(document.querySelectorAll('.expr')).toHaveLength(5);
+
+        await selectExprOption(getLeftmostExprDropdown(), 1);
+        expect(document.querySelectorAll('select.expr-dropdown:not([disabled])')).toHaveLength(2);
+
+        await selectExprOption(getLeftmostExprDropdown(), 1);
+        expect(document.querySelectorAll('select.expr-dropdown:not([disabled])')).toHaveLength(1);
+
+        await selectExprOption(getLeftmostExprDropdown(), 1);
+        expect(document.querySelectorAll('select.expr-dropdown:not([disabled])')).toHaveLength(0);
+
+        const tree = document.getElementById('tree');
+
+        expect(tree.querySelectorAll('.subtree')).toHaveLength(5);
+        expect(tree.querySelectorAll('.subtree.axiom')).toHaveLength(3);
+        expect(tree.querySelectorAll('.expr')).toHaveLength(5);
+        expect(tree.querySelectorAll('select')).toHaveLength(0);
+        expect(tree.querySelectorAll('input:not([readonly])')).toHaveLength(3);
+        expect(tree.querySelectorAll('.annotation-new')).toHaveLength(2);
+
+        const inputDataPaths = ['0-0-0', '0-1-0', '1-0'];
+        tree.querySelectorAll('input:not([readonly])').forEach((input, index) => {
+            expect(input.getAttribute('data-tree-path')).toBe(inputDataPaths[index]);
+        });
+    });
+});
+
+describe('behaviour of changing the selected language is correct', () => {
+    beforeEach(async () => {
+        await pressStartNodeButton();
+    });
+
+    test('changing the selected language with only the initial node present has correct effect', async () => {
+        let prevSelect = getLeftmostExprDropdown();
+
+        for (let i = 1; i < getLangSelector().options.length; i++) {
+            await changeLanguage(i);
+            expect(getLeftmostExprDropdown().outerHTML).not.toBe(prevSelect.outerHTML);
+            expect(getLeftmostExprDropdown().options.length).toBeGreaterThan(prevSelect.options.length);
+        }
+    });
+
+    test('can change to a child language with more existing nodes', async () => {
+        await changeLanguage(1);
+
+        await selectExprOption(getLeftmostExprDropdown(), 5);
+        await selectExprOption(getLeftmostExprDropdown(), 4);
+        await selectExprOption(getLeftmostExprDropdown(), 2);
+
+        let prevSelect = getLeftmostExprDropdown();
+
+        for (let i = 2; i < getLangSelector().options.length; i++) {
+            await changeLanguage(i);
+            expect(getLeftmostExprDropdown().outerHTML).not.toBe(prevSelect.outerHTML);
+            expect(getLeftmostExprDropdown().options.length).toBeGreaterThan(prevSelect.options.length);
+        }
+    });
+
+    test('can change to a parent language, as long as the current tree only uses expressions present in the parent language', async () => {
+        let languageSizes: number[] = [getLeftmostExprDropdown().options.length];
+        await changeLanguage(1);
+        languageSizes.push(getLeftmostExprDropdown().options.length);
+        await changeLanguage(2);
+        languageSizes.push(getLeftmostExprDropdown().options.length);
+
+        await selectExprOption(getLeftmostExprDropdown(), 5);
+        await selectExprOption(getLeftmostExprDropdown(), 4);
+
+        const nodeString = document.querySelector('.subtree.axiom').getAttribute('data-node-string');
+
+        await changeLanguage(1);
+
+        expect(getLeftmostExprDropdown().options.length).toBe(languageSizes[1]);
+        expect(document.querySelector('.subtree.axiom').getAttribute('data-node-string')).toBe(nodeString);
+    });
+
+    test('cannot change to a parent language if the current tree uses expressions not present in the parent language', async () => {
+        await changeLanguage(1);
+
+        await selectExprOption(getLeftmostExprDropdown(), 5);
+        await selectExprOption(getLeftmostExprDropdown(), 4);
+        await selectExprOption(getLeftmostExprDropdown(), 2);
+
+        try {
+            changeLanguage(0).then(() => {});
+        } catch (error) {
+            expect(error).toBeInstanceOf(ClickDeduceResponseError);
+        }
     });
 });

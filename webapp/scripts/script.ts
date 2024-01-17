@@ -12,6 +12,7 @@ let undoButton: HTMLButtonElement
 let redoButton: HTMLButtonElement;
 let modeRadios: HTMLInputElement[];
 let langSelector: HTMLSelectElement;
+let errorDiv: HTMLDivElement;
 
 let initialValues: [string, string][] = [];
 
@@ -61,7 +62,7 @@ async function loadLangSelector(): Promise<void> {
         const langSelector: HTMLElement = document.getElementById('lang-selector');
         langSelector.addEventListener('change', () => {
             if (lastNodeString !== "") {
-                runAction("IdentityAction", "", [])
+                runAction("IdentityAction", "", []);
             }
         })
     });
@@ -382,7 +383,6 @@ export function zoomToFit(): void {
 }
 
 function displayError(error: any): void {
-    const errorDiv: HTMLDivElement = document.getElementById('error-message') as HTMLDivElement;
     errorDiv.textContent = error.message;
     errorDiv.classList.add('fade-in');
     errorDiv.classList.remove('fade-out');
@@ -405,6 +405,7 @@ export async function initialise(): Promise<void> {
     redoButton = document.getElementById('redoButton') as HTMLButtonElement;
     tree = document.getElementById('tree') as HTMLDivElement;
     modeRadios = Array.from(document.querySelectorAll('input[name="mode"]'));
+    errorDiv = document.getElementById('error-message') as HTMLDivElement;
 
     for (const radio of modeRadios) {
         radio.addEventListener('change', () => {
