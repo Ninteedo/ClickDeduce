@@ -12,7 +12,9 @@ import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
+import java.io.File
 import scala.concurrent.ExecutionContextExecutor
+import scala.sys.process.Process
 
 case class EvalRequest(langName: String)
 
@@ -175,25 +177,14 @@ class WebServer extends JsonSupport {
 
   private def bundleScripts(): Unit = {
     println("Bundling scripts...")
-    val processBuilder = new ProcessBuilder("cmd.exe", "/c", "npm run build")
 
-    // Redirect error stream to the standard output stream
-    processBuilder.redirectErrorStream(true)
+    val osName = System.getProperty("os.name").toLowerCase
+    val command = if (osName.contains("win")) "cmd.exe /c npm run build" else "npm run build"
 
-    val process = processBuilder.start()
+    val process = Process(command, new File("webapp")).!
 
-    // Capture and print the output
-    val inputStream = process.getInputStream
-    val reader = new java.io.BufferedReader(new java.io.InputStreamReader(inputStream))
-
-    var line: String = ""
-    while ({ line = reader.readLine(); line != null }) {
-      println(line)
-    }
-
-    val exitCode = process.waitFor()
-    if (exitCode != 0) {
-      System.exit(exitCode)
+    if (process != 0) {
+      System.exit(process)
     }
   }
 
