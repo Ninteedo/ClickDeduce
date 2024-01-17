@@ -65,8 +65,6 @@ async function loadLangSelector(): Promise<void> {
             }
         })
     });
-
-    console.log("done here")
 }
 
 function getSelectedLanguage(): string {

@@ -99,25 +99,11 @@ describe('server is online', () => {
 afterAll(() => {
     console.log('Killing server thread');
     kill(serverThread.pid, 'SIGKILL');
-    serverThread.kill();
-
-    if (serverThread.killed) {
-        console.log('Server thread was killed');
-    } else {
-        console.error('Server thread was not killed');
-    }
-    serverThread = null;
-
-    setTimeout(() => {
-        process.exit(0);
-    }, 1000);
-
 });
 
 function loadHtmlTemplate(filename: string): string {
     const readResult: string = fs.readFileSync(path.resolve(__dirname, '../test_resources', `${filename}.html`), 'utf8');
-    const fixedLineEndings: string = readResult.replace(/\r\n/g, '\n');
-    return fixedLineEndings;
+    return readResult.replace(/\r\n/g, '\n');
 }
 
 const indexHtml = loadHtmlTemplate('../pages/index');
