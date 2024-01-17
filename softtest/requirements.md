@@ -302,7 +302,7 @@ A tree path is a string which represents a path through a node tree.
 2. It must be possible to find any node in a node tree using an appropriate tree path
    1. Phantom nodes ignore this requirement, as they are not a proper part of a node tree
 
-## Tree HTML
+### Tree HTML
 
 Node trees are represented in the interface as HTML.
 
@@ -344,3 +344,86 @@ Node trees are represented in the interface as HTML.
    5. Each subtree should have a `data-tree-path` attribute, containing the [tree path](#tree-paths) of that subtree
    6. Each subtree should have a `data-node-string` attribute, containing the [node string](#node-tree) of that subtree
    7. Any tooltips in the tree should have the `tooltip` class and be hidden by default
+
+### Actions
+
+Actions are individual operations that can be performed on a node tree.
+
+#### Select Expression
+
+This action replaces a blank expression (dropdown) with the selected expression kind.
+
+1. The action name is `SelectExprAction`
+2. The action has one additional argument for the name of the expression kind
+   1. This must match the name of an expression kind in the current language
+3. The provided tree path must point to a blank expression node
+   1. If it does not, the action should error
+4. The blank expression should be replaced with the selected expression kind in the new tree
+   1. If the selected expression kind has any subexpressions, they should be blank expressions
+   2. If the selected expression kind has any literals, they should be the empty string
+
+#### Select Type
+
+This action replaces a blank type (dropdown) with the selected type kind.
+
+1. The action name is `SelectTypeAction`
+2. The action has one additional argument for the name of the type kind
+   1. This must match the name of a type kind in the current language
+3. The provided tree path must point to a blank type node
+   1. If it does not, the action should error
+4. The blank type should be replaced with the selected type kind in the new tree
+   1. If the selected type kind has any subtypes, they should be blank types
+   2. If the selected type kind has any literals, they should be the empty string
+
+#### Edit Literal
+
+This action updates the value of a literal.
+
+1. The action name is `EditLiteralAction`
+2. The action has one additional argument for the new value of the literal
+   1. There are no restrictions on the value of the literal
+3. The provided tree path must point to a literal node
+   1. If it does not, the action should error
+4. The value of the literal in the new tree should be replaced with the provided value
+
+#### Delete
+
+This action deletes a node (and by extension any subexpressions) and replaces it with a blank expression (dropdown).
+
+1. The action name is `DeleteAction`
+2. The action has no additional arguments
+3. The provided tree path must point to an outer node (i.e. not a literal node)
+   1. If it does not, the action should error
+   2. This can target the root node
+   3. This can target a blank node, in which case the new tree should be the same as the old tree
+4. The node at the provided tree path should be replaced with a blank expression in the new tree
+
+#### Paste
+
+This action pastes a copied subtree into the tree.
+The logic for copying a subtree is part of the interface, not the server.
+
+1. The action name is `PasteAction`
+2. The action has one additional argument for the copied subtree
+   1. This must be a valid node string for the current language
+3. The provided tree path must point to an outer node (i.e. not a literal node)
+   1. If it does not, the action should error
+   2. This can target the root node
+   3. The targeted node's string can be identical to the pasted subtree's string, in which case the new tree should be
+      the same as the old tree
+4. The provided node string should be parsed as a node tree, then the targeted node should be replaced by it in the new
+   tree
+
+#### Identity
+
+This action has no effect on the tree.
+
+This is useful for actions which should not change the contents of the tree,
+but have other effects, such as changing the language or display mode.
+
+This eliminates the need for an additional endpoint or extra webapp logic.
+
+1. The action name is `IdentityAction`
+2. The action has no additional arguments
+3. The provided tree path does not matter, so can be erroneous without consequence
+4. The new tree should be the same as the old tree
