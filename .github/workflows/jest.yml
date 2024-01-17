@@ -26,5 +26,7 @@ jobs:
         java-version: '18'
         distribution: 'adopt'
         cache: 'sbt'
+    - name: Update sbt
+      run: sbt update
     - name: Run Jest tests
       run: npm test
