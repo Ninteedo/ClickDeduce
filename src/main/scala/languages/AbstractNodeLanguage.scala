@@ -771,17 +771,13 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   }
 
   case class LiteralNode(literalText: String) extends InnerNode {
-    override def toHtmlLine(mode: DisplayMode): TypedTag[String] = {
-      input(
-        `type` := "text",
-        width := Math.max(2, literalText.length) + "ch",
-        data("tree-path") := treePathString,
-        value := literalText
-      )
-    }
+    private val htmlLineShared: TypedTag[String] = input(`type` := "text", cls := "literal", value := literalText)
+
+    override def toHtmlLine(mode: DisplayMode): TypedTag[String] =
+      htmlLineShared(width := Math.max(2, literalText.length) + "ch", data("tree-path") := treePathString)
 
     override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] =
-      input(`type` := "text", readonly, disabled, width := Math.max(1, literalText.length) + "ch", value := literalText)
+      htmlLineShared(width := Math.max(1, literalText.length) + "ch", readonly, disabled)
 
     override val children: List[OuterNode] = Nil
 
