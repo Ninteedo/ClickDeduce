@@ -1,17 +1,19 @@
-import {afterEach, beforeEach, describe, expect, test} from "@jest/globals";
+import {afterAll, afterEach, beforeEach, describe, expect, jest, test} from "@jest/globals";
 import {MockResponse} from "./MockResponse";
-import {handleDropdownChange, handleLiteralChanged, handleSubmit, initialise} from "./script";
-import * as NS from "../test_resources/node_strings";
-
-import fs from 'fs';
-import path from 'path';
-import {ClickDeduceResponseError} from "./ClickDeduceResponseError";
-
-export function loadHtmlTemplate(filename: string): string {
-    const readResult: string = fs.readFileSync(path.resolve(__dirname, '../test_resources', `${filename}.html`), 'utf8');
-    const fixedLineEndings: string = readResult.replace(/\r\n/g, '\n');
-    return fixedLineEndings;
-}
+import {handleDropdownChange, handleLiteralChanged, handleSubmit, initialise} from "../script";
+import * as NS from "../../test_resources/node_strings";
+import {ClickDeduceResponseError} from "../ClickDeduceResponseError";
+import {
+    contextMenuSelect,
+    getErrorDiv,
+    getRedoButton,
+    getTabbableElements,
+    getUndoButton,
+    leftClickOn,
+    loadHtmlTemplate,
+    removeWhitespace,
+    slightDelay
+} from "./helper";
 
 const defaultHtml = loadHtmlTemplate('../pages/index')
 
@@ -123,48 +125,6 @@ jest.mock('panzoom', () => ({
     __esModule: true,
     default: jest.fn().mockImplementation(() => ({}))
 }))
-
-export function slightDelay(delay: number = 10): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, delay));
-}
-
-function contextMenuSelect(element: HTMLElement): void {
-    element.dispatchEvent(new MouseEvent('mouseover', {
-        bubbles: true,
-        cancelable: true,
-    }));
-
-    element.dispatchEvent(new MouseEvent('contextmenu', {
-        bubbles: true,
-        cancelable: true,
-        clientX: 0,
-        clientY: 0,
-        button: 2
-    }));
-}
-
-function leftClickOn(element: HTMLElement): void {
-    element.dispatchEvent(new MouseEvent('mouseover', {
-        bubbles: true,
-        cancelable: true,
-    }));
-
-    element.dispatchEvent(new MouseEvent('click', {
-        bubbles: true,
-        cancelable: true,
-        clientX: 0,
-        clientY: 0,
-        button: 0
-    }));
-}
-
-function getContextMenuElement(): HTMLElement {
-    return document.getElementById('custom-context-menu');
-}
-
-function removeWhitespace(str: string): string {
-    return str.replace(/\s/g, '');
-}
 
 async function prepareExampleTimesTree(): Promise<void> {
     const nodeString2 = NS.TIMES_EMPTY;
@@ -533,14 +493,6 @@ describe("undo and redo buttons behave correctly", () => {
             `<input type="text" style="width: 2ch;" data-tree-path="0" value="foo"></div>`
         );
 
-    function getUndoButton(): HTMLButtonElement {
-        return document.getElementById('undoButton') as HTMLButtonElement;
-    }
-
-    function getRedoButton(): HTMLButtonElement {
-        return document.getElementById('redoButton') as HTMLButtonElement;
-    }
-
     async function updateTree(nodeString: string, html: string): Promise<void> {
         actionFetchResponse = {nodeString, html};
         const dropdown = document.getElementsByClassName('expr-dropdown')[0] as HTMLSelectElement;
@@ -906,16 +858,6 @@ describe("tab cycling between input elements behaves correctly", () => {
         await handleDropdownChange(document.getElementsByClassName('expr-dropdown')[0] as HTMLSelectElement, 'expr');
     });
 
-    function getTabbableElements(): HTMLElement[] {
-        const elements = Array.from(document.querySelectorAll('input[data-tree-path]:not([disabled])')) as HTMLElement[];
-        elements.sort((a, b) => {
-            const aPath = a.getAttribute("data-tree-path");
-            const bPath = b.getAttribute("data-tree-path");
-            return aPath.localeCompare(bPath, undefined, {numeric: true, sensitivity: 'base'});
-        });
-        return elements;
-    }
-
     test("test can find a list of tabbable elements", async () => {
         const tabbableElements = getTabbableElements();
         expect(tabbableElements).toHaveLength(5);
@@ -964,20 +906,8 @@ describe("tab cycling between input and select elements behaves correctly", () =
         await prepareExampleTimesTree();
     });
 
-    function getTabbableElements(): HTMLElement[] {
-        const elements = Array.from(
-            document.querySelectorAll('input[data-tree-path]:not([disabled]), select[data-tree-path]:not([disabled])')
-        ) as HTMLElement[];
-        elements.sort((a, b) => {
-            const aPath = a.getAttribute("data-tree-path");
-            const bPath = b.getAttribute("data-tree-path");
-            return aPath.localeCompare(bPath, undefined, {numeric: true, sensitivity: 'base'});
-        });
-        return elements;
-    }
-
     test("test can find a list of tabbable elements", async () => {
-        const tabbableElements = getTabbableElements();
+        const tabbableElements = getTabbableElements(true);
         expect(tabbableElements).toHaveLength(2);
 
         expect(tabbableElements[0]).toBeInstanceOf(HTMLInputElement);
@@ -992,7 +922,7 @@ describe("tab cycling between input and select elements behaves correctly", () =
     });
 
     test("tabbing through the elements in order works", async () => {
-        const tabbableElements = getTabbableElements();
+        const tabbableElements = getTabbableElements(true);
 
         tabbableElements[0].focus();
         expect(document.activeElement).toEqual(tabbableElements[0]);
@@ -1006,7 +936,7 @@ describe("tab cycling between input and select elements behaves correctly", () =
     });
 
     test("tabbing through the elements in reverse order works", async () => {
-        const tabbableElements = getTabbableElements();
+        const tabbableElements = getTabbableElements(true);
 
         tabbableElements[0].focus();
         expect(document.activeElement).toEqual(tabbableElements[0]);
@@ -1098,10 +1028,6 @@ describe("responses to server errors are appropriate", () => {
         input.value = input.value + " foo";
         actionErrorMessage = message;
         await handleLiteralChanged(input);
-    }
-
-    function getErrorDiv(): HTMLElement {
-        return document.getElementById('error-message');
     }
 
     beforeEach(async () => {

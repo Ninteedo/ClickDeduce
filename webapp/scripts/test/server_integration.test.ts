@@ -1,11 +1,20 @@
 import {spawn} from 'child_process';
-import {afterAll, beforeAll, beforeEach, describe, expect, test} from "@jest/globals";
+import {afterAll, beforeAll, beforeEach, describe, expect, jest, test} from "@jest/globals";
 import http from "http";
 import net from "net";
 import kill from "tree-kill";
-import {handleDropdownChange, handleSubmit, initialise} from "./script";
-import fs from "fs";
-import path from "path";
+import {handleDropdownChange, initialise} from "../script";
+import {
+    changeLanguage,
+    doLiteralEdit,
+    getLangSelector,
+    getLeftmostExprDropdown,
+    getStartNodeButton,
+    getTree,
+    loadHtmlTemplate,
+    pressStartNodeButton,
+    selectExprOption
+} from "./helper";
 
 const port = 9005;
 const command = `sbt "run --port ${port}"`;
@@ -61,6 +70,13 @@ beforeAll(async () => {
     }
 });
 
+afterAll(async () => {
+    console.log('Killing server thread');
+    kill(serverThread.pid, 'SIGKILL');
+});
+
+const indexHtml = loadHtmlTemplate('../pages/index');
+
 describe('server is online', () => {
     test('server thread is running', () => {
         expect(serverThread).not.toBeNull();
@@ -96,17 +112,6 @@ describe('server is online', () => {
     });
 });
 
-afterAll(async () => {
-    console.log('Killing server thread');
-    kill(serverThread.pid, 'SIGKILL');
-});
-
-function loadHtmlTemplate(filename: string): string {
-    const readResult: string = fs.readFileSync(path.resolve(__dirname, '../test_resources', `${filename}.html`), 'utf8');
-    return readResult.replace(/\r\n/g, '\n');
-}
-
-const indexHtml = loadHtmlTemplate('../pages/index');
 
 describe('fetch works correctly', () => {
     test('fetch is defined', () => {
@@ -136,44 +141,6 @@ beforeEach(async () => {
     document.body.innerHTML = indexHtml;
     await initialise();
 });
-
-function getTree() {
-    return document.getElementById('tree');
-}
-
-function getStartNodeButton() {
-    return document.getElementById('start-node-button');
-}
-
-async function pressStartNodeButton() {
-    await handleSubmit(new Event(""), '/start-node-blank')
-}
-
-function getLangSelector() {
-    return document.getElementById('lang-selector') as HTMLSelectElement;
-}
-
-async function changeLanguage(langIndex: number): Promise<void> {
-    const langSelector = getLangSelector();
-    langSelector.selectedIndex = langIndex;
-    langSelector.dispatchEvent(new Event('change'));
-    await new Promise(resolve => setTimeout(resolve, 50));
-}
-
-function getLeftmostExprDropdown(): HTMLSelectElement {
-    return document.querySelector('select.expr-dropdown:not([disabled])') as HTMLSelectElement;
-}
-
-async function selectExprOption(dropdown: HTMLSelectElement, optionIndex: number): Promise<void> {
-    dropdown.selectedIndex = optionIndex;
-    await handleDropdownChange(dropdown, 'expr');
-}
-
-async function doLiteralEdit(input: HTMLInputElement, newValue: string): Promise<void> {
-    input.value = newValue;
-    input.dispatchEvent(new Event('change'));
-    await new Promise(resolve => setTimeout(resolve, 100));
-}
 
 describe('lang selector is correctly initialised on load', () => {
     function getLangSelectorDiv() {
