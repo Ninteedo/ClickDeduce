@@ -6,7 +6,6 @@ import kill from "tree-kill";
 import {handleDropdownChange, handleSubmit, initialise} from "./script";
 import fs from "fs";
 import path from "path";
-import {ClickDeduceResponseError} from "./ClickDeduceResponseError";
 
 const port = 9005;
 const command = `sbt "run --port ${port}"`;
@@ -380,4 +379,49 @@ describe('behaviour of changing the selected language is correct', () => {
     //         expect(error).toBeInstanceOf(ClickDeduceResponseError);
     //     }
     // });
+});
+
+describe('behaviour of editing literals is correct', () => {
+    async function doLiteralEdit(input: HTMLInputElement, newValue: string): Promise<void> {
+        input.value = newValue;
+        input.dispatchEvent(new Event('change'));
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    beforeEach(async () => {
+        await pressStartNodeButton();
+    });
+
+    test('can edit the literal of a single literal node', async () => {
+        await selectExprOption(getLeftmostExprDropdown(), 1);
+
+        let input = getTree().querySelector('input') as HTMLInputElement;
+        await doLiteralEdit(input, '123');
+
+        input = getTree().querySelector('input') as HTMLInputElement;
+        expect(input.value).toBe('123');
+    });
+
+    test('can edit the literal of a "Let"', async () => {
+        await changeLanguage(2);
+        await selectExprOption(getLeftmostExprDropdown(), 8);
+
+        let input = getTree().querySelector('input') as HTMLInputElement;
+        await doLiteralEdit(input, 'foo');
+
+        input = getTree().querySelector('input') as HTMLInputElement;
+        expect(input.value).toBe('foo');
+    });
+
+    test('can edit one literal multiple times', async () => {
+        await selectExprOption(getLeftmostExprDropdown(), 1);
+
+        let input = getTree().querySelector('input') as HTMLInputElement;
+        await doLiteralEdit(input, '123');
+        await doLiteralEdit(input, '456');
+        await doLiteralEdit(input, '789');
+
+        input = getTree().querySelector('input') as HTMLInputElement;
+        expect(input.value).toBe('789');
+    });
 });
