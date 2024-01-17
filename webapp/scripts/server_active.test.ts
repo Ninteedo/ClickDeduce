@@ -169,6 +169,12 @@ async function selectExprOption(dropdown: HTMLSelectElement, optionIndex: number
     await handleDropdownChange(dropdown, 'expr');
 }
 
+async function doLiteralEdit(input: HTMLInputElement, newValue: string): Promise<void> {
+    input.value = newValue;
+    input.dispatchEvent(new Event('change'));
+    await new Promise(resolve => setTimeout(resolve, 100));
+}
+
 describe('lang selector is correctly initialised on load', () => {
     function getLangSelectorDiv() {
         return document.getElementById('lang-selector-div');
@@ -382,12 +388,6 @@ describe('behaviour of changing the selected language is correct', () => {
 });
 
 describe('behaviour of editing literals is correct', () => {
-    async function doLiteralEdit(input: HTMLInputElement, newValue: string): Promise<void> {
-        input.value = newValue;
-        input.dispatchEvent(new Event('change'));
-        await new Promise(resolve => setTimeout(resolve, 100));
-    }
-
     beforeEach(async () => {
         await pressStartNodeButton();
     });
@@ -423,5 +423,185 @@ describe('behaviour of editing literals is correct', () => {
 
         input = getTree().querySelector('input') as HTMLInputElement;
         expect(input.value).toBe('789');
+    });
+});
+
+function getLeftmostTypeDropdown(): HTMLSelectElement {
+    return document.querySelector('select.type-dropdown:not([disabled])') as HTMLSelectElement;
+}
+
+async function selectTypeOption(dropdown: HTMLSelectElement, optionIndex: number): Promise<void> {
+    dropdown.selectedIndex = optionIndex;
+    await handleDropdownChange(dropdown, 'type');
+}
+
+describe('behaviour of manipulating trees with type selections is correct', () => {
+    beforeEach(async () => {
+        await pressStartNodeButton();
+        await changeLanguage(3);
+        await selectExprOption(getLeftmostExprDropdown(), 9);  // lambda
+    });
+
+    test('can select a simple type (int)', async () => {
+        await selectTypeOption(getLeftmostTypeDropdown(), 2);  // Int
+        const typeSubtree = getTree().querySelector('.subtree[data-tree-path="1"]');
+        expect(typeSubtree).toBeTruthy();
+        expect(typeSubtree.getAttribute('data-node-string')).toBe('TypeNode(\"IntType\", List())');
+    });
+
+    test('can select a simple type (bool)', async () => {
+        await selectTypeOption(getLeftmostTypeDropdown(), 3);  // Bool
+        const typeSubtree = getTree().querySelector('.subtree[data-tree-path="1"]');
+        expect(typeSubtree).toBeTruthy();
+        expect(typeSubtree.getAttribute('data-node-string')).toBe('TypeNode(\"BoolType\", List())');
+    });
+
+    test('can select a complex type (func int -> bool)', async () => {
+        await selectTypeOption(getLeftmostTypeDropdown(), 4);  // Func
+
+        expect(getTree().querySelectorAll('.type-dropdown')).toHaveLength(2);
+        expect(getTree().querySelector('.subtree[data-tree-path="1"]').getAttribute('data-node-string'))
+            .toBe('TypeNode("Func", List(SubTypeNode(TypeChoiceNode()), SubTypeNode(TypeChoiceNode())))');
+
+        await selectTypeOption(getLeftmostTypeDropdown(), 2);  // Int
+        expect(getTree().querySelectorAll('.type-dropdown')).toHaveLength(1);
+        expect(getTree().querySelector('.subtree[data-tree-path="1"]').getAttribute('data-node-string'))
+            .toBe('TypeNode("Func", List(SubTypeNode(TypeNode(\"IntType\", List())), SubTypeNode(TypeChoiceNode())))');
+        expect(getTree().querySelector('.subtree[data-tree-path="1-0"]').getAttribute('data-node-string'))
+            .toBe('TypeNode("IntType", List())');
+
+        await selectTypeOption(getLeftmostTypeDropdown(), 3);  // Bool
+        expect(getTree().querySelectorAll('.type-dropdown')).toHaveLength(0);
+        expect(getTree().querySelector('.subtree[data-tree-path="1"]').getAttribute('data-node-string'))
+            .toBe('TypeNode("Func", List(SubTypeNode(TypeNode("IntType", List())), SubTypeNode(TypeNode("BoolType", List()))))');
+        expect(getTree().querySelector('.subtree[data-tree-path="1-0"]').getAttribute('data-node-string'))
+            .toBe('TypeNode("IntType", List())');
+        expect(getTree().querySelector('.subtree[data-tree-path="1-1"]').getAttribute('data-node-string'))
+            .toBe('TypeNode("BoolType", List())');
+    });
+});
+
+test('images are correctly loaded', async () => {
+    // Fetch the HTML content of the page
+    const response = await fetch("", {method: 'GET'});
+    const html = await response.text();
+
+    // Use DOMParser to parse the HTML content
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+
+    // Get all image elements
+    const images = doc.getElementsByTagName('img');
+
+    for (let i = 0; i < images.length; i++) {
+        const image = images[i];
+        expect(image.getAttributeNames()).toContain('src');
+
+        const src = image.getAttribute('src');
+        expect(src.length).toBeGreaterThan(0);
+
+        console.log(`Fetching image ${src}`);
+
+        // Fetch the image
+        const imageResponse = await fetch(src, {method: 'GET'});
+        expect(imageResponse.status).toBe(200);
+        expect(imageResponse.headers.get('content-type')).toContain('image/');
+    }
+});
+
+describe("delete, copy, and paste buttons behave correctly", () => {
+    function contextMenuSelect(element: HTMLElement): void {
+        element.dispatchEvent(new MouseEvent('mouseover', {
+            bubbles: true,
+            cancelable: true,
+        }));
+
+        element.dispatchEvent(new MouseEvent('contextmenu', {
+            bubbles: true,
+            cancelable: true,
+            clientX: 0,
+            clientY: 0,
+            button: 2
+        }));
+    }
+
+    beforeEach(async () => {
+        await pressStartNodeButton();
+        await changeLanguage(3);
+        await selectExprOption(getLeftmostExprDropdown(), 3);  // Plus
+        await selectExprOption(getLeftmostExprDropdown(), 1);  // Num
+        await doLiteralEdit(getTree().querySelector('input[data-tree-path="0-0"]') as HTMLInputElement, 'foo');
+        await selectExprOption(getLeftmostExprDropdown(), 4);  // Bool
+        await doLiteralEdit(getTree().querySelector('input[data-tree-path="1-0"]') as HTMLInputElement, 'bar');
+        console.log('Tree setup done');
+    });
+
+    test("pressing delete clears the selected node", async () => {
+        expect.assertions(1);
+
+        const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
+        contextMenuSelect(element);
+
+        const deleteButton = document.getElementById('delete-button');
+        deleteButton.click();
+
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        expect(getTree().querySelector('.subtree[data-tree-path="0"]').getAttribute('data-node-string')).toBe('ExprChoiceNode()');
+    });
+
+    test("clicking paste on same element after copying it results in the same tree", async () => {
+        const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
+        contextMenuSelect(element);
+
+        const copyButton = document.getElementById('copy-button');
+        copyButton.click();
+
+        const initialTreeState = getTree().innerHTML;
+
+        contextMenuSelect(element);
+
+        const pasteButton = document.getElementById('paste-button');
+        pasteButton.click();
+
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        expect(getTree().innerHTML).toBe(initialTreeState);
+    });
+
+    test("clicking paste on another element after copying one results in the correct tree", async () => {
+        const element1 = document.querySelector('.subtree[data-tree-path="0"]') as HTMLElement;
+        contextMenuSelect(element1);
+
+        const copyButton = document.getElementById('copy-button');
+        copyButton.click();
+
+        const element2 = document.querySelector('.subtree[data-tree-path="1"]') as HTMLElement;
+        contextMenuSelect(element2);
+
+        const pasteButton = document.getElementById('paste-button');
+        pasteButton.click();
+
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        expect(getTree().innerHTML).not.toBe(element1.innerHTML);
+        expect(getTree().querySelector('.subtree[data-tree-path="1"]').getAttribute('data-node-string'))
+            .toBe('VariableNode(\"Num\", List(LiteralNode(\"foo\")))');
+    });
+
+    test("clicking paste after changing tree state makes the correct request to the server", async () => {
+        contextMenuSelect(document.querySelector('[data-tree-path="0"]'));
+        document.getElementById('copy-button').click();
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        document.getElementById('undoButton').click();
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        contextMenuSelect(document.querySelector('[data-tree-path=""]'));
+        document.getElementById('paste-button').click();
+
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        expect(document.querySelector('[data-tree-path=""]').getAttribute('data-node-string')).toBe('VariableNode(\"Num\", List(LiteralNode(\"foo\")))');
     });
 });

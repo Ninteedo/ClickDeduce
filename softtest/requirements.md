@@ -6,7 +6,7 @@
    1. The user will be able to click and drag the tree to pan around it
    2. The user will be able to scroll to zoom in and out
    3. The subtree that the user is hovering over will be highlighted
-   4. The evaluation tree will be displayed as...
+   4. The evaluation tree will be displayed as according to the [tree HTML](#tree-html) format
 2. The system will allow the user to construct an evaluation tree from scratch
    1. The user will be able to create a new evaluation tree with only a root node
    2. The user will be able to select an evaluation rule available in the language
