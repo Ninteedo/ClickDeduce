@@ -16,6 +16,17 @@ An expression which cannot be reduced further.
 For example, `3` is an axiom in the language of arithmetic.
 An [evaluation tree](#evaluation-tree) is complete if all paths end in an axiom.
 
+## Display Mode
+
+The mode in which the [node](#node) tree is displayed.
+
+There are three display modes:
+- **Edit**: The tree is displayed in a manner which allows the user to edit every part of it. This is the default mode.
+   For each node, an evaluation or type-checking result is displayed, with preference given to the evaluation result.
+- **Type-Check**: The type-checking tree is displayed, with the type-checking result for each node.
+- **Evaluate**: The evaluation tree is displayed, with the evaluation result for each node. 
+  Note that some evaluation rules create [phantom nodes](#phantom-node), which are only displayed in this mode.
+
 ## Environment
 
 A mapping from variables to values or types.
