@@ -48,7 +48,7 @@ evaluation instead produces an error.
 ## Evaluation Rule
 
 A rule which describes how to evaluate an expression.
-For example, the evaluation rule for addition is `Plus(Num(x), Num(y)) -> Num(x + y)`.
+For example, the evaluation rule for addition is `Plus(Num(x), Num(y)) ⇓ Num(x + y)`.
 
 ## Evaluation Tree
 
@@ -142,7 +142,7 @@ type-checking rules are applied.
 ## Type-Checking Rule
 
 A rule which describes how to determine the type of an expression.
-For example, the type-checking rule for addition is `Plus(Num(x), Num(y)) -> Int`.
+For example, the type-checking rule for addition is `Plus(x: Int, y: Int) : Int`.
 
 ## Type-Checking Tree
 

@@ -40,7 +40,7 @@ in all cases.
 
 ## Mock
 
-See [script.test.ts](../webapp/scripts/script.test.ts)
+See [server_mock.test.ts](../webapp/scripts/server_mock.test.ts)
 
 To ensure that the webapp is tested in isolation, it should be tested using mock server responses.
 
@@ -55,7 +55,7 @@ All main features of the webapp should be tested using this method.
 
 ## Server Integration
 
-See [server_active.test.ts](../webapp/scripts/server_active.test.ts)
+See [server_integration.test.ts](../webapp/scripts/server_integration.test.ts)
 
 The webapp should also be tested with the server running, to ensure that the webapp and server work together correctly.
 

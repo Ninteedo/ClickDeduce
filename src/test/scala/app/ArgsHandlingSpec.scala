@@ -132,7 +132,7 @@ class ArgsHandlingSpec extends AnyWordSpec with Matchers {
     }
   }
 
-  "Multiple options should be be settable by command line arguments" in {
+  "Multiple options should be settable by command line arguments" in {
     var server = WebServer()
     server.parseArgs(Array("--port", "1234", "--address", "5.6.7.89", "--skip-bundle-scripts"))
     server.portNumber shouldBe 1234
