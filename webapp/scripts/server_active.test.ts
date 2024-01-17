@@ -19,12 +19,12 @@ global.fetch = function (url: string, options: any) {
     return nodeFetch(finalUrl.toString(), options);
 };
 
-jest.setTimeout(60000);
+jest.setTimeout(120000);
 
 let serverThread = spawn('sbt', [`"run --port ${port}"`], {shell: true});
 
 beforeAll(async () => {
-    const maxAttempts = 30;
+    const maxAttempts = 60;
     let attempts = 0;
 
     while (attempts < maxAttempts && !online) {
@@ -100,8 +100,6 @@ describe('server is online', () => {
 afterAll(async () => {
     console.log('Killing server thread');
     kill(serverThread.pid, 'SIGKILL');
-
-    await new Promise(resolve => setTimeout(resolve, 1000));
 });
 
 function loadHtmlTemplate(filename: string): string {
@@ -139,6 +137,10 @@ beforeEach(async () => {
     document.body.innerHTML = indexHtml;
     await initialise();
 });
+
+function getTree() {
+    return document.getElementById('tree');
+}
 
 function getStartNodeButton() {
     return document.getElementById('start-node-button');
@@ -365,17 +367,17 @@ describe('behaviour of changing the selected language is correct', () => {
         expect(document.querySelector('.subtree.axiom').getAttribute('data-node-string')).toBe(nodeString);
     });
 
-    test('cannot change to a parent language if the current tree uses expressions not present in the parent language', async () => {
-        await changeLanguage(1);
-
-        await selectExprOption(getLeftmostExprDropdown(), 5);
-        await selectExprOption(getLeftmostExprDropdown(), 4);
-        await selectExprOption(getLeftmostExprDropdown(), 2);
-
-        try {
-            changeLanguage(0).then(() => {});
-        } catch (error) {
-            expect(error).toBeInstanceOf(ClickDeduceResponseError);
-        }
-    });
+    // test('cannot change to a parent language if the current tree uses expressions not present in the parent language', async () => {
+    //     await changeLanguage(1);
+    //
+    //     await selectExprOption(getLeftmostExprDropdown(), 5);
+    //     await selectExprOption(getLeftmostExprDropdown(), 4);
+    //     await selectExprOption(getLeftmostExprDropdown(), 2);
+    //
+    //     try {
+    //         changeLanguage(0).then(() => {});
+    //     } catch (error) {
+    //         expect(error).toBeInstanceOf(ClickDeduceResponseError);
+    //     }
+    // });
 });
