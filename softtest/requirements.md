@@ -41,7 +41,31 @@
       2. The user will then be able to use evaluation rules from the new language
       3. The language will be switched whenever the user changes the language dropdown value
 
-## Server API
+## Server
+
+### Process
+
+1. The server will be written in Scala
+   1. It will use the Akka HTTP library to handle HTTP requests
+2. The server will be able to be run from the command line
+   1. It will be able to set the port to listen on using `--port` and then a port number
+      1. If no port is specified, it will default to port `27019`
+      2. If an invalid port is specified, it will print an error message and exit
+         1. A valid port is any integer between `0` and `65535`, inclusive
+   2. It will be able to set the binding address using `--address` and then an IP address
+      1. If no address is specified, it will default to `0.0.0.0`
+      2. If an invalid address is specified, it will print an error message and exit
+         1. A valid address is any IPv4 address, following the format `x.x.x.x`, where `x` is an integer between `0`
+            and `255`, inclusive
+   3. The script bundling will be able to be skipped using `--skip-bundle-scripts` (with no value)
+      1. If this option is not specified, the server will bundle the scripts 
+3. Unless skipped using the command option, the server will bundle the scripts
+   1. It will bundle the scripts using Webpack and Babel
+   2. It will bundle the scripts when the server is started
+   3. It will bundle the scripts into the `dist` folder
+   4. It will bundle the scripts into a single file called `bundle.js`
+
+### API
 
 1. The server will return appropriate files when requested
    1. The server will return the index.html file when the user requests the root path, or specifically requests
@@ -95,8 +119,7 @@
    1. This means that the page will not be reloaded when the user interacts with the interface and there will be only
       one HTML page
 2. The main page will be served from the root path
-3. The webapp will be served from a Scala server
-   1. The server will be written using the Akka HTTP library
+3. The webapp will be served from the [server](#server)
 4. The code for the webapp will be written in TypeScript
    1. The scripts will be bundled using Webpack and Babel during the server startup process
    2. The original TypeScript files will not be served to the client
