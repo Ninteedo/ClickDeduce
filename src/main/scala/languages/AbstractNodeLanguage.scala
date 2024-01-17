@@ -81,7 +81,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
   private lazy val typeClassListDropdownHtml: TypedTag[String] = {
     select(
-      cls := "expr-dropdown",
+      cls := "type-dropdown",
       onchange := "handleDropdownChange(this, \"type\")",
       option(value := "", "Select Type..."),
       typeClassList.map(e => {
