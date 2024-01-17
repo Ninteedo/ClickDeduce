@@ -33,5 +33,5 @@ jobs:
         sbt "run --port 9005" &
         SERVER_PID=$!
         sleep 20
-        npm server-test
+        npm run server-test
         kill $SERVER_PID
