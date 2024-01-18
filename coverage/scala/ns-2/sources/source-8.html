@@ -1,0 +1,278 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > LRec</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">languages</a>
+</div>
+
+<h1>Coverage Summary for Class: LRec (languages)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">LRec</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (4/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (8/8)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">LRec$</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">LRec$Rec</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (5/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    81.8%
+  </span>
+  <span class="absValue">
+    (18/22)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">LRec$Rec$</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (3/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (4/4)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">LRec$RecV</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (3/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (5/5)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">LRec$RecV$</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (17/17)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    90.2%
+  </span>
+  <span class="absValue">
+    (37/41)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package languages
+&nbsp;
+&nbsp;import scalatags.Text
+&nbsp;import scalatags.Text.TypedTag
+&nbsp;import scalatags.Text.all.*
+&nbsp;
+<b class="fc">&nbsp;class LRec extends LLam {</b>
+&nbsp;  // expressions
+<b class="fc">&nbsp;  case class Rec(f: Literal, v: Literal, in_typ: Type, out_typ: Type, e: Expr) extends Expr {</b>
+<b class="fc">&nbsp;    override def evalInner(env: Env): Value = f match {</b>
+<b class="fc">&nbsp;      case LiteralIdentifier(f_id) =&gt;</b>
+<b class="fc">&nbsp;        v match {</b>
+<b class="fc">&nbsp;          case LiteralIdentifier(v_id) =&gt; RecV(f, v, in_typ, out_typ, e, env)</b>
+<b class="nc">&nbsp;          case _                       =&gt; InvalidIdentifierEvalError(v)</b>
+&nbsp;        }
+<b class="nc">&nbsp;      case _ =&gt; InvalidIdentifierEvalError(f)</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    override def typeCheckInner(tEnv: TypeEnv): Type = f match {</b>
+<b class="fc">&nbsp;      case LiteralIdentifier(f_id) =&gt;</b>
+<b class="fc">&nbsp;        v match {</b>
+<b class="fc">&nbsp;          case LiteralIdentifier(v_id) =&gt; Func(in_typ, out_typ)</b>
+<b class="nc">&nbsp;          case _                       =&gt; InvalidIdentifierTypeError(v)</b>
+&nbsp;        }
+<b class="nc">&nbsp;      case _ =&gt; InvalidIdentifierTypeError(f)</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    override def getChildrenBase(env: Env): List[(Term, Env)] = List(</b>
+<b class="fc">&nbsp;      (f, env),</b>
+<b class="fc">&nbsp;      (v, env),</b>
+<b class="fc">&nbsp;      (in_typ, env),</b>
+<b class="fc">&nbsp;      (out_typ, env),</b>
+<b class="fc">&nbsp;      (e, env ++ Map(f.toString -&gt; PlaceholderValue(Func(in_typ, out_typ)), v.toString -&gt; PlaceholderValue(in_typ)))</b>
+&nbsp;    )
+&nbsp;
+<b class="fc">&nbsp;    override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] = List(</b>
+<b class="fc">&nbsp;      (e, tEnv ++ Map(f.toString -&gt; Func(in_typ, out_typ), v.toString -&gt; in_typ))</b>
+&nbsp;    )
+&nbsp;
+<b class="fc">&nbsp;    override def getChildrenEval(env: Env): List[(Term, Env)] = Nil</b>
+&nbsp;  }
+&nbsp;
+<b class="fc">&nbsp;  object Rec {</b>
+<b class="fc">&nbsp;    def apply(f: String, v: String, in_typ: Type, out_typ: Type, e: Expr): Rec =</b>
+<b class="fc">&nbsp;      Rec(Literal.fromString(f), Literal.fromString(v), in_typ, out_typ, e)</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  // values
+<b class="fc">&nbsp;  case class RecV(f: Literal, v: Literal, in_typ: Type, out_typ: Type, e: Expr, env: Env) extends FunctionValue {</b>
+<b class="fc">&nbsp;    override val typ: Type = Func(in_typ, out_typ)</b>
+&nbsp;
+&nbsp;    override def getFunctionEvaluation(applyValue: Value): (Expr, Env) =
+<b class="fc">&nbsp;      (e, env ++ Map(f.toString -&gt; this, v.toString -&gt; applyValue))</b>
+&nbsp;
+<b class="fc">&nbsp;    override def evalApply(value: Value): Value = e.eval(env ++ Map(f.toString -&gt; this, v.toString -&gt; value))</b>
+&nbsp;
+&nbsp;    override lazy val valueText: Text.TypedTag[String] =
+<b class="fc">&nbsp;      div(raw(s&quot;rec $f($v: &quot;), in_typ.toHtml, raw(s&quot;) : &quot;), out_typ.toHtml, raw(&quot;. &quot;), e.toHtml)</b>
+&nbsp;  }
+&nbsp;
+<b class="fc">&nbsp;  override def prettyPrint(e: Expr): String = e match {</b>
+<b class="fc">&nbsp;    case Rec(f, v, in_typ, out_typ, e) =&gt;</b>
+<b class="fc">&nbsp;      s&quot;rec $f($v: ${prettyPrint(in_typ)}) : ${prettyPrint(out_typ)}. ${prettyPrint(e)}&quot;</b>
+<b class="fc">&nbsp;    case _ =&gt; super.prettyPrint(e)</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  override def calculateExprClassList: List[Class[Expr]] = {
+<b class="fc">&nbsp;    super.calculateExprClassList ++ List(classOf[Rec]).map(_.asInstanceOf[Class[Expr]])</b>
+&nbsp;  }
+&nbsp;}
+&nbsp;
+<b class="fc">&nbsp;object LRec extends LRec {}</b>
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-01-18 11:44</div>
+</div>
+</body>
+</html>

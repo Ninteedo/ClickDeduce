@@ -42,6 +42,6 @@ node_modules/
 webapp/dist
 package-lock.json
 
-coverage/
+./coverage/
 
 .bsp/sbt.json

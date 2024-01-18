@@ -1,3 +1,9 @@
+# Summary
+
+The Scala test directory is [`src/test/scala`](../src/test/scala).
+
+The TypeScript test directory is [`webapp/scripts/test`](../webapp/scripts/test).
+
 # Server
 
 ## Process

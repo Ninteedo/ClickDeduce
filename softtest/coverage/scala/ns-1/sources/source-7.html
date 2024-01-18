@@ -1,0 +1,134 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > UtilityFunctions</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">app</a>
+</div>
+
+<h1>Coverage Summary for Class: UtilityFunctions (app)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+  <tr>
+    <td class="name">UtilityFunctions$</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (4/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    50%
+  </span>
+  <span class="absValue">
+    (7/14)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (4/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    50%
+  </span>
+  <span class="absValue">
+    (7/14)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package app
+&nbsp;
+<b class="fc">&nbsp;object UtilityFunctions {</b>
+&nbsp;  // String escaping
+&nbsp;  // https://stackoverflow.com/a/40073137
+&nbsp;
+<b class="fc">&nbsp;  def quote(s: String): String = &quot;\&quot;&quot; + escape(s) + &quot;\&quot;&quot;</b>
+<b class="fc">&nbsp;  private def escape(s: String): String = s.flatMap(escapedChar)</b>
+&nbsp;
+<b class="fc">&nbsp;  private def escapedChar(ch: Char): String = ch match {</b>
+<b class="fc">&nbsp;    case &#39;\b&#39; =&gt; &quot;\\b&quot;</b>
+<b class="nc">&nbsp;    case &#39;\t&#39; =&gt; &quot;\\t&quot;</b>
+<b class="nc">&nbsp;    case &#39;\n&#39; =&gt; &quot;\\n&quot;</b>
+<b class="nc">&nbsp;    case &#39;\f&#39; =&gt; &quot;\\f&quot;</b>
+<b class="nc">&nbsp;    case &#39;\r&#39; =&gt; &quot;\\r&quot;</b>
+<b class="nc">&nbsp;    case &#39;&quot;&#39;  =&gt; &quot;\\\&quot;&quot;</b>
+<b class="nc">&nbsp;    case &#39;\&#39;&#39; =&gt; &quot;\\\&#39;&quot;</b>
+<b class="nc">&nbsp;    case &#39;\\&#39; =&gt; &quot;\\\\&quot;</b>
+&nbsp;    case _ =&gt;
+<b class="fc">&nbsp;      if (ch.isControl) &quot;\\0&quot; + Integer.toOctalString(ch.toInt)</b>
+<b class="fc">&nbsp;      else String.valueOf(ch)</b>
+&nbsp;  }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-01-18 11:44</div>
+</div>
+</body>
+</html>

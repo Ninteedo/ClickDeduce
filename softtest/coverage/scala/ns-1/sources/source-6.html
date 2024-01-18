@@ -1,0 +1,377 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > NodeResponse</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">app</a>
+</div>
+
+<h1>Coverage Summary for Class: NodeResponse (app)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">NodeResponse</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">NodeResponse$</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package app
+&nbsp;
+&nbsp;import akka.actor.ActorSystem
+&nbsp;import akka.http.scaladsl.Http
+&nbsp;import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+&nbsp;import akka.http.scaladsl.model.{HttpEntity, HttpResponse, StatusCodes}
+&nbsp;import akka.http.scaladsl.server.Directives.*
+&nbsp;import akka.http.scaladsl.server.{ExceptionHandler, Route}
+&nbsp;import akka.http.scaladsl.settings.ServerSettings
+&nbsp;import languages.*
+&nbsp;import scalatags.Text.TypedTag
+&nbsp;import scalatags.Text.all.*
+&nbsp;import spray.json.{DefaultJsonProtocol, RootJsonFormat}
+&nbsp;
+&nbsp;import java.io.File
+&nbsp;import scala.concurrent.ExecutionContextExecutor
+&nbsp;import scala.sys.process.Process
+&nbsp;
+&nbsp;case class EvalRequest(langName: String)
+&nbsp;
+<b class="fc">&nbsp;case class NodeResponse(nodeString: String, html: String)</b>
+&nbsp;
+&nbsp;case class ActionRequest(
+&nbsp;  langName: String,
+&nbsp;  modeName: String,
+&nbsp;  actionName: String,
+&nbsp;  nodeString: String,
+&nbsp;  treePath: String,
+&nbsp;  extraArgs: List[String]
+&nbsp;)
+&nbsp;
+&nbsp;case class LangSelectorRequest()
+&nbsp;
+&nbsp;case class LangSelectorResponse(langSelectorHtml: String)
+&nbsp;
+&nbsp;trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
+&nbsp;  implicit val evalRequestFormat: RootJsonFormat[EvalRequest] = jsonFormat1(EvalRequest.apply)
+&nbsp;  implicit val nodeResponseFormat: RootJsonFormat[NodeResponse] = jsonFormat2(NodeResponse.apply)
+&nbsp;  implicit val actionRequestFormat: RootJsonFormat[ActionRequest] = jsonFormat6(ActionRequest.apply)
+&nbsp;  implicit val langSelectorRequestFormat: RootJsonFormat[LangSelectorRequest] = jsonFormat0(LangSelectorRequest.apply)
+&nbsp;  implicit val langSelectorResponseFormat: RootJsonFormat[LangSelectorResponse] = jsonFormat1(
+&nbsp;    LangSelectorResponse.apply
+&nbsp;  )
+&nbsp;}
+&nbsp;
+&nbsp;val customExceptionHandler: ExceptionHandler = ExceptionHandler { case exception: Exception =&gt;
+&nbsp;  extractUri { uri =&gt;
+&nbsp;    exception.printStackTrace()
+&nbsp;
+&nbsp;    val statusCode = exception match {
+&nbsp;      case _: IllegalArgumentException =&gt; StatusCodes.BadRequest
+&nbsp;      case _                           =&gt; StatusCodes.InternalServerError
+&nbsp;    }
+&nbsp;
+&nbsp;    complete(HttpResponse(statusCode, entity = exception.toString))
+&nbsp;  }
+&nbsp;}
+&nbsp;
+&nbsp;class WebServer extends JsonSupport {
+&nbsp;  private val webappDirectory: String = &quot;webapp&quot;
+&nbsp;  private val distDirectory: String = s&quot;$webappDirectory/dist&quot;
+&nbsp;  private val imagesDirectory: String = s&quot;$webappDirectory/images&quot;
+&nbsp;  private val indexPage: String = s&quot;$distDirectory/index.html&quot;
+&nbsp;
+&nbsp;  private var _isOnline: Boolean = false
+&nbsp;
+&nbsp;  def isOnline: Boolean = _isOnline
+&nbsp;
+&nbsp;  private def isOnline_=(value: Boolean): Unit = _isOnline = value
+&nbsp;
+&nbsp;  private var _portNumber: Int = 27019
+&nbsp;
+&nbsp;  def portNumber: Int = _portNumber
+&nbsp;
+&nbsp;  def portNumber_=(value: Int): Unit = {
+&nbsp;    if (isOnline) throw new IllegalStateException(&quot;Cannot change port number while server is online&quot;)
+&nbsp;    if (value &lt;= 0 || value &gt; 65535) {
+&nbsp;      throw new IllegalArgumentException(&quot;Port number must be between 1 and 65535&quot;)
+&nbsp;    }
+&nbsp;    _portNumber = value
+&nbsp;  }
+&nbsp;
+&nbsp;  private var _bindingAddress: String = &quot;0.0.0.0&quot;
+&nbsp;
+&nbsp;  def bindingAddress: String = _bindingAddress
+&nbsp;
+&nbsp;  def bindingAddress_=(value: String): Unit = {
+&nbsp;    def invalidOctet(octet: Int): Boolean = {
+&nbsp;      octet &lt; 0 || octet &gt; 255 || octet.toString.toInt != octet
+&nbsp;    }
+&nbsp;
+&nbsp;    if (isOnline) throw new IllegalStateException(&quot;Cannot change binding address while server is online&quot;)
+&nbsp;    val ipAddressPattern = &quot;&quot;&quot;^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$&quot;&quot;&quot;.r
+&nbsp;    ipAddressPattern.findFirstMatchIn(value) match {
+&nbsp;      case Some(matchResult) =&gt;
+&nbsp;        val octets = matchResult.subgroups.map(_.toInt)
+&nbsp;        if (octets.exists(invalidOctet)) {
+&nbsp;          throw new IllegalArgumentException(&quot;Invalid IP address&quot;)
+&nbsp;        }
+&nbsp;        _bindingAddress = s&quot;${octets.mkString(&quot;.&quot;)}&quot;
+&nbsp;      case None =&gt; throw new IllegalArgumentException(&quot;Invalid IP address&quot;)
+&nbsp;    }
+&nbsp;  }
+&nbsp;
+&nbsp;  private var _skipBundleScripts: Boolean = false
+&nbsp;
+&nbsp;  def skipBundleScripts: Boolean = _skipBundleScripts
+&nbsp;
+&nbsp;  def skipBundleScripts_=(value: Boolean): Unit = {
+&nbsp;    if (isOnline) throw new IllegalStateException(&quot;Cannot change skipBundleScripts while server is online&quot;)
+&nbsp;    _skipBundleScripts = value
+&nbsp;  }
+&nbsp;
+&nbsp;  def runServer(args: Array[String]): Unit = {
+&nbsp;    val parseSuccess: Boolean = parseArgs(args)
+&nbsp;    if (!parseSuccess) {
+&nbsp;      println(&quot;Failed to parse arguments&quot;)
+&nbsp;      System.exit(1)
+&nbsp;    }
+&nbsp;
+&nbsp;    implicit val system: ActorSystem = ActorSystem(&quot;ClickDeduceWebServer&quot;)
+&nbsp;    implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+&nbsp;
+&nbsp;    if (skipBundleScripts) {
+&nbsp;      println(&quot;Script bundling was skipped\n&quot;)
+&nbsp;    } else {
+&nbsp;      bundleScripts()
+&nbsp;      println(&quot;\nSuccessfully bundled scripts\n\n&quot;)
+&nbsp;    }
+&nbsp;
+&nbsp;    val defaultSettings = ServerSettings(system)
+&nbsp;    val customSettings = defaultSettings.withTransparentHeadRequests(true)
+&nbsp;
+&nbsp;    isOnline = true
+&nbsp;    val bindingFuture = Http().newServerAt(bindingAddress, portNumber).withSettings(customSettings).bind(requestRoute)
+&nbsp;
+&nbsp;    println(s&quot;Server online at http://localhost:$portNumber/&quot;)
+&nbsp;    // StdIn.readLine()
+&nbsp;
+&nbsp;    while (isOnline) {
+&nbsp;      Thread.sleep(1000)
+&nbsp;    }
+&nbsp;
+&nbsp;    bindingFuture
+&nbsp;      .flatMap(_.unbind())
+&nbsp;      .onComplete(_ =&gt; system.terminate())
+&nbsp;    isOnline = false
+&nbsp;  }
+&nbsp;
+&nbsp;  def parseArgs(args: Array[String]): Boolean = {
+&nbsp;    val parser = new scopt.OptionParser[Unit](&quot;WebServer&quot;) {
+&nbsp;      opt[Int](&quot;port&quot;)
+&nbsp;        .action((x, _) =&gt; portNumber = x)
+&nbsp;        .text(&quot;Port number to bind&quot;)
+&nbsp;
+&nbsp;      opt[String](&quot;address&quot;)
+&nbsp;        .action((x, _) =&gt; bindingAddress = x)
+&nbsp;        .text(&quot;Binding address&quot;)
+&nbsp;
+&nbsp;      opt[Unit](&quot;skip-bundle-scripts&quot;)
+&nbsp;        .action((_, _) =&gt; skipBundleScripts = true)
+&nbsp;        .text(&quot;Skip bundling scripts&quot;)
+&nbsp;    }
+&nbsp;
+&nbsp;    parser.parse(args, ()).isDefined
+&nbsp;  }
+&nbsp;
+&nbsp;  val knownLanguages: List[ClickDeduceLanguage] = List(LArith(), LIf(), LLet(), LLam(), LRec())
+&nbsp;
+&nbsp;  private def getLanguage(langName: String): ClickDeduceLanguage = knownLanguages
+&nbsp;    .find(getLanguageName(_) == langName) match {
+&nbsp;    case Some(lang) =&gt; lang
+&nbsp;    case None       =&gt; throw new IllegalArgumentException(s&quot;Unknown language: $langName&quot;)
+&nbsp;  }
+&nbsp;
+&nbsp;  def getLanguageName(lang: ClickDeduceLanguage): String = lang.getClass.getSimpleName.stripSuffix(&quot;$&quot;)
+&nbsp;
+&nbsp;  private def bundleScripts(): Unit = {
+&nbsp;    println(&quot;Bundling scripts...&quot;)
+&nbsp;
+&nbsp;    val osName = System.getProperty(&quot;os.name&quot;).toLowerCase
+&nbsp;    val command = if (osName.contains(&quot;win&quot;)) &quot;cmd.exe /c npm run build&quot; else &quot;npm run build&quot;
+&nbsp;
+&nbsp;    val process = Process(command, new File(&quot;webapp&quot;)).!
+&nbsp;
+&nbsp;    if (process != 0) {
+&nbsp;      System.exit(process)
+&nbsp;    }
+&nbsp;  }
+&nbsp;
+&nbsp;  private def resourceNotFoundResponse: HttpResponse =
+&nbsp;    HttpResponse(StatusCodes.NotFound, entity = HttpEntity(&quot;The requested resource could not be found.&quot;))
+&nbsp;
+&nbsp;  val requestRoute: Route = handleExceptions(customExceptionHandler) {
+&nbsp;    post {
+&nbsp;      path(&quot;start-node-blank&quot;) {
+&nbsp;        entity(as[EvalRequest]) { request =&gt;
+&nbsp;          val lang = getLanguage(request.langName)
+&nbsp;          val tree = lang.ExprChoiceNode()
+&nbsp;          val response = NodeResponse(tree.toString, tree.toHtml(lang.DisplayMode.Edit).toString)
+&nbsp;          complete(response)
+&nbsp;        }
+&nbsp;      } ~
+&nbsp;        path(&quot;process-action&quot;) {
+&nbsp;          entity(as[ActionRequest]) { request =&gt;
+&nbsp;            val lang = getLanguage(request.langName)
+&nbsp;            val action = lang.createAction(
+&nbsp;              request.actionName,
+&nbsp;              request.nodeString,
+&nbsp;              request.treePath,
+&nbsp;              request.extraArgs,
+&nbsp;              request.modeName
+&nbsp;            )
+&nbsp;            val updatedTree = action.newTree
+&nbsp;            val displayMode: lang.DisplayMode = lang.DisplayMode.fromString(request.modeName)
+&nbsp;            val response = NodeResponse(updatedTree.toString, updatedTree.toHtml(displayMode).toString)
+&nbsp;            complete(response)
+&nbsp;          }
+&nbsp;        }
+&nbsp;    } ~
+&nbsp;      get {
+&nbsp;        path(&quot;get-lang-selector&quot;) {
+&nbsp;          val langSelector: TypedTag[String] = select(
+&nbsp;            id := &quot;lang-selector&quot;,
+&nbsp;            name := &quot;lang-name&quot;,
+&nbsp;            knownLanguages.map(lang =&gt; option(value := getLanguageName(lang), getLanguageName(lang)))
+&nbsp;          )
+&nbsp;          val response = LangSelectorResponse(langSelector.toString)
+&nbsp;          complete(response)
+&nbsp;        } ~
+&nbsp;          pathEndOrSingleSlash { getFromFile(indexPage) } ~
+&nbsp;          pathPrefix(&quot;dist&quot;) { getFromDirectory(distDirectory) } ~
+&nbsp;          pathPrefix(&quot;images&quot;) { getFromDirectory(imagesDirectory) } ~
+&nbsp;          pathPrefix(&quot;scripts&quot;) { complete(resourceNotFoundResponse) } ~
+&nbsp;          pathPrefix(&quot;styles&quot;) { complete(resourceNotFoundResponse) } ~
+&nbsp;          pathPrefix(&quot;pages&quot;) { complete(resourceNotFoundResponse) } ~
+&nbsp;          getFromDirectory(distDirectory)
+&nbsp;      }
+&nbsp;  }
+&nbsp;}
+&nbsp;
+&nbsp;object WebServer {
+&nbsp;  def main(args: Array[String]): Unit = {
+&nbsp;    val server = new WebServer()
+&nbsp;    server.runServer(args)
+&nbsp;  }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-01-18 11:44</div>
+</div>
+</body>
+</html>
