@@ -2,6 +2,10 @@ import fs from "fs";
 import path from "path";
 import {handleDropdownChange, handleSubmit} from "../actions";
 
+export function slightDelay(delay: number = 10): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, delay));
+}
+
 export function loadHtmlTemplate(filename: string): string {
     const readResult: string = fs.readFileSync(path.resolve(__dirname, '../../test_resources', `${filename}.html`), 'utf8');
     return readResult.replace(/\r\n/g, '\n');
@@ -43,10 +47,6 @@ export async function doLiteralEdit(input: HTMLInputElement, newValue: string): 
     input.value = newValue;
     input.dispatchEvent(new Event('change'));
     await new Promise(resolve => setTimeout(resolve, 100));
-}
-
-export function slightDelay(delay: number = 10): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, delay));
 }
 
 export function contextMenuSelect(element: HTMLElement): void {

@@ -1,6 +1,9 @@
-import {expect, jest} from "@jest/globals";
+import {afterAll, beforeAll, beforeEach, expect, jest} from "@jest/globals";
 import {MockResponse} from "./MockResponse";
 import {loadHtmlTemplate} from "./helper";
+import {initialise} from "../initialise";
+import * as NS from "../../test_resources/node_strings";
+import {handleDropdownChange, handleLiteralChanged, handleSubmit} from "../actions";
 
 let dummyFetchResponse: any = null;
 let actionFetchResponse: { nodeString: string, html: string } = null;
@@ -27,6 +30,7 @@ export const langSelectorHtml = `
 `;
 
 export const startNodeBlankArithHTML = loadHtmlTemplate('start_node_blank_arith');
+export const defaultHtml = loadHtmlTemplate('../pages/index');
 
 export const mockEvent = {preventDefault: jest.fn()} as unknown as Event;
 
@@ -38,7 +42,7 @@ export function resetRequestTracking(): void {
 }
 
 export function checkActionRequestExecuted(actionName: string, langName: string, modeName: string, nodeString: string,
-                                    treePath: string, extraArgs: string[]): void {
+                                           treePath: string, extraArgs: string[]): void {
     const correctRequest = {
         method: 'POST',
         headers: {
@@ -137,4 +141,41 @@ export function setDummyFetchResponse(response: any): void {
 
 export function getRequestsReceived(): { url: string, request: any }[] {
     return requestsReceived;
+}
+
+export function setUpJestBeforeAndAfter(): void {
+    beforeAll(() => {
+        setUpFetchMock();
+    });
+
+    beforeEach(async () => {
+        resetRequestTracking();
+        document.body.innerHTML = defaultHtml;
+        await initialise();
+    });
+
+    afterAll(() => {
+        jest.clearAllMocks();
+    })
+}
+
+const plusNodeArithHTML = loadHtmlTemplate('plus_node_arith');
+
+export async function prepareExampleTimesTree(): Promise<void> {
+    const nodeString2 = NS.TIMES_EMPTY;
+    const html2 = plusNodeArithHTML;
+
+    const nodeString3 = NS.TIMES_LEFT_NUM_RIGHT_EMPTY;
+    const html3 = loadHtmlTemplate('times_left_num_right_empty');
+
+    const nodeString4 = NS.TIMES_LEFT_FILLED_NUM_RIGHT_EMPTY;
+    const html4 = loadHtmlTemplate('times_left_filled_num_right_empty');
+
+    await handleSubmit(mockEvent, '/start-node-blank');
+    setActionFetchResponse(nodeString2, html2);
+    await handleDropdownChange(document.getElementsByClassName('expr-dropdown')[0] as HTMLSelectElement, 'expr');
+    setActionFetchResponse(nodeString3, html3);
+    await handleDropdownChange(document.querySelectorAll('.expr-dropdown:not([readonly])')[0] as HTMLSelectElement, 'expr');
+    setActionFetchResponse(nodeString4, html4);
+    await handleLiteralChanged(document.querySelector('input[type="text"]') as HTMLInputElement);
 }
