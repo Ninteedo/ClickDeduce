@@ -1,5 +1,4 @@
-import {afterAll, afterEach, beforeEach, describe, expect, jest, test} from "@jest/globals";
-import {MockResponse} from "./MockResponse";
+import {afterAll, beforeAll, beforeEach, describe, expect, jest, test} from "@jest/globals";
 import {initialise} from "../initialise";
 import * as NS from "../../test_resources/node_strings";
 import {ClickDeduceResponseError} from "../ClickDeduceResponseError";
@@ -15,117 +14,27 @@ import {
     slightDelay
 } from "./helper";
 import {handleDropdownChange, handleLiteralChanged, handleSubmit} from "../actions";
+import {
+    checkActionRequestExecuted,
+    getRequestsReceived,
+    langSelectorHtml,
+    langSelectorLanguages,
+    mockEvent,
+    optionsHtml,
+    resetRequestTracking,
+    setActionErrorMessage,
+    setActionFetchResponse,
+    setActionFetchResponseData,
+    setDummyFetchResponse,
+    setUpFetchMock,
+    startNodeBlankArithHTML
+} from "./request_mocking";
 
 const defaultHtml = loadHtmlTemplate('../pages/index')
 
-const langSelectorLanguages = ["LArith", "LIf"];
-const optionsHtml = langSelectorLanguages.map(lang => {
-    return `<option value="${lang}">${lang}</option>`;
-}).join('\n');
-const langSelectorHtml = `
-    <select id="lang-selector" name="lang-name">
-      ${optionsHtml}
-    </select>
-`;
-
-const startNodeBlankArithHTML = loadHtmlTemplate('start_node_blank_arith');
 const plusNodeArithHTML = loadHtmlTemplate('plus_node_arith');
 const numNodeArithHTML = loadHtmlTemplate('num_node_arith');
 
-const invalidResourceResponse: MockResponse = new MockResponse("The requested resource could not be found.", {
-    status: 404,
-    statusText: 'Not Found',
-    headers: {
-        'Content-type': 'application/json'
-    }
-});
-
-let requestsReceived: { url: string, request: any }[] = [];
-let dummyFetchResponse: any = null;
-let actionFetchResponse: { nodeString: string, html: string } = null;
-let actionErrorMessage: string = null;
-
-function checkActionRequestExecuted(actionName: string, langName: string, modeName: string, nodeString: string,
-                                    treePath: string, extraArgs: string[]): void {
-    const correctRequest = {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            langName,
-            modeName,
-            actionName,
-            nodeString,
-            treePath,
-            extraArgs
-        })
-    }
-    expect(requestsReceived).toContainEqual({url: 'process-action', request: correctRequest});
-}
-
-function fetchMock(url: string, request: any): Promise<Response> {
-    if (url.startsWith('/')) {
-        url = url.substring(1);
-    }
-    requestsReceived.push({url, request});
-
-    console.log("fetchMock called with url: " + url + " and request: " + JSON.stringify(request));
-
-    let responseJson: any = null;
-    if (url === 'get-lang-selector') {
-        if (request['method'] === 'GET') {
-            responseJson = {langSelectorHtml};
-        }
-    } else if (url === 'dummy-url') {
-        responseJson = dummyFetchResponse;
-    } else if (url === 'start-node-blank') {
-        if (request['method'] === 'POST') {
-            responseJson = {nodeString: "ExprChoiceNode()", html: startNodeBlankArithHTML};
-        }
-    } else if (url === 'process-action') {
-        if (request['method'] === 'POST') {
-            if (actionFetchResponse === null) {
-                if (actionErrorMessage !== null) {
-                    // @ts-ignore
-                    return Promise.resolve(new MockResponse(actionErrorMessage,
-                        {status: 400, statusText: 'Bad Request'}));
-                } else {
-                    actionFetchResponse = {nodeString: "", html: ""};
-                }
-            }
-            responseJson = actionFetchResponse;
-            actionFetchResponse = null;
-        }
-    }
-
-    // resource not found
-    if (responseJson === null) {
-        // @ts-ignore
-        return Promise.resolve(invalidResourceResponse);
-    }
-
-    const response: MockResponse = new MockResponse(JSON.stringify(responseJson),
-        {
-            status: 200,
-            headers: {
-                'Content-type': 'application/json'
-            }
-        }
-    );
-    // @ts-ignore
-    return Promise.resolve(response);
-}
-
-global.fetch = jest.fn(fetchMock);
-
-const mockEvent = {preventDefault: jest.fn()} as unknown as Event;
-
-// mock panzoom module, doesn't need to do anything
-jest.mock('panzoom', () => ({
-    __esModule: true,
-    default: jest.fn().mockImplementation(() => ({}))
-}))
 
 async function prepareExampleTimesTree(): Promise<void> {
     const nodeString2 = NS.TIMES_EMPTY;
@@ -138,23 +47,22 @@ async function prepareExampleTimesTree(): Promise<void> {
     const html4 = loadHtmlTemplate('times_left_filled_num_right_empty');
 
     await handleSubmit(mockEvent, '/start-node-blank');
-    actionFetchResponse = {nodeString: nodeString2, html: html2};
+    setActionFetchResponse(nodeString2, html2);
     await handleDropdownChange(document.getElementsByClassName('expr-dropdown')[0] as HTMLSelectElement, 'expr');
-    actionFetchResponse = {nodeString: nodeString3, html: html3};
+    setActionFetchResponse(nodeString3, html3);
     await handleDropdownChange(document.querySelectorAll('.expr-dropdown:not([readonly])')[0] as HTMLSelectElement, 'expr');
-    actionFetchResponse = {nodeString: nodeString4, html: html4};
+    setActionFetchResponse(nodeString4, html4);
     await handleLiteralChanged(document.querySelector('input[type="text"]') as HTMLInputElement);
 }
 
-beforeEach(async () => {
-    requestsReceived = [];
-    document.body.innerHTML = defaultHtml;
-    await initialise();
+beforeAll(() => {
+    setUpFetchMock();
 });
 
-afterEach(() => {
-    dummyFetchResponse = null;
-    actionFetchResponse = null;
+beforeEach(async () => {
+    resetRequestTracking();
+    document.body.innerHTML = defaultHtml;
+    await initialise();
 });
 
 afterAll(() => {
@@ -164,7 +72,7 @@ afterAll(() => {
 describe("fetch is correctly mocked", () => {
     test("fetch returns the set response", async () => {
         let data = {test: "test"};
-        dummyFetchResponse = data;
+        setDummyFetchResponse(data);
         fetch('dummy-url', {}).then(response => response.json()).then(contents =>
             expect(contents).toEqual(data)
         );
@@ -185,7 +93,7 @@ describe("fetch is correctly mocked", () => {
 
 describe("initialise behaves correctly", () => {
     test("a request is made to get the language selector HTML", () => {
-        expect(requestsReceived).toContainEqual({url: 'get-lang-selector', request: {method: 'GET'}});
+        expect(getRequestsReceived()).toContainEqual({url: 'get-lang-selector', request: {method: 'GET'}});
     });
 
     test("lang selector is populated correctly", () => {
@@ -215,7 +123,7 @@ describe("start new node button behaves correctly", () => {
             },
             body: JSON.stringify({langName: langSelectorLanguages[0]})
         }
-        expect(requestsReceived).toContainEqual({url: 'start-node-blank', request: correctRequest});
+        expect(getRequestsReceived()).toContainEqual({url: 'start-node-blank', request: correctRequest});
     });
 
     test("the contents of the tree div are replaced with the new tree HTML", async () => {
@@ -244,7 +152,7 @@ describe("start new node button behaves correctly", () => {
 
         await slightDelay();
 
-        expect(requestsReceived).toContainEqual({url: 'start-node-blank', request: correctRequest});
+        expect(getRequestsReceived()).toContainEqual({url: 'start-node-blank', request: correctRequest});
     });
 
     test("changing the selected language causes an identity action", async () => {
@@ -301,7 +209,7 @@ describe("selecting an option from a non-root expr dropdown behaves correctly", 
     beforeEach(async () => {
         await handleSubmit(mockEvent, '/start-node-blank');
 
-        actionFetchResponse = {nodeString: dummyNodeString, html: plusNodeArithHTML};
+        setActionFetchResponse(dummyNodeString, plusNodeArithHTML);
 
         const exprDropdown = document.getElementsByClassName('expr-dropdown')[0] as HTMLSelectElement;
         exprDropdown.selectedIndex = 2;
@@ -374,7 +282,7 @@ describe("entering text into a literal input behaves correctly", () => {
     beforeEach(async () => {
         await handleSubmit(mockEvent, '/start-node-blank');
 
-        actionFetchResponse = {nodeString: dummyNodeString, html: numNodeArithHTML};
+        setActionFetchResponse(dummyNodeString, numNodeArithHTML);
 
         const exprDropdown = document.getElementsByClassName('expr-dropdown')[0] as HTMLSelectElement;
         exprDropdown.selectedIndex = 1;
@@ -405,7 +313,7 @@ describe("entering text into a literal input behaves correctly", () => {
 
         const bar = "bar";
 
-        actionFetchResponse = fooActionFetchResponse;
+        setActionFetchResponseData(fooActionFetchResponse);
 
         let input = document.querySelector('input[type="text"]') as HTMLInputElement;
         input.value = foo;
@@ -434,11 +342,11 @@ describe("entering text into a literal input behaves correctly", () => {
         input.value = "";
         input.dispatchEvent(new Event('change'));
 
-        const initialRequestsReceived = requestsReceived.length;
+        const initialRequestsReceived = getRequestsReceived().length;
 
         input.dispatchEvent(new Event('change'));
 
-        expect(requestsReceived).toHaveLength(initialRequestsReceived);
+        expect(getRequestsReceived()).toHaveLength(initialRequestsReceived);
 
         input.value = "foo";
         input.dispatchEvent(new Event('input'));
@@ -446,13 +354,13 @@ describe("entering text into a literal input behaves correctly", () => {
 
         input.dispatchEvent(new Event('change'));
 
-        expect(requestsReceived).toHaveLength(initialRequestsReceived);
+        expect(getRequestsReceived()).toHaveLength(initialRequestsReceived);
     });
 
     test("if the input text is the same as it was before (not blank), no server request is made", async () => {
         expect.assertions(2);
 
-        actionFetchResponse = fooActionFetchResponse;
+        setActionFetchResponseData(fooActionFetchResponse);
 
         const input = document.querySelector('input[type="text"]') as HTMLInputElement;
         input.value = foo;
@@ -460,11 +368,11 @@ describe("entering text into a literal input behaves correctly", () => {
 
         await slightDelay();
 
-        const initialRequestsReceived = requestsReceived.length;
+        const initialRequestsReceived = getRequestsReceived().length;
 
         input.dispatchEvent(new Event('change'));
 
-        expect(requestsReceived).toHaveLength(initialRequestsReceived);
+        expect(getRequestsReceived()).toHaveLength(initialRequestsReceived);
 
         input.value = "bar";
         input.dispatchEvent(new Event('input'));
@@ -472,7 +380,7 @@ describe("entering text into a literal input behaves correctly", () => {
 
         input.dispatchEvent(new Event('change'));
 
-        expect(requestsReceived).toHaveLength(initialRequestsReceived);
+        expect(getRequestsReceived()).toHaveLength(initialRequestsReceived);
     });
 });
 
@@ -488,14 +396,13 @@ describe("undo and redo buttons behave correctly", () => {
     const html4 = numNodeArithHTML.replace(
         `LiteralNode(&quot;&quot;)`,
         `LiteralNode(&quot;foo&quot;)`
-    )
-        .replace(
-            `<input type="text" style="width: 2ch;" data-tree-path="0" value=""></div>`,
-            `<input type="text" style="width: 2ch;" data-tree-path="0" value="foo"></div>`
-        );
+    ).replace(
+        `<input type="text" style="width: 2ch;" data-tree-path="0" value=""></div>`,
+        `<input type="text" style="width: 2ch;" data-tree-path="0" value="foo"></div>`
+    );
 
     async function updateTree(nodeString: string, html: string): Promise<void> {
-        actionFetchResponse = {nodeString, html};
+        setActionFetchResponse(nodeString, html);
         const dropdown = document.getElementsByClassName('expr-dropdown')[0] as HTMLSelectElement;
         if (dropdown) {
             await handleDropdownChange(dropdown, 'expr');
@@ -616,7 +523,7 @@ describe("hovering over a node behaves correctly", () => {
 
     beforeEach(async () => {
         await handleSubmit(mockEvent, '/start-node-blank');
-        actionFetchResponse = {nodeString, html};
+        setActionFetchResponse(nodeString, html);
         await handleDropdownChange(document.getElementsByClassName('expr-dropdown')[0] as HTMLSelectElement, 'expr');
     });
 
@@ -737,12 +644,12 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
         contextMenuSelect(element);
 
-        const initialRequestsReceived = requestsReceived.length;
+        const initialRequestsReceived = getRequestsReceived().length;
 
         const copyButton = document.getElementById('copy-button');
         copyButton.click();
 
-        expect(requestsReceived.length).toEqual(initialRequestsReceived);
+        expect(getRequestsReceived().length).toEqual(initialRequestsReceived);
     });
 
     test("clicking paste has no effect before copying something", async () => {
@@ -751,12 +658,12 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
         contextMenuSelect(element);
 
-        const initialRequestsReceived = requestsReceived.length;
+        const initialRequestsReceived = getRequestsReceived().length;
 
         const pasteButton = document.getElementById('paste-button');
         pasteButton.click();
 
-        expect(requestsReceived.length).toEqual(initialRequestsReceived);
+        expect(getRequestsReceived().length).toEqual(initialRequestsReceived);
     });
 
     test("clicking paste on same element after copying it makes the correct request to the server", async () => {
@@ -855,7 +762,7 @@ describe("tab cycling between input elements behaves correctly", () => {
 
     beforeEach(async () => {
         await handleSubmit(mockEvent, '/start-node-blank');
-        actionFetchResponse = {nodeString, html};
+        setActionFetchResponse(nodeString, html);
         await handleDropdownChange(document.getElementsByClassName('expr-dropdown')[0] as HTMLSelectElement, 'expr');
     });
 
@@ -961,10 +868,10 @@ describe("input focus is preserved when the tree is updated", () => {
         const input = document.querySelector('input[data-tree-path="0-0"]') as HTMLInputElement;
         input.focus();
         input.value = "8";
-        actionFetchResponse = {
-            nodeString: NS.TIMES_LEFT_NUM_RIGHT_EMPTY.replace(`LiteralNode("4")`, `LiteralNode("8")`),
-            html: loadHtmlTemplate('times_left_filled_num_right_empty_alt')
-        };
+        setActionFetchResponse(
+            NS.TIMES_LEFT_NUM_RIGHT_EMPTY.replace(`LiteralNode("4")`, `LiteralNode("8")`),
+            loadHtmlTemplate('times_left_filled_num_right_empty_alt')
+        );
         expect(input.value).toEqual("8");
         input.dispatchEvent(new KeyboardEvent('keydown', {
             key: 'Enter'
@@ -979,10 +886,10 @@ describe("input focus is preserved when the tree is updated", () => {
     test("input focus is not preserved when a literal is edited and then something else is clicked", async () => {
         const input = document.querySelector('input[data-tree-path="0-0"]') as HTMLInputElement;
         input.focus();
-        actionFetchResponse = {
-            nodeString: NS.TIMES_LEFT_NUM_RIGHT_EMPTY.replace(`LiteralNode("4")`, `LiteralNode("8")`),
-            html: loadHtmlTemplate('times_left_filled_num_right_empty_alt')
-        };
+        setActionFetchResponse(
+            NS.TIMES_LEFT_NUM_RIGHT_EMPTY.replace(`LiteralNode("4")`, `LiteralNode("8")`),
+            loadHtmlTemplate('times_left_filled_num_right_empty_alt')
+        );
         input.value = "8";
         input.dispatchEvent(new Event('blur'));
 
@@ -1007,7 +914,7 @@ describe("phantom inputs are made read-only and disabled", () => {
     beforeEach(async () => {
         await handleSubmit(mockEvent, '/start-node-blank');
 
-        actionFetchResponse = {nodeString: NS.PHANTOM_EXAMPLE, html};
+        setActionFetchResponse(NS.PHANTOM_EXAMPLE, html);
 
         document.getElementById("eval-mode-radio").click();
         await slightDelay();
@@ -1027,7 +934,7 @@ describe("responses to server errors are appropriate", () => {
     async function triggerError(message: string): Promise<void> {
         const input = document.querySelector('input[type="text"]') as HTMLInputElement;
         input.value = input.value + " foo";
-        actionErrorMessage = message;
+        setActionErrorMessage(message);
         await handleLiteralChanged(input);
     }
 
