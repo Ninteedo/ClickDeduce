@@ -19,44 +19,33 @@ class LLet extends LIf {
     def apply(v: Variable): Var = new Var(Literal.fromString(v))
   }
 
-  case class Let(v: Literal, assign_expr: Expr, bound_expr: Expr) extends Expr {
+  case class Let(v: Literal, assign: Expr, bound: Expr) extends Expr {
     override def evalInner(env: Env): Value = v match {
-      case LiteralIdentifier(identifier) => {
-        val assign_val: Value = assign_expr.eval(env)
-        if (assign_val.isError) {
-          assign_val
-        } else {
-          bound_expr.eval(env + (identifier -> assign_val))
-        }
-      }
+      case LiteralIdentifier(identifier) =>
+        val assign_val: Value = assign.eval(env)
+        if (assign_val.isError) assign_val else bound.eval(env + (identifier -> assign_val))
       case _ => InvalidIdentifierEvalError(v)
     }
 
     override def typeCheckInner(tEnv: TypeEnv): Type = v match {
-      case LiteralIdentifier(identifier) => {
-        val assign_type: Type = assign_expr.typeCheck(tEnv)
-        if (assign_type.isError) {
-          assign_type
-        } else {
-          bound_expr.typeCheck(tEnv + (identifier -> assign_type))
-        }
-      }
+      case LiteralIdentifier(identifier) =>
+        val assign_type: Type = assign.typeCheck(tEnv)
+        if (assign_type.isError) assign_type else bound.typeCheck(tEnv + (identifier -> assign_type))
       case _ => InvalidIdentifierTypeError(v)
     }
 
     override def getChildrenBase(env: Env): List[(Term, Env)] =
-      List((v, env), (assign_expr, env), (bound_expr, env + (v.toString -> assign_expr.eval(env))))
+      List((v, env), (assign, env), (bound, env + (v.toString -> assign.eval(env))))
 
     override def getChildrenEval(env: Env): List[(Term, Env)] =
-      List((assign_expr, env), (bound_expr, env + (v.toString -> assign_expr.eval(env))))
+      List((assign, env), (bound, env + (v.toString -> assign.eval(env))))
 
     override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] =
-      List((assign_expr, tEnv), (bound_expr, tEnv + (v.toString -> assign_expr.typeCheck(tEnv))))
+      List((assign, tEnv), (bound, tEnv + (v.toString -> assign.typeCheck(tEnv))))
   }
 
   object Let {
-    def apply(v: Variable, assign_expr: Expr, bound_expr: Expr): Let =
-      new Let(Literal.fromString(v), assign_expr, bound_expr)
+    def apply(v: Variable, assign: Expr, bound: Expr): Let = new Let(Literal.fromString(v), assign, bound)
   }
 
   // errors
@@ -82,17 +71,16 @@ class LLet extends LIf {
   }
 
   override def prettyPrint(e: Expr): String = e match {
-    case Var(v)                          => v.toString
-    case Let(v, assign_expr, bound_expr) => {
+    case Var(v) => v.toString
+    case Let(v, assign_expr, bound_expr) =>
       val assignExprString = assign_expr match {
-        case _: Var => prettyPrint(assign_expr)
-        case _: Num => prettyPrint(assign_expr)
+        case _: Var  => prettyPrint(assign_expr)
+        case _: Num  => prettyPrint(assign_expr)
         case _: Bool => prettyPrint(assign_expr)
-        case _      => s"(${prettyPrint(assign_expr)})"
+        case _       => s"(${prettyPrint(assign_expr)})"
       }
       s"let $v = $assignExprString in ${prettyPrint(bound_expr)}"
-    }
-    case _                               => super.prettyPrint(e)
+    case _ => super.prettyPrint(e)
   }
 
   override def prettyPrint(t: Type): String = t match {

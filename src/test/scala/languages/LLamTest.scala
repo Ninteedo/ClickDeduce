@@ -73,6 +73,23 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
     }
   }
 
+  property("Apply results in error when the right side does not match the function input type") {
+    val env = Map("bool" -> BoolType(), "int" -> IntType())
+    val expressions: TableFor1[Expr] = Table(
+      "expr",
+      Apply(incrementFunction, Bool(true)),
+      Apply(incrementFunction, Var("bool")),
+      Apply(incrementFunction, incrementFunction),
+      Apply(incrementFunction, Eq(Var("int"), Var("int"))),
+      Apply(Lambda("x", BoolType(), Var("x")), Num(4)),
+      Apply(Lambda("x", BoolType(), Var("x")), Plus(Num(1), Var("int")))
+    )
+
+    forAll(expressions) { expr =>
+      expr.typeCheck(env) shouldBe an[IncompatibleTypeErrorType]
+    }
+  }
+
   property("Lambda has appropriate children expressions in type-check mode") {
     incrementFunction.getChildrenTypeCheck(Map()) shouldEqual List((incrementFunction.e, Map("x" -> IntType())))
 
@@ -297,6 +314,18 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
     exprChoicePhantomTree.getVisibleChildren(DisplayMode.Evaluation) shouldEqual
       exprChoicePhantomTree.children :+ ExprChoiceNode()
     exprChoicePhantomTree.getVisibleChildren(DisplayMode.Evaluation).last.isPhantom shouldEqual true
+  }
+
+  property("Apply doesn't show a third child if the left-hand side is not a function") {
+    val expressions: TableFor1[Expr] = Table(
+      "expr",
+      Apply(Num(4), Num(4)),
+      Apply(Eq(Apply(incrementFunction, Num(4)), Num(5)), Bool(false))
+    )
+
+    forAll(expressions) { expr =>
+      expr.getChildrenEval().length shouldEqual 2
+    }
   }
 
   property("Lambda expression has correct environment when editing subexpression") {

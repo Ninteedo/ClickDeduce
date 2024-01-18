@@ -186,6 +186,24 @@ class LArithTest extends TestTemplate[Expr, Value, Type] {
     Times(Num(5), Num(LiteralString("invalid"))).eval(Map()) shouldEqual invalidNumValue
   }
 
+  property("Attempting to evaluate an expression not defined in LArith results in an error") {
+    BlankExprDropDown().eval() shouldBe an[UnexpectedExpr]
+    BlankExprDropDown().typeCheck() shouldBe an[UnexpectedExprType]
+
+    BlankChildPlaceholder().eval() shouldBe an[UnexpectedExpr]
+    BlankChildPlaceholder().typeCheck() shouldBe an[UnexpectedExprType]
+
+    Plus(BlankExprDropDown(), Num(5)).eval() shouldBe an[UnexpectedExpr]
+    Plus(BlankExprDropDown(), Num(5)).typeCheck() shouldBe an[UnexpectedExprType]
+    Plus(Num(5), BlankExprDropDown()).eval() shouldBe an[UnexpectedExpr]
+    Plus(Num(5), BlankExprDropDown()).typeCheck() shouldBe an[UnexpectedExprType]
+
+    Times(BlankExprDropDown(), Num(5)).eval() shouldBe an[UnexpectedExpr]
+    Times(BlankExprDropDown(), Num(5)).typeCheck() shouldBe an[UnexpectedExprType]
+    Times(Num(5), BlankExprDropDown()).eval() shouldBe an[UnexpectedExpr]
+    Times(Num(5), BlankExprDropDown()).typeCheck() shouldBe an[UnexpectedExprType]
+  }
+
   property("Num should pretty print correctly") {
     prettyPrint(Num(15)) shouldBe "15"
     prettyPrint(Num(-15)) shouldBe "-15"

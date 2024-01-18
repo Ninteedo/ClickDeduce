@@ -2,7 +2,7 @@ package languages
 
 import languages.LIf.*
 import org.scalatest.matchers.should.Matchers.*
-import org.scalatest.prop.TableFor1
+import org.scalatest.prop.{TableFor1, TableFor2}
 import org.scalatest.propspec.AnyPropSpec
 
 import scala.util.Random
@@ -96,13 +96,19 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
     }
   }
 
-  property("IfThenElse.getEvalChildren returns the appropriate children") {
+  property("IfThenElse.getChildrenEval returns the appropriate children") {
     val exampleEnv: Env = Map("a" -> NumV(1), "b" -> NumV(2), "c" -> NumV(3))
-    val ifThenElse = IfThenElse(Bool(true), Num(1), Num(2))
-    ifThenElse.getChildrenEval(exampleEnv) shouldEqual List((Bool(true), exampleEnv), (Num(1), exampleEnv))
+    val ifThenElseTable: TableFor2[Expr, List[(Expr, Env)]] = Table(
+      ("expr", "children"),
+      (IfThenElse(Bool(true), Num(1), Num(2)), List((Bool(true), exampleEnv), (Num(1), exampleEnv))),
+      (IfThenElse(Bool(false), Num(1), Num(2)), List((Bool(false), exampleEnv), (Num(2), exampleEnv))),
+      (IfThenElse(Eq(Num(1), Num(2)), Num(1), Num(2)), List((Eq(Num(1), Num(2)), exampleEnv), (Num(2), exampleEnv))),
+      (IfThenElse(Num(5), Num(1), Num(2)), List((Num(5), exampleEnv), (Num(1), exampleEnv), (Num(2), exampleEnv)))
+    )
 
-    val ifThenElse2 = IfThenElse(Bool(false), Num(1), Num(2))
-    ifThenElse2.getChildrenEval(exampleEnv) shouldEqual List((Bool(false), exampleEnv), (Num(2), exampleEnv))
+    forAll(ifThenElseTable) { (expr, children) =>
+      expr.getChildrenEval(exampleEnv) shouldEqual children
+    }
   }
 
   property("IfThenElse behaviour is correct when using actions") {
@@ -192,6 +198,39 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
     tree.toHtml(DisplayMode.Edit)
     tree.toHtml(DisplayMode.TypeCheck)
     tree.toHtml(DisplayMode.Evaluation)
+  }
+
+  property("Plus and Times return an error when given an argument other than a NumV") {
+    Plus(Bool(true), Bool(false)).eval() shouldBe an[UnexpectedArgValue]
+    Plus(Num(5), Bool(true)).eval() shouldBe an[UnexpectedArgValue]
+    Plus(Bool(false), Num(5)).eval() shouldBe an[UnexpectedArgValue]
+    Times(Bool(false), Bool(true)).eval() shouldBe an[UnexpectedArgValue]
+    Times(Num(5), Bool(true)).eval() shouldBe an[UnexpectedArgValue]
+    Times(Bool(false), Num(5)).eval() shouldBe an[UnexpectedArgValue]
+
+    Plus(Bool(false), Bool(true)).typeCheck() shouldBe an[UnexpectedArgType]
+    Plus(Num(5), Bool(true)).typeCheck() shouldBe an[UnexpectedArgType]
+    Plus(Bool(false), Num(5)).typeCheck() shouldBe an[UnexpectedArgType]
+    Times(Bool(false), Bool(true)).typeCheck() shouldBe an[UnexpectedArgType]
+    Times(Num(5), Bool(true)).typeCheck() shouldBe an[UnexpectedArgType]
+    Times(Bool(false), Num(5)).typeCheck() shouldBe an[UnexpectedArgType]
+  }
+
+  property("Bool returns an error when given an argument other than a LiteralBool") {
+    val invalidLiterals: TableFor1[Literal] = Table(
+      "invalidLiterals",
+      LiteralInt(5),
+      LiteralString("hello"),
+      LiteralIdentifier("hello"),
+      Literal.fromString("\"true\""),
+      Literal.fromString("\"false\""),
+      LiteralString("true")
+    )
+
+    forAll(invalidLiterals) { l =>
+      Bool(l).eval() shouldBe an[UnexpectedArgValue]
+      Bool(l).typeCheck() shouldBe an[UnexpectedArgType]
+    }
   }
 
   property("Bool pretty prints correctly") {

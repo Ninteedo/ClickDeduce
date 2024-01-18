@@ -1,7 +1,7 @@
 package languages
 
 import languages.LLet.*
-import org.scalatest.matchers.should.Matchers.{an, shouldBe, shouldEqual}
+import org.scalatest.matchers.should.Matchers.{a, an, shouldBe, shouldEqual}
 import org.scalatest.prop.TableFor1
 import org.scalatest.propspec.AnyPropSpec
 
@@ -158,12 +158,22 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
     elseExpr.getEditValueResult shouldEqual NumV(1)
   }
 
-  property("Var pretty prints correctly") {
-    prettyPrint(Var("x")) shouldEqual "x"
-    prettyPrint(Var("y")) shouldEqual "y"
-    prettyPrint(Var("z")) shouldEqual "z"
+  property("If the assign expression in a Let is an error, then that error is returned") {
+    Let("x", Eq(Num(1), Bool(false)), Var("x")).eval() shouldBe a[TypeMismatchError]
+    Let("x", Eq(Num(1), Bool(false)), Var("x")).typeCheck() shouldBe a[TypeMismatchType]
 
-    prettyPrint(Var(Literal.fromString("iuahg546 27__"))) shouldEqual "iuahg546 27__"
+    Let("x", Plus(Num(1), Bool(false)), Var("x")).eval() shouldBe a[UnexpectedArgValue]
+    Let("x", Plus(Num(1), Bool(false)), Var("x")).typeCheck() shouldBe a[UnexpectedArgType]
+  }
+
+  property("Var pretty prints correctly") {
+    forAll(Table("identifier", variableNames: _*)) { v =>
+      prettyPrint(Var(v)) shouldEqual v
+    }
+
+    forAll(Table("identifier", invalidVariableNames: _*)) { v =>
+      prettyPrint(Var(v)) shouldEqual v
+    }
   }
 
   property("Let pretty prints correctly") {

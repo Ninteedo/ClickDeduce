@@ -3,7 +3,8 @@ package languages
 import languages.LRec.*
 import org.scalatest.concurrent.TimeLimits.failAfter
 import org.scalatest.matchers.must.Matchers.noException
-import org.scalatest.matchers.should.Matchers.{a, be, shouldBe, shouldEqual}
+import org.scalatest.matchers.should.Matchers.{a, an, be, shouldBe, shouldEqual}
+import org.scalatest.prop.TableFor1
 import org.scalatest.time.{Millis, Span}
 
 import scala.collection.immutable.Map
@@ -122,11 +123,42 @@ class LRecTest extends TestTemplate[Expr, Value, Type] {
     }
   }
 
+  property("Rec returns an error when the function or parameter names are not valid identifiers") {
+    val expressions: TableFor1[Expr] = Table(
+      "expr",
+      Rec(LiteralInt(6), LiteralIdentifier("x"), IntType(), IntType(), Num(1)),
+      Rec(LiteralIdentifier("f"), LiteralInt(-71), IntType(), IntType(), Num(1)),
+      Rec(LiteralBool(true), LiteralIdentifier("y"), IntType(), IntType(), Num(1)),
+      Rec(LiteralIdentifier("g"), LiteralBool(false), IntType(), IntType(), Num(1)),
+      Rec(LiteralBool(true), LiteralBool(false), IntType(), IntType(), Num(1)),
+      Rec(LiteralString("foo"), LiteralIdentifier("z"), IntType(), IntType(), Num(1)),
+      Rec(LiteralIdentifier("h"), LiteralString("bar"), IntType(), IntType(), Num(1)),
+      Rec(LiteralString("foo"), LiteralString("bar"), IntType(), IntType(), Num(1)),
+      Rec(" x", "y", IntType(), IntType(), Num(1)),
+      Rec("1foo", "bar", IntType(), IntType(), Num(1)),
+    )
+
+    forAll(expressions) { expr =>
+      expr.typeCheck() shouldBe an[InvalidIdentifierTypeError]
+      expr.eval() shouldBe an[InvalidIdentifierEvalError]
+    }
+
+    forAll(Table("identifier", invalidVariableNames: _*)) { v =>
+      Rec(v, "x", IntType(), IntType(), Num(1)).typeCheck() shouldBe an[InvalidIdentifierTypeError]
+      Rec("f", v, IntType(), IntType(), Num(1)).typeCheck() shouldBe an[InvalidIdentifierTypeError]
+      Rec(v, v, IntType(), IntType(), Num(1)).typeCheck() shouldBe an[InvalidIdentifierTypeError]
+
+      Rec(v, "x", IntType(), IntType(), Num(1)).eval() shouldBe an[InvalidIdentifierEvalError]
+      Rec("f", v, IntType(), IntType(), Num(1)).eval() shouldBe an[InvalidIdentifierEvalError]
+      Rec(v, v, IntType(), IntType(), Num(1)).eval() shouldBe an[InvalidIdentifierEvalError]
+    }
+  }
+
   property("Rec pretty prints correctly") {
     val factorialPretty = "rec factorial(n: Int): Int. (if (n == 0) then 1 else (n × ((factorial) (n + -1))))"
 
     prettyPrint(factorialFunction) shouldEqual factorialPretty
-    
+
     prettyPrint(factorialFunction.eval()) shouldEqual factorialPretty
   }
 }
