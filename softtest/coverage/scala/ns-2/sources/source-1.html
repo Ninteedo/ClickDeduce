@@ -49,10 +49,10 @@ Current scope:     <a href="../../index.html">all classes</a>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    74.4%
+    76.7%
   </span>
   <span class="absValue">
-    (29/39)
+    (33/43)
   </span>
 </td>
 </tr>
@@ -410,10 +410,10 @@ Current scope:     <a href="../../index.html">all classes</a>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    86.6%
+    87.1%
   </span>
   <span class="absValue">
-    (97/112)
+    (101/116)
   </span>
 </td>
 </tr>
@@ -461,11 +461,17 @@ Current scope:     <a href="../../index.html">all classes</a>
 <b class="fc">&nbsp;      case c if classOf[Node] isAssignableFrom c                   =&gt; node</b>
 <b class="fc">&nbsp;      case c if classOf[List[Int]] isAssignableFrom c              =&gt; treePath</b>
 <b class="fc">&nbsp;      case c if classOf[String] isAssignableFrom c =&gt;</b>
+<b class="fc">&nbsp;        if (remainingExtraArgs.isEmpty) {</b>
+<b class="fc">&nbsp;          throw new ActionInvocationException(s&quot;Missing parameter for $actionClass&quot;)</b>
+&nbsp;        }
 <b class="fc">&nbsp;        val arg = remainingExtraArgs.head</b>
 <b class="fc">&nbsp;        remainingExtraArgs = remainingExtraArgs.tail</b>
 <b class="fc">&nbsp;        arg</b>
 <b class="nc">&nbsp;      case c =&gt; throw new ActionInvocationException(s&quot;Unexpected parameter type in createAction: $c&quot;)</b>
 <b class="fc">&nbsp;    }</b>
+<b class="fc">&nbsp;    if (remainingExtraArgs.nonEmpty) {</b>
+<b class="fc">&nbsp;      throw new ActionInvocationException(s&quot;Too many parameters for $actionClass&quot;)</b>
+&nbsp;    }
 &nbsp;    try {
 <b class="fc">&nbsp;      val result = constructor.newInstance(arguments: _*)</b>
 <b class="fc">&nbsp;      result.asInstanceOf[Action]</b>
@@ -582,7 +588,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2024-01-18 11:44</div>
+    <div style="float:right;">generated on 2024-01-18 19:37</div>
 </div>
 </body>
 </html>

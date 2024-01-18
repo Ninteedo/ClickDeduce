@@ -201,10 +201,10 @@ Current scope:     <a href="../../index.html">all classes</a>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    91.7%
+    100%
   </span>
   <span class="absValue">
-    (11/12)
+    (12/12)
   </span>
 </td>
   </tr>
@@ -239,10 +239,10 @@ Current scope:     <a href="../../index.html">all classes</a>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    83.3%
+    100%
   </span>
   <span class="absValue">
-    (10/12)
+    (12/12)
   </span>
 </td>
   </tr>
@@ -353,10 +353,10 @@ Current scope:     <a href="../../index.html">all classes</a>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    95.8%
+    100%
   </span>
   <span class="absValue">
-    (69/72)
+    (72/72)
   </span>
 </td>
 </tr>
@@ -414,7 +414,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 <b class="fc">&nbsp;      case (IntType(), IntType()) =&gt; IntType()</b>
 <b class="fc">&nbsp;      case (t1, _) if t1.isError  =&gt; t1</b>
 <b class="fc">&nbsp;      case (_, t2) if t2.isError  =&gt; t2</b>
-<b class="nc">&nbsp;      case (t1, t2)               =&gt; UnexpectedArgType(s&quot;Plus cannot accept ($t1, $t2)&quot;)</b>
+<b class="fc">&nbsp;      case (t1, t2)               =&gt; UnexpectedArgType(s&quot;Plus cannot accept ($t1, $t2)&quot;)</b>
 <b class="fc">&nbsp;    }</b>
 &nbsp;  }
 &nbsp;
@@ -430,14 +430,14 @@ Current scope:     <a href="../../index.html">all classes</a>
 <b class="fc">&nbsp;      case (NumV(x), NumV(y))    =&gt; NumV(x * y)</b>
 <b class="fc">&nbsp;      case (v1, _) if v1.isError =&gt; v1</b>
 <b class="fc">&nbsp;      case (_, v2) if v2.isError =&gt; v2</b>
-<b class="nc">&nbsp;      case (v1, v2)              =&gt; UnexpectedArgValue(s&quot;Times cannot accept ($v1, $v2)&quot;)</b>
+<b class="fc">&nbsp;      case (v1, v2)              =&gt; UnexpectedArgValue(s&quot;Times cannot accept ($v1, $v2)&quot;)</b>
 &nbsp;    }
 &nbsp;
 <b class="fc">&nbsp;    override def typeCheckInner(tEnv: TypeEnv): Type = (e1.typeCheck(tEnv), e2.typeCheck(tEnv)) match {</b>
 <b class="fc">&nbsp;      case (IntType(), IntType()) =&gt; IntType()</b>
 <b class="fc">&nbsp;      case (t1, _) if t1.isError  =&gt; t1</b>
 <b class="fc">&nbsp;      case (_, t2) if t2.isError  =&gt; t2</b>
-<b class="nc">&nbsp;      case (t1, t2)               =&gt; UnexpectedArgType(s&quot;Times cannot accept ($t1, $t2)&quot;)</b>
+<b class="fc">&nbsp;      case (t1, t2)               =&gt; UnexpectedArgType(s&quot;Times cannot accept ($t1, $t2)&quot;)</b>
 <b class="fc">&nbsp;    }</b>
 &nbsp;  }
 &nbsp;
@@ -522,7 +522,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2024-01-18 11:44</div>
+    <div style="float:right;">generated on 2024-01-18 19:37</div>
 </div>
 </body>
 </html>

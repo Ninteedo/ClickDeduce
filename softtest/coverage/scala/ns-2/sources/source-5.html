@@ -87,10 +87,10 @@ Current scope:     <a href="../../index.html">all classes</a>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    75%
+    100%
   </span>
   <span class="absValue">
-    (6/8)
+    (8/8)
   </span>
 </td>
   </tr>
@@ -239,10 +239,10 @@ Current scope:     <a href="../../index.html">all classes</a>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    94.7%
+    100%
   </span>
   <span class="absValue">
-    (18/19)
+    (19/19)
   </span>
 </td>
   </tr>
@@ -353,10 +353,10 @@ Current scope:     <a href="../../index.html">all classes</a>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    96.3%
+    100%
   </span>
   <span class="absValue">
-    (78/81)
+    (81/81)
   </span>
 </td>
 </tr>
@@ -374,12 +374,12 @@ Current scope:     <a href="../../index.html">all classes</a>
 <b class="fc">&nbsp;  case class Bool(b: Literal) extends Expr {</b>
 <b class="fc">&nbsp;    override def evalInner(env: Env): Value = b match {</b>
 <b class="fc">&nbsp;      case LiteralBool(b) =&gt; BoolV(b)</b>
-<b class="nc">&nbsp;      case _              =&gt; UnexpectedArgValue(s&quot;Bool can only accept LiteralBool, not $b&quot;)</b>
+<b class="fc">&nbsp;      case _              =&gt; UnexpectedArgValue(s&quot;Bool can only accept LiteralBool, not $b&quot;)</b>
 &nbsp;    }
 &nbsp;
 <b class="fc">&nbsp;    override def typeCheckInner(tEnv: TypeEnv): Type = b match {</b>
 <b class="fc">&nbsp;      case LiteralBool(_) =&gt; BoolType()</b>
-<b class="nc">&nbsp;      case _              =&gt; UnexpectedArgType(s&quot;Bool can only accept LiteralBool, not $b&quot;)</b>
+<b class="fc">&nbsp;      case _              =&gt; UnexpectedArgType(s&quot;Bool can only accept LiteralBool, not $b&quot;)</b>
 <b class="fc">&nbsp;    }</b>
 &nbsp;  }
 &nbsp;
@@ -433,7 +433,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 <b class="fc">&nbsp;    override def getChildrenEval(env: Env): List[(Term, Env)] = cond.eval(env) match {</b>
 <b class="fc">&nbsp;      case BoolV(true)  =&gt; List((cond, env), (then_expr, env))</b>
 <b class="fc">&nbsp;      case BoolV(false) =&gt; List((cond, env), (else_expr, env))</b>
-<b class="nc">&nbsp;      case _            =&gt; List((cond, env), (then_expr, env), (else_expr, env))</b>
+<b class="fc">&nbsp;      case _            =&gt; List((cond, env), (then_expr, env), (else_expr, env))</b>
 <b class="fc">&nbsp;    }</b>
 &nbsp;  }
 &nbsp;
@@ -509,7 +509,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2024-01-18 11:44</div>
+    <div style="float:right;">generated on 2024-01-18 19:37</div>
 </div>
 </body>
 </html>
