@@ -1,6 +1,6 @@
 import {afterAll, afterEach, beforeEach, describe, expect, jest, test} from "@jest/globals";
 import {MockResponse} from "./MockResponse";
-import {handleDropdownChange, handleLiteralChanged, handleSubmit, initialise} from "../script";
+import {initialise} from "../script";
 import * as NS from "../../test_resources/node_strings";
 import {ClickDeduceResponseError} from "../ClickDeduceResponseError";
 import {
@@ -14,6 +14,7 @@ import {
     removeWhitespace,
     slightDelay
 } from "./helper";
+import {handleDropdownChange, handleLiteralChanged, handleSubmit} from "../actions";
 
 const defaultHtml = loadHtmlTemplate('../pages/index')
 

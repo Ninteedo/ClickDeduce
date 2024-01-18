@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import {handleDropdownChange, handleSubmit} from "../script";
+import {handleDropdownChange, handleSubmit} from "../actions";
 
 export function loadHtmlTemplate(filename: string): string {
     const readResult: string = fs.readFileSync(path.resolve(__dirname, '../../test_resources', `${filename}.html`), 'utf8');

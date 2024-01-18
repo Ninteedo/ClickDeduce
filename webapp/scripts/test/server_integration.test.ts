@@ -3,7 +3,7 @@ import {afterAll, beforeAll, beforeEach, describe, expect, jest, test} from "@je
 import http from "http";
 import net from "net";
 import kill from "tree-kill";
-import {handleDropdownChange, initialise} from "../script";
+import {initialise} from "../script";
 import {
     changeLanguage,
     doLiteralEdit,
@@ -15,6 +15,7 @@ import {
     pressStartNodeButton,
     selectExprOption
 } from "./helper";
+import {handleDropdownChange} from "../actions";
 
 const port = 9005;
 const command = `sbt "run --port ${port}"`;
