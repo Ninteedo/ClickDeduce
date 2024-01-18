@@ -24,11 +24,11 @@ export async function initialise(): Promise<void> {
 
     panzoomInstance = panzoom(tree, {
         bounds: false, boundsPadding: 0, zoomDoubleClickSpeed: 1,
-        onTouch: function (e: Event) {
+        onTouch: (e) => {
             // TODO: cannot use on mobile currently
             return false;  // tells the library to not preventDefault.
         },
-        filterKey: function (/* e, dx, dy, dz */) {
+        filterKey: () => {
             return true;  // don't let panzoom handle this event:
         }
     });
