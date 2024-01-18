@@ -1,9 +1,8 @@
 package languages
 
 import languages.LArith.*
-import org.scalatest.GivenWhenThen
 import org.scalatest.matchers.should.Matchers.*
-import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor1, TableFor3}
+import org.scalatest.prop.TableFor3
 import org.scalatest.propspec.AnyPropSpec
 
 import scala.util.Random
@@ -129,11 +128,6 @@ class LArithTest extends TestTemplate[Expr, Value, Type] {
     prettyPrint(Times(Plus(Num(15), Num(20)), Plus(Num(25), Num(30)))) shouldBe "((15 + 20) × (25 + 30))"
   }
 
-  property("NumV should print appropriately") {
-    prettyPrint(NumV(15)) shouldBe "15"
-    prettyPrint(NumV(-15)) shouldBe "-15"
-  }
-
   property("Children of arithmetic expressions is accurate") {
     def getChildrenExpressions(expr: Expr): List[Expr] = expr.getChildrenEval().map(_._1.asInstanceOf[Expr])
 
@@ -190,5 +184,48 @@ class LArithTest extends TestTemplate[Expr, Value, Type] {
     Plus(Num(5), Num(LiteralString("invalid"))).eval(Map()) shouldEqual invalidNumValue
     Times(Num(LiteralString("invalid")), Num(5)).eval(Map()) shouldEqual invalidNumValue
     Times(Num(5), Num(LiteralString("invalid"))).eval(Map()) shouldEqual invalidNumValue
+  }
+
+  property("Num should pretty print correctly") {
+    prettyPrint(Num(15)) shouldBe "15"
+    prettyPrint(Num(-15)) shouldBe "-15"
+    prettyPrint(Num(0)) shouldBe "0"
+    val quiteBigInt = BigInt("965712796818796")
+    prettyPrint(Num(quiteBigInt)) shouldBe quiteBigInt.toString
+    val reallyBigInt = BigInt("965712796818796") * BigInt("8561575617798768176")
+    prettyPrint(Num(reallyBigInt)) shouldBe reallyBigInt.toString
+    val reallyNegativeBigInt = BigInt("965712796818796") * BigInt("-8561575617798768176")
+    prettyPrint(Num(reallyNegativeBigInt)) shouldBe reallyNegativeBigInt.toString
+  }
+
+  property("Plus should pretty print correctly") {
+    prettyPrint(Plus(Num(15), Num(20))) shouldBe "(15 + 20)"
+    prettyPrint(Plus(Num(15), Num(-20))) shouldBe "(15 + -20)"
+    prettyPrint(Plus(Plus(Num(15), Num(20)), Num(25))) shouldBe "((15 + 20) + 25)"
+    prettyPrint(Plus(Num(15), Plus(Num(20), Num(25)))) shouldBe "(15 + (20 + 25))"
+    prettyPrint(Plus(Plus(Num(15), Num(20)), Plus(Num(25), Num(30)))) shouldBe "((15 + 20) + (25 + 30))"
+  }
+
+  property("Times should pretty print correctly") {
+    prettyPrint(Times(Num(15), Num(20))) shouldBe "(15 × 20)"
+    prettyPrint(Times(Num(15), Num(-20))) shouldBe "(15 × -20)"
+    prettyPrint(Times(Times(Num(15), Num(20)), Num(25))) shouldBe "((15 × 20) × 25)"
+    prettyPrint(Times(Num(15), Times(Num(20), Num(25)))) shouldBe "(15 × (20 × 25))"
+    prettyPrint(Times(Times(Num(15), Num(20)), Times(Num(25), Num(30)))) shouldBe "((15 × 20) × (25 × 30))"
+  }
+
+  property("Mixed Plus and Times should pretty print correctly") {
+    prettyPrint(Plus(Times(Num(15), Num(20)), Num(25))) shouldBe "((15 × 20) + 25)"
+    prettyPrint(Plus(Num(15), Times(Num(20), Num(25)))) shouldBe "(15 + (20 × 25))"
+    prettyPrint(Plus(Times(Num(15), Num(20)), Times(Num(25), Num(30)))) shouldBe "((15 × 20) + (25 × 30))"
+  }
+
+  property("NumV should pretty print correctly") {
+    prettyPrint(NumV(15)) shouldBe "15"
+    prettyPrint(NumV(-15)) shouldBe "-15"
+  }
+
+  property("IntType should pretty print correctly") {
+    prettyPrint(IntType()) shouldBe "Int"
   }
 }

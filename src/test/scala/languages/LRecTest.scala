@@ -121,4 +121,12 @@ class LRecTest extends TestTemplate[Expr, Value, Type] {
       a[DepthLimitExceededException] should be thrownBy node.toHtml(DisplayMode.Evaluation)
     }
   }
+
+  property("Rec pretty prints correctly") {
+    val factorialPretty = "rec factorial(n: Int): Int. (if (n == 0) then 1 else (n × ((factorial) (n + -1))))"
+
+    prettyPrint(factorialFunction) shouldEqual factorialPretty
+    
+    prettyPrint(factorialFunction.eval()) shouldEqual factorialPretty
+  }
 }

@@ -323,4 +323,25 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
     subExprNode.getTypeEnv shouldEqual Map("x" -> IntType())
     subExprNode.getType shouldEqual IntType()
   }
+
+  property("Lambda pretty prints correctly") {
+    prettyPrint(incrementFunction) shouldEqual "λx: Int. (x + 1)"
+    prettyPrint(twiceFunction) shouldEqual "λf: (Int → Int). λx: Int. ((f) ((f) x))"
+
+    prettyPrint(incrementFunction.eval()) shouldEqual "λx: Int. (x + 1)"
+    prettyPrint(twiceFunction.eval()) shouldEqual "λf: (Int → Int). λx: Int. ((f) ((f) x))"
+  }
+
+  property("Apply pretty prints correctly") {
+    prettyPrint(Apply(incrementFunction, Num(8))) shouldEqual "((λx: Int. (x + 1)) 8)"
+    prettyPrint(Apply(Bool(false), Num(45))) shouldEqual "((false) 45)"
+    prettyPrint(Apply(twiceFunction, incrementFunction)) shouldEqual "((λf: (Int → Int). λx: Int. ((f) ((f) x))) λx: Int. (x + 1))"
+  }
+
+  property("Func pretty prints correctly") {
+    prettyPrint(Func(IntType(), IntType())) shouldEqual "(Int → Int)"
+    prettyPrint(Func(BoolType(), IntType())) shouldEqual "(Bool → Int)"
+    prettyPrint(Func(BoolType(), Func(IntType(), IntType()))) shouldEqual "(Bool → (Int → Int))"
+    prettyPrint(Func(Func(IntType(), IntType()), IntType())) shouldEqual "((Int → Int) → Int)"
+  }
 }

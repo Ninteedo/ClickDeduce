@@ -157,4 +157,28 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
     thenExpr.getEditValueResult shouldEqual NumV(1)
     elseExpr.getEditValueResult shouldEqual NumV(1)
   }
+
+  property("Var pretty prints correctly") {
+    prettyPrint(Var("x")) shouldEqual "x"
+    prettyPrint(Var("y")) shouldEqual "y"
+    prettyPrint(Var("z")) shouldEqual "z"
+
+    prettyPrint(Var(Literal.fromString("iuahg546 27__"))) shouldEqual "iuahg546 27__"
+  }
+
+  property("Let pretty prints correctly") {
+    prettyPrint(Let("x", Num(1), Var("x"))) shouldEqual "let x = 1 in x"
+    prettyPrint(Let("y", Num(2), Var("y"))) shouldEqual "let y = 2 in y"
+    prettyPrint(Let("z", Num(3), Var("z"))) shouldEqual "let z = 3 in z"
+
+    prettyPrint(Let("x", Num(1), Let("y", Num(2), Plus(Var("x"), Var("y"))))) shouldEqual
+      "let x = 1 in let y = 2 in (x + y)"
+    prettyPrint(Let("x", Bool(true), Let("y", Num(2), Plus(Var("x"), Var("y"))))) shouldEqual
+      "let x = true in let y = 2 in (x + y)"
+    prettyPrint(Let("x", Var("y"), Let("y", Num(2), Times(Var("x"), Bool(false))))) shouldEqual
+      "let x = y in let y = 2 in (x × false)"
+
+    prettyPrint(Let("x", Let("y", Num(3), Var("y")), Var("x"))) shouldEqual
+      "let x = (let y = 3 in y) in x"
+  }
 }

@@ -101,22 +101,22 @@ class LLam extends LLet {
   }
 
   override def prettyPrint(e: Expr): String = e match {
-    case Lambda(v, typ, e) => s"λ$v:${prettyPrint(typ)}. ${prettyPrint(e)}"
-    case Apply(e1, e2)     => s"${prettyPrint(e1)} ${prettyPrint(e2)}"
+    case Lambda(v, typ, e) => s"λ$v: ${prettyPrint(typ)}. ${prettyPrint(e)}"
+    case Apply(e1, e2)     => s"((${prettyPrint(e1)}) ${prettyPrint(e2)})"
     case _                 => super.prettyPrint(e)
   }
 
   override def prettyPrint(v: Value): String = v match {
     case LambdaV(v, inputType, e, env) => {
       val eString: String = if (e == BlankExprDropDown()) "?" else prettyPrint(e)
-      s"λ$v. $eString"
+      s"λ$v: ${prettyPrint(inputType)}. $eString"
     }
     case PlaceholderValue(typ) => "?"
     case _                     => super.prettyPrint(v)
   }
 
   override def prettyPrint(t: Type): String = t match {
-    case Func(in, out)                         => s"${prettyPrint(in)} → ${prettyPrint(out)}"
+    case Func(in, out)                         => s"(${prettyPrint(in)} → ${prettyPrint(out)})"
     case ApplyToNonFunctionErrorType(typ)      => s"CannotApplyError(${prettyPrint(typ)})"
     case IncompatibleTypeErrorType(typ1, typ2) => s"IncompatibleTypes(${prettyPrint(typ1)}, ${prettyPrint(typ2)})"
     case _                                     => super.prettyPrint(t)

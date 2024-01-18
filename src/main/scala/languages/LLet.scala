@@ -83,7 +83,15 @@ class LLet extends LIf {
 
   override def prettyPrint(e: Expr): String = e match {
     case Var(v)                          => v.toString
-    case Let(v, assign_expr, bound_expr) => s"let $v = ${prettyPrint(assign_expr)} in ${prettyPrint(bound_expr)}"
+    case Let(v, assign_expr, bound_expr) => {
+      val assignExprString = assign_expr match {
+        case _: Var => prettyPrint(assign_expr)
+        case _: Num => prettyPrint(assign_expr)
+        case _: Bool => prettyPrint(assign_expr)
+        case _      => s"(${prettyPrint(assign_expr)})"
+      }
+      s"let $v = $assignExprString in ${prettyPrint(bound_expr)}"
+    }
     case _                               => super.prettyPrint(e)
   }
 

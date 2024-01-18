@@ -193,4 +193,32 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
     tree.toHtml(DisplayMode.TypeCheck)
     tree.toHtml(DisplayMode.Evaluation)
   }
+
+  property("Bool pretty prints correctly") {
+    prettyPrint(Bool(true)) shouldEqual "true"
+    prettyPrint(Bool(false)) shouldEqual "false"
+  }
+
+  property("Eq pretty prints correctly") {
+    prettyPrint(Eq(Num(1), Num(2))) shouldEqual "(1 == 2)"
+    prettyPrint(Eq(Bool(true), Bool(false))) shouldEqual "(true == false)"
+    prettyPrint(Eq(Eq(Num(1), Num(2)), Eq(Num(3), Num(4)))) shouldEqual "((1 == 2) == (3 == 4))"
+    prettyPrint(Eq(Plus(Num(1), Num(2)), Num(3))) shouldEqual "((1 + 2) == 3)"
+  }
+
+  property("IfThenElse pretty prints correctly") {
+    prettyPrint(IfThenElse(Bool(true), Num(1), Num(2))) shouldEqual "(if true then 1 else 2)"
+    prettyPrint(IfThenElse(Eq(Num(1), Num(2)), Num(1), Num(2))) shouldEqual "(if (1 == 2) then 1 else 2)"
+    prettyPrint(IfThenElse(Bool(true), IfThenElse(Bool(false), Num(1), Num(2)), Num(3))) shouldEqual
+      "(if true then (if false then 1 else 2) else 3)"
+  }
+
+  property("BoolType pretty prints correctly") {
+    prettyPrint(BoolType()) shouldEqual "Bool"
+  }
+
+  property("BoolV pretty prints correctly") {
+    prettyPrint(BoolV(true)) shouldEqual "true"
+    prettyPrint(BoolV(false)) shouldEqual "false"
+  }
 }

@@ -58,10 +58,18 @@ class LRec extends LLam {
       div(raw(s"rec $f($v: "), in_typ.toHtml, raw(s") : "), out_typ.toHtml, raw(". "), e.toHtml)
   }
 
+  private def prettyPrintRec(f: Literal, v: Literal, in_typ: Type, out_typ: Type, e: Expr) = {
+    s"rec $f($v: ${prettyPrint(in_typ)}): ${prettyPrint(out_typ)}. ${prettyPrint(e)}"
+  }
+
   override def prettyPrint(e: Expr): String = e match {
-    case Rec(f, v, in_typ, out_typ, e) =>
-      s"rec $f($v: ${prettyPrint(in_typ)}) : ${prettyPrint(out_typ)}. ${prettyPrint(e)}"
+    case Rec(f, v, in_typ, out_typ, e) => prettyPrintRec(f, v, in_typ, out_typ, e)
     case _ => super.prettyPrint(e)
+  }
+
+  override def prettyPrint(v: Value): String = v match {
+    case RecV(f, v, in_typ, out_typ, e, env) => prettyPrintRec(f, v, in_typ, out_typ, e)
+    case _ => super.prettyPrint(v)
   }
 
   override def calculateExprClassList: List[Class[Expr]] = {
