@@ -3,7 +3,7 @@ import {afterAll, beforeAll, beforeEach, describe, expect, jest, test} from "@je
 import http from "http";
 import net from "net";
 import kill from "tree-kill";
-import {initialise} from "../script";
+import {initialise} from "../initialise";
 import {
     changeLanguage,
     doLiteralEdit,

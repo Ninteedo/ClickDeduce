@@ -3,7 +3,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
     // The entry point of your application
-    entry: './webapp/scripts/script.ts',
+    entry: './webapp/scripts/initialise.ts',
 
     // The output configuration of your bundle
     output: {

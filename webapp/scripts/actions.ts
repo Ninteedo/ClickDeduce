@@ -41,13 +41,11 @@ export async function handleLiteralChanged(textInput: HTMLInputElement): Promise
     }
 
     await runAction("EditLiteralAction", treePath, [literalValue]).then(() => {
-        console.log("Focus path: " + focusedTreePath);
         if (focusedTreePath == null) {
             return;
         }
         let focusedElement: HTMLElement = document.querySelector(`[data-tree-path="${focusedTreePath}"]`);
         if (focusedElement != null && focusedElement instanceof HTMLElement) {
-            console.log("Focus: " + focusedElement.outerHTML);
             focusedElement.focus();
             if (focusedElement instanceof HTMLInputElement) {
                 focusedElement.select();

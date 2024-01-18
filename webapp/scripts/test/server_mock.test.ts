@@ -1,6 +1,6 @@
 import {afterAll, afterEach, beforeEach, describe, expect, jest, test} from "@jest/globals";
 import {MockResponse} from "./MockResponse";
-import {initialise} from "../script";
+import {initialise} from "../initialise";
 import * as NS from "../../test_resources/node_strings";
 import {ClickDeduceResponseError} from "../ClickDeduceResponseError";
 import {

@@ -1,7 +1,7 @@
 import {handleLiteralChanged} from "./actions";
 import {activeInputs} from "./treeManipulation";
 import {hasClassOrParentHasClass} from "./utils";
-import {panzoomInstance, tree} from "./script";
+import {panzoomInstance, tree} from "./initialise";
 
 let errorDiv: HTMLDivElement;
 export let nextFocusElement: HTMLElement = null;

@@ -1,4 +1,4 @@
-import {tree} from "./script";
+import {tree} from "./initialise";
 import {hasClassOrParentHasClass} from "./utils";
 import {handleLiteralChanged, runAction} from "./actions";
 import {clearHighlight, contextMenuSelectedElement, handleKeyDown} from "./interface";

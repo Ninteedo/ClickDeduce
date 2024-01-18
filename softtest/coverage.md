@@ -121,7 +121,7 @@ functionality is difficult to capture in a test.
 
 `PanZoom` would error when running the tests in the `JSDOM` environment, so I replaced it with a mock implementation.
 
-The low function coverage in [`script.ts`](../webapp/scripts/script.ts) is due to some of the arguments for
+The low function coverage in [`initialise.ts`](../webapp/scripts/initialise.ts) is due to some of the arguments for
 initialising the `PanZoom` library being functions.
 These functions are both trivial and difficult to test due to the aforementioned reasons,
 so I do not believe this is problematic.

@@ -22,8 +22,7 @@
   },
   "scripts": {
     "test": "jest --runInBand --detectOpenHandles",
-    "build": "webpack --mode=development",
-    "server-test": "jest server_active.test.ts --detectOpenHandles"
+    "build": "webpack --mode=development"
   },
   "dependencies": {
     "@panzoom/panzoom": "~4.5.1",
