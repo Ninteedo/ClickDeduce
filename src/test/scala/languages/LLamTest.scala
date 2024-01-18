@@ -317,11 +317,8 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
   }
 
   property("Apply doesn't show a third child if the left-hand side is not a function") {
-    val expressions: TableFor1[Expr] = Table(
-      "expr",
-      Apply(Num(4), Num(4)),
-      Apply(Eq(Apply(incrementFunction, Num(4)), Num(5)), Bool(false))
-    )
+    val expressions: TableFor1[Expr] =
+      Table("expr", Apply(Num(4), Num(4)), Apply(Eq(Apply(incrementFunction, Num(4)), Num(5)), Bool(false)))
 
     forAll(expressions) { expr =>
       expr.getChildrenEval().length shouldEqual 2
@@ -364,7 +361,9 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
   property("Apply pretty prints correctly") {
     prettyPrint(Apply(incrementFunction, Num(8))) shouldEqual "((λx: Int. (x + 1)) 8)"
     prettyPrint(Apply(Bool(false), Num(45))) shouldEqual "((false) 45)"
-    prettyPrint(Apply(twiceFunction, incrementFunction)) shouldEqual "((λf: (Int → Int). λx: Int. ((f) ((f) x))) λx: Int. (x + 1))"
+    prettyPrint(
+      Apply(twiceFunction, incrementFunction)
+    ) shouldEqual "((λf: (Int → Int). λx: Int. ((f) ((f) x))) λx: Int. (x + 1))"
   }
 
   property("Func pretty prints correctly") {

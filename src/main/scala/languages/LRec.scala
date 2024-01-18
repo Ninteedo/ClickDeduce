@@ -64,12 +64,12 @@ class LRec extends LLam {
 
   override def prettyPrint(e: Expr): String = e match {
     case Rec(f, v, in_typ, out_typ, e) => prettyPrintRec(f, v, in_typ, out_typ, e)
-    case _ => super.prettyPrint(e)
+    case _                             => super.prettyPrint(e)
   }
 
   override def prettyPrint(v: Value): String = v match {
     case RecV(f, v, in_typ, out_typ, e, env) => prettyPrintRec(f, v, in_typ, out_typ, e)
-    case _ => super.prettyPrint(v)
+    case _                                   => super.prettyPrint(v)
   }
 
   override def calculateExprClassList: List[Class[Expr]] = {

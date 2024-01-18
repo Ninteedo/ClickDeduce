@@ -189,7 +189,7 @@ class LArithTest extends TestTemplate[Expr, Value, Type] {
   property("Attempting to evaluate an expression not defined in LArith results in an error") {
     BlankExprDropDown().eval() shouldBe an[UnexpectedExpr]
     BlankExprDropDown().typeCheck() shouldBe an[UnexpectedExprType]
-    
+
     Plus(BlankExprDropDown(), Num(5)).eval() shouldBe an[UnexpectedExpr]
     Plus(BlankExprDropDown(), Num(5)).typeCheck() shouldBe an[UnexpectedExprType]
     Plus(Num(5), BlankExprDropDown()).eval() shouldBe an[UnexpectedExpr]
