@@ -15,7 +15,6 @@ class NodeTreeTest extends AnyFunSuite {
       child.treePath shouldEqual List(i)
     }
     tree.treePath shouldEqual List()
-    println(tree.toHtml)
   }
 
   test("Can correctly represent a simple arithmetic tree with a literal field open") {
@@ -32,7 +31,6 @@ class NodeTreeTest extends AnyFunSuite {
     tree.treePath shouldEqual List()
     tree.children shouldEqual children.map(_.node)
     variableChild.children shouldEqual List(variableChildInner)
-    println(tree.toHtml)
   }
 
   test("Can correctly represent an arithmetic tree with an unselected sub-expression") {
@@ -46,7 +44,6 @@ class NodeTreeTest extends AnyFunSuite {
         )
       )
     )
-    println(tree.toHtml)
   }
 
   def correctNodeRead(node: Node): Unit = {
