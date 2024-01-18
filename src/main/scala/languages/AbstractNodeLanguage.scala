@@ -20,20 +20,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     override lazy val toHtml: TypedTag[String] = exprClassListDropdownHtml()
   }
 
-  case class BlankChildPlaceholder() extends Expr, BlankSpace {
-    override lazy val toHtml: TypedTag[String] = span(cls := "blank-child-placeholder")
-
-    override lazy val childVersion: Expr = BlankExprDropDown()
-  }
-
-  case class BlankValueInput() extends BlankSpace
-
-  case class BlankExprArg() extends Expr, BlankSpace
-
-  case class BlankLiteral() extends Literal, BlankSpace {
-    val value: Any = ""
-  }
-
   case class BlankTypeDropDown() extends Type, BlankSpace {
     override lazy val toHtml: TypedTag[String] = typeClassListDropdownHtml()
   }
@@ -46,56 +32,43 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
   protected def calculateTypeClassList: List[Class[Type]] = List(classOf[UnknownType]).map(_.asInstanceOf[Class[Type]])
 
-  private lazy val blankClassList: List[Class[BlankSpace]] = {
-    List(
-      classOf[BlankExprDropDown],
-      classOf[BlankChildPlaceholder],
-      classOf[BlankValueInput],
-      classOf[BlankExprArg],
-      classOf[BlankLiteral]
-    ).map(_.asInstanceOf[Class[BlankSpace]])
-  }
+  private lazy val blankClassList: List[Class[BlankSpace]] =
+    List(classOf[BlankExprDropDown], classOf[BlankTypeDropDown]).map(_.asInstanceOf[Class[BlankSpace]])
 
-  private lazy val nodeClassList: List[Class[Node]] = {
-    List(
-      classOf[VariableNode],
-      classOf[ExprChoiceNode],
-      classOf[SubExprNode],
-      classOf[LiteralNode],
-      classOf[TypeNode],
-      classOf[TypeChoiceNode],
-      classOf[SubTypeNode]
-    ).map(_.asInstanceOf[Class[Node]])
-  }
+  private lazy val nodeClassList: List[Class[Node]] = List(
+    classOf[VariableNode],
+    classOf[ExprChoiceNode],
+    classOf[SubExprNode],
+    classOf[LiteralNode],
+    classOf[TypeNode],
+    classOf[TypeChoiceNode],
+    classOf[SubTypeNode]
+  ).map(_.asInstanceOf[Class[Node]])
 
-  private lazy val exprClassListDropdownHtml: TypedTag[String] = {
-    select(
-      cls := "expr-dropdown",
-      onchange := "handleDropdownChange(this, \"expr\")",
-      option(value := "", "Select Expr..."),
-      exprClassList.map(e => {
-        option(value := e.getSimpleName, e.getSimpleName)
-      })
-    )
-  }
+  private lazy val exprClassListDropdownHtml: TypedTag[String] = select(
+    cls := "expr-dropdown",
+    onchange := "handleDropdownChange(this, \"expr\")",
+    option(value := "", "Select Expr..."),
+    exprClassList.map(e => {
+      option(value := e.getSimpleName, e.getSimpleName)
+    })
+  )
 
-  private lazy val typeClassListDropdownHtml: TypedTag[String] = {
-    select(
-      cls := "type-dropdown",
-      onchange := "handleDropdownChange(this, \"type\")",
-      option(value := "", "Select Type..."),
-      typeClassList.map(e => {
-        option(value := e.getSimpleName, e.getSimpleName)
-      })
-    )
-  }
+  private lazy val typeClassListDropdownHtml: TypedTag[String] = select(
+    cls := "type-dropdown",
+    onchange := "handleDropdownChange(this, \"type\")",
+    option(value := "", "Select Type..."),
+    typeClassList.map(e => {
+      option(value := e.getSimpleName, e.getSimpleName)
+    })
+  )
 
   /** Create an `Term` given its string representation.
     *
     * @return
     *   The `Term` created, if successful.
     */
-  def parseTerm(s: String): Option[Term] = {
+  private def parseTerm(s: String): Option[Term] = {
     @tailrec
     def makeTerm(name: String, args: List[Any]): Option[Term] = {
       def constructTermFromArgs[T](termClass: Class[T]): T = {
@@ -169,7 +142,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
   private def typeNameToClass(name: String): Option[Class[Type]] = typeClassList.find(_.getSimpleName == name)
 
-  def cacheQuery[A, B](cache: collection.mutable.Map[A, B], key: A, value: => B): B = cache.get(key) match {
+  private def cacheQuery[A, B](cache: collection.mutable.Map[A, B], key: A, value: => B): B = cache.get(key) match {
     case Some(value) => value
     case None =>
       val result = value
@@ -194,7 +167,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       markParentInitialised()
     }
 
-    protected def markParentInitialised(): Unit = {
+    private def markParentInitialised(): Unit = {
       parentInitialised = true
     }
 
@@ -291,29 +264,16 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       }
 
       NodeParser.parseNode(s) match {
-        case NodeParser.Success(Some(matched: Node), _) =>
-          def parentify(node: Node): Unit = node match {
-            case n: OuterNode =>
-              n.children.foreach({ c =>
-                c.setParent(Some(n))
-                parentify(c)
-              })
-            case n: InnerNode =>
-              n.children.foreach({ c =>
-                c.setParent(n.getParent)
-                parentify(c)
-              })
-          }
-
-          parentify(matched)
-          Some(matched)
-        case x => None
+        case NodeParser.Success(Some(matched: Node), _) => Some(matched)
+        case x                                          => None
       }
     }
 
     def readPathString(s: String): List[Int] = s match {
       case "" => Nil
-      case s  => s.split("-").map(_.toInt).toList
+      case s =>
+        if (s.split("-").forall(_.matches("\\d+"))) s.split("-").map(_.toInt).toList
+        else throw new InvalidTreePathStringException(s)
     }
   }
 
@@ -931,6 +891,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   private val depthLimit: Int = 100
 
   class DepthLimitExceededException extends Exception(s"Depth limit ($depthLimit) exceeded")
+
+  class InvalidTreePathStringException(s: String) extends Exception(s"Invalid tree path string: $s")
 
   class InvalidTreePathException(treePath: List[Int]) extends Exception(s"Invalid tree path: $treePath")
 
