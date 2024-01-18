@@ -505,4 +505,105 @@ class ActionSpec extends AnyWordSpec with Matchers {
       }
     }
   }
+
+  "Invalid actions creation" should {
+    val realActionNames = TableFor1(
+      "actionName",
+      "SelectExprAction",
+      "SelectTypeAction",
+      "EditLiteralAction",
+      "DeleteAction",
+      "PasteAction",
+      "IdentityAction"
+    )
+
+    "throw an error when attempting to create an action with an invalid action name" in {
+      val fakeNames = TableFor1(
+        "actionName",
+        "FakeAction",
+        "InvalidAction",
+        "Paste",
+        "ActionPaste",
+        "IdentityAtion",
+        "SelectExpr",
+        "giuhahnan",
+        "Boo",
+        "Foo",
+        "Bar",
+        "SelectTypeAction1"
+      )
+
+      forAll(fakeNames) { actionName =>
+        an[ActionInvocationException] should be thrownBy createAction(actionName, "ExprChoiceNode()", "", List())
+      }
+    }
+
+    "throw an error when attempting to create an action with an invalid node string" in {
+      val invalidNodeStrings = TableFor1(
+        "nodeString",
+        "ExprChoiceNode",
+        "TypeChoiceNode",
+        "VariableNode",
+        "SubExprNode(ExprChoiceNode())",
+        "SubTypeNode(TypeChoiceNode())",
+        "VariableNode()",
+        "VariableNode('Num', List())",
+        "NotARealNode(\"Num\")",
+        "LiteralNode(\"x\")"
+      )
+
+      forAll(realActionNames) { actionName =>
+        forAll(invalidNodeStrings) { nodeString =>
+          val exception = intercept[Exception] {
+            createAction(actionName, nodeString, "", List())
+          }
+          assert(exception.isInstanceOf[NodeStringParseException] || exception.isInstanceOf[ActionInvocationException])
+        }
+      }
+    }
+
+    "throw an error when provided with an invalid tree path" in {
+      val treePaths = TableFor1("treePath", "-1", "x", "foo", "0-foo", "0--2")
+
+      forAll(treePaths) { treePath =>
+        an[InvalidTreePathStringException] should be thrownBy createAction(
+          "IdentityAction",
+          "ExprChoiceNode()",
+          treePath,
+          List()
+        )
+      }
+    }
+
+    "throw an error when not provided with too few extra arguments" in {
+      val extraArgs = TableFor2(
+        ("actionName", "extraArgs"),
+        ("SelectExprAction", List()),
+        ("SelectTypeAction", List()),
+        ("EditLiteralAction", List()),
+        ("PasteAction", List())
+      )
+
+      forAll(extraArgs) { (actionName, extraArgs) =>
+        an[ActionInvocationException] should be thrownBy createAction(actionName, "ExprChoiceNode()", "", extraArgs)
+      }
+    }
+
+    "throw an error when provided with too many extra arguments" in {
+      val extraArgs = TableFor2(
+        ("actionName", "extraArgs"),
+        ("SelectExprAction", List("Eq", "foo")),
+        ("SelectTypeAction", List("IntType", "foo")),
+        ("EditLiteralAction", List("foo", "bar")),
+        ("PasteAction", List(VariableNode.fromExpr(Num(1)).toString, "foo")),
+        ("PasteAction", List("foo", "bar", "baz")),
+        ("DeleteAction", List("foo")),
+        ("IdentityAction", List("foo"))
+      )
+
+      forAll(extraArgs) { (actionName, extraArgs) =>
+        an[ActionInvocationException] should be thrownBy createAction(actionName, "ExprChoiceNode()", "", extraArgs)
+      }
+    }
+  }
 }

@@ -205,6 +205,9 @@ trait AbstractNodeLanguage extends AbstractLanguage {
             if (constructor.getParameterTypes.last.isAssignableFrom(classOf[Env])) {
               arguments = arguments :+ env
             }
+            if (constructor.getParameterTypes.length != arguments.length) {
+              throw new NodeStringParseException(s"$name(${args.mkString(", ")})")
+            }
             Some(constructor.newInstance(arguments: _*).asInstanceOf[Node])
           case None => None
         }

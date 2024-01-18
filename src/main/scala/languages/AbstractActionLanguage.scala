@@ -35,10 +35,16 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
       case c if classOf[Node] isAssignableFrom c                   => node
       case c if classOf[List[Int]] isAssignableFrom c              => treePath
       case c if classOf[String] isAssignableFrom c =>
+        if (remainingExtraArgs.isEmpty) {
+          throw new ActionInvocationException(s"Missing parameter for $actionClass")
+        }
         val arg = remainingExtraArgs.head
         remainingExtraArgs = remainingExtraArgs.tail
         arg
       case c => throw new ActionInvocationException(s"Unexpected parameter type in createAction: $c")
+    }
+    if (remainingExtraArgs.nonEmpty) {
+      throw new ActionInvocationException(s"Too many parameters for $actionClass")
     }
     try {
       val result = constructor.newInstance(arguments: _*)
