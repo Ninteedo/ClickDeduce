@@ -202,7 +202,7 @@ trait AbstractLanguage {
     def fromString(s: String): Literal = {
       if (List("true", "false").contains(s.toLowerCase)) {
         LiteralBool(s.toBoolean)
-      } else if (s.startsWith("\"") && s.endsWith("\"")) {
+      } else if (s.startsWith("\"") && s.endsWith("\"") && s.length > 1) {
         LiteralString(s.substring(1, s.length - 1))
       } else if ("-?\\d+".r.matches(s)) {
         LiteralInt(BigInt(s))

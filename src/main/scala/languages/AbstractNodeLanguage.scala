@@ -198,9 +198,9 @@ trait AbstractNodeLanguage extends AbstractLanguage {
           case Some(value) =>
             val constructor = value.getConstructors()(0)
             var arguments = AbstractNodeLanguage.this +: args.map {
-              case LiteralString(s) => s.stripPrefix("\"").stripSuffix("\"")
-              case Some(e)          => e
-              case x                => x
+              case l: Literal => l.toString
+              case Some(e)    => e
+              case x          => x
             }
             if (constructor.getParameterTypes.last.isAssignableFrom(classOf[Env])) {
               arguments = arguments :+ env
@@ -249,9 +249,12 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
         def innerNodeName: Parser[String] = "SubExprNode" | "LiteralNode" | "SubTypeNode"
 
-        def outerNodeArg: Parser[Any] = outerListParse | innerNode | stringLiteral ^^ (s => LiteralString(s))
+        def outerNodeArg: Parser[Any] = outerListParse | innerNode | stringLiteral ^^ (s => Literal.fromString(UtilityFunctions.unquote(s)))
 
-        def innerNodeArg: Parser[Any] = outerNode | stringLiteral ^^ (s => LiteralString(s))
+        def innerNodeArg: Parser[Any] = outerNode | stringLiteral ^^ (s => {
+          val temp = s
+          Literal.fromString(UtilityFunctions.unquote(s))
+        })
 
         def innerNode: Parser[InnerNode] = innerNodeName ~ "(" ~ repsep(innerNodeArg, "\\s*,\\s*".r) ~ ")" ^^ {
           case name ~ "(" ~ args ~ ")" =>
@@ -395,7 +398,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       }
     }
 
-    lazy val depth: Int = getParent match {
+    def depth: Int = getParent match {
       case Some(value) => value.depth + 1
       case None        => 0
     }
