@@ -215,20 +215,12 @@ trait AbstractNodeLanguage extends AbstractLanguage {
         def outerNode: Parser[Option[OuterNode | Expr | Type]] =
           outerNodeName ~ "(" ~ repsep(outerNodeArg, "\\s*,\\s*".r) ~ ")" ^^ {
             case name ~ "(" ~ args ~ ")" =>
-              if (name.endsWith("Node")) {
-                val node = makeNode(name, args)
-                node match {
-                  case Some(n: OuterNode) =>
-                    n.children.foreach(_.setParent(Some(n)))
-                    Some(n)
-                  case _ => throw new NodeStringParseException(s"$name(${args.mkString(", ")})")
-                }
-              } else {
-                val exprString = s"$name(${args.mkString(", ")})"
-                readExpr(exprString) match {
-                  case Some(expr) => Some(expr)
-                  case None       => readType(exprString)
-                }
+              val node = makeNode(name, args)
+              node match {
+                case Some(n: OuterNode) =>
+                  n.children.foreach(_.setParent(Some(n)))
+                  Some(n)
+                case _ => throw new NodeStringParseException(s"$name(${args.mkString(", ")})")
               }
             case _ => None
           }
@@ -247,7 +239,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
         def innerNodeName: Parser[String] = "SubExprNode" | "LiteralNode" | "SubTypeNode"
 
-        def outerNodeArg: Parser[Any] = outerListParse | innerNode | stringLiteral ^^ (s => Literal.fromString(UtilityFunctions.unquote(s)))
+        def outerNodeArg: Parser[Any] =
+          outerListParse | innerNode | stringLiteral ^^ (s => Literal.fromString(UtilityFunctions.unquote(s)))
 
         def innerNodeArg: Parser[Any] = outerNode | stringLiteral ^^ (s => {
           val temp = s
@@ -442,7 +435,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       div(
         cls := "subtree axiom" + phantomClassName,
         data("tree-path") := treePathString,
-        data("term") := getExpr.toString,
         data("node-string") := toString,
         divByMode(mode, true),
         div(cls := "annotation-axiom", exprName)
@@ -458,7 +450,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       div(
         cls := "subtree" + phantomClassName,
         data("tree-path") := treePathString,
-        data("term") := getExpr.toString,
         data("node-string") := toString,
         divByMode(mode, false),
         div(cls := "args", getVisibleChildren(mode).map(_.toHtml(mode)), div(cls := "annotation-new", exprName))
@@ -767,7 +758,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       div(
         cls := "subtree axiom",
         data("tree-path") := treePathString,
-        data("term") := getType.toString,
         data("node-string") := toString,
         div(cls := "expr", toHtmlLine(mode)(display := "inline")),
         div(cls := "annotation-axiom", getTypeName)
@@ -778,7 +768,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       div(
         cls := "subtree",
         data("tree-path") := treePathString,
-        data("term") := getType.toString,
         data("node-string") := toString,
         div(cls := "node", div(cls := "expr", toHtmlLine(mode))),
         div(cls := "args", children.map(_.toHtml(mode)), div(cls := "annotation-new", getTypeName))
