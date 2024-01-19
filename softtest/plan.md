@@ -138,3 +138,23 @@ If I have time, I will look into security testing, but I do not expect to have t
 This is an academic project, so I do not expect it to be used in a production environment.
 I am also considering reducing the role of the server in the future, so extensive security testing may be wasted
 effort.
+
+## Limitations
+
+- There are no system tests written for the Scala code.
+This is because the Scala code is primarily used for the server, which is not intended to be used interactively.
+
+- The tests for the HTML conversion will not be able to check for extra elements in the DOM which should not be there.
+
+- There is a limit to how independent the tests for some parts of the Scala and TypeScript code can be.
+  This means that some tests will be more akin to integration tests than unit tests.
+
+- The unit test and some of the integration tests for the TypeScript code will have to accurately mock server responses.
+
+- The system tests for the TypeScript code will not be able to test the website in a real browser environment
+automatically. 
+The accuracy of these tests is dependent on the accuracy of the jsdom implementation. 
+
+- The performance tests will not be able to test the performance of the website in a real browser environment.
+
+- With low priority, it is unlikely that there will be any security tests.
