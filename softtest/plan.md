@@ -1,5 +1,23 @@
 # Test Plan
 
+## Overview
+
+Tests will be used throughout the development of the project to ensure that the code works as expected and matches
+the requirements.
+
+The IDE being used for development is IntelliJ IDEA, which has built-in support for running tests.
+Its test interface highlights the tests which have failed, and includes debugging functionality.
+It will be configured to run the tests automatically whenever a commit is made to the local git repository.
+
+There will be two separate test tools used for the project, one for the Scala code and one for the TypeScript code.
+
+Scala is a statically typed language, so the compiler will catch errors resulting from incorrect types.
+This also applies to TypeScript, which is a statically typed version of JavaScript.
+
+The Scala tests will feature a mix of unit tests and integration tests.
+
+The TypeScript tests will feature a mix of unit tests, integration tests, and system tests.
+
 ## Scala
 
 The Scala code will be tested using ScalaTest.
@@ -96,3 +114,27 @@ the tests will be run in a headless browser.
    - The tests will check that the state of the page is as expected after each event, or a series of events.
 - The tests will be run in a headless browser using jsdom.
 - The tests will be run using Jest. 
+
+### Performance Tests
+
+It is important that the website is responsive and does not have any noticeable lag when the user interacts with it.
+
+I anticipate the main performance issue will be the time taken for the server to parse a request, evaluate it, and
+create an HTML representation of the result.
+
+To test this, I will create a number of tests which will send a request to the server and measure the time taken for
+the server to respond.
+
+There will also be a number of tests which will send a number of requests to the server in quick succession and
+measure the time taken for the server to respond to all of them.
+
+I am not prioritising this, as I believe worrying about DDoS attacks is unnecessary for this project.
+
+### Security Tests
+
+While security is important, it is not a priority for this project.
+If I have time, I will look into security testing, but I do not expect to have time to do this.
+
+This is an academic project, so I do not expect it to be used in a production environment.
+I am also considering reducing the role of the server in the future, so extensive security testing may be wasted
+effort.
