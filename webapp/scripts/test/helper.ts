@@ -38,9 +38,14 @@ export function getLeftmostExprDropdown(): HTMLSelectElement {
     return document.querySelector('select.expr-dropdown:not([disabled])') as HTMLSelectElement;
 }
 
-export async function selectExprOption(dropdown: HTMLSelectElement, optionIndex: number): Promise<void> {
+export async function selectExprOption(dropdown: HTMLSelectElement, optionIndex: number, manual: boolean = false): Promise<void> {
     dropdown.selectedIndex = optionIndex;
-    await handleDropdownChange(dropdown, 'expr');
+    if (manual) {
+        dropdown.dispatchEvent(new Event('change'));
+        await slightDelay(50);
+    } else {
+        await handleDropdownChange(dropdown, 'expr');
+    }
 }
 
 export async function doLiteralEdit(input: HTMLInputElement, newValue: string): Promise<void> {

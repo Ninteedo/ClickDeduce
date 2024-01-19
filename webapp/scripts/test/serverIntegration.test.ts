@@ -226,7 +226,7 @@ describe('selecting an option from the expression choice dropdown has the correc
     });
 
     test('selecting the "Num" option has correct effect', async () => {
-        await selectExprOption(getLeftmostExprDropdown(), 1);
+        await selectExprOption(getLeftmostExprDropdown(), 1, true);
 
         expect(document.querySelectorAll('.subtree')).toHaveLength(1);
         expect(document.querySelectorAll('.subtree.axiom')).toHaveLength(1);
@@ -245,7 +245,7 @@ describe('selecting an option from the expression choice dropdown has the correc
     });
 
     test('selecting the "Plus" option has correct effect', async () => {
-        await selectExprOption(getLeftmostExprDropdown(), 2);
+        await selectExprOption(getLeftmostExprDropdown(), 2, true);
 
         expect(document.querySelectorAll('.subtree')).toHaveLength(3);
         expect(document.querySelectorAll('.subtree.axiom')).toHaveLength(2);
@@ -254,26 +254,26 @@ describe('selecting an option from the expression choice dropdown has the correc
     });
 
     test('selecting the "Times" option then the "Plus" and "Num" options has correct effect', async () => {
-        await selectExprOption(getLeftmostExprDropdown(), 3);
+        await selectExprOption(getLeftmostExprDropdown(), 3, true);
 
         expect(document.querySelectorAll('.subtree')).toHaveLength(3);
         expect(document.querySelectorAll('.subtree.axiom')).toHaveLength(2);
         expect(document.querySelectorAll('select.expr-dropdown:not([disabled])')).toHaveLength(2);
         expect(document.querySelectorAll('.expr')).toHaveLength(3);
 
-        await selectExprOption(getLeftmostExprDropdown(), 2);
+        await selectExprOption(getLeftmostExprDropdown(), 2, true);
         expect(document.querySelectorAll('.subtree')).toHaveLength(5);
         expect(document.querySelectorAll('.subtree.axiom')).toHaveLength(3);
         expect(document.querySelectorAll('select.expr-dropdown:not([disabled])')).toHaveLength(3);
         expect(document.querySelectorAll('.expr')).toHaveLength(5);
 
-        await selectExprOption(getLeftmostExprDropdown(), 1);
+        await selectExprOption(getLeftmostExprDropdown(), 1, true);
         expect(document.querySelectorAll('select.expr-dropdown:not([disabled])')).toHaveLength(2);
 
-        await selectExprOption(getLeftmostExprDropdown(), 1);
+        await selectExprOption(getLeftmostExprDropdown(), 1, true);
         expect(document.querySelectorAll('select.expr-dropdown:not([disabled])')).toHaveLength(1);
 
-        await selectExprOption(getLeftmostExprDropdown(), 1);
+        await selectExprOption(getLeftmostExprDropdown(), 1, true);
         expect(document.querySelectorAll('select.expr-dropdown:not([disabled])')).toHaveLength(0);
 
         const tree = document.getElementById('tree');

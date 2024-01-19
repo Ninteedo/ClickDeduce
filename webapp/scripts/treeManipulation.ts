@@ -1,6 +1,6 @@
 import {tree} from "./initialise";
 import {hasClassOrParentHasClass} from "./utils";
-import {handleLiteralChanged, runAction} from "./actions";
+import {handleDropdownChange, handleLiteralChanged, runAction} from "./actions";
 import {clearHighlight, contextMenuSelectedElement, handleKeyDown} from "./interface";
 
 let treeHistory: { mode: string; html: string; nodeString: string; lang: string }[] = [];
@@ -106,6 +106,7 @@ export function updateTree(newTreeHtml: string, newNodeString: string, modeName:
  */
 function treeCleanup(): void {
     addHoverListeners();
+    addDropdownListeners();
     makeOrphanedInputsReadOnly();
     makePhantomInputsReadOnly();
     setLiteralInitialValues();
@@ -160,6 +161,24 @@ function addHoverListeners(): void {
                 clearHighlight();
             }
         });
+    });
+}
+
+function addDropdownListeners(): void {
+    document.querySelectorAll('.expr-dropdown').forEach(select => {
+        if (select instanceof HTMLSelectElement) {
+            select.addEventListener('change', (event) => {
+                handleDropdownChange(select, 'expr');
+            })
+        }
+    });
+
+    document.querySelectorAll('.type-dropdown').forEach(select => {
+        if (select instanceof HTMLSelectElement) {
+            select.addEventListener('change', (event) => {
+                handleDropdownChange(select, 'type');
+            })
+        }
     });
 }
 

@@ -17,11 +17,11 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   }
 
   case class BlankExprDropDown() extends Expr, BlankSpace {
-    override lazy val toHtml: TypedTag[String] = exprClassListDropdownHtml()
+    override lazy val toHtml: TypedTag[String] = exprClassListDropdownHtml
   }
 
   case class BlankTypeDropDown() extends Type, BlankSpace {
-    override lazy val toHtml: TypedTag[String] = typeClassListDropdownHtml()
+    override lazy val toHtml: TypedTag[String] = typeClassListDropdownHtml
   }
 
   private lazy val exprClassList: List[Class[Expr]] = calculateExprClassList
@@ -47,7 +47,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
   private lazy val exprClassListDropdownHtml: TypedTag[String] = select(
     cls := "expr-dropdown",
-    onchange := "handleDropdownChange(this, \"expr\")",
     option(value := "", "Select Expr..."),
     exprClassList.map(e => {
       option(value := e.getSimpleName, e.getSimpleName)
@@ -56,7 +55,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
   private lazy val typeClassListDropdownHtml: TypedTag[String] = select(
     cls := "type-dropdown",
-    onchange := "handleDropdownChange(this, \"type\")",
     option(value := "", "Select Type..."),
     typeClassList.map(e => {
       option(value := e.getSimpleName, e.getSimpleName)
