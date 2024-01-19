@@ -84,7 +84,7 @@ export function getContextMenuElement(): HTMLElement {
 }
 
 export function removeWhitespace(str: string): string {
-    return str.replace(/\s/g, '');
+    return str.replace(/^\s+|\s+$/g, '');
 }
 
 export function getUndoButton(): HTMLButtonElement {

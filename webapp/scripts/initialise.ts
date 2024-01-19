@@ -15,6 +15,11 @@ import panzoom, {PanZoom} from "panzoom";
 export let tree: HTMLDivElement;
 export let panzoomInstance: PanZoom;
 
+/**
+ * Sets up the global variables and initialises the panzoom instance.
+ *
+ * Can be called again to reset the state of the app
+ */
 export async function initialise(): Promise<void> {
     resetInterfaceGlobals();
     resetCopyCache();
