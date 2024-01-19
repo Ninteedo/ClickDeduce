@@ -45,3 +45,8 @@ package-lock.json
 /coverage/
 
 .bsp/sbt.json
+
+# stryker temp files
+.stryker-tmp
+
+/reports/mutation
