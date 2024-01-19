@@ -13,7 +13,8 @@ import {
     getTree,
     loadHtmlTemplate,
     pressStartNodeButton,
-    selectExprOption
+    selectExprOption,
+    slightDelay
 } from "./helper";
 import {handleDropdownChange} from "../actions";
 
@@ -571,5 +572,97 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         await new Promise(resolve => setTimeout(resolve, 50));
 
         expect(document.querySelector('[data-tree-path=""]').getAttribute('data-node-string')).toBe('VariableNode(\"Num\", List(LiteralNode(\"foo\")))');
+    });
+});
+
+describe("input focus is preserved when tabbing as the tree is updated", () => {
+    beforeEach(async () => {
+        await pressStartNodeButton();
+        await selectExprOption(getLeftmostExprDropdown(), 3);  // Times
+        await selectExprOption(getLeftmostExprDropdown(), 2);  // Plus
+        await selectExprOption(getLeftmostExprDropdown(), 1);  // Num
+        await selectExprOption(getLeftmostExprDropdown(), 1);  // Num
+        await doLiteralEdit(getTree().querySelector('input[data-tree-path="0-0-0"]') as HTMLInputElement, '44');
+        await doLiteralEdit(getTree().querySelector('input[data-tree-path="0-1-0"]') as HTMLInputElement, '55');
+    });
+
+    test("editing a literal and then tabbing to the next input element updates the tree correctly", async () => {
+        const input = getTree().querySelector('input[data-tree-path="0-0-0"]') as HTMLInputElement;
+        input.value = '77';
+        input.dispatchEvent(new KeyboardEvent('keydown', {key: 'Tab'}));
+        input.dispatchEvent(new Event('blur'));
+
+        await slightDelay();
+
+        expect(getTree().querySelector('input[data-tree-path="0-0-0"]').getAttribute('value')).toBe('77');
+    });
+
+    test("editing a literal and then tabbing to another literal sets the focus to the next input element", async () => {
+        const input = getTree().querySelector('input[data-tree-path="0-0-0"]') as HTMLInputElement;
+        input.value = '77';
+        input.dispatchEvent(new KeyboardEvent('keydown', {key: 'Tab'}));
+        input.dispatchEvent(new Event('blur'));
+
+        await slightDelay();
+
+        expect(document.activeElement).toBe(getTree().querySelector('input[data-tree-path="0-1-0"]'));
+    });
+
+    test("editing a literal and then pressing shift + tab to another literal sets the focus to the previous input element", async () => {
+        const input = getTree().querySelector('input[data-tree-path="0-1-0"]') as HTMLInputElement;
+        input.value = '77';
+        input.dispatchEvent(new KeyboardEvent('keydown', {key: 'Tab', shiftKey: true}));
+        input.blur();
+
+        await slightDelay();
+
+        expect(document.activeElement).toBe(getTree().querySelector('input[data-tree-path="0-0-0"]'));
+    });
+
+    // does not work, limitation of focusing select elements
+    // test("editing a literal and then tabbing to a dropdown sets the focus to it", async () => {
+    //     const input = getTree().querySelector('input[data-tree-path="0-1-0"]') as HTMLInputElement;
+    //     await doLiteralEdit(input, '77');
+    //     input.dispatchEvent(new KeyboardEvent('keydown', {key: 'Tab'}));
+    //
+    //     await slightDelay();
+    //
+    //     expect(document.activeElement).toBe(getTree().querySelector('select[data-tree-path="0-1"]'));
+    // });
+});
+
+describe("user can perform a sequence of actions", () => {
+    beforeEach(async () => {
+        await pressStartNodeButton();
+    });
+
+    test("LArith: (1 + 2) * 3", async () => {
+        await selectExprOption(getLeftmostExprDropdown(), 3);  // Times
+        await selectExprOption(getLeftmostExprDropdown(), 2);  // Plus
+        await selectExprOption(getLeftmostExprDropdown(), 1);  // Num
+        await selectExprOption(getLeftmostExprDropdown(), 1);  // Num
+
+        getTree().querySelector('input[data-tree-path="0-0-0"]').setAttribute('value', '1');
+        getTree().querySelector('input[data-tree-path="0-0-0"]').dispatchEvent(new KeyboardEvent('keydown', {key: 'Tab'}));
+        getTree().querySelector('input[data-tree-path="0-0-0"]').dispatchEvent(new Event('blur'));
+        await slightDelay();
+
+        expect(getTree().querySelector('input[data-tree-path="0-0-0"]').getAttribute('value')).toBe('1');
+        expect(document.activeElement).toBe(getTree().querySelector('input[data-tree-path="0-1-0"]'))
+
+        document.activeElement.setAttribute('value', '2');
+        document.activeElement.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter'}));
+
+        await slightDelay();
+
+        expect(getTree().querySelector('input[data-tree-path="0-0-0"]').getAttribute('value')).toBe('1');
+        expect(getTree().querySelector('input[data-tree-path="0-1-0"]').getAttribute('value')).toBe('2');
+
+        await selectExprOption(getLeftmostExprDropdown(), 1);  // Num
+        await doLiteralEdit(getTree().querySelector('input[data-tree-path="1-0"]') as HTMLInputElement, '3');
+
+        expect(getTree().querySelector('input[data-tree-path="0-0-0"]').getAttribute('value')).toBe('1');
+        expect(getTree().querySelector('input[data-tree-path="0-1-0"]').getAttribute('value')).toBe('2');
+        expect(getTree().querySelector('input[data-tree-path="1-0"]').getAttribute('value')).toBe('3');
     });
 });

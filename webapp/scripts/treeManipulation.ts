@@ -207,6 +207,10 @@ function updateActiveInputsList(): void {
     })
 }
 
+export function getActiveInputs(): HTMLElement[] {
+    return activeInputs;
+}
+
 /**
  * Updates the list of initial values for literal inputs.
  */

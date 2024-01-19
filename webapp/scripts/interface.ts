@@ -1,5 +1,5 @@
 import {handleLiteralChanged} from "./actions";
-import {activeInputs} from "./treeManipulation";
+import {getActiveInputs} from "./treeManipulation";
 import {hasClassOrParentHasClass} from "./utils";
 import {panzoomInstance, tree} from "./initialise";
 
@@ -45,18 +45,20 @@ export async function handleKeyDown(e: KeyboardEvent): Promise<void> {
 export async function handleTabPressed(e: KeyboardEvent): Promise<void> {
     if (e.key === 'Tab' && (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement)) {
         e.preventDefault();
-        let activeElemIndex = activeInputs.indexOf(e.target);
+        const activeInputPaths: string[] = getActiveInputs().map(input => input.getAttribute('data-tree-path'));
+        const targetOuterPath: string = e.target.getAttribute('data-tree-path');
+        let activeElemIndex = activeInputPaths.indexOf(targetOuterPath);
         if (e.shiftKey) {
             activeElemIndex -= 1;
         } else {
             activeElemIndex += 1;
         }
         if (activeElemIndex < 0) {
-            activeElemIndex = activeInputs.length - 1;
-        } else if (activeElemIndex >= activeInputs.length) {
+            activeElemIndex = getActiveInputs().length - 1;
+        } else if (activeElemIndex >= getActiveInputs().length) {
             activeElemIndex = 0;
         }
-        nextFocusElement = activeInputs[activeElemIndex];
+        nextFocusElement = getActiveInputs()[activeElemIndex];
         nextFocusElement.focus();
         if (nextFocusElement instanceof HTMLInputElement) {
             nextFocusElement.select();

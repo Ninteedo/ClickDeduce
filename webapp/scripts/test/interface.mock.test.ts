@@ -234,10 +234,6 @@ describe("input focus is preserved when the tree is updated", () => {
     });
 });
 
-describe("input focus is preserved when tabbing as the tree is updated", () => {
-
-});
-
 describe("responses to server errors are appropriate", () => {
     async function triggerError(message: string): Promise<void> {
         const input = document.querySelector('input[type="text"]') as HTMLInputElement;
