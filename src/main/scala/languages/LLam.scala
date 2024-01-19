@@ -85,9 +85,9 @@ class LLam extends LLet {
 
     override def evalApply(value: Value): Value = e.eval(env + (v -> value))
 
-    override lazy val valueText: TypedTag[String] = {
-      div(raw(s"λ$v. "), e.toHtml, raw(s" : "), typ.toHtml)
-    }
+    override lazy val valueText: TypedTag[String] = div(
+      raw(prettyPrint(LambdaV(v, TypePlaceholder(inputType.toHtml.toString), ExprPlaceholder(e.toHtml.toString), env)))
+    )
   }
 
   case class ApplyToNonFunctionError(value: Value) extends EvalError {

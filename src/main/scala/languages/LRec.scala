@@ -54,13 +54,24 @@ class LRec extends LLam {
 
     override def evalApply(value: Value): Value = e.eval(env ++ Map(f.toString -> this, v.toString -> value))
 
-    override lazy val valueText: Text.TypedTag[String] =
-      div(raw(s"rec $f($v: "), in_typ.toHtml, raw(s") : "), out_typ.toHtml, raw(". "), e.toHtml)
+    override lazy val valueText: Text.TypedTag[String] = div(
+      raw(
+        prettyPrint(
+          RecV(
+            f,
+            v,
+            TypePlaceholder(in_typ.toHtml.toString),
+            TypePlaceholder(out_typ.toHtml.toString),
+            ExprPlaceholder(e.toHtml.toString),
+            env
+          )
+        )
+      )
+    )
   }
 
-  private def prettyPrintRec(f: Literal, v: Literal, in_typ: Type, out_typ: Type, e: Expr) = {
+  private def prettyPrintRec(f: Literal, v: Literal, in_typ: Type, out_typ: Type, e: Expr) =
     s"rec $f($v: ${prettyPrint(in_typ)}): ${prettyPrint(out_typ)}. ${prettyPrint(e)}"
-  }
 
   override def prettyPrint(e: Expr): String = e match {
     case Rec(f, v, in_typ, out_typ, e) => prettyPrintRec(f, v, in_typ, out_typ, e)
