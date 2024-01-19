@@ -7,11 +7,11 @@ import {
     setActionFetchResponse,
     setUpFetchMock,
     startNodeBlankArithHTML
-} from "./request_mocking";
+} from "./requestMocking";
 import {handleDropdownChange, handleLiteralChanged, handleSubmit} from "../actions";
 import {contextMenuSelect, getRedoButton, getUndoButton, loadHtmlTemplate, slightDelay} from "./helper";
 import * as NS from "../../test_resources/node_strings";
-import {numNodeArithHTML, plusNodeArithHTML} from "./server_mock.test";
+import {numNodeArithHTML, plusNodeArithHTML} from "./serverMock.test";
 
 beforeAll(() => {
     setUpFetchMock();

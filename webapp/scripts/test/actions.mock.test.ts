@@ -13,10 +13,10 @@ import {
     setActionFetchResponseData,
     setUpFetchMock,
     startNodeBlankArithHTML
-} from "./request_mocking";
+} from "./requestMocking";
 import {handleDropdownChange, handleSubmit} from "../actions";
 import * as NS from "../../test_resources/node_strings";
-import {numNodeArithHTML, plusNodeArithHTML} from "./server_mock.test";
+import {numNodeArithHTML, plusNodeArithHTML} from "./serverMock.test";
 
 beforeAll(() => {
     setUpFetchMock();

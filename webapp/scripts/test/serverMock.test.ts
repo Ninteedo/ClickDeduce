@@ -7,7 +7,7 @@ import {
     resetRequestTracking,
     setDummyFetchResponse,
     setUpFetchMock
-} from "./request_mocking";
+} from "./requestMocking";
 
 export const plusNodeArithHTML = loadHtmlTemplate('plus_node_arith');
 export const numNodeArithHTML = loadHtmlTemplate('num_node_arith');

@@ -1,5 +1,5 @@
 import {afterAll, beforeAll, beforeEach, describe, expect, jest, test} from "@jest/globals";
-import {defaultHtml, getRequestsReceived, optionsHtml, resetRequestTracking, setUpFetchMock} from "./request_mocking";
+import {defaultHtml, getRequestsReceived, optionsHtml, resetRequestTracking, setUpFetchMock} from "./requestMocking";
 import {removeWhitespace} from "./helper";
 import {initialise} from "../initialise";
 

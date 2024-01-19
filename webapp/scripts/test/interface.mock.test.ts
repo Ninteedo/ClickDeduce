@@ -7,7 +7,7 @@ import {
     setActionErrorMessage,
     setActionFetchResponse,
     setUpFetchMock
-} from "./request_mocking";
+} from "./requestMocking";
 import {
     contextMenuSelect,
     getErrorDiv,
