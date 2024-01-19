@@ -143,7 +143,7 @@ They should each be available separately for the user to select from the languag
 ### Arithmetic (LArith)
 
 1. The language will support the following expressions:
-   1. `Num(x)`, where `x` is a literal
+   1. `Num(x)`, where `x` is a literal 
    2. `Plus(x, y)`, where `x` and `y` are expressions
    3. `Times(x, y)`, where `x` and `y` are expressions
 2. The language will have the following types:
@@ -153,6 +153,8 @@ They should each be available separately for the user to select from the languag
 4. The language will have the following evaluation rules:
    1. `Num(x) ⇓ NumV(x)`
       1. The literal `x` must only contain digits and optionally a minus sign at the beginning
+      2. These integers should be able to be extremely large or small
+         1. Integers should be able to be at least 100 digits long 
    2. `Plus(NumV(x), NumV(y)) ⇓ NumV(x + y)`
    3. `Times(NumV(x), NumV(y)) ⇓ NumV(x * y)`
 5. The language will have the following type-checking rules:

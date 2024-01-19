@@ -172,6 +172,23 @@ class LArithTest extends TestTemplate[Expr, Value, Type] {
     }
   }
 
+  property("Num can accept integers at least 100 digits long") {
+    val base = BigInt("10")
+    val digits = 100
+    val reallyBigInts = List(
+      base.pow(digits) - 1,
+      base.pow(digits),
+      base.pow(digits) + 1,
+      -base.pow(digits) + 1,
+      -base.pow(digits),
+      -base.pow(digits) - 1
+    )
+
+    forAll(Table("int", reallyBigInts: _*)) { num =>
+      Num(LiteralInt(num)).eval() shouldBe NumV(num)
+    }
+  }
+
   property("Plus and Times pass errors on") {
     val invalidNumType = Num(LiteralString("invalid")).typeCheck(Map())
     Plus(Num(LiteralString("invalid")), Num(5)).typeCheck(Map()) shouldEqual invalidNumType
