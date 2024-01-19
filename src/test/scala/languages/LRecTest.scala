@@ -33,6 +33,26 @@ class LRecTest extends TestTemplate[Expr, Value, Type] {
     nestedOverridingRecFunction1.typeCheck(Map()) shouldEqual Func(IntType(), IntType())
   }
 
+  property("Rec verifies that its expression matches the reported type") {
+    val fakeFactorialFunction = Rec(
+      "factorial",
+      "n",
+      IntType(),
+      IntType(),
+      Bool(true)
+    )
+    val fakeFactorialFunction2 = Rec(
+      "factorial",
+      "n",
+      IntType(),
+      IntType(),
+      Apply(Lambda("f", Func(IntType(), IntType()), Var("f")), Var("factorial"))
+    )
+
+    fakeFactorialFunction.typeCheck() shouldBe a[RecursiveFunctionExpressionOutTypeMismatch]
+    fakeFactorialFunction2.typeCheck() shouldBe a[RecursiveFunctionExpressionOutTypeMismatch]
+  }
+
   property("Applying with Rec type-checks correctly") {
     Apply(factorialFunction, Num(5)).typeCheck(Map()) shouldEqual IntType()
     Apply(factorialFunction, Num(5))

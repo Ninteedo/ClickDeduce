@@ -21,6 +21,7 @@
         <option value="languages.NodeHTMLSpec" />
         <option value="languages.NodeTreeTest" />
         <option value="languages.ReadExprTest" />
+        <option value="languages.ComplexExpressionsTest" />
       </list>
     </option>
     <option name="shortenClasspath" value="NONE" />

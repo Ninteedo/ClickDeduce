@@ -6,11 +6,11 @@ import scalatags.Text.all.*
 
 class LRec extends LLam {
   // expressions
-  case class Rec(f: Literal, v: Literal, in_typ: Type, out_typ: Type, e: Expr) extends Expr {
+  case class Rec(f: Literal, v: Literal, inType: Type, outType: Type, e: Expr) extends Expr {
     override def evalInner(env: Env): Value = f match {
       case LiteralIdentifier(f_id) =>
         v match {
-          case LiteralIdentifier(v_id) => RecV(f, v, in_typ, out_typ, e, env)
+          case LiteralIdentifier(v_id) => RecV(f, v, inType, outType, e, env)
           case _                       => InvalidIdentifierEvalError(v)
         }
       case _ => InvalidIdentifierEvalError(f)
@@ -19,8 +19,11 @@ class LRec extends LLam {
     override def typeCheckInner(tEnv: TypeEnv): Type = f match {
       case LiteralIdentifier(f_id) =>
         v match {
-          case LiteralIdentifier(v_id) => Func(in_typ, out_typ)
-          case _                       => InvalidIdentifierTypeError(v)
+          case LiteralIdentifier(v_id) =>
+            val determinedOutType = e.typeCheck(tEnv + (f.toString -> Func(inType, outType)) + (v.toString -> inType))
+            if (outType == determinedOutType) Func(inType, outType)
+            else RecursiveFunctionExpressionOutTypeMismatch(outType, determinedOutType)
+          case _ => InvalidIdentifierTypeError(v)
         }
       case _ => InvalidIdentifierTypeError(f)
     }
@@ -28,13 +31,13 @@ class LRec extends LLam {
     override def getChildrenBase(env: Env): List[(Term, Env)] = List(
       (f, env),
       (v, env),
-      (in_typ, env),
-      (out_typ, env),
-      (e, env ++ Map(f.toString -> PlaceholderValue(Func(in_typ, out_typ)), v.toString -> PlaceholderValue(in_typ)))
+      (inType, env),
+      (outType, env),
+      (e, env ++ Map(f.toString -> PlaceholderValue(Func(inType, outType)), v.toString -> PlaceholderValue(inType)))
     )
 
     override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] = List(
-      (e, tEnv ++ Map(f.toString -> Func(in_typ, out_typ), v.toString -> in_typ))
+      (e, tEnv ++ Map(f.toString -> Func(inType, outType), v.toString -> inType))
     )
 
     override def getChildrenEval(env: Env): List[(Term, Env)] = Nil
@@ -85,6 +88,11 @@ class LRec extends LLam {
 
   override def calculateExprClassList: List[Class[Expr]] = {
     super.calculateExprClassList ++ List(classOf[Rec]).map(_.asInstanceOf[Class[Expr]])
+  }
+
+  class RecursiveFunctionExpressionOutTypeMismatch(declared: Type, actual: Type) extends TypeError {
+    override val message: String =
+      s"Recursive function expression declared return type $declared does not match actual return type $actual"
   }
 }
 
