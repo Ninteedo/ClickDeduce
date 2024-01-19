@@ -288,11 +288,57 @@ They should each be available separately for the user to select from the languag
 
 The node tree is a less mathematically rigorous representation of the evaluation tree, which allows for more flexibility
 in the interface.
-Without this representation, it would be difficult for users to construct a tree, especially one that is not
+Without this representation, it would be challenging for users to construct a tree, especially one that is not
 well-formed.
 
 1. Any node tree can be converted to a string which can be converted back into the same node tree
 2. Any expression can be represented as a node tree
+
+### Node Kinds
+
+The node tree begins with an outer node, which can contain any number of inner nodes as arguments.
+Each inner node can contain any number of outer nodes as children.
+This creates a tree structure alternating between inner and outer nodes.
+
+#### Outer Nodes
+
+1. Can be the root node
+2. Can contain any number of inner nodes
+
+##### Expression Node
+
+1. Stores the name of the expression kind
+2. Stores arguments for the expression
+   1. Each argument is an inner node
+   2. The expression kind determines the number of arguments
+3. An expression node and all its arguments can be constructed from an expression
+
+##### Type Node
+
+1. Stores the name of the type kind
+2. Stores subtypes and literals for the type
+   1. The type kind determines the number of inner nodes
+   2. Cannot contain any subexpressions
+3. A type node and all its subtypes can be constructed from a type
+
+#### Inner Nodes
+
+1. Cannot be the root node
+2. Must be contained within an outer node
+3. Can contain any number of outer nodes as children
+
+##### Literal Node
+
+1. Stores the value of the literal as a string
+2. Cannot have any children
+
+##### Subexpression Node
+
+1. Stores a single expression node as a child
+
+##### Subtype Node
+
+1. Stores a single type node as a child
 
 ### Tree Paths
 
