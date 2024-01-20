@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="mutation-test-elements.js"></script>
+</head>
+<body>
+  <mutation-test-report-app title-postfix="Stryker4s report">
+    Your browser doesn't support <a href="https://caniuse.com/#search=custom%20elements">custom elements</a>.
+    Please use a latest version of an evergreen browser (Firefox, Chrome, Safari, Opera, etc).
+  </mutation-test-report-app>
+  <script>
+    const app = document.getElementsByTagName('mutation-test-report-app').item(0);
+    function updateTheme() {
+      document.body.style.backgroundColor = app.themeBackgroundColor;
+    }
+    app.addEventListener('theme-changed', updateTheme);
+    updateTheme();
+  </script>
+  <script src="report.js"></script>
+</body>
+</html>

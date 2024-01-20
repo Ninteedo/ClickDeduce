@@ -18,6 +18,6 @@ const config = {
   mutate: [
       "webapp/scripts/*.ts"
   ],
-  concurrency: 1
+  // concurrency: 1
 };
 export default config;

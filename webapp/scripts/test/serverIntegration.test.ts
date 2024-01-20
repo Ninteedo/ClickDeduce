@@ -65,7 +65,7 @@ beforeAll(async () => {
         }
     }
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    jest.setTimeout(10000);
 
     if (attempts === maxAttempts) {
         throw new Error('Server did not start within the expected time.');
