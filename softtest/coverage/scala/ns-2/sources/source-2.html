@@ -1027,7 +1027,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 <b class="fc">&nbsp;    def fromString(s: String): Literal = {</b>
 <b class="fc">&nbsp;      if (List(&quot;true&quot;, &quot;false&quot;).contains(s.toLowerCase)) {</b>
 <b class="fc">&nbsp;        LiteralBool(s.toBoolean)</b>
-<b class="fc">&nbsp;      } else if (s.startsWith(&quot;\&quot;&quot;) &amp;&amp; s.endsWith(&quot;\&quot;&quot;)) {</b>
+<b class="fc">&nbsp;      } else if (s.startsWith(&quot;\&quot;&quot;) &amp;&amp; s.endsWith(&quot;\&quot;&quot;) &amp;&amp; s.length &gt; 1) {</b>
 <b class="fc">&nbsp;        LiteralString(s.substring(1, s.length - 1))</b>
 <b class="fc">&nbsp;      } else if (&quot;-?\\d+&quot;.r.matches(s)) {</b>
 <b class="fc">&nbsp;        LiteralInt(BigInt(s))</b>
@@ -1140,7 +1140,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2024-01-18 19:37</div>
+    <div style="float:right;">generated on 2024-01-21 10:10</div>
 </div>
 </body>
 </html>

@@ -44,15 +44,15 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (4/4)
+    (7/7)
   </span>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    50%
+    72.5%
   </span>
   <span class="absValue">
-    (7/14)
+    (29/40)
   </span>
 </td>
   </tr>
@@ -63,15 +63,15 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (4/4)
+    (7/7)
   </span>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    50%
+    72.5%
   </span>
   <span class="absValue">
-    (7/14)
+    (29/40)
   </span>
 </td>
 </tr>
@@ -97,12 +97,53 @@ Current scope:     <a href="../../index.html">all classes</a>
 <b class="nc">&nbsp;    case &#39;\n&#39; =&gt; &quot;\\n&quot;</b>
 <b class="nc">&nbsp;    case &#39;\f&#39; =&gt; &quot;\\f&quot;</b>
 <b class="nc">&nbsp;    case &#39;\r&#39; =&gt; &quot;\\r&quot;</b>
-<b class="nc">&nbsp;    case &#39;&quot;&#39;  =&gt; &quot;\\\&quot;&quot;</b>
-<b class="nc">&nbsp;    case &#39;\&#39;&#39; =&gt; &quot;\\\&#39;&quot;</b>
-<b class="nc">&nbsp;    case &#39;\\&#39; =&gt; &quot;\\\\&quot;</b>
+<b class="fc">&nbsp;    case &#39;&quot;&#39;  =&gt; &quot;\\\&quot;&quot;</b>
+<b class="fc">&nbsp;    case &#39;\&#39;&#39; =&gt; &quot;\\\&#39;&quot;</b>
+<b class="fc">&nbsp;    case &#39;\\&#39; =&gt; &quot;\\\\&quot;</b>
 &nbsp;    case _ =&gt;
 <b class="fc">&nbsp;      if (ch.isControl) &quot;\\0&quot; + Integer.toOctalString(ch.toInt)</b>
 <b class="fc">&nbsp;      else String.valueOf(ch)</b>
+&nbsp;  }
+&nbsp;
+<b class="fc">&nbsp;  def unquote(s: String): String = if (s.length &gt; 1 &amp;&amp; s.startsWith(&quot;\&quot;&quot;) &amp;&amp; s.endsWith(&quot;\&quot;&quot;)) {</b>
+<b class="fc">&nbsp;    unescape(s.substring(1, s.length - 1))</b>
+&nbsp;  } else {
+<b class="nc">&nbsp;    throw new Exception(&quot;Invalid string literal&quot;)</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  private def unescape(s: String): String = {
+<b class="fc">&nbsp;    val res = new StringBuilder</b>
+<b class="fc">&nbsp;    var i = 0</b>
+<b class="fc">&nbsp;    var escaped = false</b>
+&nbsp;
+<b class="fc">&nbsp;    s.foreach(c =&gt; {</b>
+<b class="fc">&nbsp;      if (escaped) {</b>
+<b class="fc">&nbsp;        c match {</b>
+<b class="fc">&nbsp;          case &#39;b&#39;  =&gt; res += &#39;\b&#39;</b>
+<b class="nc">&nbsp;          case &#39;t&#39;  =&gt; res += &#39;\t&#39;</b>
+<b class="nc">&nbsp;          case &#39;n&#39;  =&gt; res += &#39;\n&#39;</b>
+<b class="nc">&nbsp;          case &#39;f&#39;  =&gt; res += &#39;\f&#39;</b>
+<b class="nc">&nbsp;          case &#39;r&#39;  =&gt; res += &#39;\r&#39;</b>
+<b class="fc">&nbsp;          case &#39;&quot;&#39;  =&gt; res += &#39;&quot;&#39;</b>
+<b class="fc">&nbsp;          case &#39;\&#39;&#39; =&gt; res += &#39;\&#39;&#39;</b>
+<b class="fc">&nbsp;          case &#39;\\&#39; =&gt; res += &#39;\\&#39;</b>
+<b class="nc">&nbsp;          case _    =&gt; throw new Exception(&quot;Invalid escape sequence&quot;)</b>
+&nbsp;        }
+<b class="fc">&nbsp;        escaped = false</b>
+&nbsp;      } else {
+<b class="fc">&nbsp;        if (c == &#39;\\&#39;) {</b>
+<b class="fc">&nbsp;          escaped = true</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;          res += c</b>
+&nbsp;        }
+&nbsp;      }
+<b class="fc">&nbsp;    })</b>
+&nbsp;
+<b class="fc">&nbsp;    if (escaped) {</b>
+<b class="nc">&nbsp;      throw new Exception(&quot;Invalid escape sequence&quot;)</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    res.toString</b>
 &nbsp;  }
 &nbsp;}
 </code>
@@ -128,7 +169,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2024-01-18 19:37</div>
+    <div style="float:right;">generated on 2024-01-21 10:10</div>
 </div>
 </body>
 </html>

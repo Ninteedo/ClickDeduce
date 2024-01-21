@@ -498,9 +498,9 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;
 <b class="fc">&nbsp;    override def evalApply(value: Value): Value = e.eval(env + (v -&gt; value))</b>
 &nbsp;
-<b class="fc">&nbsp;    override lazy val valueText: TypedTag[String] = {</b>
-<b class="fc">&nbsp;      div(raw(s&quot;?$v. &quot;), e.toHtml, raw(s&quot; : &quot;), typ.toHtml)</b>
-<b class="fc">&nbsp;    }</b>
+<b class="fc">&nbsp;    override lazy val valueText: TypedTag[String] = div(</b>
+<b class="fc">&nbsp;      raw(prettyPrint(LambdaV(v, TypePlaceholder(inputType.toHtml.toString), ExprPlaceholder(e.toHtml.toString), env)))</b>
+<b class="fc">&nbsp;    )</b>
 &nbsp;  }
 &nbsp;
 <b class="fc">&nbsp;  case class ApplyToNonFunctionError(value: Value) extends EvalError {</b>
@@ -568,7 +568,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2024-01-18 19:37</div>
+    <div style="float:right;">generated on 2024-01-21 10:10</div>
 </div>
 </body>
 </html>
