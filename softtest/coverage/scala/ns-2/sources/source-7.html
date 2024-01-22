@@ -44,7 +44,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (6/6)
+    (4/4)
   </span>
 </td>
 <td class="coverageStat">
@@ -52,7 +52,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (21/21)
+    (8/8)
   </span>
 </td>
 </tr>
@@ -158,7 +158,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (5/5)
+    (7/7)
   </span>
 </td>
 <td class="coverageStat">
@@ -166,7 +166,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (14/14)
+    (21/21)
   </span>
 </td>
   </tr>
@@ -242,7 +242,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (2/2)
+    (3/3)
   </span>
 </td>
   </tr>
@@ -318,7 +318,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (64/64)
+    (59/59)
   </span>
 </td>
 </tr>
@@ -343,7 +343,9 @@ Current scope:     <a href="../../index.html">all classes</a>
 <b class="fc">&nbsp;    override def typeCheckInner(tEnv: TypeEnv): Type = v match {</b>
 <b class="fc">&nbsp;      case LiteralIdentifier(identifier) =&gt; tEnv.getOrElse(identifier, UnknownVariableTypeError(v))</b>
 <b class="fc">&nbsp;      case _                             =&gt; InvalidIdentifierTypeError(v)</b>
-<b class="fc">&nbsp;    }</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    override def prettyPrint: String = v.toString</b>
 &nbsp;  }
 &nbsp;
 <b class="fc">&nbsp;  object Var {</b>
@@ -373,6 +375,16 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;
 &nbsp;    override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] =
 <b class="fc">&nbsp;      List((assign, tEnv), (bound, tEnv + (v.toString -&gt; assign.typeCheck(tEnv))))</b>
+&nbsp;
+&nbsp;    override def prettyPrint: String = {
+<b class="fc">&nbsp;      val assignExprString = assign match {</b>
+<b class="fc">&nbsp;        case _: Var =&gt; assign.prettyPrint</b>
+<b class="fc">&nbsp;        case _: Num =&gt; assign.prettyPrint</b>
+<b class="fc">&nbsp;        case _: Bool =&gt; assign.prettyPrint</b>
+<b class="fc">&nbsp;        case _ =&gt; s&quot;(${assign.prettyPrint})&quot;</b>
+&nbsp;      }
+<b class="fc">&nbsp;      s&quot;let $v = $assignExprString in ${bound.prettyPrint}&quot;</b>
+<b class="fc">&nbsp;    }</b>
 &nbsp;  }
 &nbsp;
 <b class="fc">&nbsp;  object Let {</b>
@@ -389,6 +401,8 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;
 <b class="fc">&nbsp;  case class UnknownVariableTypeError(v: Literal) extends TypeError {</b>
 <b class="fc">&nbsp;    override val message: String = s&quot;Unknown variable identifier &#39;$v&#39;&quot;</b>
+&nbsp;
+<b class="fc">&nbsp;    override def prettyPrint: String = s&quot;UnknownVariable($v)&quot;</b>
 &nbsp;  }
 &nbsp;
 <b class="fc">&nbsp;  case class InvalidIdentifierEvalError(v: Literal) extends EvalError {</b>
@@ -399,24 +413,6 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;
 <b class="fc">&nbsp;  case class InvalidIdentifierTypeError(v: Literal) extends TypeError {</b>
 <b class="fc">&nbsp;    override val message: String = s&quot;Invalid identifier &#39;$v&#39;&quot;</b>
-&nbsp;  }
-&nbsp;
-<b class="fc">&nbsp;  override def prettyPrint(e: Expr): String = e match {</b>
-<b class="fc">&nbsp;    case Var(v) =&gt; v.toString</b>
-<b class="fc">&nbsp;    case Let(v, assign_expr, bound_expr) =&gt;</b>
-<b class="fc">&nbsp;      val assignExprString = assign_expr match {</b>
-<b class="fc">&nbsp;        case _: Var  =&gt; prettyPrint(assign_expr)</b>
-<b class="fc">&nbsp;        case _: Num  =&gt; prettyPrint(assign_expr)</b>
-<b class="fc">&nbsp;        case _: Bool =&gt; prettyPrint(assign_expr)</b>
-<b class="fc">&nbsp;        case _       =&gt; s&quot;(${prettyPrint(assign_expr)})&quot;</b>
-&nbsp;      }
-<b class="fc">&nbsp;      s&quot;let $v = $assignExprString in ${prettyPrint(bound_expr)}&quot;</b>
-<b class="fc">&nbsp;    case _ =&gt; super.prettyPrint(e)</b>
-&nbsp;  }
-&nbsp;
-<b class="fc">&nbsp;  override def prettyPrint(t: Type): String = t match {</b>
-<b class="fc">&nbsp;    case UnknownVariableTypeError(v) =&gt; s&quot;UnknownVariable($v)&quot;</b>
-<b class="fc">&nbsp;    case _                           =&gt; super.prettyPrint(t)</b>
 &nbsp;  }
 &nbsp;
 &nbsp;  override def calculateExprClassList: List[Class[Expr]] = {
@@ -448,7 +444,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2024-01-21 10:10</div>
+    <div style="float:right;">generated on 2024-01-22 12:53</div>
 </div>
 </body>
 </html>

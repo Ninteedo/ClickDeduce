@@ -1415,7 +1415,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 <b class="fc">&nbsp;        case n: LiteralNode =&gt; LiteralAny(n.toHtmlLine(mode).toString)</b>
 <b class="fc">&nbsp;        case n: SubTypeNode =&gt; TypePlaceholder(n.node.toHtmlLineReadOnly(mode).toString)</b>
 <b class="fc">&nbsp;      }</b>
-<b class="fc">&nbsp;      prettyPrint(constructor.newInstance(arguments: _*).asInstanceOf[Expr])</b>
+<b class="fc">&nbsp;      constructor.newInstance(arguments: _*).asInstanceOf[Expr].prettyPrint</b>
 &nbsp;    }
 &nbsp;
 &nbsp;    private def getExprHtmlLineReadOnly(mode: DisplayMode): String = {
@@ -1425,7 +1425,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 <b class="fc">&nbsp;        case n: LiteralNode =&gt; LiteralAny(n.toHtmlLineReadOnly(mode).toString)</b>
 <b class="fc">&nbsp;        case n: SubTypeNode =&gt; TypePlaceholder(n.node.toHtmlLineReadOnly(mode).toString)</b>
 <b class="fc">&nbsp;      }</b>
-<b class="fc">&nbsp;      prettyPrint(constructor.newInstance(arguments: _*).asInstanceOf[Expr])</b>
+<b class="fc">&nbsp;      constructor.newInstance(arguments: _*).asInstanceOf[Expr].prettyPrint</b>
 &nbsp;    }
 &nbsp;
 <b class="fc">&nbsp;    override def toString: String = s&quot;VariableNode(${UtilityFunctions.quote(exprName)}, $args)&quot;</b>
@@ -1578,11 +1578,9 @@ Current scope:     <a href="../../index.html">all classes</a>
 <b class="fc">&nbsp;        throw new IllegalArgumentException(s&quot;Unknown expression type for ${lang.getClass.getSimpleName}: $typeName&quot;)</b>
 &nbsp;    }
 &nbsp;
-&nbsp;    override def toHtmlLine(mode: DisplayMode): TypedTag[String] =
-<b class="fc">&nbsp;      getType.toHtml(data(&quot;tree-path&quot;) := treePathString)</b>
+<b class="fc">&nbsp;    override def toHtmlLine(mode: DisplayMode): TypedTag[String] = getType.toHtml(data(&quot;tree-path&quot;) := treePathString)</b>
 &nbsp;
-&nbsp;    override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] =
-<b class="fc">&nbsp;      toHtmlLine(mode)(readonly, disabled)</b>
+<b class="fc">&nbsp;    override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] = toHtmlLine(mode)(readonly, disabled)</b>
 &nbsp;
 <b class="fc">&nbsp;    override val children: List[OuterNode] = args.filter(_.isInstanceOf[SubTypeNode]).flatMap(_.children)</b>
 &nbsp;
@@ -1594,7 +1592,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 <b class="nc">&nbsp;        case n: LiteralNode =&gt; LiteralAny(n.toHtmlLine(mode).toString)</b>
 <b class="nc">&nbsp;        case n: SubTypeNode =&gt; TypePlaceholder(n.node.toHtmlLine(mode).toString)</b>
 <b class="nc">&nbsp;      }</b>
-<b class="nc">&nbsp;      prettyPrint(constructor.newInstance(arguments: _*).asInstanceOf[Expr])</b>
+<b class="nc">&nbsp;      constructor.newInstance(arguments: _*).asInstanceOf[Expr].prettyPrint</b>
 &nbsp;    }
 &nbsp;
 &nbsp;    def getExprHtmlLineReadOnly(mode: DisplayMode): String = {
@@ -1603,7 +1601,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 <b class="nc">&nbsp;        case n: LiteralNode =&gt; LiteralAny(n.toHtmlLineReadOnly(mode).toString)</b>
 <b class="nc">&nbsp;        case n: SubTypeNode =&gt; TypePlaceholder(n.node.toHtmlLineReadOnly(mode).toString)</b>
 <b class="nc">&nbsp;      }</b>
-<b class="nc">&nbsp;      prettyPrint(constructor.newInstance(arguments: _*).asInstanceOf[Expr])</b>
+<b class="nc">&nbsp;      constructor.newInstance(arguments: _*).asInstanceOf[Expr].prettyPrint</b>
 &nbsp;    }
 &nbsp;
 <b class="fc">&nbsp;    children.foreach(_.setParent(Some(this)))</b>
@@ -1708,7 +1706,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2024-01-21 10:10</div>
+    <div style="float:right;">generated on 2024-01-22 12:53</div>
 </div>
 </body>
 </html>

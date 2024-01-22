@@ -44,7 +44,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (7/7)
+    (4/4)
   </span>
 </td>
 <td class="coverageStat">
@@ -52,7 +52,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (24/24)
+    (11/11)
   </span>
 </td>
 </tr>
@@ -120,7 +120,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (1/1)
+    (2/2)
   </span>
 </td>
 <td class="coverageStat">
@@ -128,7 +128,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (1/1)
+    (2/2)
   </span>
 </td>
   </tr>
@@ -166,7 +166,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (2/2)
+    (3/3)
   </span>
 </td>
   </tr>
@@ -318,7 +318,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (2/2)
+    (3/3)
   </span>
 </td>
   </tr>
@@ -348,7 +348,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (30/30)
+    (28/28)
   </span>
 </td>
 <td class="coverageStat">
@@ -356,7 +356,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (81/81)
+    (71/71)
   </span>
 </td>
 </tr>
@@ -380,7 +380,9 @@ Current scope:     <a href="../../index.html">all classes</a>
 <b class="fc">&nbsp;    override def typeCheckInner(tEnv: TypeEnv): Type = b match {</b>
 <b class="fc">&nbsp;      case LiteralBool(_) =&gt; BoolType()</b>
 <b class="fc">&nbsp;      case _              =&gt; UnexpectedArgType(s&quot;Bool can only accept LiteralBool, not $b&quot;)</b>
-<b class="fc">&nbsp;    }</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    override def prettyPrint: String = b.toString</b>
 &nbsp;  }
 &nbsp;
 <b class="fc">&nbsp;  object Bool {</b>
@@ -406,7 +408,9 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;      } else {
 <b class="fc">&nbsp;        TypeMismatchType(t1, t2)</b>
 &nbsp;      }
-<b class="fc">&nbsp;    }</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    override def prettyPrint: String = s&quot;(${e1.prettyPrint} == ${e2.prettyPrint})&quot;</b>
 &nbsp;  }
 &nbsp;
 <b class="fc">&nbsp;  case class IfThenElse(cond: Expr, then_expr: Expr, else_expr: Expr) extends Expr {</b>
@@ -434,12 +438,17 @@ Current scope:     <a href="../../index.html">all classes</a>
 <b class="fc">&nbsp;      case BoolV(true)  =&gt; List((cond, env), (then_expr, env))</b>
 <b class="fc">&nbsp;      case BoolV(false) =&gt; List((cond, env), (else_expr, env))</b>
 <b class="fc">&nbsp;      case _            =&gt; List((cond, env), (then_expr, env), (else_expr, env))</b>
-<b class="fc">&nbsp;    }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    override def prettyPrint: String =
+<b class="fc">&nbsp;      s&quot;(if ${cond.prettyPrint} then ${then_expr.prettyPrint} else ${else_expr.prettyPrint})&quot;</b>
 &nbsp;  }
 &nbsp;
 &nbsp;  // values
 <b class="fc">&nbsp;  case class BoolV(b: Boolean) extends Value {</b>
 <b class="fc">&nbsp;    override val typ: Type = BoolType()</b>
+&nbsp;
+<b class="fc">&nbsp;    override def prettyPrint: String = b.toString</b>
 &nbsp;  }
 &nbsp;
 <b class="fc">&nbsp;  case class TypeMismatchError(exprName: String, type1: Type, type2: Type) extends EvalError {</b>
@@ -449,29 +458,14 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;  }
 &nbsp;
 &nbsp;  // types
-<b class="fc">&nbsp;  case class BoolType() extends Type</b>
+<b class="fc">&nbsp;  case class BoolType() extends Type {</b>
+<b class="fc">&nbsp;    override def prettyPrint: String = &quot;Bool&quot;</b>
+&nbsp;  }
 &nbsp;
 <b class="fc">&nbsp;  case class TypeMismatchType(type1: Type, type2: Type) extends TypeError {</b>
 <b class="fc">&nbsp;    override val message: String = s&quot;$type1 not compatible with $type2&quot;</b>
-&nbsp;  }
 &nbsp;
-<b class="fc">&nbsp;  override def prettyPrint(e: Expr): String = e match {</b>
-<b class="fc">&nbsp;    case Bool(b)    =&gt; b.toString</b>
-<b class="fc">&nbsp;    case Eq(e1, e2) =&gt; s&quot;(${prettyPrint(e1)} == ${prettyPrint(e2)})&quot;</b>
-<b class="fc">&nbsp;    case IfThenElse(cond, then_expr, else_expr) =&gt;</b>
-<b class="fc">&nbsp;      s&quot;(if ${prettyPrint(cond)} then ${prettyPrint(then_expr)} else ${prettyPrint(else_expr)})&quot;</b>
-<b class="fc">&nbsp;    case _ =&gt; super.prettyPrint(e)</b>
-&nbsp;  }
-&nbsp;
-<b class="fc">&nbsp;  override def prettyPrint(v: Value): String = v match {</b>
-<b class="fc">&nbsp;    case BoolV(b) =&gt; b.toString</b>
-<b class="fc">&nbsp;    case _        =&gt; super.prettyPrint(v)</b>
-&nbsp;  }
-&nbsp;
-<b class="fc">&nbsp;  override def prettyPrint(t: Type): String = t match {</b>
-<b class="fc">&nbsp;    case BoolType()               =&gt; &quot;Bool&quot;</b>
-<b class="fc">&nbsp;    case TypeMismatchType(t1, t2) =&gt; s&quot;TypeMismatch($t1, $t2)&quot;</b>
-<b class="fc">&nbsp;    case _                        =&gt; super.prettyPrint(t)</b>
+<b class="fc">&nbsp;    override def prettyPrint: String = s&quot;TypeMismatch($type1, $type2)&quot;</b>
 &nbsp;  }
 &nbsp;
 &nbsp;  override def calculateExprClassList: List[Class[Expr]] = {
@@ -509,7 +503,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2024-01-21 10:10</div>
+    <div style="float:right;">generated on 2024-01-22 12:53</div>
 </div>
 </body>
 </html>

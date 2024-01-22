@@ -44,7 +44,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (7/7)
+    (4/4)
   </span>
 </td>
 <td class="coverageStat">
@@ -52,7 +52,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (26/26)
+    (11/11)
   </span>
 </td>
 </tr>
@@ -166,7 +166,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (2/2)
+    (3/3)
   </span>
 </td>
   </tr>
@@ -196,7 +196,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (2/2)
+    (3/3)
   </span>
 </td>
 <td class="coverageStat">
@@ -204,7 +204,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (5/5)
+    (6/6)
   </span>
 </td>
   </tr>
@@ -248,7 +248,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (2/2)
+    (3/3)
   </span>
 </td>
   </tr>
@@ -278,7 +278,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (5/5)
+    (6/6)
   </span>
 </td>
 <td class="coverageStat">
@@ -286,7 +286,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (10/10)
+    (11/11)
   </span>
 </td>
   </tr>
@@ -316,7 +316,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (5/5)
+    (6/6)
   </span>
 </td>
 <td class="coverageStat">
@@ -324,7 +324,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (7/7)
+    (10/10)
   </span>
 </td>
   </tr>
@@ -354,7 +354,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (1/1)
+    (2/2)
   </span>
 </td>
 <td class="coverageStat">
@@ -362,7 +362,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (2/2)
+    (3/3)
   </span>
 </td>
   </tr>
@@ -392,7 +392,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (37/37)
+    (38/38)
   </span>
 </td>
 <td class="coverageStat">
@@ -400,7 +400,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (79/79)
+    (72/72)
   </span>
 </td>
 </tr>
@@ -435,7 +435,9 @@ Current scope:     <a href="../../index.html">all classes</a>
 <b class="fc">&nbsp;    override def getChildrenEval(env: Env = Map()): List[(Term, Env)] = (e1.eval(env), e2.eval(env)) match {</b>
 <b class="fc">&nbsp;      case (v1: FunctionValue, v2) =&gt; List((e1, env), (e2, env), v1.getFunctionEvaluation(v2))</b>
 <b class="fc">&nbsp;      case _                       =&gt; List((e1, env), (e2, env))</b>
-<b class="fc">&nbsp;    }</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    override def prettyPrint: String = s&quot;((${e1.prettyPrint}) ${e2.prettyPrint})&quot;</b>
 &nbsp;  }
 &nbsp;
 <b class="fc">&nbsp;  case class Lambda(v: Literal, typ: Type, e: Expr) extends Expr {</b>
@@ -455,6 +457,8 @@ Current scope:     <a href="../../index.html">all classes</a>
 <b class="fc">&nbsp;    override def getChildrenEval(env: Env): List[(Term, Env)] = Nil</b>
 &nbsp;
 <b class="fc">&nbsp;    override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] = List((e, tEnv + (v.toString -&gt; typ)))</b>
+&nbsp;
+<b class="fc">&nbsp;    override def prettyPrint: String = s&quot;?$v: ${typ.prettyPrint}. ${e.prettyPrint}&quot;</b>
 &nbsp;  }
 &nbsp;
 <b class="fc">&nbsp;  object Lambda {</b>
@@ -474,14 +478,20 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;    }
 &nbsp;
 <b class="fc">&nbsp;    override lazy val valueText: TypedTag[String] = div(in.toHtml, raw(&quot; ? &quot;), out.toHtml)</b>
+&nbsp;
+<b class="fc">&nbsp;    override def prettyPrint: String = s&quot;(${in.prettyPrint} ? ${out.prettyPrint})&quot;</b>
 &nbsp;  }
 &nbsp;
 <b class="fc">&nbsp;  case class ApplyToNonFunctionErrorType(wrongType: Type) extends TypeError {</b>
-<b class="fc">&nbsp;    override val message: String = s&quot;Cannot apply with left expression being ${prettyPrint(wrongType)}&quot;</b>
+<b class="fc">&nbsp;    override val message: String = s&quot;Cannot apply with left expression being ${wrongType.prettyPrint}&quot;</b>
+&nbsp;
+<b class="fc">&nbsp;    override def prettyPrint: String = s&quot;CannotApplyError(${wrongType.prettyPrint})&quot;</b>
 &nbsp;  }
 &nbsp;
 <b class="fc">&nbsp;  case class IncompatibleTypeErrorType(typ1: Type, typ2: Type) extends TypeError {</b>
 <b class="fc">&nbsp;    override val message: String = s&quot;mismatched types for applying function (expected $typ1 but got $typ2)&quot;</b>
+&nbsp;
+<b class="fc">&nbsp;    override def prettyPrint: String = s&quot;IncompatibleTypes(${typ1.prettyPrint}, ${typ2.prettyPrint})&quot;</b>
 &nbsp;  }
 &nbsp;
 &nbsp;  // values
@@ -499,40 +509,25 @@ Current scope:     <a href="../../index.html">all classes</a>
 <b class="fc">&nbsp;    override def evalApply(value: Value): Value = e.eval(env + (v -&gt; value))</b>
 &nbsp;
 <b class="fc">&nbsp;    override lazy val valueText: TypedTag[String] = div(</b>
-<b class="fc">&nbsp;      raw(prettyPrint(LambdaV(v, TypePlaceholder(inputType.toHtml.toString), ExprPlaceholder(e.toHtml.toString), env)))</b>
+<b class="fc">&nbsp;      raw(LambdaV(v, TypePlaceholder(inputType.toHtml.toString), ExprPlaceholder(e.toHtml.toString), env).prettyPrint)</b>
 <b class="fc">&nbsp;    )</b>
+&nbsp;
+&nbsp;    override def prettyPrint: String = {
+<b class="fc">&nbsp;      val eString: String = if (e == BlankExprDropDown()) &quot;?&quot; else e.prettyPrint</b>
+<b class="fc">&nbsp;      s&quot;?$v: ${inputType.prettyPrint}. $eString&quot;</b>
+<b class="fc">&nbsp;    }</b>
 &nbsp;  }
 &nbsp;
 <b class="fc">&nbsp;  case class ApplyToNonFunctionError(value: Value) extends EvalError {</b>
-<b class="fc">&nbsp;    override val message: String = s&quot;Cannot apply with left expression being ${prettyPrint(value)}&quot;</b>
+<b class="fc">&nbsp;    override val message: String = s&quot;Cannot apply with left expression being ${value.prettyPrint}&quot;</b>
 &nbsp;
 <b class="fc">&nbsp;    override val typ: Type = ApplyToNonFunctionErrorType(value.typ)</b>
 &nbsp;  }
 &nbsp;
 <b class="fc">&nbsp;  case class PlaceholderValue(override val typ: Type) extends Value {</b>
 <b class="fc">&nbsp;    override def isPlaceholder: Boolean = true</b>
-&nbsp;  }
 &nbsp;
-<b class="fc">&nbsp;  override def prettyPrint(e: Expr): String = e match {</b>
-<b class="fc">&nbsp;    case Lambda(v, typ, e) =&gt; s&quot;?$v: ${prettyPrint(typ)}. ${prettyPrint(e)}&quot;</b>
-<b class="fc">&nbsp;    case Apply(e1, e2)     =&gt; s&quot;((${prettyPrint(e1)}) ${prettyPrint(e2)})&quot;</b>
-<b class="fc">&nbsp;    case _                 =&gt; super.prettyPrint(e)</b>
-&nbsp;  }
-&nbsp;
-<b class="fc">&nbsp;  override def prettyPrint(v: Value): String = v match {</b>
-<b class="fc">&nbsp;    case LambdaV(v, inputType, e, env) =&gt; {</b>
-<b class="fc">&nbsp;      val eString: String = if (e == BlankExprDropDown()) &quot;?&quot; else prettyPrint(e)</b>
-<b class="fc">&nbsp;      s&quot;?$v: ${prettyPrint(inputType)}. $eString&quot;</b>
-&nbsp;    }
-<b class="fc">&nbsp;    case PlaceholderValue(typ) =&gt; &quot;?&quot;</b>
-<b class="fc">&nbsp;    case _                     =&gt; super.prettyPrint(v)</b>
-&nbsp;  }
-&nbsp;
-<b class="fc">&nbsp;  override def prettyPrint(t: Type): String = t match {</b>
-<b class="fc">&nbsp;    case Func(in, out)                         =&gt; s&quot;(${prettyPrint(in)} ? ${prettyPrint(out)})&quot;</b>
-<b class="fc">&nbsp;    case ApplyToNonFunctionErrorType(typ)      =&gt; s&quot;CannotApplyError(${prettyPrint(typ)})&quot;</b>
-<b class="fc">&nbsp;    case IncompatibleTypeErrorType(typ1, typ2) =&gt; s&quot;IncompatibleTypes(${prettyPrint(typ1)}, ${prettyPrint(typ2)})&quot;</b>
-<b class="fc">&nbsp;    case _                                     =&gt; super.prettyPrint(t)</b>
+<b class="fc">&nbsp;    override def prettyPrint: String = &quot;?&quot;</b>
 &nbsp;  }
 &nbsp;
 &nbsp;  override def calculateExprClassList: List[Class[Expr]] = {
@@ -568,7 +563,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2024-01-21 10:10</div>
+    <div style="float:right;">generated on 2024-01-22 12:53</div>
 </div>
 </body>
 </html>

@@ -41,18 +41,18 @@ Current scope:     <a href="../../index.html">all classes</a>
   <td class="name">AbstractLanguage</td>
 <td class="coverageStat">
   <span class="percent">
-    40%
+    28.6%
   </span>
   <span class="absValue">
-    (10/25)
+    (6/21)
   </span>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    45.9%
+    31.8%
   </span>
   <span class="absValue">
-    (17/37)
+    (7/22)
   </span>
 </td>
 </tr>
@@ -193,18 +193,18 @@ Current scope:     <a href="../../index.html">all classes</a>
     <td class="name">AbstractLanguage$Expr</td>
 <td class="coverageStat">
   <span class="percent">
-    85.7%
+    92.9%
   </span>
   <span class="absValue">
-    (12/14)
+    (13/14)
   </span>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    80%
+    85%
   </span>
   <span class="absValue">
-    (16/20)
+    (17/20)
   </span>
 </td>
   </tr>
@@ -223,7 +223,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (1/1)
+    (2/2)
   </span>
 </td>
   </tr>
@@ -250,18 +250,18 @@ Current scope:     <a href="../../index.html">all classes</a>
     <td class="name">AbstractLanguage$Literal</td>
 <td class="coverageStat">
   <span class="percent">
-    66.7%
+    75%
   </span>
   <span class="absValue">
-    (2/3)
+    (3/4)
   </span>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    66.7%
+    75%
   </span>
   <span class="absValue">
-    (2/3)
+    (3/4)
   </span>
 </td>
   </tr>
@@ -516,18 +516,18 @@ Current scope:     <a href="../../index.html">all classes</a>
     <td class="name">AbstractLanguage$Term</td>
 <td class="coverageStat">
   <span class="percent">
-    50%
+    57.1%
   </span>
   <span class="absValue">
-    (3/6)
+    (4/7)
   </span>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    50%
+    57.1%
   </span>
   <span class="absValue">
-    (3/6)
+    (4/7)
   </span>
 </td>
   </tr>
@@ -584,7 +584,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (10/10)
+    (11/11)
   </span>
 </td>
   </tr>
@@ -641,7 +641,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (1/1)
+    (2/2)
   </span>
 </td>
   </tr>
@@ -747,7 +747,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (1/1)
+    (2/2)
   </span>
 </td>
 <td class="coverageStat">
@@ -755,7 +755,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (1/1)
+    (2/2)
   </span>
 </td>
   </tr>
@@ -785,7 +785,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (4/4)
+    (5/5)
   </span>
 </td>
 <td class="coverageStat">
@@ -793,7 +793,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (5/5)
+    (6/6)
   </span>
 </td>
   </tr>
@@ -801,18 +801,18 @@ Current scope:     <a href="../../index.html">all classes</a>
   <td class="name"><strong>Total</strong></td>
 <td class="coverageStat">
   <span class="percent">
-    76.2%
+    77.2%
   </span>
   <span class="absValue">
-    (77/101)
+    (78/101)
   </span>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    78.9%
+    82%
   </span>
   <span class="absValue">
-    (116/147)
+    (114/139)
   </span>
 </td>
 </tr>
@@ -851,15 +851,17 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;  type TypeEnv = Map[Variable, Type]
 &nbsp;
 <b class="fc">&nbsp;  trait Term {</b>
-<b class="fc">&nbsp;    lazy val toHtml: TypedTag[String] = span(raw(prettyPrint(this)))</b>
+<b class="fc">&nbsp;    lazy val toHtml: TypedTag[String] = span(raw(prettyPrint))</b>
 &nbsp;
 <b class="nc">&nbsp;    def getChildrenBase(env: Env = Map()): List[(Term, Env)] = Nil</b>
 &nbsp;
 <b class="nc">&nbsp;    def getChildrenEval(env: Env = Map()): List[(Term, Env)] = Nil</b>
 &nbsp;
-<b class="nc">&nbsp;    def getChildrenTypeCheck(tEnv: TypeEnv = Map()): List[(Term, TypeEnv)] = Nil</b>
+<b class="fc">&nbsp;    def getChildrenTypeCheck(tEnv: TypeEnv = Map()): List[(Term, TypeEnv)] = Nil</b>
 &nbsp;
 <b class="fc">&nbsp;    def isPlaceholder: Boolean = false</b>
+&nbsp;
+<b class="nc">&nbsp;    def prettyPrint: String = toHtml.toString</b>
 &nbsp;  }
 &nbsp;
 &nbsp;  /** An unevaluated expression.
@@ -874,7 +876,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;      }
 &nbsp;    }
 &nbsp;
-<b class="nc">&nbsp;    override def getChildrenBase(env: Env = Map()): List[(Term, Env)] =</b>
+<b class="fc">&nbsp;    override def getChildrenBase(env: Env = Map()): List[(Term, Env)] =</b>
 <b class="fc">&nbsp;      getExprFields(this).zip(LazyList.continually(env))</b>
 &nbsp;
 <b class="fc">&nbsp;    override def getChildrenEval(env: Env = Map()): List[(Term, Env)] =</b>
@@ -922,7 +924,9 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;
 <b class="nc">&nbsp;  case class MissingExpr() extends Expr</b>
 &nbsp;
-<b class="pc">&nbsp;  case class ExprPlaceholder(content: String) extends Expr</b>
+<b class="pc">&nbsp;  case class ExprPlaceholder(content: String) extends Expr {</b>
+<b class="fc">&nbsp;    override def prettyPrint: String = content</b>
+&nbsp;  }
 &nbsp;
 &nbsp;  /** A value resulting from an expression being evaluated.
 &nbsp;    */
@@ -932,11 +936,13 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;
 <b class="fc">&nbsp;    lazy val tooltipText: String = toString + &quot;: &quot; + typ.toString</b>
 &nbsp;
-<b class="fc">&nbsp;    lazy val valueText: TypedTag[String] = div(prettyPrint(this) + &quot;: &quot; + prettyPrint(typ))</b>
+<b class="fc">&nbsp;    lazy val valueText: TypedTag[String] = div(prettyPrint + &quot;: &quot; + typ.prettyPrint)</b>
 &nbsp;
 &nbsp;    val typ: Type
 &nbsp;
 <b class="fc">&nbsp;    val isError: Boolean = false</b>
+&nbsp;
+<b class="fc">&nbsp;    override def prettyPrint: String = toHtml.toString</b>
 &nbsp;  }
 &nbsp;
 &nbsp;  /** The type of a value.
@@ -947,14 +953,18 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;
 <b class="fc">&nbsp;    lazy val tooltipText: String = toString</b>
 &nbsp;
-<b class="fc">&nbsp;    lazy val valueText: TypedTag[String] = div(prettyPrint(this))</b>
+<b class="fc">&nbsp;    lazy val valueText: TypedTag[String] = div(prettyPrint)</b>
 &nbsp;
 <b class="fc">&nbsp;    val isError: Boolean = false</b>
 &nbsp;  }
 &nbsp;
-<b class="pc">&nbsp;  case class UnknownType() extends Type</b>
+<b class="pc">&nbsp;  case class UnknownType() extends Type {</b>
+<b class="fc">&nbsp;    override def prettyPrint: String = &quot;Unknown&quot;</b>
+&nbsp;  }
 &nbsp;
-<b class="pc">&nbsp;  case class TypePlaceholder(content: String) extends Type</b>
+<b class="pc">&nbsp;  case class TypePlaceholder(content: String) extends Type {</b>
+<b class="fc">&nbsp;    override def prettyPrint: String = content</b>
+&nbsp;  }
 &nbsp;
 &nbsp;  trait TermError extends Term {
 <b class="fc">&nbsp;    val message: String = &quot;Error&quot;</b>
@@ -1004,6 +1014,8 @@ Current scope:     <a href="../../index.html">all classes</a>
 <b class="fc">&nbsp;    override lazy val valueText: TypedTag[String] = div(&quot;?&quot;)</b>
 &nbsp;
 <b class="fc">&nbsp;    override val isError: Boolean = true</b>
+&nbsp;
+<b class="fc">&nbsp;    override def prettyPrint: String = message</b>
 &nbsp;  }
 &nbsp;
 &nbsp;  /** An error that occurs due to attempting to process an unknown `Expr`.
@@ -1021,6 +1033,8 @@ Current scope:     <a href="../../index.html">all classes</a>
 <b class="nc">&nbsp;    override lazy val toHtml: TypedTag[String] = p(value.toString)</b>
 &nbsp;
 <b class="fc">&nbsp;    override lazy val toString: String = value.toString</b>
+&nbsp;
+<b class="fc">&nbsp;    override def prettyPrint: String = toString</b>
 &nbsp;  }
 &nbsp;
 <b class="pc">&nbsp;  object Literal {</b>
@@ -1055,52 +1069,6 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;
 <b class="pc">&nbsp;  case class LiteralAny(value: String) extends Literal {</b>
 <b class="fc">&nbsp;    override lazy val toString: String = value</b>
-&nbsp;  }
-&nbsp;
-&nbsp;  /** Function to create a human-readable string representation of an `Expr`.
-&nbsp;    *
-&nbsp;    * @param e
-&nbsp;    *   The `Expr` to be pretty printed.
-&nbsp;    * @return
-&nbsp;    *   A `String` representing the pretty printed expression.
-&nbsp;    */
-<b class="fc">&nbsp;  def prettyPrint(e: Expr): String = e match {</b>
-<b class="fc">&nbsp;    case ExprPlaceholder(content) =&gt; content</b>
-<b class="nc">&nbsp;    case x                        =&gt; x.toHtml.toString</b>
-&nbsp;  }
-&nbsp;
-&nbsp;  /** Function to create a human-readable string representation of a `Type`.
-&nbsp;    *
-&nbsp;    * @param t
-&nbsp;    *   The `Type` to be pretty printed.
-&nbsp;    * @return
-&nbsp;    *   A `String` representing the pretty printed type.
-&nbsp;    */
-<b class="fc">&nbsp;  def prettyPrint(t: Type): String = t match {</b>
-<b class="fc">&nbsp;    case x: TypeError             =&gt; x.message</b>
-<b class="fc">&nbsp;    case x: UnknownType           =&gt; &quot;Unknown&quot;</b>
-<b class="fc">&nbsp;    case TypePlaceholder(content) =&gt; content</b>
-<b class="nc">&nbsp;    case x                        =&gt; throw new NotImplementedError(s&quot;prettyPrint($x)&quot;)</b>
-&nbsp;  }
-&nbsp;
-&nbsp;  /** Function to create a human-readable string representation of a `Value`.
-&nbsp;    *
-&nbsp;    * @param v
-&nbsp;    *   The `Value` to be pretty printed.
-&nbsp;    * @return
-&nbsp;    *   A `String` representing the pretty printed value.
-&nbsp;    */
-<b class="fc">&nbsp;  def prettyPrint(v: Value): String = v match {</b>
-<b class="fc">&nbsp;    case x =&gt; x.toHtml.toString</b>
-&nbsp;  }
-&nbsp;
-&nbsp;  def prettyPrint(term: Term): String = {
-<b class="fc">&nbsp;    term match {</b>
-<b class="fc">&nbsp;      case e: Expr  =&gt; prettyPrint(e)</b>
-<b class="nc">&nbsp;      case t: Type  =&gt; prettyPrint(t)</b>
-<b class="nc">&nbsp;      case v: Value =&gt; prettyPrint(v)</b>
-<b class="nc">&nbsp;      case x        =&gt; throw new IllegalArgumentException(s&quot;Unknown term: $x&quot;)</b>
-&nbsp;    }
 &nbsp;  }
 &nbsp;
 <b class="fc">&nbsp;  def envToTypeEnv(env: Env): TypeEnv = env.map((k: String, v: Value) =&gt; (k, v.typ))</b>
@@ -1140,7 +1108,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2024-01-21 10:10</div>
+    <div style="float:right;">generated on 2024-01-22 12:53</div>
 </div>
 </body>
 </html>

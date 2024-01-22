@@ -168,11 +168,11 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
 
   property("Var pretty prints correctly") {
     forAll(Table("identifier", variableNames: _*)) { v =>
-      Var(v).prettyPrint shouldEqual v
+      Var(Literal.fromString(v)).prettyPrint shouldEqual v
     }
 
     forAll(Table("identifier", invalidVariableNames: _*)) { v =>
-      Var(v).prettyPrint shouldEqual v
+      Var(Literal.fromString(v)).prettyPrint shouldEqual v
     }
   }
 
@@ -190,5 +190,17 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
 
     Let("x", Let("y", Num(3), Var("y")), Var("x")).prettyPrint shouldEqual
       "let x = (let y = 3 in y) in x"
+  }
+
+  property("Let has the correct children") {
+    val let = Let("x", Num(1), Var("x"))
+
+    let.getChildrenBase() shouldEqual List(
+      (LiteralIdentifier("x"), Map()),
+      (Num(1), Map()),
+      (Var("x"), Map("x" -> NumV(1)))
+    )
+    let.getChildrenEval() shouldEqual List((Num(1), Map()), (Var("x"), Map("x" -> NumV(1))))
+    let.getChildrenTypeCheck() shouldEqual List((Num(1), Map()), (Var("x"), Map("x" -> IntType())))
   }
 }
