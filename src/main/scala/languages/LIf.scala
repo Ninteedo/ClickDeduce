@@ -12,6 +12,8 @@ class LIf extends LArith {
       case LiteralBool(_) => BoolType()
       case _              => UnexpectedArgType(s"Bool can only accept LiteralBool, not $b")
     }
+
+    override def prettyPrint: String = b.toString
   }
 
   object Bool {
@@ -38,6 +40,8 @@ class LIf extends LArith {
         TypeMismatchType(t1, t2)
       }
     }
+
+    override def prettyPrint: String = s"(${e1.prettyPrint} == ${e2.prettyPrint})"
   }
 
   case class IfThenElse(cond: Expr, then_expr: Expr, else_expr: Expr) extends Expr {
@@ -66,11 +70,16 @@ class LIf extends LArith {
       case BoolV(false) => List((cond, env), (else_expr, env))
       case _            => List((cond, env), (then_expr, env), (else_expr, env))
     }
+
+    override def prettyPrint: String =
+      s"(if ${cond.prettyPrint} then ${then_expr.prettyPrint} else ${else_expr.prettyPrint})"
   }
 
   // values
   case class BoolV(b: Boolean) extends Value {
     override val typ: Type = BoolType()
+
+    override def prettyPrint: String = b.toString
   }
 
   case class TypeMismatchError(exprName: String, type1: Type, type2: Type) extends EvalError {
@@ -80,29 +89,14 @@ class LIf extends LArith {
   }
 
   // types
-  case class BoolType() extends Type
+  case class BoolType() extends Type {
+    override def prettyPrint: String = "Bool"
+  }
 
   case class TypeMismatchType(type1: Type, type2: Type) extends TypeError {
     override val message: String = s"$type1 not compatible with $type2"
-  }
 
-  override def prettyPrint(e: Expr): String = e match {
-    case Bool(b)    => b.toString
-    case Eq(e1, e2) => s"(${prettyPrint(e1)} == ${prettyPrint(e2)})"
-    case IfThenElse(cond, then_expr, else_expr) =>
-      s"(if ${prettyPrint(cond)} then ${prettyPrint(then_expr)} else ${prettyPrint(else_expr)})"
-    case _ => super.prettyPrint(e)
-  }
-
-  override def prettyPrint(v: Value): String = v match {
-    case BoolV(b) => b.toString
-    case _        => super.prettyPrint(v)
-  }
-
-  override def prettyPrint(t: Type): String = t match {
-    case BoolType()               => "Bool"
-    case TypeMismatchType(t1, t2) => s"TypeMismatch($t1, $t2)"
-    case _                        => super.prettyPrint(t)
+    override def prettyPrint: String = s"TypeMismatch($type1, $type2)"
   }
 
   override def calculateExprClassList: List[Class[Expr]] = {

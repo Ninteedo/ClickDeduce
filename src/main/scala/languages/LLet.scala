@@ -13,6 +13,8 @@ class LLet extends LIf {
       case LiteralIdentifier(identifier) => tEnv.getOrElse(identifier, UnknownVariableTypeError(v))
       case _                             => InvalidIdentifierTypeError(v)
     }
+
+    override def prettyPrint: String = v.toString
   }
 
   object Var {
@@ -42,6 +44,16 @@ class LLet extends LIf {
 
     override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] =
       List((assign, tEnv), (bound, tEnv + (v.toString -> assign.typeCheck(tEnv))))
+
+    override def prettyPrint: String = {
+      val assignExprString = assign match {
+        case _: Var => assign.prettyPrint
+        case _: Num => assign.prettyPrint
+        case _: Bool => assign.prettyPrint
+        case _ => s"(${assign.prettyPrint})"
+      }
+      s"let $v = $assignExprString in ${bound.prettyPrint}"
+    }
   }
 
   object Let {
@@ -58,6 +70,8 @@ class LLet extends LIf {
 
   case class UnknownVariableTypeError(v: Literal) extends TypeError {
     override val message: String = s"Unknown variable identifier '$v'"
+
+    override def prettyPrint: String = s"UnknownVariable($v)"
   }
 
   case class InvalidIdentifierEvalError(v: Literal) extends EvalError {
@@ -68,24 +82,6 @@ class LLet extends LIf {
 
   case class InvalidIdentifierTypeError(v: Literal) extends TypeError {
     override val message: String = s"Invalid identifier '$v'"
-  }
-
-  override def prettyPrint(e: Expr): String = e match {
-    case Var(v) => v.toString
-    case Let(v, assign_expr, bound_expr) =>
-      val assignExprString = assign_expr match {
-        case _: Var  => prettyPrint(assign_expr)
-        case _: Num  => prettyPrint(assign_expr)
-        case _: Bool => prettyPrint(assign_expr)
-        case _       => s"(${prettyPrint(assign_expr)})"
-      }
-      s"let $v = $assignExprString in ${prettyPrint(bound_expr)}"
-    case _ => super.prettyPrint(e)
-  }
-
-  override def prettyPrint(t: Type): String = t match {
-    case UnknownVariableTypeError(v) => s"UnknownVariable($v)"
-    case _                           => super.prettyPrint(t)
   }
 
   override def calculateExprClassList: List[Class[Expr]] = {

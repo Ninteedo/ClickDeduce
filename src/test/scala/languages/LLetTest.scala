@@ -168,27 +168,27 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
 
   property("Var pretty prints correctly") {
     forAll(Table("identifier", variableNames: _*)) { v =>
-      prettyPrint(Var(v)) shouldEqual v
+      Var(v).prettyPrint shouldEqual v
     }
 
     forAll(Table("identifier", invalidVariableNames: _*)) { v =>
-      prettyPrint(Var(v)) shouldEqual v
+      Var(v).prettyPrint shouldEqual v
     }
   }
 
   property("Let pretty prints correctly") {
-    prettyPrint(Let("x", Num(1), Var("x"))) shouldEqual "let x = 1 in x"
-    prettyPrint(Let("y", Num(2), Var("y"))) shouldEqual "let y = 2 in y"
-    prettyPrint(Let("z", Num(3), Var("z"))) shouldEqual "let z = 3 in z"
+    Let("x", Num(1), Var("x")).prettyPrint shouldEqual "let x = 1 in x"
+    Let("y", Num(2), Var("y")).prettyPrint shouldEqual "let y = 2 in y"
+    Let("z", Num(3), Var("z")).prettyPrint shouldEqual "let z = 3 in z"
 
-    prettyPrint(Let("x", Num(1), Let("y", Num(2), Plus(Var("x"), Var("y"))))) shouldEqual
+    Let("x", Num(1), Let("y", Num(2), Plus(Var("x"), Var("y")))).prettyPrint shouldEqual
       "let x = 1 in let y = 2 in (x + y)"
-    prettyPrint(Let("x", Bool(true), Let("y", Num(2), Plus(Var("x"), Var("y"))))) shouldEqual
+    Let("x", Bool(true), Let("y", Num(2), Plus(Var("x"), Var("y")))).prettyPrint shouldEqual
       "let x = true in let y = 2 in (x + y)"
-    prettyPrint(Let("x", Var("y"), Let("y", Num(2), Times(Var("x"), Bool(false))))) shouldEqual
+    Let("x", Var("y"), Let("y", Num(2), Times(Var("x"), Bool(false)))).prettyPrint shouldEqual
       "let x = y in let y = 2 in (x × false)"
 
-    prettyPrint(Let("x", Let("y", Num(3), Var("y")), Var("x"))) shouldEqual
+    Let("x", Let("y", Num(3), Var("y")), Var("x")).prettyPrint shouldEqual
       "let x = (let y = 3 in y) in x"
   }
 }

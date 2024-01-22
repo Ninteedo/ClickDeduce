@@ -628,7 +628,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
         case n: LiteralNode => LiteralAny(n.toHtmlLine(mode).toString)
         case n: SubTypeNode => TypePlaceholder(n.node.toHtmlLineReadOnly(mode).toString)
       }
-      prettyPrint(constructor.newInstance(arguments: _*).asInstanceOf[Expr])
+      constructor.newInstance(arguments: _*).asInstanceOf[Expr].prettyPrint
     }
 
     private def getExprHtmlLineReadOnly(mode: DisplayMode): String = {
@@ -638,7 +638,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
         case n: LiteralNode => LiteralAny(n.toHtmlLineReadOnly(mode).toString)
         case n: SubTypeNode => TypePlaceholder(n.node.toHtmlLineReadOnly(mode).toString)
       }
-      prettyPrint(constructor.newInstance(arguments: _*).asInstanceOf[Expr])
+      constructor.newInstance(arguments: _*).asInstanceOf[Expr].prettyPrint
     }
 
     override def toString: String = s"VariableNode(${UtilityFunctions.quote(exprName)}, $args)"
@@ -791,11 +791,9 @@ trait AbstractNodeLanguage extends AbstractLanguage {
         throw new IllegalArgumentException(s"Unknown expression type for ${lang.getClass.getSimpleName}: $typeName")
     }
 
-    override def toHtmlLine(mode: DisplayMode): TypedTag[String] =
-      getType.toHtml(data("tree-path") := treePathString)
+    override def toHtmlLine(mode: DisplayMode): TypedTag[String] = getType.toHtml(data("tree-path") := treePathString)
 
-    override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] =
-      toHtmlLine(mode)(readonly, disabled)
+    override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] = toHtmlLine(mode)(readonly, disabled)
 
     override val children: List[OuterNode] = args.filter(_.isInstanceOf[SubTypeNode]).flatMap(_.children)
 
@@ -807,7 +805,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
         case n: LiteralNode => LiteralAny(n.toHtmlLine(mode).toString)
         case n: SubTypeNode => TypePlaceholder(n.node.toHtmlLine(mode).toString)
       }
-      prettyPrint(constructor.newInstance(arguments: _*).asInstanceOf[Expr])
+      constructor.newInstance(arguments: _*).asInstanceOf[Expr].prettyPrint
     }
 
     def getExprHtmlLineReadOnly(mode: DisplayMode): String = {
@@ -816,7 +814,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
         case n: LiteralNode => LiteralAny(n.toHtmlLineReadOnly(mode).toString)
         case n: SubTypeNode => TypePlaceholder(n.node.toHtmlLineReadOnly(mode).toString)
       }
-      prettyPrint(constructor.newInstance(arguments: _*).asInstanceOf[Expr])
+      constructor.newInstance(arguments: _*).asInstanceOf[Expr].prettyPrint
     }
 
     children.foreach(_.setParent(Some(this)))

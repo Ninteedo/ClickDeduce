@@ -26,7 +26,7 @@ trait AbstractLanguage {
   type TypeEnv = Map[Variable, Type]
 
   trait Term {
-    lazy val toHtml: TypedTag[String] = span(raw(prettyPrint(this)))
+    lazy val toHtml: TypedTag[String] = span(raw(prettyPrint))
 
     def getChildrenBase(env: Env = Map()): List[(Term, Env)] = Nil
 
@@ -35,6 +35,8 @@ trait AbstractLanguage {
     def getChildrenTypeCheck(tEnv: TypeEnv = Map()): List[(Term, TypeEnv)] = Nil
 
     def isPlaceholder: Boolean = false
+
+    def prettyPrint: String = toHtml.toString
   }
 
   /** An unevaluated expression.
@@ -97,7 +99,9 @@ trait AbstractLanguage {
 
   case class MissingExpr() extends Expr
 
-  case class ExprPlaceholder(content: String) extends Expr
+  case class ExprPlaceholder(content: String) extends Expr {
+    override def prettyPrint: String = content
+  }
 
   /** A value resulting from an expression being evaluated.
     */
@@ -107,11 +111,13 @@ trait AbstractLanguage {
 
     lazy val tooltipText: String = toString + ": " + typ.toString
 
-    lazy val valueText: TypedTag[String] = div(prettyPrint(this) + ": " + prettyPrint(typ))
+    lazy val valueText: TypedTag[String] = div(prettyPrint + ": " + typ.prettyPrint)
 
     val typ: Type
 
     val isError: Boolean = false
+
+    override def prettyPrint: String = toHtml.toString
   }
 
   /** The type of a value.
@@ -122,14 +128,18 @@ trait AbstractLanguage {
 
     lazy val tooltipText: String = toString
 
-    lazy val valueText: TypedTag[String] = div(prettyPrint(this))
+    lazy val valueText: TypedTag[String] = div(prettyPrint)
 
     val isError: Boolean = false
   }
 
-  case class UnknownType() extends Type
+  case class UnknownType() extends Type {
+    override def prettyPrint: String = "Unknown"
+  }
 
-  case class TypePlaceholder(content: String) extends Type
+  case class TypePlaceholder(content: String) extends Type {
+    override def prettyPrint: String = content
+  }
 
   trait TermError extends Term {
     val message: String = "Error"
@@ -179,6 +189,8 @@ trait AbstractLanguage {
     override lazy val valueText: TypedTag[String] = div("?")
 
     override val isError: Boolean = true
+
+    override def prettyPrint: String = message
   }
 
   /** An error that occurs due to attempting to process an unknown `Expr`.
@@ -196,6 +208,8 @@ trait AbstractLanguage {
     override lazy val toHtml: TypedTag[String] = p(value.toString)
 
     override lazy val toString: String = value.toString
+
+    override def prettyPrint: String = toString
   }
 
   object Literal {
@@ -230,52 +244,6 @@ trait AbstractLanguage {
 
   case class LiteralAny(value: String) extends Literal {
     override lazy val toString: String = value
-  }
-
-  /** Function to create a human-readable string representation of an `Expr`.
-    *
-    * @param e
-    *   The `Expr` to be pretty printed.
-    * @return
-    *   A `String` representing the pretty printed expression.
-    */
-  def prettyPrint(e: Expr): String = e match {
-    case ExprPlaceholder(content) => content
-    case x                        => x.toHtml.toString
-  }
-
-  /** Function to create a human-readable string representation of a `Type`.
-    *
-    * @param t
-    *   The `Type` to be pretty printed.
-    * @return
-    *   A `String` representing the pretty printed type.
-    */
-  def prettyPrint(t: Type): String = t match {
-    case x: TypeError             => x.message
-    case x: UnknownType           => "Unknown"
-    case TypePlaceholder(content) => content
-    case x                        => throw new NotImplementedError(s"prettyPrint($x)")
-  }
-
-  /** Function to create a human-readable string representation of a `Value`.
-    *
-    * @param v
-    *   The `Value` to be pretty printed.
-    * @return
-    *   A `String` representing the pretty printed value.
-    */
-  def prettyPrint(v: Value): String = v match {
-    case x => x.toHtml.toString
-  }
-
-  def prettyPrint(term: Term): String = {
-    term match {
-      case e: Expr  => prettyPrint(e)
-      case t: Type  => prettyPrint(t)
-      case v: Value => prettyPrint(v)
-      case x        => throw new IllegalArgumentException(s"Unknown term: $x")
-    }
   }
 
   def envToTypeEnv(env: Env): TypeEnv = env.map((k: String, v: Value) => (k, v.typ))

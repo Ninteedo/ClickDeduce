@@ -177,8 +177,8 @@ class LRecTest extends TestTemplate[Expr, Value, Type] {
   property("Rec pretty prints correctly") {
     val factorialPretty = "rec factorial(n: Int): Int. (if (n == 0) then 1 else (n × ((factorial) (n + -1))))"
 
-    prettyPrint(factorialFunction) shouldEqual factorialPretty
+    factorialFunction.prettyPrint shouldEqual factorialPretty
 
-    prettyPrint(factorialFunction.eval()) shouldEqual factorialPretty
+    factorialFunction.eval().prettyPrint shouldEqual factorialPretty
   }
 }

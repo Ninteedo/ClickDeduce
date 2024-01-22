@@ -23,6 +23,8 @@ class LLam extends LLet {
       case (v1: FunctionValue, v2) => List((e1, env), (e2, env), v1.getFunctionEvaluation(v2))
       case _                       => List((e1, env), (e2, env))
     }
+
+    override def prettyPrint: String = s"((${e1.prettyPrint}) ${e2.prettyPrint})"
   }
 
   case class Lambda(v: Literal, typ: Type, e: Expr) extends Expr {
@@ -42,6 +44,8 @@ class LLam extends LLet {
     override def getChildrenEval(env: Env): List[(Term, Env)] = Nil
 
     override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] = List((e, tEnv + (v.toString -> typ)))
+
+    override def prettyPrint: String = s"λ$v: ${typ.prettyPrint}. ${e.prettyPrint}"
   }
 
   object Lambda {
@@ -61,14 +65,20 @@ class LLam extends LLet {
     }
 
     override lazy val valueText: TypedTag[String] = div(in.toHtml, raw(" → "), out.toHtml)
+
+    override def prettyPrint: String = s"(${in.prettyPrint} → ${out.prettyPrint})"
   }
 
   case class ApplyToNonFunctionErrorType(wrongType: Type) extends TypeError {
-    override val message: String = s"Cannot apply with left expression being ${prettyPrint(wrongType)}"
+    override val message: String = s"Cannot apply with left expression being ${wrongType.prettyPrint}"
+
+    override def prettyPrint: String = s"CannotApplyError(${wrongType.prettyPrint})"
   }
 
   case class IncompatibleTypeErrorType(typ1: Type, typ2: Type) extends TypeError {
     override val message: String = s"mismatched types for applying function (expected $typ1 but got $typ2)"
+
+    override def prettyPrint: String = s"IncompatibleTypes(${typ1.prettyPrint}, ${typ2.prettyPrint})"
   }
 
   // values
@@ -86,40 +96,25 @@ class LLam extends LLet {
     override def evalApply(value: Value): Value = e.eval(env + (v -> value))
 
     override lazy val valueText: TypedTag[String] = div(
-      raw(prettyPrint(LambdaV(v, TypePlaceholder(inputType.toHtml.toString), ExprPlaceholder(e.toHtml.toString), env)))
+      raw(LambdaV(v, TypePlaceholder(inputType.toHtml.toString), ExprPlaceholder(e.toHtml.toString), env).prettyPrint)
     )
+
+    override def prettyPrint: String = {
+      val eString: String = if (e == BlankExprDropDown()) "?" else e.prettyPrint
+      s"λ$v: ${inputType.prettyPrint}. $eString"
+    }
   }
 
   case class ApplyToNonFunctionError(value: Value) extends EvalError {
-    override val message: String = s"Cannot apply with left expression being ${prettyPrint(value)}"
+    override val message: String = s"Cannot apply with left expression being ${value.prettyPrint}"
 
     override val typ: Type = ApplyToNonFunctionErrorType(value.typ)
   }
 
   case class PlaceholderValue(override val typ: Type) extends Value {
     override def isPlaceholder: Boolean = true
-  }
 
-  override def prettyPrint(e: Expr): String = e match {
-    case Lambda(v, typ, e) => s"λ$v: ${prettyPrint(typ)}. ${prettyPrint(e)}"
-    case Apply(e1, e2)     => s"((${prettyPrint(e1)}) ${prettyPrint(e2)})"
-    case _                 => super.prettyPrint(e)
-  }
-
-  override def prettyPrint(v: Value): String = v match {
-    case LambdaV(v, inputType, e, env) => {
-      val eString: String = if (e == BlankExprDropDown()) "?" else prettyPrint(e)
-      s"λ$v: ${prettyPrint(inputType)}. $eString"
-    }
-    case PlaceholderValue(typ) => "?"
-    case _                     => super.prettyPrint(v)
-  }
-
-  override def prettyPrint(t: Type): String = t match {
-    case Func(in, out)                         => s"(${prettyPrint(in)} → ${prettyPrint(out)})"
-    case ApplyToNonFunctionErrorType(typ)      => s"CannotApplyError(${prettyPrint(typ)})"
-    case IncompatibleTypeErrorType(typ1, typ2) => s"IncompatibleTypes(${prettyPrint(typ1)}, ${prettyPrint(typ2)})"
-    case _                                     => super.prettyPrint(t)
+    override def prettyPrint: String = "?"
   }
 
   override def calculateExprClassList: List[Class[Expr]] = {

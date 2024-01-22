@@ -41,6 +41,8 @@ class LRec extends LLam {
     )
 
     override def getChildrenEval(env: Env): List[(Term, Env)] = Nil
+
+    override def prettyPrint: String = prettyPrintRec(f, v, inType, outType, e)
   }
 
   object Rec {
@@ -59,32 +61,22 @@ class LRec extends LLam {
 
     override lazy val valueText: Text.TypedTag[String] = div(
       raw(
-        prettyPrint(
-          RecV(
-            f,
-            v,
-            TypePlaceholder(in_typ.toHtml.toString),
-            TypePlaceholder(out_typ.toHtml.toString),
-            ExprPlaceholder(e.toHtml.toString),
-            env
-          )
-        )
+        RecV(
+          f,
+          v,
+          TypePlaceholder(in_typ.toHtml.toString),
+          TypePlaceholder(out_typ.toHtml.toString),
+          ExprPlaceholder(e.toHtml.toString),
+          env
+        ).prettyPrint
       )
     )
+
+    override def prettyPrint: String = prettyPrintRec(f, v, in_typ, out_typ, e)
   }
 
   private def prettyPrintRec(f: Literal, v: Literal, in_typ: Type, out_typ: Type, e: Expr) =
-    s"rec $f($v: ${prettyPrint(in_typ)}): ${prettyPrint(out_typ)}. ${prettyPrint(e)}"
-
-  override def prettyPrint(e: Expr): String = e match {
-    case Rec(f, v, in_typ, out_typ, e) => prettyPrintRec(f, v, in_typ, out_typ, e)
-    case _                             => super.prettyPrint(e)
-  }
-
-  override def prettyPrint(v: Value): String = v match {
-    case RecV(f, v, in_typ, out_typ, e, env) => prettyPrintRec(f, v, in_typ, out_typ, e)
-    case _                                   => super.prettyPrint(v)
-  }
+    s"rec $f($v: ${in_typ.prettyPrint}): ${out_typ.prettyPrint}. ${e.prettyPrint}"
 
   override def calculateExprClassList: List[Class[Expr]] = {
     super.calculateExprClassList ++ List(classOf[Rec]).map(_.asInstanceOf[Class[Expr]])

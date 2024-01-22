@@ -120,12 +120,12 @@ class LArithTest extends TestTemplate[Expr, Value, Type] {
   }
 
   property("Arithmetic expressions should print appropriately") {
-    prettyPrint(Num(15)) shouldBe "15"
-    prettyPrint(Plus(Num(15), Num(20))) shouldBe "(15 + 20)"
-    prettyPrint(Times(Num(15), Num(20))) shouldBe "(15 × 20)"
-    prettyPrint(Plus(Num(15), Times(Num(20), Num(25)))) shouldBe "(15 + (20 × 25))"
-    prettyPrint(Times(Plus(Num(15), Num(20)), Num(25))) shouldBe "((15 + 20) × 25)"
-    prettyPrint(Times(Plus(Num(15), Num(20)), Plus(Num(25), Num(30)))) shouldBe "((15 + 20) × (25 + 30))"
+    Num(15).prettyPrint shouldBe "15"
+    Plus(Num(15), Num(20)).prettyPrint shouldBe "(15 + 20)"
+    Times(Num(15), Num(20)).prettyPrint shouldBe "(15 × 20)"
+    Plus(Num(15), Times(Num(20), Num(25))).prettyPrint shouldBe "(15 + (20 × 25))"
+    Times(Plus(Num(15), Num(20)), Num(25)).prettyPrint shouldBe "((15 + 20) × 25)"
+    Times(Plus(Num(15), Num(20)), Plus(Num(25), Num(30))).prettyPrint shouldBe "((15 + 20) × (25 + 30))"
   }
 
   property("Children of arithmetic expressions is accurate") {
@@ -219,45 +219,45 @@ class LArithTest extends TestTemplate[Expr, Value, Type] {
   }
 
   property("Num should pretty print correctly") {
-    prettyPrint(Num(15)) shouldBe "15"
-    prettyPrint(Num(-15)) shouldBe "-15"
-    prettyPrint(Num(0)) shouldBe "0"
+    Num(15).prettyPrint shouldBe "15"
+    Num(-15).prettyPrint shouldBe "-15"
+    Num(0).prettyPrint shouldBe "0"
     val quiteBigInt = BigInt("965712796818796")
-    prettyPrint(Num(quiteBigInt)) shouldBe quiteBigInt.toString
+    Num(quiteBigInt).prettyPrint shouldBe quiteBigInt.toString
     val reallyBigInt = BigInt("965712796818796") * BigInt("8561575617798768176")
-    prettyPrint(Num(reallyBigInt)) shouldBe reallyBigInt.toString
+    Num(reallyBigInt).prettyPrint shouldBe reallyBigInt.toString
     val reallyNegativeBigInt = BigInt("965712796818796") * BigInt("-8561575617798768176")
-    prettyPrint(Num(reallyNegativeBigInt)) shouldBe reallyNegativeBigInt.toString
+    Num(reallyNegativeBigInt).prettyPrint shouldBe reallyNegativeBigInt.toString
   }
 
   property("Plus should pretty print correctly") {
-    prettyPrint(Plus(Num(15), Num(20))) shouldBe "(15 + 20)"
-    prettyPrint(Plus(Num(15), Num(-20))) shouldBe "(15 + -20)"
-    prettyPrint(Plus(Plus(Num(15), Num(20)), Num(25))) shouldBe "((15 + 20) + 25)"
-    prettyPrint(Plus(Num(15), Plus(Num(20), Num(25)))) shouldBe "(15 + (20 + 25))"
-    prettyPrint(Plus(Plus(Num(15), Num(20)), Plus(Num(25), Num(30)))) shouldBe "((15 + 20) + (25 + 30))"
+    Plus(Num(15), Num(20)).prettyPrint shouldBe "(15 + 20)"
+    Plus(Num(15), Num(-20)).prettyPrint shouldBe "(15 + -20)"
+    Plus(Plus(Num(15), Num(20)), Num(25)).prettyPrint shouldBe "((15 + 20) + 25)"
+    Plus(Num(15), Plus(Num(20), Num(25))).prettyPrint shouldBe "(15 + (20 + 25))"
+    Plus(Plus(Num(15), Num(20)), Plus(Num(25), Num(30))).prettyPrint shouldBe "((15 + 20) + (25 + 30))"
   }
 
   property("Times should pretty print correctly") {
-    prettyPrint(Times(Num(15), Num(20))) shouldBe "(15 × 20)"
-    prettyPrint(Times(Num(15), Num(-20))) shouldBe "(15 × -20)"
-    prettyPrint(Times(Times(Num(15), Num(20)), Num(25))) shouldBe "((15 × 20) × 25)"
-    prettyPrint(Times(Num(15), Times(Num(20), Num(25)))) shouldBe "(15 × (20 × 25))"
-    prettyPrint(Times(Times(Num(15), Num(20)), Times(Num(25), Num(30)))) shouldBe "((15 × 20) × (25 × 30))"
+    Times(Num(15), Num(20)).prettyPrint shouldBe "(15 × 20)"
+    Times(Num(15), Num(-20)).prettyPrint shouldBe "(15 × -20)"
+    Times(Times(Num(15), Num(20)), Num(25)).prettyPrint shouldBe "((15 × 20) × 25)"
+    Times(Num(15), Times(Num(20), Num(25))).prettyPrint shouldBe "(15 × (20 × 25))"
+    Times(Times(Num(15), Num(20)), Times(Num(25), Num(30))).prettyPrint shouldBe "((15 × 20) × (25 × 30))"
   }
 
   property("Mixed Plus and Times should pretty print correctly") {
-    prettyPrint(Plus(Times(Num(15), Num(20)), Num(25))) shouldBe "((15 × 20) + 25)"
-    prettyPrint(Plus(Num(15), Times(Num(20), Num(25)))) shouldBe "(15 + (20 × 25))"
-    prettyPrint(Plus(Times(Num(15), Num(20)), Times(Num(25), Num(30)))) shouldBe "((15 × 20) + (25 × 30))"
+    Plus(Times(Num(15), Num(20)), Num(25)).prettyPrint shouldBe "((15 × 20) + 25)"
+    Plus(Num(15), Times(Num(20), Num(25))).prettyPrint shouldBe "(15 + (20 × 25))"
+    Plus(Times(Num(15), Num(20)), Times(Num(25), Num(30))).prettyPrint shouldBe "((15 × 20) + (25 × 30))"
   }
 
   property("NumV should pretty print correctly") {
-    prettyPrint(NumV(15)) shouldBe "15"
-    prettyPrint(NumV(-15)) shouldBe "-15"
+    NumV(15).prettyPrint shouldBe "15"
+    NumV(-15).prettyPrint shouldBe "-15"
   }
 
   property("IntType should pretty print correctly") {
-    prettyPrint(IntType()) shouldBe "Int"
+    IntType().prettyPrint shouldBe "Int"
   }
 }
