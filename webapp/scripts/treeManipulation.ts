@@ -14,7 +14,7 @@ let langSelector: HTMLSelectElement;
 export let activeInputs: HTMLElement[] = [];
 export let initialValues: [string, string][] = [];
 
-export let lastNodeString: string = "";
+export let lastNodeString: string = null;
 
 /**
  * Resets the global variables used by the tree manipulation code.
@@ -26,7 +26,7 @@ export async function resetTreeManipulation(): Promise<void> {
     redoButton = document.getElementById('redoButton') as HTMLButtonElement;
     activeInputs = [];
     initialValues = [];
-    lastNodeString = "";
+    lastNodeString = null;
 
     updateUndoRedoButtons();
 
@@ -55,9 +55,7 @@ async function loadLangSelector(): Promise<void> {
     }).then(() => {
         const langSelector: HTMLElement = document.getElementById('lang-selector');
         langSelector.addEventListener('change', () => {
-            if (lastNodeString !== "") {
-                runAction("IdentityAction", "", []);
-            }
+            runAction("IdentityAction", "", []);
         })
     });
 }

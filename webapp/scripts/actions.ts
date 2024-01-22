@@ -101,6 +101,10 @@ export async function handleDropdownChange(dropdown: HTMLSelectElement, kind: st
  * @param extraArgs any extra arguments to pass to the action
  */
 export async function runAction(actionName: string, treePath: string, extraArgs: any[]): Promise<void> {
+    if (lastNodeString == null) {
+        return;
+    }
+
     const modeName: string = getSelectedMode();
     const langName: string = getSelectedLanguage();
     return fetch("/process-action", {
