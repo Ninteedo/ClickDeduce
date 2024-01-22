@@ -42,11 +42,11 @@ a lot of the uncovered lines should be covered in reality.
 #### Branch Coverage
 
 I also found that the branch coverage was inaccurate, as even a simple `if` statement was marked as hundreds of
-branches, resulting in branch coverage under `30%` for the repository, which was not a useful measurement.
+branches, resulting in branch coverage of `33%` for the repository, which was not a useful measurement.
 
 It is possible that the branch coverage is accurate, but I believe that it is more likely that there is some inaccuracy.
 
-With more time, I would have liked to investigate this further, as branch coverage is a very useful metric.
+With more time, I would have liked to investigate this further, as branch coverage is a useful metric.
 
 ### App Package
 

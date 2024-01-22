@@ -5,6 +5,11 @@
 Tests will be used throughout the development of the project to ensure that the code works as expected and matches
 the requirements.
 
+At the early stages of development, the exact project structure was not yet fully decided, so development was not
+test-driven at that point.
+Later on, the project structure was more stable, so development was test-driven from that point onwards.
+This plan was written after the project structure was determined, so it is based on the test-driven development.
+
 The IDE being used for development is IntelliJ IDEA, which has built-in support for running tests.
 Its test interface highlights the tests which have failed, and includes debugging functionality.
 It will be configured to run the tests automatically whenever a commit is made to the local git repository.

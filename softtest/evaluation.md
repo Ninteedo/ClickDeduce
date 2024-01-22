@@ -20,23 +20,25 @@ I believe high branch coverage would be more difficult to achieve than high line
 require more complex tests, and would be more likely to require unreachable code to be removed.
 This may be possible to achieve with other tools, but I did not have time to investigate this.
 
-The Scala backend has an overall coverage of `89%` for methods and `89%` for lines, which is a good level of coverage.
+The Scala backend has an overall coverage of `89%` for methods and `88%` for lines, which is a good level of coverage.
 This does mean that `11%` of methods and lines are not covered, but as discussed in the coverage report,
 this is not terrible.
+The branch coverage is `33%`, which is not a good level of coverage, but as discussed in the coverage report,
+it is unclear how accurate this is.
 
 The TypeScript front end has an overall coverage of `96%` for statements, `92%` for branches, `95%` for functions, and
 `95%` for lines. This is an exceptional level of coverage, and I am satisfied with this.
 
 The most important aspect is that the defined languages accurately follow the specification,
 since they are the purpose of the project, and with a mathematical basis, any issues would be highly visible.
-All of the defined languages have `100%` coverage for methods and lines in the test suite.
+All the defined languages have `100%` coverage for methods and lines in the test suite.
 
 I do not believe `100%` coverage for the languages is unreasonable, as they are relatively simple, and the
 specification is well-defined.
 
 The main ways to improve the coverage would be to (and the reasons why these weren't done were):
-1. Create test cases for the server thread, which is difficult due to its asynchronous nature.
-2. Create test cases for the functionality of PanZoom, which is difficult since it is a third-party library. 
+1. Create test cases for the server thread, which is hard due to its asynchronous nature.
+2. Create test cases for the functionality of PanZoom, which is a low priority since it is a third-party library. 
 3. Create test cases for the `zoomToFit` function in the frontend, which is difficult since depends on its
    interaction with PanZoom, and the fact that it a purely visual function.
 4. Create test cases for ensuring that the text in error messages is correct, which are not defined in the
@@ -53,11 +55,13 @@ I believe that setting a mutation score goal is not particularly useful, as it i
 will be created, and how many of these have effects that compromise the functionality of the program.
 
 If `25%` of the mutants just replace error messages, then a target of `90%` would be unrealistic.
-If all of the mutants are designed to break the functionality, then a target of `90%` would be too low.
+If all of the mutants are hand-crafted to break the functionality, then a target of `90%` would be too low.
 
 Since the mutation testing was automated and done by a tool I was unfamiliar with, I did not have a good idea of
 what a good mutation score would be.
 I also think that a lot of the mutants generated were not useful, particularly in the Scala code.
+
+I set a target of `80%` for the mutation score, though I am unsure how useful this is.
 
 There were practically no mutants that affected the evaluation and type-checking behaviour of the languages,
 which is the most important part of the project.
