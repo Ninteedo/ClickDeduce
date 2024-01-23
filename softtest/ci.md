@@ -15,6 +15,8 @@ This means I won't run into issues where the tests pass on my machine but not on
 
 The GitHub Actions workflows are defined in [.github/workflows](../.github/workflows).
 
+![GitHub Actions overview](./images/actions_overview.png)
+
 ## Limitations of GitHub Actions
 
 The main limitation I found was that the result of testing was simply a pass or fail, rather than a breakdown of
@@ -43,6 +45,10 @@ The workflow is designed as follows:
 
 Note that the web server part of the application is not tested here, as it used in the Jest tests.
 
+![Scala CI overview](./images/scala_ci_overview.png)
+
+![Scala CI test results](./images/scala_ci_results.png)
+
 ## Jest CI
 
 The Jest CI workflow is defined in [jest.yml](../.github/workflows/jest.yml).
@@ -69,6 +75,12 @@ It could have potentially made it clearer which tests failed, but I decided that
 (that could potentially rack up minutes of usage) was not worth it. 
 The vast majority of each test's duration is spent installing dependencies, so extra workflows would take up a lot of
 server time.
+
+![Jest CI overview](./images/jest_ci_overview.png)
+
+![Jest CI test results](./images/jest_ci_results.png)
+
+![Jest CI test fail](./images/jest_ci_fail.png)
 
 ## Improvements
 

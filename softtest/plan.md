@@ -86,12 +86,20 @@ Jest provides mocking functionality, so this will be used to mock the server res
 A custom fetch mock function will be used which will allow the tests to specify the response for each request.
 The tests will then be able to check that the code behaves as expected for each response.
 
+The overall idea is that if the code makes the correct requests and handles the fake responses correctly, then it
+should behave correctly with the real server.
+
 ### Unit Tests
 
 Similarly to the Scala code, some of the TypeScript code will be highly interdependent, so it will be difficult to
 fully separate some modules from each other.
 
 Generally, the behaviour of the action methods is dependent on the functionality of the tree manipulation methods.
+
+The tree manipulation tests will be a mix of unit and integration tests.
+For example, the behaviour of the undo and redo buttons is a mixture of levels:
+whether they should be disabled is unit-level,
+while the effects of them being clicked is integration-level.
 
 ### Integration Tests
 
@@ -118,7 +126,7 @@ the tests will be run in a headless browser.
    - This will consist of events such as clicking buttons, entering text, keyboard events, and mouse events.
    - The tests will check that the state of the page is as expected after each event, or a series of events.
 - The tests will be run in a headless browser using jsdom.
-- The tests will be run using Jest. 
+- The tests will be run using Jest.
 
 ### Performance Tests
 
@@ -147,7 +155,7 @@ effort.
 ## Limitations
 
 - There are no system tests written for the Scala code.
-This is because the Scala code is primarily used for the server, which is not intended to be used interactively.
+  This is because the Scala code is primarily used for the server, which is not intended to be used interactively.
 
 - The tests for the HTML conversion will not be able to check for extra elements in the DOM which should not be there.
 
@@ -157,8 +165,8 @@ This is because the Scala code is primarily used for the server, which is not in
 - The unit test and some of the integration tests for the TypeScript code will have to accurately mock server responses.
 
 - The system tests for the TypeScript code will not be able to test the website in a real browser environment
-automatically. 
-The accuracy of these tests is dependent on the accuracy of the jsdom implementation. 
+  automatically.
+  The accuracy of these tests is dependent on the accuracy of the jsdom implementation.
 
 - The performance tests will not be able to test the performance of the website in a real browser environment.
 

@@ -23,6 +23,12 @@
    2. It will bundle the scripts when the server is started
    3. It will bundle the scripts into the `dist` folder
    4. It will bundle the scripts into a single file called `bundle.js`
+4. If an error occurs while processing a request, the server will respond with a context-appropriate error code and
+   message
+   1. The server process will not end when an error occurs
+5. The server will not store any user data
+   1. The server will not store any user data in memory
+   2. The server will not store any user data in files
 
 ### API
 
