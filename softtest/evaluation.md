@@ -76,10 +76,15 @@ of the evaluation and type-checking code, due to these being more complex than a
 
 An assessment of which requirements have associated tests can be found [here](./requirements_to_tests.md).
 
-In total, out of 207 requirements, 27 are not tested.
-This means that 87% of requirements are tested.
+I set a target of `90%` of requirement having tests directly associated with them.
+This is because I believed that it is important to cover every requirement, but I understand that some requirements
+may be difficult to test directly.
 
-I believe that this is a good level of coverage, showing that the majority of the requirements are tested.
+In total, out of 207 requirements, 27 are not tested.
+This means that `87%` of requirements are tested.
+
+This does not quite meet the target, but I believe it is a good level of coverage 
+(considering that a lot of the uncovered requirements are UI-related, and are hard to test automatically).
 
 ## Limitations
 
