@@ -57,6 +57,12 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
     IfThenElse(Bool(true), Bool(true), Num(2)).typeCheck(Map()) shouldBe a[TypeError]
   }
 
+  property("IfThenElse type-checks to an error when the condition is not a BoolType") {
+    IfThenElse(Num(1), Num(1), Num(2)).typeCheck(Map()) shouldBe a[TypeMismatchType]
+    IfThenElse(Plus(Num(1), Num(2)), Bool(true), Bool(false)).typeCheck(Map()) shouldBe a[TypeMismatchType]
+    IfThenElse(IfThenElse(Bool(true), Num(1), Num(0)), Num(1), Num(2)).typeCheck(Map()) shouldBe a[TypeMismatchType]
+  }
+
   property("Eq type-checks to BoolType when both sides have the same type") {
     Eq(Num(1), Num(2)).typeCheck(Map()) shouldEqual BoolType()
     Eq(Bool(true), Bool(false)).typeCheck(Map()) shouldEqual BoolType()
@@ -92,7 +98,7 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
 
   property("Can create VariableNode for expression kinds in LIf") {
     forAll(newExprClasses) { c =>
-      VariableNode.createFromExprName(c) shouldBe a[VariableNode]
+      VariableNode.createFromExprName(c).get shouldBe a[VariableNode]
     }
   }
 

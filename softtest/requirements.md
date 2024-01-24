@@ -125,7 +125,7 @@
       2. The focused subtree will remain highlighted as long as the context menu is open
       3. Operations from the context menu will target the focused subtree
    2. The user will be able to delete a node, resetting that subtree to an empty state
-   3. The user will be able to copy a node, and paste it somewhere else in the tree
+   3. The user will be able to copy a node and paste it somewhere else in the tree
       1. It is only possible to paste a subtree after copying a subtree
       2. Any subtree can be copied, including the root node
    4. The user will be able to reset the entire tree to an empty state
@@ -269,6 +269,7 @@ They should each be available separately for the user to select from the languag
 7. The following scenarios will result in an error:
    1. The literal `v` in `Lambda(v, t, x)` is not a valid identifier
    2. When evaluating `Apply(LambdaV(v, t, x, env), y)`, the type of `y` is not equal to `t`
+   3. When evaluating `Apply(v1, v2)`, the type of `v1` is not any kind of `Func`
 
 ### Recursive Functions (LRec)
 
@@ -346,10 +347,12 @@ This creates a tree structure alternating between inner and outer nodes.
 
 1. Stores the value of the literal as a string
 2. Cannot have any children
+3. Can read a literal correctly, including handling escape characters
 
 ##### Subexpression Node
 
 1. Stores a single expression node as a child
+2. Cannot be a child of a type node
 
 ##### Subtype Node
 

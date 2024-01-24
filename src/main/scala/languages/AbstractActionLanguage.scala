@@ -63,10 +63,14 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
     override val treePath: List[Int],
     exprChoiceName: String
   ) extends Action(originalTree, treePath) {
-    override lazy val newTree: OuterNode = originalTree.findChild(treePath) match {
-      case Some(exprChoiceNode: ExprChoiceNode) =>
-        originalTree.replace(treePath, VariableNode.createFromExprName(exprChoiceName))
-      case other => throw new InvalidSelectTargetException(other)
+    override lazy val newTree: OuterNode = {
+      val exprNode = VariableNode.createFromExprName(exprChoiceName)
+      if (exprNode.isEmpty) throw new InvalidSelectValueNameException(exprChoiceName)
+      originalTree.findChild(treePath) match {
+        case Some(exprChoiceNode: ExprChoiceNode) =>
+          originalTree.replace(treePath, exprNode.get)
+        case other => throw new InvalidSelectTargetException(other)
+      }
     }
   }
 
@@ -75,10 +79,14 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
     override val treePath: List[Int],
     typeChoiceName: String
   ) extends Action(originalTree, treePath) {
-    override lazy val newTree: OuterNode = originalTree.findChild(treePath) match {
-      case Some(typeChoiceNode: TypeChoiceNode) =>
-        originalTree.replace(treePath, TypeNode.fromTypeName(typeChoiceName))
-      case other => throw new InvalidSelectTargetException(other)
+    override lazy val newTree: OuterNode = {
+      val typeNode = TypeNode.fromTypeName(typeChoiceName)
+      if (typeNode.isEmpty) throw new InvalidSelectValueNameException(typeChoiceName)
+      originalTree.findChild(treePath) match {
+        case Some(typeChoiceNode: TypeChoiceNode) =>
+          originalTree.replace(treePath, typeNode.get)
+        case other => throw new InvalidSelectTargetException(other)
+      }
     }
   }
 
@@ -132,6 +140,8 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
   class ActionInvocationException(message: String) extends Exception(message)
 
   class InvalidSelectTargetException(found: Option[Node]) extends Exception(s"Invalid select target: $found")
+
+  class InvalidSelectValueNameException(valueName: String) extends Exception(s"Invalid select value name: $valueName")
 
   class InvalidEditTargetException(found: Option[Node]) extends Exception(s"Invalid literal edit target: $found")
 

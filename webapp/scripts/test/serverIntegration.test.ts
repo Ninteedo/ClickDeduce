@@ -307,7 +307,7 @@ describe('behaviour of changing the selected language is correct', () => {
         }
     });
 
-    test('can change to a child language with more existing nodes', async () => {
+    test('can change to a child language with more existing expressions', async () => {
         await changeLanguage(1);
 
         await selectExprOption(getLeftmostExprDropdown(), 5);

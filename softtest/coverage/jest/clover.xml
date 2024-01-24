@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1705921029072" clover="3.2.0">
-  <project timestamp="1705921029072" name="All files">
+<coverage generated="1706118535855" clover="3.2.0">
+  <project timestamp="1706118535855" name="All files">
     <metrics statements="283" coveredstatements="270" conditionals="79" coveredconditionals="73" methods="74" coveredmethods="70" elements="436" coveredelements="413" complexity="0" loc="283" ncloc="283" packages="1" files="6" classes="6"/>
     <file name="ClickDeduceResponseError.ts" path="D:\Users\RIchard\Documents\Uni\Inf\Project\ClickDeduce\webapp\scripts\ClickDeduceResponseError.ts">
       <metrics statements="5" coveredstatements="5" conditionals="2" coveredconditionals="1" methods="2" coveredmethods="2"/>

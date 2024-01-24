@@ -34,10 +34,6 @@ Current scope:     <a href="../../index.html">all classes</a>
 </th>
 <th class="coverageStat 
 ">
-  Branch, %
-</th>
-<th class="coverageStat 
-">
   Line, %
 </th>
 </tr>
@@ -49,14 +45,6 @@ Current scope:     <a href="../../index.html">all classes</a>
   </span>
   <span class="absValue">
     (4/4)
-  </span>
-</td>
-<td class="coverageStat">
-  <span class="percent">
-    35%
-  </span>
-  <span class="absValue">
-    (7/20)
   </span>
 </td>
 <td class="coverageStat">
@@ -99,14 +87,6 @@ Current scope:     <a href="../../index.html">all classes</a>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    28.4%
-  </span>
-  <span class="absValue">
-    (21/74)
-  </span>
-</td>
-<td class="coverageStat">
-  <span class="percent">
     100%
   </span>
   <span class="absValue">
@@ -122,14 +102,6 @@ Current scope:     <a href="../../index.html">all classes</a>
   </span>
   <span class="absValue">
     (3/3)
-  </span>
-</td>
-<td class="coverageStat">
-  <span class="percent">
-    50%
-  </span>
-  <span class="absValue">
-    (1/2)
   </span>
 </td>
 <td class="coverageStat">
@@ -153,14 +125,6 @@ Current scope:     <a href="../../index.html">all classes</a>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    50%
-  </span>
-  <span class="absValue">
-    (1/2)
-  </span>
-</td>
-<td class="coverageStat">
-  <span class="percent">
     100%
   </span>
   <span class="absValue">
@@ -176,14 +140,6 @@ Current scope:     <a href="../../index.html">all classes</a>
   </span>
   <span class="absValue">
     (5/5)
-  </span>
-</td>
-<td class="coverageStat">
-  <span class="percent">
-    37.5%
-  </span>
-  <span class="absValue">
-    (30/80)
   </span>
 </td>
 <td class="coverageStat">
@@ -207,14 +163,6 @@ Current scope:     <a href="../../index.html">all classes</a>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    50%
-  </span>
-  <span class="absValue">
-    (1/2)
-  </span>
-</td>
-<td class="coverageStat">
-  <span class="percent">
     100%
   </span>
   <span class="absValue">
@@ -230,14 +178,6 @@ Current scope:     <a href="../../index.html">all classes</a>
   </span>
   <span class="absValue">
     (21/21)
-  </span>
-</td>
-<td class="coverageStat">
-  <span class="percent">
-    33.9%
-  </span>
-  <span class="absValue">
-    (61/180)
   </span>
 </td>
 <td class="coverageStat">
@@ -264,22 +204,22 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;
 <b class="fc">&nbsp;class LRec extends LLam {</b>
 &nbsp;  // expressions
-<b class="pc">&nbsp;  case class Rec(f: Literal, v: Literal, inType: Type, outType: Type, e: Expr) extends Expr {</b>
+<b class="fc">&nbsp;  case class Rec(f: Literal, v: Literal, inType: Type, outType: Type, e: Expr) extends Expr {</b>
 <b class="fc">&nbsp;    override def evalInner(env: Env): Value = f match {</b>
-<b class="pc">&nbsp;      case LiteralIdentifier(f_id) =&gt;</b>
+<b class="fc">&nbsp;      case LiteralIdentifier(f_id) =&gt;</b>
 <b class="fc">&nbsp;        v match {</b>
-<b class="pc">&nbsp;          case LiteralIdentifier(v_id) =&gt; RecV(f, v, inType, outType, e, env)</b>
+<b class="fc">&nbsp;          case LiteralIdentifier(v_id) =&gt; RecV(f, v, inType, outType, e, env)</b>
 <b class="fc">&nbsp;          case _                       =&gt; InvalidIdentifierEvalError(v)</b>
 &nbsp;        }
 <b class="fc">&nbsp;      case _ =&gt; InvalidIdentifierEvalError(f)</b>
 &nbsp;    }
 &nbsp;
 <b class="fc">&nbsp;    override def typeCheckInner(tEnv: TypeEnv): Type = f match {</b>
-<b class="pc">&nbsp;      case LiteralIdentifier(f_id) =&gt;</b>
+<b class="fc">&nbsp;      case LiteralIdentifier(f_id) =&gt;</b>
 <b class="fc">&nbsp;        v match {</b>
-<b class="pc">&nbsp;          case LiteralIdentifier(v_id) =&gt;</b>
+<b class="fc">&nbsp;          case LiteralIdentifier(v_id) =&gt;</b>
 <b class="fc">&nbsp;            val determinedOutType = e.typeCheck(tEnv + (f.toString -&gt; Func(inType, outType)) + (v.toString -&gt; inType))</b>
-<b class="pc">&nbsp;            if (outType == determinedOutType) Func(inType, outType)</b>
+<b class="fc">&nbsp;            if (outType == determinedOutType) Func(inType, outType)</b>
 <b class="fc">&nbsp;            else RecursiveFunctionExpressionOutTypeMismatch(outType, determinedOutType)</b>
 <b class="fc">&nbsp;          case _ =&gt; InvalidIdentifierTypeError(v)</b>
 &nbsp;        }
@@ -300,16 +240,16 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;
 <b class="fc">&nbsp;    override def getChildrenEval(env: Env): List[(Term, Env)] = Nil</b>
 &nbsp;
-<b class="pc">&nbsp;    override def prettyPrint: String = prettyPrintRec(f, v, inType, outType, e)</b>
+<b class="fc">&nbsp;    override def prettyPrint: String = prettyPrintRec(f, v, inType, outType, e)</b>
 &nbsp;  }
 &nbsp;
-<b class="pc">&nbsp;  object Rec {</b>
+<b class="fc">&nbsp;  object Rec {</b>
 <b class="fc">&nbsp;    def apply(f: String, v: String, in_typ: Type, out_typ: Type, e: Expr): Rec =</b>
 <b class="fc">&nbsp;      Rec(Literal.fromString(f), Literal.fromString(v), in_typ, out_typ, e)</b>
 &nbsp;  }
 &nbsp;
 &nbsp;  // values
-<b class="pc">&nbsp;  case class RecV(f: Literal, v: Literal, in_typ: Type, out_typ: Type, e: Expr, env: Env) extends FunctionValue {</b>
+<b class="fc">&nbsp;  case class RecV(f: Literal, v: Literal, in_typ: Type, out_typ: Type, e: Expr, env: Env) extends FunctionValue {</b>
 <b class="fc">&nbsp;    override val typ: Type = Func(in_typ, out_typ)</b>
 &nbsp;
 &nbsp;    override def getFunctionEvaluation(applyValue: Value): (Expr, Env) =
@@ -317,7 +257,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;
 <b class="fc">&nbsp;    override def evalApply(value: Value): Value = e.eval(env ++ Map(f.toString -&gt; this, v.toString -&gt; value))</b>
 &nbsp;
-<b class="pc">&nbsp;    override lazy val valueText: Text.TypedTag[String] = div(</b>
+<b class="fc">&nbsp;    override lazy val valueText: Text.TypedTag[String] = div(</b>
 <b class="fc">&nbsp;      raw(</b>
 <b class="fc">&nbsp;        RecV(</b>
 <b class="fc">&nbsp;          f,</b>
@@ -328,9 +268,9 @@ Current scope:     <a href="../../index.html">all classes</a>
 <b class="fc">&nbsp;          env</b>
 &nbsp;        ).prettyPrint
 &nbsp;      )
-<b class="pc">&nbsp;    )</b>
+<b class="fc">&nbsp;    )</b>
 &nbsp;
-<b class="pc">&nbsp;    override def prettyPrint: String = prettyPrintRec(f, v, in_typ, out_typ, e)</b>
+<b class="fc">&nbsp;    override def prettyPrint: String = prettyPrintRec(f, v, in_typ, out_typ, e)</b>
 &nbsp;  }
 &nbsp;
 &nbsp;  private def prettyPrintRec(f: Literal, v: Literal, in_typ: Type, out_typ: Type, e: Expr) =
@@ -340,7 +280,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 <b class="fc">&nbsp;    super.calculateExprClassList ++ List(classOf[Rec]).map(_.asInstanceOf[Class[Expr]])</b>
 &nbsp;  }
 &nbsp;
-<b class="pc">&nbsp;  class RecursiveFunctionExpressionOutTypeMismatch(declared: Type, actual: Type) extends TypeError {</b>
+<b class="fc">&nbsp;  class RecursiveFunctionExpressionOutTypeMismatch(declared: Type, actual: Type) extends TypeError {</b>
 &nbsp;    override val message: String =
 <b class="fc">&nbsp;      s&quot;Recursive function expression declared return type $declared does not match actual return type $actual&quot;</b>
 &nbsp;  }
@@ -370,7 +310,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2024-01-22 16:28</div>
+    <div style="float:right;">generated on 2024-01-24 17:47</div>
 </div>
 </body>
 </html>

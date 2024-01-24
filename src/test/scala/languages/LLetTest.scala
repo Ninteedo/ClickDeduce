@@ -36,6 +36,29 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
     }
   }
 
+  property("Var correctly evaluates with simple environment") {
+    forAll(assortedValues) { value =>
+      {
+        val v = randomElement(variableNames)
+        Var(v).eval(Map(v -> value)) shouldEqual value
+      }
+    }
+  }
+
+  property("Var correctly evaluates with big environment") {
+    forAll(assortedValues) { value => {
+      var env: Env = Map()
+      for (i <- 0 until Math.min(assortedValues.length, variableNames.length)) {
+        val v = randomElement(variableNames)
+        val value = randomElement(assortedValues.toList)
+        env += v -> value
+      }
+      val v: Variable = randomElement(env.keys.toList)
+      Var(v).eval(env) shouldEqual env(v)
+    }
+    }
+  }
+
   testExpression(
     "Let with single Let in expression",
     createExprTable(
@@ -81,7 +104,7 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
   }
 
   property("Let behaviour is correct with actions") {
-    val tree = VariableNode.createFromExprName("Let")
+    val tree = VariableNode.createFromExprName("Let").get
     tree.args shouldEqual List(LiteralNode(""), SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode()))
 
     val v: Variable = "x"

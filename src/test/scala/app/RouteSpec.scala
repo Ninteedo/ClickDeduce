@@ -24,11 +24,11 @@ class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with J
     val startNodeBlank: String = "/start-node-blank"
 
     def createRequest(lang: ClickDeduceLanguage): Future[MessageEntity] = {
-      val request = EvalRequest(server.getLanguageName(lang))
+      val request = EvalRequest(WebServer.getLanguageName(lang))
       Marshal(request).to[MessageEntity]
     }
 
-    val langRequestList: List[Future[MessageEntity]] = server.knownLanguages.map(createRequest)
+    val langRequestList: List[Future[MessageEntity]] = WebServer.knownLanguages.map(createRequest)
 
     def checkOnAllRequests(test: Future[MessageEntity] => Unit): Unit = {
       langRequestList.foreach { request =>
@@ -183,7 +183,7 @@ class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with J
         checkHtmlDoc { doc =>
           val select = (doc >> elementList("select")).head
           val options = select >> elementList("option")
-          options.size shouldBe server.knownLanguages.size
+          options.size shouldBe WebServer.knownLanguages.size
         }
       }
 
@@ -192,8 +192,8 @@ class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with J
           val select = (doc >> elementList("select")).head
           val options = select >> elementList("option")
           options.zipWithIndex.foreach { case (option, index) =>
-            option.attr("value") shouldBe server.getLanguageName(server.knownLanguages(index))
-            option.text shouldBe server.getLanguageName(server.knownLanguages(index))
+            option.attr("value") shouldBe WebServer.getLanguageName(WebServer.knownLanguages(index))
+            option.text shouldBe WebServer.getLanguageName(WebServer.knownLanguages(index))
           }
         }
       }
@@ -213,7 +213,7 @@ class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with J
     ): Future[MessageEntity] = {
       val treePathString = treePath.mkString("-")
       val request =
-        ActionRequest(server.getLanguageName(lang), modeName, actionKind, nodeString, treePathString, extraArgs)
+        ActionRequest(WebServer.getLanguageName(lang), modeName, actionKind, nodeString, treePathString, extraArgs)
       Marshal(request).to[MessageEntity]
     }
 
@@ -299,13 +299,13 @@ class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with J
 
     "return an error response for an invalid display mode" in {
       val request =
-        ActionRequest(server.getLanguageName(LArith), "nonsense", "IdentityAction", "ExprChoiceNode()", "", List())
+        ActionRequest(WebServer.getLanguageName(LArith), "nonsense", "IdentityAction", "ExprChoiceNode()", "", List())
       errorOnInvalidRequest(request)
     }
 
     "return an error response for an invalid action kind" in {
       val request =
-        ActionRequest(server.getLanguageName(LArith), "edit", "NonsenseAction", "ExprChoiceNode()", "", List())
+        ActionRequest(WebServer.getLanguageName(LArith), "edit", "NonsenseAction", "ExprChoiceNode()", "", List())
       errorOnInvalidRequest(request)
     }
 
@@ -320,7 +320,7 @@ class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with J
         """VariableNode("Num", List(SubExprNode(ExprChoiceNode())))"""
       )
       for (nodeString <- invalidNodeStrings) {
-        val request = ActionRequest(server.getLanguageName(LArith), "edit", "IdentityAction", nodeString, "", List())
+        val request = ActionRequest(WebServer.getLanguageName(LArith), "edit", "IdentityAction", nodeString, "", List())
         errorOnInvalidRequest(request)
       }
     }

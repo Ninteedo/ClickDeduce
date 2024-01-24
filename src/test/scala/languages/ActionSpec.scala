@@ -1,5 +1,6 @@
 package languages
 
+import app.WebServer
 import languages.LLam.*
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.TableDrivenPropertyChecks.forAll
@@ -80,7 +81,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
         val action = SelectExprAction(tree, List(), exprChoiceName)
         action.newTree shouldBe a[VariableNode]
         action.newTree.asInstanceOf[VariableNode].exprName shouldBe exprChoiceName
-        action.newTree shouldEqual VariableNode.createFromExprName(exprChoiceName)
+        action.newTree shouldEqual VariableNode.createFromExprName(exprChoiceName).get
       }
     }
 
@@ -105,7 +106,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
           "Lambda",
           VariableNode
             .fromExpr(IfThenElse(Plus(Num(1), BlankExprDropDown()), Num(6), BlankExprDropDown()))
-            .replace(List(0, 1), VariableNode.createFromExprName("Lambda"))
+            .replace(List(0, 1), VariableNode.createFromExprName("Lambda").get)
             .asInstanceOf[ExprNode]
         )
       )
@@ -126,6 +127,28 @@ class ActionSpec extends AnyWordSpec with Matchers {
       )
       forAll(trees) { (tree, treePath, exprChoiceName) =>
         an[InvalidSelectTargetException] should be thrownBy SelectExprAction(tree, treePath, exprChoiceName).newTree
+      }
+    }
+
+    "throw an error if the expression kind is not defined in the language" in {
+      val cases: TableFor2[String, String] = TableFor2(
+        ("langName", "exprName"),
+        ("LRec", "fake"),
+        ("LArith", "Rec"),
+        ("LIf", "If Then Else"),
+        ("LArith", "If Then Else"),
+        ("LArith", "fake"),
+        ("LArith", "Let"),
+        ("LArith", "Var"),
+        ("LArith", "Lambda"),
+        ("LArith", "IntType")
+      )
+
+      forAll(cases) { (langName, exprName) =>
+        val lang = WebServer.getLanguage(langName)
+        an[InvalidSelectValueNameException] should be thrownBy lang
+          .SelectExprAction(lang.ExprChoiceNode(), List(), exprName)
+          .newTree
       }
     }
   }
@@ -206,6 +229,19 @@ class ActionSpec extends AnyWordSpec with Matchers {
 
       forAll(trees) { (tree, treePath, typeChoiceName) =>
         an[InvalidSelectTargetException] should be thrownBy SelectTypeAction(tree, treePath, typeChoiceName).newTree
+      }
+    }
+
+    "throw an error if the type kind is not defined in the language" in {
+      val cases: TableFor1[String] =
+        TableFor1("typeName", "fake", "Num", "Plus", "Lambda", "Type", "Func(IntType(), IntType())")
+
+      forAll(cases) { typeName =>
+        an[InvalidSelectValueNameException] should be thrownBy SelectTypeAction(
+          VariableNode.fromExpr(Lambda("x", BlankTypeDropDown(), BlankExprDropDown())),
+          List(1),
+          typeName
+        ).newTree
       }
     }
   }
@@ -361,6 +397,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
     "correctly paste an expr node string into a tree" in {
       val trees: TableFor4[ExprNode, List[Int], String, ExprNode] = TableFor4(
         ("tree", "treePath", "pasteNodeString", "result"),
+        (ExprChoiceNode(), List(), VariableNode.fromExpr(Num(1)).toString, VariableNode.fromExpr(Num(1))),
         (
           VariableNode.fromExpr(Plus(Num(1), Num(2))),
           List(0),

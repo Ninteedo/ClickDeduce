@@ -34,10 +34,6 @@ Current scope:     <a href="../../index.html">all classes</a>
 </th>
 <th class="coverageStat 
 ">
-  Branch, %
-</th>
-<th class="coverageStat 
-">
   Line, %
 </th>
 </tr>
@@ -49,14 +45,6 @@ Current scope:     <a href="../../index.html">all classes</a>
   </span>
   <span class="absValue">
     (1/1)
-  </span>
-</td>
-<td class="coverageStat">
-  <span class="percent">
-    39.3%
-  </span>
-  <span class="absValue">
-    (11/28)
   </span>
 </td>
 <td class="coverageStat">
@@ -99,14 +87,6 @@ Current scope:     <a href="../../index.html">all classes</a>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    39.3%
-  </span>
-  <span class="absValue">
-    (11/28)
-  </span>
-</td>
-<td class="coverageStat">
-  <span class="percent">
     100%
   </span>
   <span class="absValue">
@@ -141,7 +121,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;
 &nbsp;case class EvalRequest(langName: String)
 &nbsp;
-<b class="pc">&nbsp;case class NodeResponse(nodeString: String, html: String)</b>
+<b class="fc">&nbsp;case class NodeResponse(nodeString: String, html: String)</b>
 &nbsp;
 &nbsp;case class ActionRequest(
 &nbsp;  langName: String,
@@ -288,16 +268,6 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;    parser.parse(args, ()).isDefined
 &nbsp;  }
 &nbsp;
-&nbsp;  val knownLanguages: List[ClickDeduceLanguage] = List(LArith(), LIf(), LLet(), LLam(), LRec())
-&nbsp;
-&nbsp;  private def getLanguage(langName: String): ClickDeduceLanguage = knownLanguages
-&nbsp;    .find(getLanguageName(_) == langName) match {
-&nbsp;    case Some(lang) =&gt; lang
-&nbsp;    case None       =&gt; throw new IllegalArgumentException(s&quot;Unknown language: $langName&quot;)
-&nbsp;  }
-&nbsp;
-&nbsp;  def getLanguageName(lang: ClickDeduceLanguage): String = lang.getClass.getSimpleName.stripSuffix(&quot;$&quot;)
-&nbsp;
 &nbsp;  private def bundleScripts(): Unit = {
 &nbsp;    println(&quot;Bundling scripts...&quot;)
 &nbsp;
@@ -318,7 +288,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;    post {
 &nbsp;      path(&quot;start-node-blank&quot;) {
 &nbsp;        entity(as[EvalRequest]) { request =&gt;
-&nbsp;          val lang = getLanguage(request.langName)
+&nbsp;          val lang = WebServer.getLanguage(request.langName)
 &nbsp;          val tree = lang.ExprChoiceNode()
 &nbsp;          val response = NodeResponse(tree.toString, tree.toHtml(lang.DisplayMode.Edit).toString)
 &nbsp;          complete(response)
@@ -326,7 +296,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;      } ~
 &nbsp;        path(&quot;process-action&quot;) {
 &nbsp;          entity(as[ActionRequest]) { request =&gt;
-&nbsp;            val lang = getLanguage(request.langName)
+&nbsp;            val lang = WebServer.getLanguage(request.langName)
 &nbsp;            val action = lang.createAction(
 &nbsp;              request.actionName,
 &nbsp;              request.nodeString,
@@ -346,7 +316,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;          val langSelector: TypedTag[String] = select(
 &nbsp;            id := &quot;lang-selector&quot;,
 &nbsp;            name := &quot;lang-name&quot;,
-&nbsp;            knownLanguages.map(lang =&gt; option(value := getLanguageName(lang), getLanguageName(lang)))
+&nbsp;            WebServer.knownLanguages.map(lang =&gt; option(value := WebServer.getLanguageName(lang), WebServer.getLanguageName(lang)))
 &nbsp;          )
 &nbsp;          val response = LangSelectorResponse(langSelector.toString)
 &nbsp;          complete(response)
@@ -367,6 +337,15 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;    val server = new WebServer()
 &nbsp;    server.runServer(args)
 &nbsp;  }
+&nbsp;
+&nbsp;  val knownLanguages: List[ClickDeduceLanguage] = List(LArith(), LIf(), LLet(), LLam(), LRec())
+&nbsp;
+&nbsp;  def getLanguage(langName: String): ClickDeduceLanguage = knownLanguages.find(getLanguageName(_) == langName) match {
+&nbsp;    case Some(lang) =&gt; lang
+&nbsp;    case None =&gt; throw new IllegalArgumentException(s&quot;Unknown language: $langName&quot;)
+&nbsp;  }
+&nbsp;
+&nbsp;  def getLanguageName(lang: ClickDeduceLanguage): String = lang.getClass.getSimpleName.stripSuffix(&quot;$&quot;)
 &nbsp;}
 </code>
 </pre>
@@ -391,7 +370,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2024-01-22 16:28</div>
+    <div style="float:right;">generated on 2024-01-24 17:47</div>
 </div>
 </body>
 </html>

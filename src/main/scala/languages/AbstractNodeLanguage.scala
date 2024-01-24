@@ -648,22 +648,26 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   }
 
   object VariableNode {
-    def createFromExprName(exprName: String): VariableNode = {
-      val exprClass = exprNameToClass(exprName).get
-      val constructor = exprClass.getConstructors.head
-      val innerNodes = constructor.getParameterTypes
-        .map {
-          case c if classOf[AbstractNodeLanguage] isAssignableFrom c => None
-          case c if classOf[Expr] isAssignableFrom c                 => Some(SubExprNode(ExprChoiceNode()))
-          case c if classOf[Literal] isAssignableFrom c              => Some(LiteralNode(""))
-          case c if classOf[Type] isAssignableFrom c                 => Some(SubTypeNode(TypeChoiceNode()))
-          case c => throw new Exception(s"Unexpected parameter type in createFromExpr: $c")
-        }
-        .filter(_.isDefined)
-        .map(_.get)
-      val result = VariableNode(exprName, innerNodes.toList)
-      innerNodes.foreach(_.setParent(Some(result)))
-      result
+    def createFromExprName(exprName: String): Option[VariableNode] = {
+      try {
+        val exprClass = exprNameToClass(exprName).get
+        val constructor = exprClass.getConstructors.head
+        val innerNodes = constructor.getParameterTypes
+          .map {
+            case c if classOf[AbstractNodeLanguage] isAssignableFrom c => None
+            case c if classOf[Expr] isAssignableFrom c                 => Some(SubExprNode(ExprChoiceNode()))
+            case c if classOf[Literal] isAssignableFrom c              => Some(LiteralNode(""))
+            case c if classOf[Type] isAssignableFrom c                 => Some(SubTypeNode(TypeChoiceNode()))
+            case c => throw new Exception(s"Unexpected parameter type in createFromExpr: $c")
+          }
+          .filter(_.isDefined)
+          .map(_.get)
+        val result = VariableNode(exprName, innerNodes.toList)
+        innerNodes.foreach(_.setParent(Some(result)))
+        Some(result)
+      } catch {
+        case _ => None
+      }
     }
 
     def fromExpr(e: Expr): ExprNode = e match {
@@ -822,23 +826,20 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   }
 
   object TypeNode {
-    def fromTypeName(typeName: String): TypeNode = {
-      typeNameToClass(typeName) match {
-        case Some(typ) =>
-          val constructor = typ.getConstructors()(0)
-          val arguments = constructor.getParameterTypes
-            .map({
-              case c if classOf[Type] isAssignableFrom c             => Some(SubTypeNode(TypeChoiceNode()))
-              case c if classOf[Literal] isAssignableFrom c          => Some(LiteralNode(""))
-              case c if classOf[AbstractLanguage] isAssignableFrom c => None
-            })
-            .filter(_.isDefined)
-            .map(_.get)
-            .toList
-          TypeNode(typeName, arguments)
-        case None =>
-          throw new IllegalArgumentException(s"Unknown expression type for ${lang.getClass.getSimpleName}: $typeName")
-      }
+    def fromTypeName(typeName: String): Option[TypeNode] = typeNameToClass(typeName) match {
+      case Some(typ) =>
+        val constructor = typ.getConstructors()(0)
+        val arguments = constructor.getParameterTypes
+          .map({
+            case c if classOf[Type] isAssignableFrom c             => Some(SubTypeNode(TypeChoiceNode()))
+            case c if classOf[Literal] isAssignableFrom c          => Some(LiteralNode(""))
+            case c if classOf[AbstractLanguage] isAssignableFrom c => None
+          })
+          .filter(_.isDefined)
+          .map(_.get)
+          .toList
+        Some(TypeNode(typeName, arguments))
+      case None => None
     }
 
     def fromType(typ: Type): TypeNodeParent = typ match {

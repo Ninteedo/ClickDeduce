@@ -114,7 +114,7 @@ class NodeSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChecks 
       )
 
       forAll(cases) { (name, node) =>
-        VariableNode.createFromExprName(name) shouldBe node
+        VariableNode.createFromExprName(name) shouldBe Some(node)
       }
     }
 
@@ -433,7 +433,7 @@ class NodeSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChecks 
       testLiteralNodeStringConversion(literals)
     }
 
-    "correctly convert to and from string with escapes" in {
+    "correctly convert to and from a string with escapes" in {
       val literals = List(
         "\\",
         "\\\\",

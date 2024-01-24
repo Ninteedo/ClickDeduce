@@ -10,7 +10,7 @@ import org.scalatest.time.{Millis, Span}
 import scala.collection.immutable.Map
 
 class LRecTest extends TestTemplate[Expr, Value, Type] {
-  val factorialFunction: Expr = Rec(
+  val factorialFunction: Rec = Rec(
     "factorial",
     "n",
     IntType(),
@@ -18,7 +18,7 @@ class LRecTest extends TestTemplate[Expr, Value, Type] {
     IfThenElse(Eq(Var("n"), Num(0)), Num(1), Times(Var("n"), Apply(Var("factorial"), Plus(Var("n"), Num(-1)))))
   )
 
-  val nestedOverridingRecFunction1: Expr =
+  val nestedOverridingRecFunction1: Rec =
     Rec("f", "x", IntType(), IntType(), Apply(Rec("f", "x", IntType(), IntType(), Num(1)), Var("x")))
 
   property("Rec type-checks correctly") {
@@ -33,14 +33,54 @@ class LRecTest extends TestTemplate[Expr, Value, Type] {
     nestedOverridingRecFunction1.typeCheck(Map()) shouldEqual Func(IntType(), IntType())
   }
 
-  property("Rec verifies that its expression matches the reported type") {
-    val fakeFactorialFunction = Rec(
-      "factorial",
-      "n",
+  property("Rec evaluates correctly") {
+    Rec("f", "x", IntType(), IntType(), Num(1)).eval(Map()) shouldEqual RecV(
+      Literal.fromString("f"),
+      Literal.fromString("x"),
       IntType(),
       IntType(),
-      Bool(true)
+      Num(1),
+      Map()
     )
+    Rec("f", "x", IntType(), IntType(), Num(1))
+      .eval(Map("f" -> NumV(6), "x" -> BoolV(false))) shouldEqual RecV(
+      Literal.fromString("f"),
+      Literal.fromString("x"),
+      IntType(),
+      IntType(),
+      Num(1),
+      Map("f" -> NumV(6), "x" -> BoolV(false))
+    )
+    Rec("f", "x", IntType(), Func(IntType(), BoolType()), Lambda("y", IntType(), Eq(Var("y"), Num(0))))
+      .eval(Map("f" -> NumV(-657), "x" -> BoolV(true))) shouldEqual
+      RecV(
+        Literal.fromString("f"),
+        Literal.fromString("x"),
+        IntType(),
+        Func(IntType(), BoolType()),
+        Lambda("y", IntType(), Eq(Var("y"), Num(0))),
+        Map("f" -> NumV(-657), "x" -> BoolV(true))
+      )
+    factorialFunction.eval(Map()) shouldEqual RecV(
+      factorialFunction.f,
+      factorialFunction.v,
+      factorialFunction.inType,
+      factorialFunction.outType,
+      factorialFunction.e,
+      Map()
+    )
+    nestedOverridingRecFunction1.eval(Map()) shouldEqual RecV(
+      nestedOverridingRecFunction1.f,
+      nestedOverridingRecFunction1.v,
+      nestedOverridingRecFunction1.inType,
+      nestedOverridingRecFunction1.outType,
+      nestedOverridingRecFunction1.e,
+      Map()
+    )
+  }
+
+  property("Rec verifies that its expression matches the reported type") {
+    val fakeFactorialFunction = Rec("factorial", "n", IntType(), IntType(), Bool(true))
     val fakeFactorialFunction2 = Rec(
       "factorial",
       "n",
@@ -155,7 +195,7 @@ class LRecTest extends TestTemplate[Expr, Value, Type] {
       Rec(LiteralIdentifier("h"), LiteralString("bar"), IntType(), IntType(), Num(1)),
       Rec(LiteralString("foo"), LiteralString("bar"), IntType(), IntType(), Num(1)),
       Rec(" x", "y", IntType(), IntType(), Num(1)),
-      Rec("1foo", "bar", IntType(), IntType(), Num(1)),
+      Rec("1foo", "bar", IntType(), IntType(), Num(1))
     )
 
     forAll(expressions) { expr =>

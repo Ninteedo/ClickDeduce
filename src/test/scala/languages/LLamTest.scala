@@ -99,7 +99,7 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
   }
 
   property("Lambda node behaves appropriately with simple argument type") {
-    val initialTree = VariableNode.createFromExprName("Lambda")
+    val initialTree = VariableNode.createFromExprName("Lambda").get
     initialTree.args shouldEqual List(LiteralNode(""), SubTypeNode(TypeChoiceNode()), SubExprNode(ExprChoiceNode()))
 
     val argName: String = "foo"
@@ -135,7 +135,7 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
   }
 
   property("Lambda node behaves appropriately with complex argument type") {
-    val initialTree = VariableNode.createFromExprName("Lambda")
+    val initialTree = VariableNode.createFromExprName("Lambda").get
     initialTree.args shouldEqual List(LiteralNode(""), SubTypeNode(TypeChoiceNode()), SubExprNode(ExprChoiceNode()))
 
     val argName: String = "bar"
@@ -236,7 +236,7 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
   }
 
   property("Lambda node createAction behaves appropriately with complex argument type") {
-    val initialTree = VariableNode.createFromExprName("Lambda")
+    val initialTree = VariableNode.createFromExprName("Lambda").get
     initialTree.args shouldEqual List(LiteralNode(""), SubTypeNode(TypeChoiceNode()), SubExprNode(ExprChoiceNode()))
 
     val argName: String = "super1984"

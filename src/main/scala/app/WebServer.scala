@@ -165,16 +165,6 @@ class WebServer extends JsonSupport {
     parser.parse(args, ()).isDefined
   }
 
-  val knownLanguages: List[ClickDeduceLanguage] = List(LArith(), LIf(), LLet(), LLam(), LRec())
-
-  private def getLanguage(langName: String): ClickDeduceLanguage = knownLanguages
-    .find(getLanguageName(_) == langName) match {
-    case Some(lang) => lang
-    case None       => throw new IllegalArgumentException(s"Unknown language: $langName")
-  }
-
-  def getLanguageName(lang: ClickDeduceLanguage): String = lang.getClass.getSimpleName.stripSuffix("$")
-
   private def bundleScripts(): Unit = {
     println("Bundling scripts...")
 
@@ -195,7 +185,7 @@ class WebServer extends JsonSupport {
     post {
       path("start-node-blank") {
         entity(as[EvalRequest]) { request =>
-          val lang = getLanguage(request.langName)
+          val lang = WebServer.getLanguage(request.langName)
           val tree = lang.ExprChoiceNode()
           val response = NodeResponse(tree.toString, tree.toHtml(lang.DisplayMode.Edit).toString)
           complete(response)
@@ -203,7 +193,7 @@ class WebServer extends JsonSupport {
       } ~
         path("process-action") {
           entity(as[ActionRequest]) { request =>
-            val lang = getLanguage(request.langName)
+            val lang = WebServer.getLanguage(request.langName)
             val action = lang.createAction(
               request.actionName,
               request.nodeString,
@@ -223,7 +213,7 @@ class WebServer extends JsonSupport {
           val langSelector: TypedTag[String] = select(
             id := "lang-selector",
             name := "lang-name",
-            knownLanguages.map(lang => option(value := getLanguageName(lang), getLanguageName(lang)))
+            WebServer.knownLanguages.map(lang => option(value := WebServer.getLanguageName(lang), WebServer.getLanguageName(lang)))
           )
           val response = LangSelectorResponse(langSelector.toString)
           complete(response)
@@ -244,4 +234,13 @@ object WebServer {
     val server = new WebServer()
     server.runServer(args)
   }
+
+  val knownLanguages: List[ClickDeduceLanguage] = List(LArith(), LIf(), LLet(), LLam(), LRec())
+
+  def getLanguage(langName: String): ClickDeduceLanguage = knownLanguages.find(getLanguageName(_) == langName) match {
+    case Some(lang) => lang
+    case None => throw new IllegalArgumentException(s"Unknown language: $langName")
+  }
+
+  def getLanguageName(lang: ClickDeduceLanguage): String = lang.getClass.getSimpleName.stripSuffix("$")
 }
