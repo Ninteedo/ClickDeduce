@@ -7,6 +7,11 @@ If a requirement does not need to be tested, it is marked as "N/A".
 
 If a requirement that should be tested is not covered by any tests, it is marked as "Not tested".
 
+In total, out of 207 requirements, 27 are not tested.
+This means that 87% of requirements are tested.
+
+A large portion of the untested requirements are to do with the UI, which is difficult to test automatically.
+
 ## Server
 
 ### Process

@@ -72,6 +72,14 @@ Mutation testing was not particularly useful for the Scala code for the language
 This is because the automated tools for mutation testing did not manage to create mutants
 of the evaluation and type-checking code, due to these being more complex than an automated tool can handle.
 
+## Requirements
+
+An assessment of which requirements have associated tests can be found [here](./requirements_to_tests.md).
+
+In total, out of 207 requirements, 27 are not tested.
+This means that 87% of requirements are tested.
+
+I believe that this is a good level of coverage, showing that the majority of the requirements are tested.
 
 ## Limitations
 
@@ -98,3 +106,5 @@ Security testing and performance testing would be useful, but are not a priority
 I would like to implement more advanced mutation testing for the Scala code.
 This would possibly involve hand-crafting mutants with a better understanding of the code,
 rather than relying on an automated tool which is not able to create useful mutants.
+
+A higher coverage of requirements could be achieved by introducing user testing for the interface.

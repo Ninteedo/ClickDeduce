@@ -17,7 +17,7 @@ The mutation reports are available in [`softtest/mutation`](./mutation).
 
 ### Scala
 
-The Scala mutation testing report shows that out of 470 mutants, 161 survived, giving a mutation score of `66%`.
+The Scala mutation testing report shows that out of 541 mutants, 158 survived, giving a mutation score of `66%`.
 
 This score is not particularly high.
 However, upon inspecting the mutants, a large portion of them are replacing string literals in places that are
@@ -25,7 +25,7 @@ unimportant for the functionality of the program.
 
 With string literal mutants excluded, there are 199 mutants, of which 42 survived, giving a mutation
 score of `79%`.
-This means that more than half of the original mutants were string literal replacements.
+This means that nearly half of the original mutants were string literal replacements.
 
 Upon further inspection, I do not believe that mutation testing is a good fit for the languages part of this project.
 
