@@ -34,6 +34,8 @@ trait TestTemplate[E <: ClickDeduceLanguage#Expr, V <: ClickDeduceLanguage#Value
     }
   }
 
+  val testExpressionTableHeading: (String, String, String) = ("expr", "value", "type")
+
   /** Create a table of expressions, their correct evaluation results, and their correct types.
     */
   def createExprTable(expressions: Iterable[E], results: Iterable[V], types: Iterable[T]): TableFor3[E, V, T] = {

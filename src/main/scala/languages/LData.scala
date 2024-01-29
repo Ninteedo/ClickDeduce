@@ -2,7 +2,7 @@ package languages
 
 import scalatags.Text
 import scalatags.Text.TypedTag
-import scalatags.Text.all.*
+import scalatags.Text.all.{div, raw}
 
 class LData extends LRec {
   // expressions
@@ -57,7 +57,7 @@ class LData extends LRec {
     override def typeCheckInner(tEnv: TypeEnv): Type = verifyLiteralIdentifierType(x) {
       verifyLiteralIdentifierType(y) {
         assign.typeCheck(tEnv) match {
-          case PairType(l, r)   => bound.typeCheck(tEnv + (a.toString -> l) + (b.toString -> r))
+          case PairType(l, r)   => bound.typeCheck(tEnv + (x.toString -> l) + (y.toString -> r))
           case error: TypeError => error
           case other            => TupleOperationOnNonTupleType(other)
         }
@@ -85,6 +85,11 @@ class LData extends LRec {
             .typeCheck(tEnv))
         )
       )
+  }
+
+  object LetPair {
+    def apply(x: Variable, y: Variable, assign: Expr, bound: Expr): LetPair =
+      LetPair(Literal.fromString(x), Literal.fromString(y), assign, bound)
   }
 
   case class UnitExpr() extends Expr {
@@ -126,7 +131,19 @@ class LData extends LRec {
       verifyLiteralIdentifierType(r) {
         e.typeCheck(tEnv) match {
           case UnionType(lType, rType) =>
-            UnionType(AnyType(), AnyType()) // TODO: not implemented yet
+            val leftResult = lExpr.typeCheck(tEnv + (l.toString -> lType))
+            val rightResult = rExpr.typeCheck(tEnv + (r.toString -> rType))
+            if (leftResult == rightResult) leftResult
+            else
+              (leftResult, rightResult) match {
+                case (UnionType(a, UnknownType()), UnionType(UnknownType(), b)) => UnionType(a, b)
+                case (UnionType(UnknownType(), a), UnionType(b, UnknownType())) => UnionType(b, a)
+                case (UnionType(a, UnknownType()), UnionType(b, UnknownType())) =>
+                  if (a == b) UnionType(a, UnknownType()) else TypeMismatchType(a, b)
+                case (UnionType(UnknownType(), a), UnionType(UnknownType(), b)) =>
+                  if (a == b) UnionType(UnknownType(), a) else TypeMismatchType(a, b)
+                case _ => TypeMismatchType(leftResult, rightResult)
+              }
           case other => CaseSwitchOnNonUnionType(other)
         }
       }
@@ -160,6 +177,11 @@ class LData extends LRec {
       case other =>
         List((e, tEnv), (lExpr, tEnv + (l.toString -> UnknownType())), (rExpr, tEnv + (r.toString -> UnknownType())))
     }
+  }
+
+  object CaseSwitch {
+    def apply(e: Expr, l: Variable, r: Variable, lExpr: Expr, rExpr: Expr): CaseSwitch =
+      CaseSwitch(e, Literal.fromString(l), Literal.fromString(r), lExpr, rExpr)
   }
 
   // types
