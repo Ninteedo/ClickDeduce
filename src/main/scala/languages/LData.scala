@@ -44,23 +44,19 @@ class LData extends LRec {
   }
 
   case class LetPair(x: Literal, y: Literal, assign: Expr, bound: Expr) extends Expr {
-    override def evalInner(env: Env): Value = verifyLiteralIdentifierEval(x) {
-      verifyLiteralIdentifierEval(y) {
-        assign.eval(env) match {
-          case PairV(v1, v2)    => bound.eval(env + (x.toString -> v1) + (y.toString -> v2))
-          case error: EvalError => error
-          case other            => TupleOperationOnNonTupleValue(other)
-        }
+    override def evalInner(env: Env): Value = verifyLiteralIdentifierEval(x, y) {
+      assign.eval(env) match {
+        case PairV(v1, v2)    => bound.eval(env + (x.toString -> v1) + (y.toString -> v2))
+        case error: EvalError => error
+        case other            => TupleOperationOnNonTupleValue(other)
       }
     }
 
-    override def typeCheckInner(tEnv: TypeEnv): Type = verifyLiteralIdentifierType(x) {
-      verifyLiteralIdentifierType(y) {
-        assign.typeCheck(tEnv) match {
-          case PairType(l, r)   => bound.typeCheck(tEnv + (x.toString -> l) + (y.toString -> r))
-          case error: TypeError => error
-          case other            => TupleOperationOnNonTupleType(other)
-        }
+    override def typeCheckInner(tEnv: TypeEnv): Type = verifyLiteralIdentifierType(x, y) {
+      assign.typeCheck(tEnv) match {
+        case PairType(l, r)   => bound.typeCheck(tEnv + (x.toString -> l) + (y.toString -> r))
+        case error: TypeError => error
+        case other            => TupleOperationOnNonTupleType(other)
       }
     }
 
@@ -79,11 +75,7 @@ class LData extends LRec {
     override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] =
       List(
         (assign, tEnv),
-        (
-          bound,
-          tEnv + (x.toString -> Fst(assign).typeCheck(tEnv)) + (y.toString -> Snd(assign)
-            .typeCheck(tEnv))
-        )
+        (bound, tEnv + (x.toString -> Fst(assign).typeCheck(tEnv)) + (y.toString -> Snd(assign).typeCheck(tEnv)))
       )
   }
 
@@ -117,35 +109,22 @@ class LData extends LRec {
   }
 
   case class CaseSwitch(e: Expr, l: Literal, r: Literal, lExpr: Expr, rExpr: Expr) extends Expr {
-    override def evalInner(env: Env): Value = verifyLiteralIdentifierEval(l) {
-      verifyLiteralIdentifierEval(r) {
-        e.eval(env) match {
-          case LeftV(v, rightType) => lExpr.eval(env + (l.toString -> v))
-          case RightV(leftType, v) => rExpr.eval(env + (r.toString -> v))
-          case other               => CaseSwitchOnNonUnionValue(other)
-        }
+    override def evalInner(env: Env): Value = verifyLiteralIdentifierEval(l, r) {
+      e.eval(env) match {
+        case LeftV(v, rightType) => lExpr.eval(env + (l.toString -> v))
+        case RightV(leftType, v) => rExpr.eval(env + (r.toString -> v))
+        case other               => CaseSwitchOnNonUnionValue(other)
       }
     }
 
-    override def typeCheckInner(tEnv: TypeEnv): Type = verifyLiteralIdentifierType(l) {
-      verifyLiteralIdentifierType(r) {
-        e.typeCheck(tEnv) match {
-          case UnionType(lType, rType) =>
-            val leftResult = lExpr.typeCheck(tEnv + (l.toString -> lType))
-            val rightResult = rExpr.typeCheck(tEnv + (r.toString -> rType))
-            if (leftResult == rightResult) leftResult
-            else
-              (leftResult, rightResult) match {
-                case (UnionType(a, UnknownType()), UnionType(UnknownType(), b)) => UnionType(a, b)
-                case (UnionType(UnknownType(), a), UnionType(b, UnknownType())) => UnionType(b, a)
-                case (UnionType(a, UnknownType()), UnionType(b, UnknownType())) =>
-                  if (a == b) UnionType(a, UnknownType()) else TypeMismatchType(a, b)
-                case (UnionType(UnknownType(), a), UnionType(UnknownType(), b)) =>
-                  if (a == b) UnionType(UnknownType(), a) else TypeMismatchType(a, b)
-                case _ => TypeMismatchType(leftResult, rightResult)
-              }
-          case other => CaseSwitchOnNonUnionType(other)
-        }
+    override def typeCheckInner(tEnv: TypeEnv): Type = verifyLiteralIdentifierType(l, r) {
+      e.typeCheck(tEnv) match {
+        case UnionType(lType, rType) =>
+          val leftResult = lExpr.typeCheck(tEnv + (l.toString -> lType))
+          val rightResult = rExpr.typeCheck(tEnv + (r.toString -> rType))
+          if (leftResult == rightResult) leftResult
+          else TypeMismatchType(leftResult, rightResult)
+        case other => CaseSwitchOnNonUnionType(other)
       }
     }
 
@@ -153,10 +132,6 @@ class LData extends LRec {
       s"case ${e.prettyPrint} of { left($l) ⇒ ${lExpr.prettyPrint}; right($r) ⇒ ${rExpr.prettyPrint} }"
 
     override def getChildrenBase(env: Env): List[(Term, Env)] = {
-//      val (lTyp, rTyp): (Type, Type) = e.typeCheck(envToTypeEnv(env)) match {
-//        case UnionType(l, r) => (l, r)
-//        case _               => (UnknownType(), UnknownType())
-//      }
       val (lVal, rVal): (Value, Value) = e.eval(env) match {
         case LeftV(v, rTyp)  => (v, HiddenValue(rTyp))
         case RightV(lTyp, v) => (HiddenValue(lTyp), v)
@@ -264,14 +239,18 @@ class LData extends LRec {
     override val typ: Type = CaseSwitchOnNonUnionType(provided.typ)
   }
 
-  def verifyLiteralIdentifierEval(l: Literal)(continue: => Value): Value = l match {
-    case LiteralIdentifier(_) => continue
-    case _                    => InvalidIdentifierEvalError(l)
+  private def verifyLiteralIdentifierEval(l: Literal*)(continue: => Value): Value = {
+    l.find(!_.isInstanceOf[LiteralIdentifier]) match {
+      case Some(lit) => InvalidIdentifierEvalError(lit)
+      case None      => continue
+    }
   }
 
-  def verifyLiteralIdentifierType(l: Literal)(continue: => Type): Type = l match {
-    case LiteralIdentifier(_) => continue
-    case _                    => InvalidIdentifierTypeError(l)
+  private def verifyLiteralIdentifierType(l: Literal*)(continue: => Type): Type = {
+    l.find(!_.isInstanceOf[LiteralIdentifier]) match {
+      case Some(lit) => InvalidIdentifierTypeError(lit)
+      case None      => continue
+    }
   }
 
   override def calculateExprClassList: List[Class[Expr]] = super.calculateExprClassList ++ List(
