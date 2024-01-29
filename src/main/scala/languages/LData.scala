@@ -100,18 +100,18 @@ class LData extends LRec {
     override def prettyPrint: String = "()"
   }
 
-  case class Left(e: Expr) extends Expr {
-    override def evalInner(env: Env): Value = LeftV(e.eval(env))
+  case class Left(e: Expr, rightType: Type) extends Expr {
+    override def evalInner(env: Env): Value = LeftV(e.eval(env), rightType)
 
-    override def typeCheckInner(tEnv: TypeEnv): Type = UnionType(e.typeCheck(tEnv), UnknownType())
+    override def typeCheckInner(tEnv: TypeEnv): Type = UnionType(e.typeCheck(tEnv), rightType)
 
     override def prettyPrint: String = s"left(${e.prettyPrint})"
   }
 
-  case class Right(e: Expr) extends Expr {
-    override def evalInner(env: Env): Value = RightV(e.eval(env))
+  case class Right(leftType: Type, e: Expr) extends Expr {
+    override def evalInner(env: Env): Value = RightV(leftType, e.eval(env))
 
-    override def typeCheckInner(tEnv: TypeEnv): Type = UnionType(UnknownType(), e.typeCheck(tEnv))
+    override def typeCheckInner(tEnv: TypeEnv): Type = UnionType(leftType, e.typeCheck(tEnv))
 
     override def prettyPrint: String = s"right(${e.prettyPrint})"
   }
@@ -120,9 +120,9 @@ class LData extends LRec {
     override def evalInner(env: Env): Value = verifyLiteralIdentifierEval(l) {
       verifyLiteralIdentifierEval(r) {
         e.eval(env) match {
-          case LeftV(v)  => lExpr.eval(env + (l.toString -> v))
-          case RightV(v) => rExpr.eval(env + (r.toString -> v))
-          case other     => CaseSwitchOnNonUnionValue(other)
+          case LeftV(v, rightType) => lExpr.eval(env + (l.toString -> v))
+          case RightV(leftType, v) => rExpr.eval(env + (r.toString -> v))
+          case other               => CaseSwitchOnNonUnionValue(other)
         }
       }
     }
@@ -153,22 +153,22 @@ class LData extends LRec {
       s"case ${e.prettyPrint} of { left($l) ⇒ ${lExpr.prettyPrint}; right($r) ⇒ ${rExpr.prettyPrint} }"
 
     override def getChildrenBase(env: Env): List[(Term, Env)] = {
-      val (lTyp, rTyp): (Type, Type) = e.typeCheck(envToTypeEnv(env)) match {
-        case UnionType(l, r) => (l, r)
-        case _               => (UnknownType(), UnknownType())
-      }
+//      val (lTyp, rTyp): (Type, Type) = e.typeCheck(envToTypeEnv(env)) match {
+//        case UnionType(l, r) => (l, r)
+//        case _               => (UnknownType(), UnknownType())
+//      }
       val (lVal, rVal): (Value, Value) = e.eval(env) match {
-        case LeftV(v)  => (v, HiddenValue(rTyp))
-        case RightV(v) => (HiddenValue(lTyp), v)
-        case _         => (HiddenValue(lTyp), HiddenValue(rTyp))
+        case LeftV(v, rTyp)  => (v, HiddenValue(rTyp))
+        case RightV(lTyp, v) => (HiddenValue(lTyp), v)
+        case _               => (HiddenValue(UnknownType()), HiddenValue(UnknownType()))
       }
       List((e, env), (lExpr, env + (l.toString -> lVal)), (rExpr, env + (r.toString -> rVal)))
     }
 
     override def getChildrenEval(env: Env): List[(Term, Env)] = e.eval(env) match {
-      case LeftV(v)  => List((e, env), (lExpr, env + (l.toString -> v)))
-      case RightV(v) => List((e, env), (rExpr, env + (r.toString -> v)))
-      case other     => List((e, env))
+      case LeftV(v, _)  => List((e, env), (lExpr, env + (l.toString -> v)))
+      case RightV(_, v) => List((e, env), (rExpr, env + (r.toString -> v)))
+      case other        => List((e, env))
     }
 
     override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] = e.typeCheck(tEnv) match {
@@ -224,20 +224,22 @@ class LData extends LRec {
     override def prettyPrint: String = "()"
   }
 
-  case class LeftV(v: Value) extends Value {
-    override val typ: Type = UnionType(v.typ, UnknownType())
+  case class LeftV(v: Value, rightType: Type) extends Value {
+    override val typ: Type = UnionType(v.typ, rightType)
 
     override def prettyPrint: String = s"left(${v.prettyPrint})"
 
-    override lazy val valueText: TypedTag[String] = div(raw(LeftV(ValuePlaceholder(v.toHtml.toString)).prettyPrint))
+    override lazy val valueText: TypedTag[String] =
+      div(raw(LeftV(ValuePlaceholder(v.toHtml.toString), TypePlaceholder(rightType.toHtml.toString)).prettyPrint))
   }
 
-  case class RightV(v: Value) extends Value {
-    override val typ: Type = UnionType(UnknownType(), v.typ)
+  case class RightV(leftType: Type, v: Value) extends Value {
+    override val typ: Type = UnionType(leftType, v.typ)
 
     override def prettyPrint: String = s"right(${v.prettyPrint})"
 
-    override lazy val valueText: TypedTag[String] = div(raw(RightV(ValuePlaceholder(v.toHtml.toString)).prettyPrint))
+    override lazy val valueText: TypedTag[String] =
+      div(raw(RightV(TypePlaceholder(leftType.toHtml.toString), ValuePlaceholder(v.toHtml.toString)).prettyPrint))
   }
 
   // errors

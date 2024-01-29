@@ -232,6 +232,7 @@ export function getActiveInputs(): HTMLElement[] {
  * Updates the list of initial values for literal inputs.
  */
 function setLiteralInitialValues() {
+    initialValues = [];
     document.querySelectorAll('input[data-tree-path]').forEach(input => {
         if (input instanceof HTMLInputElement) {
             initialValues.push([input.getAttribute('data-tree-path'), input.value]);

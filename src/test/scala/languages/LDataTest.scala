@@ -74,17 +74,17 @@ class LDataTest extends TestTemplate[Expr, Value, Type] {
     "Left",
     Table(
       testExpressionTableHeading,
-      (Left(Num(1)), LeftV(NumV(1)), UnionType(IntType(), UnknownType())),
-      (Left(Bool(true)), LeftV(BoolV(true)), UnionType(BoolType(), UnknownType())),
+      (Left(Num(1), BoolType()), LeftV(NumV(1), BoolType()), UnionType(IntType(), BoolType())),
+      (Left(Bool(true), IntType()), LeftV(BoolV(true), IntType()), UnionType(BoolType(), IntType())),
       (
-        Left(Lambda("x", IntType(), Num(1))),
-        LeftV(LambdaV("x", IntType(), Num(1), Map())),
-        UnionType(Func(IntType(), IntType()), UnknownType())
+        Left(Lambda("x", IntType(), Num(1)), IntType()),
+        LeftV(LambdaV("x", IntType(), Num(1), Map()), IntType()),
+        UnionType(Func(IntType(), IntType()), IntType())
       ),
       (
-        Left(Pair(Bool(true), Plus(Num(1), Num(2)))),
-        LeftV(PairV(BoolV(true), NumV(3))),
-        UnionType(PairType(BoolType(), IntType()), UnknownType())
+        Left(Pair(Bool(true), Plus(Num(1), Num(2))), PairType(Func(IntType(), BoolType()), IntType())),
+        LeftV(PairV(BoolV(true), NumV(3)), PairType(Func(IntType(), BoolType()), IntType())),
+        UnionType(PairType(BoolType(), IntType()), PairType(Func(IntType(), BoolType()), IntType()))
       )
     )
   )
@@ -93,17 +93,17 @@ class LDataTest extends TestTemplate[Expr, Value, Type] {
     "Right",
     Table(
       testExpressionTableHeading,
-      (Right(Num(1)), RightV(NumV(1)), UnionType(UnknownType(), IntType())),
-      (Right(Bool(true)), RightV(BoolV(true)), UnionType(UnknownType(), BoolType())),
+      (Right(BoolType(), Num(1)), RightV(BoolType(), NumV(1)), UnionType(BoolType(), IntType())),
+      (Right(IntType(), Bool(true)), RightV(IntType(), BoolV(true)), UnionType(IntType(), BoolType())),
       (
-        Right(Lambda("x", IntType(), Num(1))),
-        RightV(LambdaV("x", IntType(), Num(1), Map())),
-        UnionType(UnknownType(), Func(IntType(), IntType()))
+        Right(BoolType(), Lambda("x", IntType(), Num(1))),
+        RightV(BoolType(), LambdaV("x", IntType(), Num(1), Map())),
+        UnionType(BoolType(), Func(IntType(), IntType()))
       ),
       (
-        Right(Pair(Bool(true), Plus(Num(1), Num(2)))),
-        RightV(PairV(BoolV(true), NumV(3))),
-        UnionType(UnknownType(), PairType(BoolType(), IntType()))
+        Right(PairType(IntType(), Func(BoolType(), BoolType())), Pair(Bool(true), Plus(Num(1), Num(2)))),
+        RightV(PairType(IntType(), Func(BoolType(), BoolType())), PairV(BoolV(true), NumV(3))),
+        UnionType(PairType(IntType(), Func(BoolType(), BoolType())), PairType(BoolType(), IntType()))
       )
     )
   )
@@ -112,13 +112,39 @@ class LDataTest extends TestTemplate[Expr, Value, Type] {
     "CaseSwitch",
     Table(
       testExpressionTableHeading,
-      (CaseSwitch(Left(Num(1)), "x", "y", Num(100), Num(-200)), NumV(100), IntType()),
-      (CaseSwitch(Right(Num(1)), "x", "y", Num(100), Num(-200)), NumV(-200), IntType()),
-      (CaseSwitch(Right(Num(1)), "x", "error", Plus(Num(2), Num(10)), Var("error")), NumV(1), IntType()),
       (
-        CaseSwitch(Left(Plus(Num(1), Num(2))), "a", "b", Times(Num(3), Var("a")), Times(Num(4), Var("b"))),
+        CaseSwitch(Left(Lambda("x", BoolType(), Bool(false)), BoolType()), "x", "y", Num(100), Num(-200)),
+        NumV(100),
+        IntType()
+      ),
+      (CaseSwitch(Right(BoolType(), Num(1)), "x", "y", Num(100), Num(-200)), NumV(-200), IntType()),
+      (CaseSwitch(Right(IntType(), Num(1)), "x", "error", Plus(Num(2), Num(10)), Var("error")), NumV(1), IntType()),
+      (
+        CaseSwitch(Left(Plus(Num(1), Num(2)), IntType()), "a", "b", Times(Num(3), Var("a")), Times(Num(4), Var("b"))),
         NumV(9),
         IntType()
+      ),
+      (
+        CaseSwitch(
+          Right(Func(IntType(), IntType()), Num(1)),
+          "x",
+          "y",
+          Apply(Var("x"), Num(10)),
+          Plus(Var("y"), Num(100))
+        ),
+        NumV(101),
+        IntType()
+      ),
+      (
+        CaseSwitch(
+          Left(Lambda("x", IntType(), Plus(Var("x"), Num(1))), BoolType()),
+            "x",
+            "y",
+          Left(Apply(Var("x"), Num(-1)), Func(IntType(), BoolType())),
+          Right(IntType(), Lambda("x", IntType(), Eq(Var("x"), Num(0))))
+        ),
+        LeftV(NumV(0), Func(IntType(), BoolType())),
+        UnionType(IntType(), Func(IntType(), BoolType()))
       )
     )
   )
@@ -126,19 +152,34 @@ class LDataTest extends TestTemplate[Expr, Value, Type] {
   property("Complex CaseSwitch type scenarios are type-checked correctly") {
     val cases = Table(
       ("expr", "type"),
-      (CaseSwitch(Left(Num(1)), "x", "y", Num(100), Num(-200)), IntType()),
-      (CaseSwitch(Right(Num(1)), "x", "y", Num(100), Num(-200)), IntType()),
-      (CaseSwitch(Left(Num(1)), "x", "y", Num(100), Bool(true)), TypeMismatchType(IntType(), BoolType())),
+      (CaseSwitch(Left(Num(1), BoolType()), "x", "y", Num(100), Num(-200)), IntType()),
+      (CaseSwitch(Right(IntType(), Num(1)), "x", "y", Num(100), Num(-200)), IntType()),
+      (CaseSwitch(Left(Num(1), IntType()), "x", "y", Num(100), Bool(true)), TypeMismatchType(IntType(), BoolType())),
       (
-        CaseSwitch(Right(Num(1)), "x", "y", Lambda("x", IntType(), Num(1)), Num(-200)),
+        CaseSwitch(Right(Func(IntType(), IntType()), Num(1)), "x", "y", Lambda("x", IntType(), Num(1)), Num(-200)),
         TypeMismatchType(Func(IntType(), IntType()), IntType())
       ),
-      (CaseSwitch(Left(Num(1)), "x", "y", Left(Num(100)), Right(Num(-200))), UnionType(IntType(), IntType())),
-      (CaseSwitch(Right(Num(1)), "x", "y", Left(Num(100)), Right(Bool(true))), UnionType(IntType(), BoolType())),
-      (CaseSwitch(Left(Num(1)), "x", "y", Left(Num(100)), Left(Num(-200))), UnionType(IntType(), UnknownType())),
       (
-        CaseSwitch(Left(Bool(false)), "x", "y", Right(Bool(true)), Right(Bool(false))),
-        UnionType(UnknownType(), BoolType())
+        CaseSwitch(Left(Num(1), BoolType()), "x", "y", Left(Num(100), IntType()), Right(IntType(), Num(-200))),
+        UnionType(IntType(), IntType())
+      ),
+      (
+        CaseSwitch(Right(BoolType(), Num(1)), "x", "y", Left(Num(100), BoolType()), Right(IntType(), Bool(true))),
+        UnionType(IntType(), BoolType())
+      ),
+      (
+        CaseSwitch(Left(Num(1), IntType()), "x", "y", Left(Num(100), BoolType()), Left(Num(-200), BoolType())),
+        UnionType(IntType(), BoolType())
+      ),
+      (
+        CaseSwitch(
+          Left(Bool(false), IntType()),
+          "x",
+          "y",
+          Right(Func(IntType(), IntType()), Bool(true)),
+          Right(Func(IntType(), IntType()), Bool(false))
+        ),
+        UnionType(Func(IntType(), IntType()), BoolType())
       )
     )
 
@@ -153,11 +194,11 @@ class LDataTest extends TestTemplate[Expr, Value, Type] {
       Fst(Num(1)),
       Fst(Bool(true)),
       Fst(Lambda("x", IntType(), Num(1))),
-      Fst(Left(Pair(Bool(true), Bool(false)))),
+      Fst(Left(Pair(Bool(true), Bool(false)), IntType())),
       Snd(Num(1)),
       Snd(Bool(true)),
       Snd(Lambda("x", IntType(), Num(1))),
-      Snd(Left(Pair(Bool(true), Bool(false))))
+      Snd(Left(Pair(Bool(true), Bool(false)), IntType()))
     )
 
     forAll(cases) { expr =>
@@ -171,10 +212,11 @@ class LDataTest extends TestTemplate[Expr, Value, Type] {
     CaseSwitch(Pair(Num(1), Num(2)), "x", "y", Num(100), Num(-200)).typeCheck() shouldEqual
       CaseSwitchOnNonUnionType(PairType(IntType(), IntType()))
 
-    CaseSwitch(Left(Num(1)), "x", "y", Num(10), Bool(true)).typeCheck() shouldEqual
+    CaseSwitch(Left(Num(1), BoolType()), "x", "y", Num(10), Bool(true)).typeCheck() shouldEqual
       TypeMismatchType(IntType(), BoolType())
-    CaseSwitch(Right(Bool(false)), "x", "y", Left(Num(10)), Left(Bool(true))).typeCheck() shouldEqual
-      TypeMismatchType(IntType(), BoolType())
+    CaseSwitch(Right(BoolType(), Bool(false)), "x", "y", Left(Num(10), BoolType()), Left(Bool(true), BoolType()))
+      .typeCheck() shouldEqual
+      TypeMismatchType(UnionType(IntType(), BoolType()), UnionType(BoolType(), BoolType()))
   }
 
 }

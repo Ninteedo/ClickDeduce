@@ -47,6 +47,8 @@ export async function handleLiteralChanged(textInput: HTMLInputElement): Promise
     const treePath: string = textInput.getAttribute("data-tree-path");
 
     if (initialValues.find(([path, value]) => path === treePath && value === literalValue)) {
+        console.log(`Skipping redundant action, tree path "${treePath}" already has value "${literalValue}"`);
+        console.log(`Initial values: ${JSON.stringify(initialValues)}`);
         return;
     }
 
