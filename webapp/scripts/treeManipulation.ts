@@ -40,6 +40,8 @@ export async function resetTreeManipulation(): Promise<void> {
     await loadLangSelector().then(() => {
         langSelector = document.getElementById('lang-selector') as HTMLSelectElement;
     });
+
+    setupFileInput();
 }
 
 /**
@@ -290,4 +292,49 @@ export function enableInputs(): void {
         radio.removeAttribute('disabled');
     });
     langSelector.removeAttribute('disabled');
+}
+
+export function saveTree(): void {
+    const contents = JSON.stringify({
+        nodeString: lastNodeString,
+        lang: langSelector.value,
+    })
+    const blob = new Blob([contents], {type: 'text/plain'});
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'tree.cdtree';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    window.URL.revokeObjectURL(url);
+}
+
+const fileInput = document.createElement('input');
+
+function setupFileInput(): void {
+    fileInput.type = 'file';
+    fileInput.accept = '.cdtree';
+    fileInput.onchange = (event) => {
+        const file = (event.target as HTMLInputElement).files[0];
+        const reader = new FileReader();
+        reader.onload = () => {
+            const contents = reader.result as string;
+            const {nodeString, lang} = JSON.parse(contents);
+            langSelector.value = lang;
+            loadTreeFromString(nodeString);
+        };
+        reader.readAsText(file);
+    };
+}
+
+export function loadTree(): void {
+    fileInput.click();
+}
+
+async function loadTreeFromString(nodeString: string): Promise<void> {
+    lastNodeString = nodeString;
+    await runAction("IdentityAction", "", [])
 }

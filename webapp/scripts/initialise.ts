@@ -8,7 +8,7 @@ import {
     pasteTreeNode,
     resetCopyCache
 } from "./actions";
-import {redo, resetTreeManipulation, undo} from "./treeManipulation";
+import {loadTree, redo, resetTreeManipulation, saveTree, undo} from "./treeManipulation";
 import {handleTabPressed, resetInterfaceGlobals, zoomToFit} from "./interface";
 import panzoom, {PanZoom} from "panzoom";
 
@@ -50,3 +50,5 @@ export async function initialise(): Promise<void> {
 (window as any).pasteTreeNode = pasteTreeNode;
 (window as any).handleDropdownChange = handleDropdownChange;
 (window as any).handleLiteralChanged = handleLiteralChanged;
+(window as any).saveTree = saveTree;
+(window as any).loadTree = loadTree;
