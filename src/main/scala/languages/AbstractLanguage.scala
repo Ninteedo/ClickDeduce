@@ -119,6 +119,12 @@ trait AbstractLanguage {
 
     override def prettyPrint: String = toHtml.toString
   }
+  
+  case class ValuePlaceholder(content: String) extends Value {
+    override def prettyPrint: String = content
+    
+    override val typ: Type = TypePlaceholder(content)
+  }
 
   /** The type of a value.
     */

@@ -202,6 +202,10 @@ form {
     opacity: 1;
 }
 
+.tooltip > div {
+    display: inline;
+}
+
 .error-origin {
     color: var(--red);
 }

@@ -345,7 +345,7 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
     )
 
     val subExprNode = tree.children.last.asInstanceOf[VariableNode]
-    subExprNode.getEditEnv shouldEqual Map("x" -> PlaceholderValue(IntType()))
+    subExprNode.getEditEnv shouldEqual Map("x" -> HiddenValue(IntType()))
     subExprNode.getTypeEnv shouldEqual Map("x" -> IntType())
     subExprNode.getType shouldEqual IntType()
   }

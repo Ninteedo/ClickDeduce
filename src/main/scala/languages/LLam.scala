@@ -39,7 +39,7 @@ class LLam extends LLet {
     }
 
     override def getChildrenBase(env: Env): List[(Term, Env)] =
-      List((v, env), (typ, env), (e, env + (v.toString -> PlaceholderValue(typ))))
+      List((v, env), (typ, env), (e, env + (v.toString -> HiddenValue(typ))))
 
     override def getChildrenEval(env: Env): List[(Term, Env)] = Nil
 
@@ -111,7 +111,7 @@ class LLam extends LLet {
     override val typ: Type = ApplyToNonFunctionErrorType(value.typ)
   }
 
-  case class PlaceholderValue(override val typ: Type) extends Value {
+  case class HiddenValue(override val typ: Type) extends Value {
     override def isPlaceholder: Boolean = true
 
     override def prettyPrint: String = "?"

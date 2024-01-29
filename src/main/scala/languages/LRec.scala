@@ -33,7 +33,7 @@ class LRec extends LLam {
       (v, env),
       (inType, env),
       (outType, env),
-      (e, env ++ Map(f.toString -> PlaceholderValue(Func(inType, outType)), v.toString -> PlaceholderValue(inType)))
+      (e, env ++ Map(f.toString -> HiddenValue(Func(inType, outType)), v.toString -> HiddenValue(inType)))
     )
 
     override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] = List(
