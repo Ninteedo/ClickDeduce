@@ -1,6 +1,14 @@
 import {getSelectedLanguage, getSelectedMode} from "./utils";
 import {ClickDeduceResponseError} from "./ClickDeduceResponseError";
-import {initialValues, lastNodeString, treeHistoryIndex, updateTree, useTreeFromHistory} from "./treeManipulation";
+import {
+    disableInputs,
+    enableInputs,
+    initialValues,
+    lastNodeString,
+    treeHistoryIndex,
+    updateTree,
+    useTreeFromHistory
+} from "./treeManipulation";
 import {contextMenuSelectedElement, displayError, nextFocusElement} from "./interface";
 
 let copyCache: string = null;
@@ -106,6 +114,7 @@ export async function runAction(actionName: string, treePath: string, extraArgs:
     if (lastNodeString == null) {
         return;
     }
+    disableInputs();
 
     const modeName: string = getSelectedMode();
     const langName: string = getSelectedLanguage();
@@ -120,14 +129,17 @@ export async function runAction(actionName: string, treePath: string, extraArgs:
         })
     }).then(response => {
         if (!response.ok) {
+            enableInputs();
             return response.text().then(text => {
                 throw new ClickDeduceResponseError(text);
             });
         }
         return response;
     }).then(response => response.json()).then(updatedTree => {
-        updateTree(updatedTree.html, updatedTree.nodeString, modeName, langName, true)
+        updateTree(updatedTree.html, updatedTree.nodeString, modeName, langName, true);
+        enableInputs();
     }).catch(error => {
+        enableInputs();
         displayError(error);
         useTreeFromHistory(treeHistoryIndex);
         throw new ClickDeduceResponseError(error.message);

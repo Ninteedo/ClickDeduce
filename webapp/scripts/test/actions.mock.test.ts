@@ -421,7 +421,10 @@ describe("mode radio buttons behave correctly", () => {
     });
 
     test("clicking the edit mode button makes the correct request to the server", async () => {
+        setActionFetchResponse("ExprChoiceNode()", plusNodeArithHTML);
         document.getElementById('type-check-mode-radio').click();
+        await slightDelay();
+
         document.getElementById('edit-mode-radio').click();
 
         checkActionRequestExecuted("IdentityAction", langSelectorLanguages[0], "edit",

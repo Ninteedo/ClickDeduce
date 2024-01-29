@@ -269,3 +269,25 @@ function updateTextInputWidth(textInput: HTMLInputElement): void {
     const minWidth: number = 2;
     textInput.style.width = Math.max(minWidth, textInput.value.length) + "ch";
 }
+
+export function disableInputs(): void {
+    activeInputs.forEach(input => {
+        input.setAttribute('readonly', "true");
+        input.setAttribute('disabled', "true");
+    });
+    modeRadios.forEach(radio => {
+        radio.setAttribute('disabled', "true");
+    });
+    langSelector.setAttribute('disabled', "true");
+}
+
+export function enableInputs(): void {
+    activeInputs.forEach(input => {
+        input.removeAttribute('readonly');
+        input.removeAttribute('disabled');
+    });
+    modeRadios.forEach(radio => {
+        radio.removeAttribute('disabled');
+    });
+    langSelector.removeAttribute('disabled');
+}
