@@ -59,6 +59,10 @@ button:active {
     background-color: var(--highlighted-tree);
 }
 
+button:not(:disabled) {
+    cursor: pointer;
+}
+
 select {
     background-color: var(--current-line);
     color: var(--foreground);
@@ -244,8 +248,20 @@ form {
 }
 
 .expr-selector-container {
-    display: inline;
+    display: inline-flex;
     position: relative;
+}
+
+.expr-selector-input {
+    margin: 0;
+    border-radius: 3px 0 0 3px;
+}
+
+.expr-selector-button {
+    margin: 0;
+    border: var(--input-outline) solid 1px;
+    border-radius: 0 3px 3px 0;
+    cursor: pointer;
 }
 
 .expr-selector-dropdown {
@@ -256,6 +272,11 @@ form {
     color: var(--foreground);
     border: var(--input-outline) solid 1px;
     z-index: 1;
+}
+
+.expr-selector-option {
+    cursor: pointer;
+    padding: 5px;
 }
 
 .expr-selector-option.highlight {
