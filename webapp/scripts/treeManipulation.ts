@@ -248,13 +248,24 @@ function setLiteralInitialValues() {
 }
 
 function replaceSelectInputs(): void {
-    const selectInputs: NodeListOf<HTMLSelectElement> = document.querySelectorAll('select.expr-dropdown[data-tree-path]:not([disabled])');
+    const selectInputs: NodeListOf<HTMLSelectElement> = document.querySelectorAll(
+        'select.expr-dropdown[data-tree-path]:not([disabled]), select.type-dropdown[data-tree-path]:not([disabled])'
+    );
     selectInputs.forEach(select => {
         const options = Array.from(select.options).slice(1);
         const treePath = select.getAttribute('data-tree-path');
+        let placeholderText: string;
+        let kind: string;
+        if (select.classList.contains('expr-dropdown')) {
+            placeholderText = 'Enter Expression...';
+            kind = 'expr';
+        } else {
+            placeholderText = 'Enter Type...';
+            kind = 'type';
+        }
         const newHtml =
-            `<div class="expr-selector-container" data-tree-path="${treePath}">
-              <input type="text" class="expr-selector-input" placeholder="Enter Expression" data-tree-path="${treePath}" />
+            `<div class="expr-selector-container" data-tree-path="${treePath}" data-kind="${kind}">
+              <input type="text" class="expr-selector-input" placeholder="${placeholderText}" data-tree-path="${treePath}" />
               <button class="expr-selector-button">&#9660;</button>
               <div class="expr-selector-dropdown">
                 ${options.map(option => option.outerHTML).join('')}

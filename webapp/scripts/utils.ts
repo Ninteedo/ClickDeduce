@@ -27,3 +27,25 @@ export function hasClassOrParentHasClass(element: HTMLElement, className: string
     return element.classList.contains(className) ||
         (element.parentElement && hasClassOrParentHasClass(element.parentElement, className));
 }
+
+export function parseTreePath(treePath: string): number[] {
+    return treePath.split('-').map((s) => parseInt(s)).filter((n) => !isNaN(n));
+}
+
+export function compareTreePaths(path1: string, path2: string): number {
+    const readPath1 = parseTreePath(path1);
+    const readPath2 = parseTreePath(path2);
+    for (let i = 0; i < Math.min(readPath1.length, readPath2.length); i++) {
+        if (readPath1[i] < readPath2[i]) {
+            return -1;
+        } else if (readPath1[i] > readPath2[i]) {
+            return 1;
+        }
+    }
+    if (readPath1.length < readPath2.length) {
+        return -1;
+    } else if (readPath1.length > readPath2.length) {
+        return 1;
+    }
+    return 0;
+}

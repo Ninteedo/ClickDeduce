@@ -1,4 +1,4 @@
-import {getSelectedLanguage, getSelectedMode} from "./utils";
+import {compareTreePaths, getSelectedLanguage, getSelectedMode} from "./utils";
 import {ClickDeduceResponseError} from "./ClickDeduceResponseError";
 import {
     disableInputs,
@@ -116,20 +116,25 @@ export async function handleExprSelectorChoice(selector: HTMLDivElement, value: 
         focusedTreePath = nextFocusElement.getAttribute("data-tree-path");
     }
 
+    const kind = selector.getAttribute("data-kind");
+    let actionName: string;
+    if (kind === "type") {
+        actionName = "SelectTypeAction";
+    } else if (kind === "expr") {
+        actionName = "SelectExprAction";
+    } else {
+        throw new Error(`Unknown dropdown kind: ${kind}`);
+    }
+
     input.value = value;
     const dataTreePath: string = selector.getAttribute("data-tree-path");
-    await runAction("SelectExprAction", dataTreePath, [value]).then(() => {
+    await runAction(actionName, dataTreePath, [value]).then(() => {
         console.log(focusedTreePath);
         if (focusedTreePath == null) {
             return;
         }
 
-        const children = getActiveInputs().filter(input => input.getAttribute("data-tree-path").startsWith(focusedTreePath));
-        console.log(children);
-        if (children.length === 0) {
-            return;
-        }
-        let focusedElement = children[0];
+        const focusedElement = getActiveInputs().find(input => compareTreePaths(focusedTreePath, input.getAttribute("data-tree-path")) <= 0);
 
         console.log(focusedElement);
         if (focusedElement != null && focusedElement instanceof HTMLElement) {
