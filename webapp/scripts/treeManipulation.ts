@@ -85,7 +85,7 @@ export function updateTree(newTreeHtml: string, newNodeString: string, modeName:
         if (treeHistoryIndex < treeHistory.length - 1) {
             treeHistory = treeHistory.slice(0, treeHistoryIndex + 1);
         }
-        const newEntry: { mode: string; html: string; nodeString: string; lang: string } = {
+        const newEntry = {
             html: newTreeHtml,
             nodeString: newNodeString,
             mode: modeName,
@@ -212,15 +212,18 @@ function makePhantomInputsReadOnly(): void {
  * Also adds event listeners to the inputs.
  */
 function updateActiveInputsList(): void {
-    activeInputs = Array.from(document.querySelectorAll('input[data-tree-path]:not([disabled]), select[data-tree-path]:not([disabled])'));
+    activeInputs = Array.from(document.querySelectorAll(
+        'input.literal[data-tree-path]:not([disabled]), input.expr-selector-input:not([disabled])'
+    ));
     activeInputs.sort((a, b) => {
         const aPath = a.getAttribute("data-tree-path");
         const bPath = b.getAttribute("data-tree-path");
         return aPath.localeCompare(bPath, undefined, {numeric: true, sensitivity: 'base'});
-    })
+    });
+    console.log(activeInputs.map(input => input.outerHTML).join('\n'));
     activeInputs.forEach(input => {
         input.addEventListener('keydown', handleKeyDown);
-        if (input instanceof HTMLInputElement) {
+        if (input instanceof HTMLInputElement && input.classList.contains('literal')) {
             input.addEventListener('change', () => handleLiteralChanged(input));
             input.addEventListener('input', () => updateTextInputWidth(input));
             input.addEventListener('blur', () => handleLiteralChanged(input));
@@ -251,7 +254,7 @@ function replaceSelectInputs(): void {
         const treePath = select.getAttribute('data-tree-path');
         const newHtml =
             `<div class="expr-selector-container" data-tree-path="${treePath}">
-              <input type="text" class="expr-selector-input" placeholder="Enter Expression" />
+              <input type="text" class="expr-selector-input" placeholder="Enter Expression" data-tree-path="${treePath}" />
               <button class="expr-selector-button">&#9660;</button>
               <div class="expr-selector-dropdown">
                 ${options.map(option => option.outerHTML).join('')}
@@ -269,7 +272,7 @@ function replaceSelectInputs(): void {
         input.addEventListener('input', () => updateExprSelectorDropdown(newSelector));
         input.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
-                selectorEnterPressed(newSelector);
+                // selectorEnterPressed(newSelector);
             } else if (event.key === 'ArrowDown') {
                 moveSelectorOptionHighlight(newSelector, 1);
             } else if (event.key === 'ArrowUp') {
@@ -383,7 +386,7 @@ function selectorSelectOption(selectorDiv: HTMLDivElement, option: HTMLOptionEle
     handleExprSelectorChoice(selectorDiv, option.value);
 }
 
-function selectorEnterPressed(selectorDiv: HTMLDivElement) {
+export function selectorEnterPressed(selectorDiv: HTMLDivElement) {
     const input = selectorDiv.querySelector('.expr-selector-input') as HTMLInputElement;
     const dropdown = selectorDiv.querySelector('.expr-selector-dropdown') as HTMLDivElement;
     const button = selectorDiv.querySelector('.expr-selector-button') as HTMLButtonElement;

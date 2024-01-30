@@ -1,5 +1,5 @@
 import {handleLiteralChanged} from "./actions";
-import {getActiveInputs} from "./treeManipulation";
+import {getActiveInputs, selectorEnterPressed} from "./treeManipulation";
 import {hasClassOrParentHasClass} from "./utils";
 import {panzoomInstance, tree} from "./initialise";
 
@@ -29,12 +29,21 @@ export function resetInterfaceGlobals(): void {
  * @param e the keydown event
  */
 export async function handleKeyDown(e: KeyboardEvent): Promise<void> {
+    console.log('Key pressed: ' + e.key);
     if (e.key === 'Tab' && (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement)) {
         await handleTabPressed(e);
     } else if (e.key === 'Enter' && e.target instanceof HTMLInputElement) {
         e.preventDefault();
         nextFocusElement = e.target;
-        await handleLiteralChanged(e.target);
+        console.log('Focus element set to ' + nextFocusElement.outerHTML);
+        if (e.target.classList.contains('literal')) {
+            await handleLiteralChanged(e.target);
+        } else if (e.target.classList.contains('expr-selector-input')) {
+            const selector = e.target.parentElement;
+            if (selector instanceof HTMLDivElement) {
+                selectorEnterPressed(selector);
+            }
+        }
     }
 }
 

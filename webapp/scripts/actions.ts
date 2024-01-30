@@ -3,6 +3,7 @@ import {ClickDeduceResponseError} from "./ClickDeduceResponseError";
 import {
     disableInputs,
     enableInputs,
+    getActiveInputs,
     initialValues,
     lastNodeString,
     treeHistoryIndex,
@@ -69,7 +70,7 @@ export async function handleLiteralChanged(textInput: HTMLInputElement): Promise
         if (focusedTreePath == null) {
             return;
         }
-        let focusedElement: HTMLElement = document.querySelector(`[data-tree-path="${focusedTreePath}"]`);
+        let focusedElement: HTMLElement = document.querySelector(`input[data-tree-path="${focusedTreePath}"]`);
         if (focusedElement != null && focusedElement instanceof HTMLElement) {
             focusedElement.focus();
             if (focusedElement instanceof HTMLInputElement) {
@@ -109,9 +110,35 @@ export async function handleExprSelectorChoice(selector: HTMLDivElement, value: 
     const dropdown = selector.querySelector('.expr-selector-dropdown') as HTMLDivElement;
     const button = selector.querySelector('.expr-selector-button') as HTMLButtonElement;
 
+    let focusedTreePath: string = null;
+    console.log(nextFocusElement);
+    if (nextFocusElement != null) {
+        focusedTreePath = nextFocusElement.getAttribute("data-tree-path");
+    }
+
     input.value = value;
     const dataTreePath: string = selector.getAttribute("data-tree-path");
-    await runAction("SelectExprAction", dataTreePath, [value]);
+    await runAction("SelectExprAction", dataTreePath, [value]).then(() => {
+        console.log(focusedTreePath);
+        if (focusedTreePath == null) {
+            return;
+        }
+
+        const children = getActiveInputs().filter(input => input.getAttribute("data-tree-path").startsWith(focusedTreePath));
+        console.log(children);
+        if (children.length === 0) {
+            return;
+        }
+        let focusedElement = children[0];
+
+        console.log(focusedElement);
+        if (focusedElement != null && focusedElement instanceof HTMLElement) {
+            focusedElement.focus();
+            if (focusedElement instanceof HTMLInputElement) {
+                focusedElement.select();
+            }
+        }
+    });
 }
 
 /**
