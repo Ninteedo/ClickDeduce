@@ -79,6 +79,11 @@ form {
     overflow: hidden;
 }
 
+#tree-container.file-drag-highlight {
+    border: 2px dashed #4CAF50;
+    background-color: #49494d;
+}
+
 #tree {
     /*margin-top: 30px;*/
     max-width: fit-content;

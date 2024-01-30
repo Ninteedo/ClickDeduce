@@ -141,6 +141,7 @@ export function zoomToFit(): void {
  * @param error the error to display, requires a 'message' property
  */
 export function displayError(error: any): void {
+    console.log(error);
     errorDiv.textContent = error.message;
     errorDiv.classList.add('fade-in');
     errorDiv.classList.remove('fade-out');

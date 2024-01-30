@@ -1,7 +1,7 @@
 import {tree} from "./initialise";
 import {hasClassOrParentHasClass} from "./utils";
 import {handleDropdownChange, handleLiteralChanged, runAction} from "./actions";
-import {clearHighlight, contextMenuSelectedElement, handleKeyDown} from "./interface";
+import {clearHighlight, contextMenuSelectedElement, displayError, handleKeyDown} from "./interface";
 
 let treeHistory: { mode: string; html: string; nodeString: string; lang: string }[] = [];
 export let treeHistoryIndex: number = 0;
@@ -42,6 +42,7 @@ export async function resetTreeManipulation(): Promise<void> {
     });
 
     setupFileInput();
+    setupDragAndDrop();
 }
 
 /**
@@ -314,22 +315,6 @@ export function saveTree(): void {
 
 const fileInput = document.createElement('input');
 
-function setupFileInput(): void {
-    fileInput.type = 'file';
-    fileInput.accept = '.cdtree';
-    fileInput.onchange = (event) => {
-        const file = (event.target as HTMLInputElement).files[0];
-        const reader = new FileReader();
-        reader.onload = () => {
-            const contents = reader.result as string;
-            const {nodeString, lang} = JSON.parse(contents);
-            langSelector.value = lang;
-            loadTreeFromString(nodeString);
-        };
-        reader.readAsText(file);
-    };
-}
-
 export function loadTree(): void {
     fileInput.click();
 }
@@ -337,4 +322,72 @@ export function loadTree(): void {
 async function loadTreeFromString(nodeString: string): Promise<void> {
     lastNodeString = nodeString;
     await runAction("IdentityAction", "", [])
+}
+
+function setupFileInput(): void {
+    fileInput.type = 'file';
+    fileInput.accept = '.cdtree';
+    fileInput.onchange = (event) => {
+        const file = (event.target as HTMLInputElement).files[0];
+        const reader = new FileReader();
+        reader.onload = () => {
+            loadFromFile(reader);
+        };
+        reader.readAsText(file);
+    };
+}
+
+function setupDragAndDrop(): void {
+    const treeContainer = document.getElementById('tree-container');
+    if (!treeContainer) {
+        console.error('Tree container not found');
+        return;
+    }
+
+    const highlightClass: string = 'file-drag-highlight';
+    const addHighlight = () => treeContainer.classList.add(highlightClass);
+    const removeHighlight = () => treeContainer.classList.remove(highlightClass);
+
+    treeContainer.addEventListener('dragover', (event) => {
+        event.preventDefault();
+        addHighlight();
+    });
+
+    treeContainer.addEventListener('dragleave', removeHighlight);
+
+    treeContainer.addEventListener('drop', (event) => {
+        event.preventDefault(); // Prevent default behavior (like opening the file)
+        removeHighlight();
+
+        const file: File = event.dataTransfer?.files[0];
+        if (!file) {
+            displayError('No file dropped');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            loadFromFile(reader);
+        };
+        reader.readAsText(file);
+    });
+}
+
+function loadFromFile(reader: FileReader): void {
+    reader.onerror = () => displayError(new Error('Error occurred while attempting to read file'))
+    try {
+        const contents: string = reader.result as string;
+        const json = JSON.parse(contents);
+        if (!json.nodeString || !json.lang) {
+            throw new Error('Provided file did not contain required tree data');
+        }
+        langSelector.value = json.lang;
+        loadTreeFromString(json.nodeString);
+    } catch (e) {
+        if (e instanceof SyntaxError) {
+            displayError(new SyntaxError('Provided file was not valid JSON'));
+        } else {
+            displayError(e);
+        }
+    }
 }
