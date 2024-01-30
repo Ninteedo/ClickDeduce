@@ -16,6 +16,8 @@ export let initialValues: [string, string][] = [];
 
 export let lastNodeString: string = null;
 
+const fileInput: HTMLInputElement = document.createElement('input');
+
 /**
  * Resets the global variables used by the tree manipulation code.
  */
@@ -93,9 +95,7 @@ export function updateTree(newTreeHtml: string, newNodeString: string, modeName:
     }
     updateUndoRedoButtons();
     updateActiveInputsList();
-    modeRadios.forEach(radio => {
-        radio.checked = radio.value === modeName;
-    });
+    setSelectedMode(modeName);
     langSelector.value = lang;
 }
 
@@ -273,6 +273,12 @@ function updateTextInputWidth(textInput: HTMLInputElement): void {
     textInput.style.width = Math.max(minWidth, textInput.value.length) + "ch";
 }
 
+function setSelectedMode(mode: string): void {
+    modeRadios.forEach(radio => {
+        radio.checked = radio.value === mode;
+    });
+}
+
 export function disableInputs(): void {
     activeInputs.forEach(input => {
         input.setAttribute('readonly', "true");
@@ -299,6 +305,7 @@ export function saveTree(): void {
     const contents = JSON.stringify({
         nodeString: lastNodeString,
         lang: langSelector.value,
+        mode: modeRadios.find(radio => radio.checked).value,
     })
     const blob = new Blob([contents], {type: 'text/plain'});
     const url = window.URL.createObjectURL(blob);
@@ -311,17 +318,6 @@ export function saveTree(): void {
     document.body.removeChild(a);
 
     window.URL.revokeObjectURL(url);
-}
-
-const fileInput = document.createElement('input');
-
-export function loadTree(): void {
-    fileInput.click();
-}
-
-async function loadTreeFromString(nodeString: string): Promise<void> {
-    lastNodeString = nodeString;
-    await runAction("IdentityAction", "", [])
 }
 
 function setupFileInput(): void {
@@ -356,7 +352,7 @@ function setupDragAndDrop(): void {
     treeContainer.addEventListener('dragleave', removeHighlight);
 
     treeContainer.addEventListener('drop', (event) => {
-        event.preventDefault(); // Prevent default behavior (like opening the file)
+        event.preventDefault();
         removeHighlight();
 
         const file: File = event.dataTransfer?.files[0];
@@ -366,9 +362,7 @@ function setupDragAndDrop(): void {
         }
 
         const reader = new FileReader();
-        reader.onload = () => {
-            loadFromFile(reader);
-        };
+        reader.onload = () => loadFromFile(reader);
         reader.readAsText(file);
     });
 }
@@ -378,16 +372,25 @@ function loadFromFile(reader: FileReader): void {
     try {
         const contents: string = reader.result as string;
         const json = JSON.parse(contents);
-        if (!json.nodeString || !json.lang) {
+        if (!json.nodeString || !json.lang || !json.mode) {
             throw new Error('Provided file did not contain required tree data');
         }
         langSelector.value = json.lang;
+        setSelectedMode(json.mode);
         loadTreeFromString(json.nodeString);
     } catch (e) {
         if (e instanceof SyntaxError) {
-            displayError(new SyntaxError('Provided file was not valid JSON'));
-        } else {
-            displayError(e);
+            e = new SyntaxError('Provided file was not valid JSON');
         }
+        displayError(e);
     }
+}
+
+export function loadTree(): void {
+    fileInput.click();
+}
+
+async function loadTreeFromString(nodeString: string): Promise<void> {
+    lastNodeString = nodeString;
+    await runAction("IdentityAction", "", [])
 }
