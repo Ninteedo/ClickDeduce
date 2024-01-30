@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import {handleDropdownChange, handleSubmit} from "../actions";
+import {handleSubmit} from "../actions";
 
 export function slightDelay(delay: number = 10): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, delay));
@@ -34,18 +34,22 @@ export async function changeLanguage(langIndex: number): Promise<void> {
     await new Promise(resolve => setTimeout(resolve, 50));
 }
 
-export function getLeftmostExprDropdown(): HTMLSelectElement {
-    return document.querySelector('select.expr-dropdown:not([disabled])') as HTMLSelectElement;
+export function getLeftmostExprDropdown(): HTMLDivElement {
+    return document.querySelector('.expr-selector-container[data-kind="expr"]') as HTMLDivElement;
 }
 
-export async function selectExprOption(dropdown: HTMLSelectElement, optionIndex: number, manual: boolean = false): Promise<void> {
-    dropdown.selectedIndex = optionIndex;
-    if (manual) {
-        dropdown.dispatchEvent(new Event('change'));
-        await slightDelay(50);
-    } else {
-        await handleDropdownChange(dropdown, 'expr');
-    }
+export function getExprDropdownOptions(selector: HTMLDivElement) {
+    const dropdown = selector.querySelector('.expr-selector-dropdown') as HTMLDivElement;
+    return Array.from(dropdown.querySelectorAll('option'));
+}
+
+export async function selectExprOption(selector: HTMLDivElement, exprName: string, manual: boolean = false): Promise<void> {
+    const input = selector.querySelector('.expr-selector-input') as HTMLInputElement;
+    input.focus();
+    input.value = exprName;
+    input.dispatchEvent(new Event('input'));
+    input.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter'}));
+    await slightDelay(50);
 }
 
 export async function doLiteralEdit(input: HTMLInputElement, newValue: string): Promise<void> {

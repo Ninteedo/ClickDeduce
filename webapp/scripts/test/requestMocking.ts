@@ -1,9 +1,9 @@
 import {afterAll, beforeAll, beforeEach, expect, jest} from "@jest/globals";
 import {MockResponse} from "./MockResponse";
-import {loadHtmlTemplate} from "./helper";
+import {getLeftmostExprDropdown, loadHtmlTemplate, selectExprOption} from "./helper";
 import {initialise} from "../initialise";
 import * as NS from "../../test_resources/node_strings";
-import {handleDropdownChange, handleLiteralChanged, handleSubmit} from "../actions";
+import {handleLiteralChanged, handleSubmit} from "../actions";
 
 let dummyFetchResponse: any = null;
 let actionFetchResponse: { nodeString: string, html: string } = null;
@@ -173,9 +173,9 @@ export async function prepareExampleTimesTree(): Promise<void> {
 
     await handleSubmit(mockEvent, '/start-node-blank');
     setActionFetchResponse(nodeString2, html2);
-    await handleDropdownChange(document.getElementsByClassName('expr-dropdown')[0] as HTMLSelectElement, 'expr');
+    await selectExprOption(getLeftmostExprDropdown(), "Num");
     setActionFetchResponse(nodeString3, html3);
-    await handleDropdownChange(document.querySelectorAll('.expr-dropdown:not([readonly])')[0] as HTMLSelectElement, 'expr');
+    await selectExprOption(getLeftmostExprDropdown(), "Num");
     setActionFetchResponse(nodeString4, html4);
     await handleLiteralChanged(document.querySelector('input[type="text"]') as HTMLInputElement);
 }

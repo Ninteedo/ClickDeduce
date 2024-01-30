@@ -80,31 +80,6 @@ export async function handleLiteralChanged(textInput: HTMLInputElement): Promise
     });
 }
 
-/**
- * Handles an expr/type choice dropdown being selected.
- *
- * Executes the SelectExprAction or SelectTypeAction (as appropriate).
- *
- * @param dropdown the expr/type choice dropdown
- * @param kind the kind of dropdown (either "expr" or "type")
- */
-export async function handleDropdownChange(dropdown: HTMLSelectElement, kind: string): Promise<void> {
-    const selectedValue: string = dropdown.value;
-    const subtree: HTMLElement = dropdown.parentElement.parentElement;
-    const dataTreePath: string = subtree.getAttribute("data-tree-path");
-
-    let actionName: string;
-    if (kind === "type") {
-        actionName = "SelectTypeAction";
-    } else if (kind === "expr") {
-        actionName = "SelectExprAction";
-    } else {
-        throw new Error(`Unknown dropdown kind: ${kind}`);
-    }
-
-    await runAction(actionName, dataTreePath, [selectedValue]);
-}
-
 export async function handleExprSelectorChoice(selector: HTMLDivElement, value: string): Promise<void> {
     const input = selector.querySelector('.expr-selector-input') as HTMLInputElement;
     const dropdown = selector.querySelector('.expr-selector-dropdown') as HTMLDivElement;

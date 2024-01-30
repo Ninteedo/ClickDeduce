@@ -1,6 +1,6 @@
 import {tree} from "./initialise";
 import {hasClassOrParentHasClass} from "./utils";
-import {handleDropdownChange, handleExprSelectorChoice, handleLiteralChanged, runAction} from "./actions";
+import {handleExprSelectorChoice, handleLiteralChanged, runAction} from "./actions";
 import {clearHighlight, contextMenuSelectedElement, displayError, handleKeyDown} from "./interface";
 
 let treeHistory: { mode: string; html: string; nodeString: string; lang: string }[] = [];
@@ -108,7 +108,6 @@ export function updateTree(newTreeHtml: string, newNodeString: string, modeName:
 function treeCleanup(): void {
     replaceSelectInputs();
     addHoverListeners();
-    addDropdownListeners();
     makeOrphanedInputsReadOnly();
     makePhantomInputsReadOnly();
     setLiteralInitialValues();
@@ -165,25 +164,6 @@ function addHoverListeners(): void {
         });
     });
 }
-
-function addDropdownListeners(): void {
-    document.querySelectorAll('.expr-dropdown').forEach(select => {
-        if (select instanceof HTMLSelectElement) {
-            select.addEventListener('change', (event) => {
-                handleDropdownChange(select, 'expr');
-            })
-        }
-    });
-
-    document.querySelectorAll('.type-dropdown').forEach(select => {
-        if (select instanceof HTMLSelectElement) {
-            select.addEventListener('change', (event) => {
-                handleDropdownChange(select, 'type');
-            })
-        }
-    });
-}
-
 /**
  * Makes all inputs without a data-tree-path attribute read-only.
  */
@@ -252,6 +232,10 @@ function replaceSelectInputs(): void {
         'select.expr-dropdown[data-tree-path]:not([disabled]), select.type-dropdown[data-tree-path]:not([disabled])'
     );
     selectInputs.forEach(select => {
+        if (hasClassOrParentHasClass(select, 'phantom')) {
+            return;
+        }
+
         const options = Array.from(select.options).slice(1);
         const treePath = select.getAttribute('data-tree-path');
         let placeholderText: string;
@@ -315,13 +299,13 @@ function updateExprSelectorDropdown(selectorDiv: HTMLDivElement, keepOpenWhenEmp
         return;
     }
 
-    if (dropdown.style.display === 'none') {
+    if (dropdown.style.display === 'none' || dropdown.style.display === '') {
         toggleExprSelectorDropdownDisplay(selectorDiv);
     }
 
     const filterText = input.value.toLowerCase();
     options.forEach(option => {
-        if (option.innerText.toLowerCase().includes(filterText)) {
+        if (option.innerHTML.toLowerCase().includes(filterText)) {
             option.style.display = 'block';
         } else {
             option.style.display = 'none';
@@ -373,11 +357,9 @@ function toggleExprSelectorDropdownDisplay(selectorDiv: HTMLDivElement) {
 function showExprSelectorDropdown(selectorDiv: HTMLDivElement) {
     const dropdown = selectorDiv.querySelector('.expr-selector-dropdown') as HTMLDivElement;
     const button = selectorDiv.querySelector('.expr-selector-button') as HTMLButtonElement;
-    if (dropdown.style.display === 'none') {
-        button.innerHTML = '&#9650;';
-        dropdown.style.display = 'block';
-        updateExprSelectorDropdown(selectorDiv, true);
-    }
+    button.innerHTML = '&#9650;';
+    dropdown.style.display = 'block';
+    updateExprSelectorDropdown(selectorDiv, true);
 }
 
 function hideExprSelectorDropdown(selectorDiv: HTMLDivElement) {
@@ -385,6 +367,11 @@ function hideExprSelectorDropdown(selectorDiv: HTMLDivElement) {
     const button = selectorDiv.querySelector('.expr-selector-button') as HTMLButtonElement;
     button.innerHTML = '&#9660;';
     dropdown.style.display = 'none';
+
+    dropdown.querySelectorAll('option').forEach(option => {
+        option.classList.remove('highlight');
+        option.removeAttribute('style');
+    });
 }
 
 function selectorSelectOption(selectorDiv: HTMLDivElement, option: HTMLOptionElement) {

@@ -8,8 +8,16 @@ import {
     setUpFetchMock,
     startNodeBlankArithHTML
 } from "./requestMocking";
-import {handleDropdownChange, handleLiteralChanged, handleSubmit} from "../actions";
-import {contextMenuSelect, getRedoButton, getUndoButton, loadHtmlTemplate, slightDelay} from "./helper";
+import {handleLiteralChanged, handleSubmit} from "../actions";
+import {
+    contextMenuSelect,
+    getLeftmostExprDropdown,
+    getRedoButton,
+    getUndoButton,
+    loadHtmlTemplate,
+    selectExprOption,
+    slightDelay
+} from "./helper";
 import * as NS from "../../test_resources/node_strings";
 import {numNodeArithHTML, plusNodeArithHTML} from "./serverMock.test";
 
@@ -46,11 +54,13 @@ describe("undo and redo buttons behave correctly", () => {
 
     async function updateTree(nodeString: string, html: string): Promise<void> {
         setActionFetchResponse(nodeString, html);
-        const dropdown = document.getElementsByClassName('expr-dropdown')[0] as HTMLSelectElement;
+        const dropdown = getLeftmostExprDropdown();
         if (dropdown) {
-            await handleDropdownChange(dropdown, 'expr');
+            await selectExprOption(getLeftmostExprDropdown(), "Num");
+            document.querySelectorAll('input.expr-selector-input').forEach(input => input.dispatchEvent(new Event('blur')));
+            console.log("done");
         } else {
-            const literalInput = document.querySelector('input[type="text"]') as HTMLInputElement;
+            const literalInput = document.querySelector('input.literal') as HTMLInputElement;
             literalInput.value = literalInput.value + " ";
             await handleLiteralChanged(literalInput);
         }
@@ -93,43 +103,49 @@ describe("undo and redo buttons behave correctly", () => {
 
     test("pressing undo reverts the tree to the previous state", async () => {
         expect.assertions(1);
+        const prevHtml = document.getElementById('tree').innerHTML;
         await updateTree(nodeString2, html2);
         getUndoButton().click();
-        expect(document.getElementById('tree').innerHTML).toEqual(html1);
+        expect(document.getElementById('tree').innerHTML).toEqual(prevHtml);
     });
 
     test("pressing undo twice reverts the tree to the state before the previous state", async () => {
         expect.assertions(2);
+        const state1Html = document.getElementById('tree').innerHTML;
         await updateTree(nodeString2, html2);
+        const state2Html = document.getElementById('tree').innerHTML;
         await updateTree(nodeString3, html3);
 
         getUndoButton().click();
-        expect(document.getElementById('tree').innerHTML).toEqual(html2);
+        expect(document.getElementById('tree').innerHTML).toEqual(state2Html);
 
         getUndoButton().click();
-        expect(document.getElementById('tree').innerHTML).toEqual(html1);
+        expect(document.getElementById('tree').innerHTML).toEqual(state1Html);
     });
 
     test("pressing undo and then redo reverts the tree to the most recent state", async () => {
         expect.assertions(1);
         await updateTree(nodeString2, html2);
+        const state2Html = document.getElementById('tree').innerHTML;
         getUndoButton().click();
         getRedoButton().click();
-        expect(document.getElementById('tree').innerHTML).toEqual(html2);
+        expect(document.getElementById('tree').innerHTML).toEqual(state2Html);
     });
 
     test("pressing undo and then redo twice reverts the tree to the state before the most recent state", async () => {
         expect.assertions(2);
         await updateTree(nodeString2, html2);
+        const state2Html = document.getElementById('tree').innerHTML;
         await updateTree(nodeString3, html3);
+        const state3Html = document.getElementById('tree').innerHTML;
 
         getUndoButton().click();
         getUndoButton().click();
         getRedoButton().click();
-        expect(document.getElementById('tree').innerHTML).toEqual(html2);
+        expect(document.getElementById('tree').innerHTML).toEqual(state2Html);
 
         getRedoButton().click();
-        expect(document.getElementById('tree').innerHTML).toEqual(html3);
+        expect(document.getElementById('tree').innerHTML).toEqual(state3Html);
     });
 
     test("pressing undo then performing an action disables redo", async () => {
@@ -167,7 +183,7 @@ describe("hovering over a node behaves correctly", () => {
     beforeEach(async () => {
         await handleSubmit(mockEvent, '/start-node-blank');
         setActionFetchResponse(nodeString, html);
-        await handleDropdownChange(document.getElementsByClassName('expr-dropdown')[0] as HTMLSelectElement, 'expr');
+        await selectExprOption(getLeftmostExprDropdown(), "Num");
     });
 
     test("mousing over a node highlights it", async () => {
@@ -213,7 +229,7 @@ describe("hovering over a node behaves correctly", () => {
 describe("phantom inputs are made read-only and disabled", () => {
     const html = loadHtmlTemplate('phantom_example');
 
-    const selector = `input[name="eg"], select[name="77"]`;
+    const selector = `input.literal[name="eg"], select[name="77"]`;
 
     beforeEach(async () => {
         await handleSubmit(mockEvent, '/start-node-blank');

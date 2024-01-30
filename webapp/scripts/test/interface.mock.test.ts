@@ -11,14 +11,16 @@ import {
 import {
     contextMenuSelect,
     getErrorDiv,
+    getLeftmostExprDropdown,
     getTabbableElements,
     leftClickOn,
     loadHtmlTemplate,
+    selectExprOption,
     slightDelay
 } from "./helper";
 import {initialise} from "../initialise";
 import * as NS from "../../test_resources/node_strings";
-import {handleDropdownChange, handleLiteralChanged, handleSubmit} from "../actions";
+import {handleLiteralChanged, handleSubmit} from "../actions";
 import {ClickDeduceResponseError} from "../ClickDeduceResponseError";
 
 beforeAll(() => {
@@ -95,7 +97,7 @@ describe("tab cycling between input elements behaves correctly", () => {
     beforeEach(async () => {
         await handleSubmit(mockEvent, '/start-node-blank');
         setActionFetchResponse(nodeString, html);
-        await handleDropdownChange(document.getElementsByClassName('expr-dropdown')[0] as HTMLSelectElement, 'expr');
+        await selectExprOption(getLeftmostExprDropdown(), "Num");
     });
 
     test("test can find a list of tabbable elements", async () => {
@@ -151,7 +153,9 @@ describe("tab cycling between input and select elements behaves correctly", () =
         expect(tabbableElements).toHaveLength(2);
 
         expect(tabbableElements[0]).toBeInstanceOf(HTMLInputElement);
-        expect(tabbableElements[1]).toBeInstanceOf(HTMLSelectElement);
+        expect(tabbableElements[0].classList).toContain('literal');
+        expect(tabbableElements[1]).toBeInstanceOf(HTMLInputElement);
+        expect(tabbableElements[1].classList).toContain('expr-selector-input');
 
         const paths = ["0-0", "1"];
 

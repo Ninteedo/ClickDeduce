@@ -7,6 +7,7 @@ import {initialise} from "../initialise";
 import {
     changeLanguage,
     doLiteralEdit,
+    getExprDropdownOptions,
     getLangSelector,
     getLeftmostExprDropdown,
     getStartNodeButton,
@@ -16,7 +17,6 @@ import {
     selectExprOption,
     slightDelay
 } from "./helper";
-import {handleDropdownChange} from "../actions";
 
 const port = 9005;
 const command = `sbt "run --port ${port}"`;
@@ -215,8 +215,8 @@ describe('start node button has correct effect', () => {
     test('the added node has the correct content', async () => {
         await pressStartNodeButton();
         expect(document.querySelectorAll('.subtree.axiom')).toHaveLength(1);
-        expect(document.querySelectorAll('select.expr-dropdown')).toHaveLength(1);
-        expect(document.querySelectorAll('select.expr-dropdown option')).toHaveLength(4);
+        expect(document.querySelectorAll('input.expr-selector-input')).toHaveLength(1);
+        expect(document.querySelectorAll('.expr-selector-dropdown option')).toHaveLength(3);
         expect(document.querySelectorAll('.annotation-axiom')).toHaveLength(1);
     });
 });
@@ -227,7 +227,7 @@ describe('selecting an option from the expression choice dropdown has the correc
     });
 
     test('selecting the "Num" option has correct effect', async () => {
-        await selectExprOption(getLeftmostExprDropdown(), 1, true);
+        await selectExprOption(getLeftmostExprDropdown(), "Num", true);
 
         expect(document.querySelectorAll('.subtree')).toHaveLength(1);
         expect(document.querySelectorAll('.subtree.axiom')).toHaveLength(1);
@@ -246,48 +246,48 @@ describe('selecting an option from the expression choice dropdown has the correc
     });
 
     test('selecting the "Plus" option has correct effect', async () => {
-        await selectExprOption(getLeftmostExprDropdown(), 2, true);
+        await selectExprOption(getLeftmostExprDropdown(), "Plus", true);
 
         expect(document.querySelectorAll('.subtree')).toHaveLength(3);
         expect(document.querySelectorAll('.subtree.axiom')).toHaveLength(2);
-        expect(document.querySelectorAll('select.expr-dropdown:not([disabled])')).toHaveLength(2);
+        expect(document.querySelectorAll('input.expr-selector-input:not([disabled])')).toHaveLength(2);
         expect(document.querySelectorAll('.expr')).toHaveLength(3);
     });
 
     test('selecting the "Times" option then the "Plus" and "Num" options has correct effect', async () => {
-        await selectExprOption(getLeftmostExprDropdown(), 3, true);
+        await selectExprOption(getLeftmostExprDropdown(), "Times", true);
 
         expect(document.querySelectorAll('.subtree')).toHaveLength(3);
         expect(document.querySelectorAll('.subtree.axiom')).toHaveLength(2);
-        expect(document.querySelectorAll('select.expr-dropdown:not([disabled])')).toHaveLength(2);
+        expect(document.querySelectorAll('input.expr-selector-input:not([disabled])')).toHaveLength(2);
         expect(document.querySelectorAll('.expr')).toHaveLength(3);
 
-        await selectExprOption(getLeftmostExprDropdown(), 2, true);
+        await selectExprOption(getLeftmostExprDropdown(), "Plus", true);
         expect(document.querySelectorAll('.subtree')).toHaveLength(5);
         expect(document.querySelectorAll('.subtree.axiom')).toHaveLength(3);
-        expect(document.querySelectorAll('select.expr-dropdown:not([disabled])')).toHaveLength(3);
+        expect(document.querySelectorAll('input.expr-selector-input:not([disabled])')).toHaveLength(3);
         expect(document.querySelectorAll('.expr')).toHaveLength(5);
 
-        await selectExprOption(getLeftmostExprDropdown(), 1, true);
-        expect(document.querySelectorAll('select.expr-dropdown:not([disabled])')).toHaveLength(2);
+        await selectExprOption(getLeftmostExprDropdown(), "Num", true);
+        expect(document.querySelectorAll('input.expr-selector-input:not([disabled])')).toHaveLength(2);
 
-        await selectExprOption(getLeftmostExprDropdown(), 1, true);
-        expect(document.querySelectorAll('select.expr-dropdown:not([disabled])')).toHaveLength(1);
+        await selectExprOption(getLeftmostExprDropdown(), "Num", true);
+        expect(document.querySelectorAll('input.expr-selector-input:not([disabled])')).toHaveLength(1);
 
-        await selectExprOption(getLeftmostExprDropdown(), 1, true);
-        expect(document.querySelectorAll('select.expr-dropdown:not([disabled])')).toHaveLength(0);
+        await selectExprOption(getLeftmostExprDropdown(), "Num", true);
+        expect(document.querySelectorAll('input.expr-selector-input:not([disabled])')).toHaveLength(0);
 
         const tree = document.getElementById('tree');
 
         expect(tree.querySelectorAll('.subtree')).toHaveLength(5);
         expect(tree.querySelectorAll('.subtree.axiom')).toHaveLength(3);
         expect(tree.querySelectorAll('.expr')).toHaveLength(5);
-        expect(tree.querySelectorAll('select')).toHaveLength(0);
-        expect(tree.querySelectorAll('input:not([readonly])')).toHaveLength(3);
+        expect(tree.querySelectorAll('input.expr-selector-input')).toHaveLength(0);
+        expect(tree.querySelectorAll('input.literal:not([readonly])')).toHaveLength(3);
         expect(tree.querySelectorAll('.annotation-new')).toHaveLength(2);
 
         const inputDataPaths = ['0-0-0', '0-1-0', '1-0'];
-        tree.querySelectorAll('input:not([readonly])').forEach((input, index) => {
+        tree.querySelectorAll('input.literal:not([readonly])').forEach((input, index) => {
             expect(input.getAttribute('data-tree-path')).toBe(inputDataPaths[index]);
         });
     });
@@ -304,41 +304,41 @@ describe('behaviour of changing the selected language is correct', () => {
         for (let i = 1; i < getLangSelector().options.length; i++) {
             await changeLanguage(i);
             expect(getLeftmostExprDropdown().outerHTML).not.toBe(prevSelect.outerHTML);
-            expect(getLeftmostExprDropdown().options.length).toBeGreaterThan(prevSelect.options.length);
+            expect(getExprDropdownOptions(getLeftmostExprDropdown()).length).toBeGreaterThan(getExprDropdownOptions(prevSelect).length);
         }
     });
 
     test('can change to a child language with more existing expressions', async () => {
         await changeLanguage(1);
 
-        await selectExprOption(getLeftmostExprDropdown(), 5);
-        await selectExprOption(getLeftmostExprDropdown(), 4);
-        await selectExprOption(getLeftmostExprDropdown(), 2);
+        await selectExprOption(getLeftmostExprDropdown(), "IfThenElse");
+        await selectExprOption(getLeftmostExprDropdown(), "Bool");
+        await selectExprOption(getLeftmostExprDropdown(), "Plus");
 
         let prevSelect = getLeftmostExprDropdown();
 
         for (let i = 2; i < getLangSelector().options.length; i++) {
             await changeLanguage(i);
             expect(getLeftmostExprDropdown().outerHTML).not.toBe(prevSelect.outerHTML);
-            expect(getLeftmostExprDropdown().options.length).toBeGreaterThan(prevSelect.options.length);
+            expect(getExprDropdownOptions(getLeftmostExprDropdown()).length).toBeGreaterThan(getExprDropdownOptions(prevSelect).length);
         }
     });
 
     test('can change to a parent language, as long as the current tree only uses expressions present in the parent language', async () => {
-        let languageSizes: number[] = [getLeftmostExprDropdown().options.length];
+        let languageSizes: number[] = [getExprDropdownOptions(getLeftmostExprDropdown()).length];
         await changeLanguage(1);
-        languageSizes.push(getLeftmostExprDropdown().options.length);
+        languageSizes.push(getExprDropdownOptions(getLeftmostExprDropdown()).length);
         await changeLanguage(2);
-        languageSizes.push(getLeftmostExprDropdown().options.length);
+        languageSizes.push(getExprDropdownOptions(getLeftmostExprDropdown()).length);
 
-        await selectExprOption(getLeftmostExprDropdown(), 5);
-        await selectExprOption(getLeftmostExprDropdown(), 4);
+        await selectExprOption(getLeftmostExprDropdown(), "IfThenElse");
+        await selectExprOption(getLeftmostExprDropdown(), "Bool");
 
         const nodeString = document.querySelector('.subtree.axiom').getAttribute('data-node-string');
 
         await changeLanguage(1);
 
-        expect(getLeftmostExprDropdown().options.length).toBe(languageSizes[1]);
+        expect(getExprDropdownOptions(getLeftmostExprDropdown()).length).toBe(languageSizes[1]);
         expect(document.querySelector('.subtree.axiom').getAttribute('data-node-string')).toBe(nodeString);
     });
 
@@ -363,7 +363,7 @@ describe('behaviour of editing literals is correct', () => {
     });
 
     test('can edit the literal of a single literal node', async () => {
-        await selectExprOption(getLeftmostExprDropdown(), 1);
+        await selectExprOption(getLeftmostExprDropdown(), "nNum");
 
         let input = getTree().querySelector('input') as HTMLInputElement;
         await doLiteralEdit(input, '123');
@@ -374,7 +374,7 @@ describe('behaviour of editing literals is correct', () => {
 
     test('can edit the literal of a "Let"', async () => {
         await changeLanguage(2);
-        await selectExprOption(getLeftmostExprDropdown(), 8);
+        await selectExprOption(getLeftmostExprDropdown(), "Let");
 
         let input = getTree().querySelector('input') as HTMLInputElement;
         await doLiteralEdit(input, 'foo');
@@ -384,7 +384,7 @@ describe('behaviour of editing literals is correct', () => {
     });
 
     test('can edit one literal multiple times', async () => {
-        await selectExprOption(getLeftmostExprDropdown(), 1);
+        await selectExprOption(getLeftmostExprDropdown(), "Num");
 
         let input = getTree().querySelector('input') as HTMLInputElement;
         await doLiteralEdit(input, '123');
@@ -396,52 +396,51 @@ describe('behaviour of editing literals is correct', () => {
     });
 });
 
-function getLeftmostTypeDropdown(): HTMLSelectElement {
-    return document.querySelector('select.type-dropdown:not([disabled])') as HTMLSelectElement;
+function getLeftmostTypeDropdown(): HTMLDivElement {
+    return document.querySelector('.expr-selector-container[data-kind="type"]') as HTMLDivElement;
 }
 
-async function selectTypeOption(dropdown: HTMLSelectElement, optionIndex: number): Promise<void> {
-    dropdown.selectedIndex = optionIndex;
-    await handleDropdownChange(dropdown, 'type');
+async function selectTypeOption(selector: HTMLDivElement, typeName: string): Promise<void> {
+    await selectExprOption(selector, typeName);
 }
 
 describe('behaviour of manipulating trees with type selections is correct', () => {
     beforeEach(async () => {
         await pressStartNodeButton();
         await changeLanguage(3);
-        await selectExprOption(getLeftmostExprDropdown(), 10);  // lambda
+        await selectExprOption(getLeftmostExprDropdown(), "Lambda");  // lambda
     });
 
     test('can select a simple type (int)', async () => {
-        await selectTypeOption(getLeftmostTypeDropdown(), 2);  // Int
+        await selectTypeOption(getLeftmostTypeDropdown(), "IntType");
         const typeSubtree = getTree().querySelector('.subtree[data-tree-path="1"]');
         expect(typeSubtree).toBeTruthy();
         expect(typeSubtree.getAttribute('data-node-string')).toBe('TypeNode(\"IntType\", List())');
     });
 
     test('can select a simple type (bool)', async () => {
-        await selectTypeOption(getLeftmostTypeDropdown(), 3);  // Bool
+        await selectTypeOption(getLeftmostTypeDropdown(), "BoolType");
         const typeSubtree = getTree().querySelector('.subtree[data-tree-path="1"]');
         expect(typeSubtree).toBeTruthy();
         expect(typeSubtree.getAttribute('data-node-string')).toBe('TypeNode(\"BoolType\", List())');
     });
 
     test('can select a complex type (func int -> bool)', async () => {
-        await selectTypeOption(getLeftmostTypeDropdown(), 4);  // Func
+        await selectTypeOption(getLeftmostTypeDropdown(), "Func");
 
-        expect(getTree().querySelectorAll('.type-dropdown')).toHaveLength(2);
+        expect(getTree().querySelectorAll('.expr-selector-container[data-kind="type"]')).toHaveLength(2);
         expect(getTree().querySelector('.subtree[data-tree-path="1"]').getAttribute('data-node-string'))
             .toBe('TypeNode("Func", List(SubTypeNode(TypeChoiceNode()), SubTypeNode(TypeChoiceNode())))');
 
-        await selectTypeOption(getLeftmostTypeDropdown(), 2);  // Int
-        expect(getTree().querySelectorAll('.type-dropdown')).toHaveLength(1);
+        await selectTypeOption(getLeftmostTypeDropdown(), "IntType");
+        expect(getTree().querySelectorAll('.expr-selector-container[data-kind="type"]')).toHaveLength(1);
         expect(getTree().querySelector('.subtree[data-tree-path="1"]').getAttribute('data-node-string'))
             .toBe('TypeNode("Func", List(SubTypeNode(TypeNode(\"IntType\", List())), SubTypeNode(TypeChoiceNode())))');
         expect(getTree().querySelector('.subtree[data-tree-path="1-0"]').getAttribute('data-node-string'))
             .toBe('TypeNode("IntType", List())');
 
-        await selectTypeOption(getLeftmostTypeDropdown(), 3);  // Bool
-        expect(getTree().querySelectorAll('.type-dropdown')).toHaveLength(0);
+        await selectTypeOption(getLeftmostTypeDropdown(), "BoolType");
+        expect(getTree().querySelectorAll('.expr-selector-container[data-kind="type"]')).toHaveLength(0);
         expect(getTree().querySelector('.subtree[data-tree-path="1"]').getAttribute('data-node-string'))
             .toBe('TypeNode("Func", List(SubTypeNode(TypeNode("IntType", List())), SubTypeNode(TypeNode("BoolType", List()))))');
         expect(getTree().querySelector('.subtree[data-tree-path="1-0"]').getAttribute('data-node-string'))
@@ -498,10 +497,10 @@ describe("delete, copy, and paste buttons behave correctly", () => {
     beforeEach(async () => {
         await pressStartNodeButton();
         await changeLanguage(3);
-        await selectExprOption(getLeftmostExprDropdown(), 3);  // Plus
-        await selectExprOption(getLeftmostExprDropdown(), 1);  // Num
+        await selectExprOption(getLeftmostExprDropdown(), "Plus");
+        await selectExprOption(getLeftmostExprDropdown(), "Num");
         await doLiteralEdit(getTree().querySelector('input[data-tree-path="0-0"]') as HTMLInputElement, 'foo');
-        await selectExprOption(getLeftmostExprDropdown(), 4);  // Bool
+        await selectExprOption(getLeftmostExprDropdown(), "Bool");
         await doLiteralEdit(getTree().querySelector('input[data-tree-path="1-0"]') as HTMLInputElement, 'bar');
         console.log('Tree setup done');
     });
@@ -579,10 +578,10 @@ describe("delete, copy, and paste buttons behave correctly", () => {
 describe("input focus is preserved when tabbing as the tree is updated", () => {
     beforeEach(async () => {
         await pressStartNodeButton();
-        await selectExprOption(getLeftmostExprDropdown(), 3);  // Times
-        await selectExprOption(getLeftmostExprDropdown(), 2);  // Plus
-        await selectExprOption(getLeftmostExprDropdown(), 1);  // Num
-        await selectExprOption(getLeftmostExprDropdown(), 1);  // Num
+        await selectExprOption(getLeftmostExprDropdown(), "Times");
+        await selectExprOption(getLeftmostExprDropdown(), "Plus");
+        await selectExprOption(getLeftmostExprDropdown(), "Num");
+        await selectExprOption(getLeftmostExprDropdown(), "Num");
         await doLiteralEdit(getTree().querySelector('input[data-tree-path="0-0-0"]') as HTMLInputElement, '44');
         await doLiteralEdit(getTree().querySelector('input[data-tree-path="0-1-0"]') as HTMLInputElement, '55');
     });
@@ -638,10 +637,10 @@ describe("user can perform a sequence of actions", () => {
     });
 
     test("LArith: (1 + 2) * 3", async () => {
-        await selectExprOption(getLeftmostExprDropdown(), 3);  // Times
-        await selectExprOption(getLeftmostExprDropdown(), 2);  // Plus
-        await selectExprOption(getLeftmostExprDropdown(), 1);  // Num
-        await selectExprOption(getLeftmostExprDropdown(), 1);  // Num
+        await selectExprOption(getLeftmostExprDropdown(), "Times");  // Times
+        await selectExprOption(getLeftmostExprDropdown(), "Plus");  // Plus
+        await selectExprOption(getLeftmostExprDropdown(), "Num");  // Num
+        await selectExprOption(getLeftmostExprDropdown(), "Num");  // Num
 
         getTree().querySelector('input[data-tree-path="0-0-0"]').setAttribute('value', '1');
         getTree().querySelector('input[data-tree-path="0-0-0"]').dispatchEvent(new KeyboardEvent('keydown', {key: 'Tab'}));
@@ -659,7 +658,7 @@ describe("user can perform a sequence of actions", () => {
         expect(getTree().querySelector('input[data-tree-path="0-0-0"]').getAttribute('value')).toBe('1');
         expect(getTree().querySelector('input[data-tree-path="0-1-0"]').getAttribute('value')).toBe('2');
 
-        await selectExprOption(getLeftmostExprDropdown(), 1);  // Num
+        await selectExprOption(getLeftmostExprDropdown(), "Num");  // Num
         await doLiteralEdit(getTree().querySelector('input[data-tree-path="1-0"]') as HTMLInputElement, '3');
 
         expect(getTree().querySelector('input[data-tree-path="0-0-0"]').getAttribute('value')).toBe('1');

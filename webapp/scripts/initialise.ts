@@ -2,7 +2,6 @@ import '../styles/stylesheet.css';
 import {
     clearTreeNode,
     copyTreeNode,
-    handleDropdownChange,
     handleLiteralChanged,
     handleSubmit,
     pasteTreeNode,
@@ -48,7 +47,6 @@ export async function initialise(): Promise<void> {
 (window as any).clearTreeNode = clearTreeNode;
 (window as any).copyTreeNode = copyTreeNode;
 (window as any).pasteTreeNode = pasteTreeNode;
-(window as any).handleDropdownChange = handleDropdownChange;
 (window as any).handleLiteralChanged = handleLiteralChanged;
 (window as any).saveTree = saveTree;
 (window as any).loadTree = loadTree;
