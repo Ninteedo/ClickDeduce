@@ -18,11 +18,11 @@ class ActionSpec extends AnyWordSpec with Matchers {
 
     "create a SelectExprAction" in {
       val tree = ExprChoiceNode()
-      val action = createAction("SelectExprAction", tree.toString, "", List("Eq"))
+      val action = createAction("SelectExprAction", tree.toString, "", List("Equal"))
       action shouldBe a[SelectExprAction]
       action.originalTree shouldBe tree
       action.treePath shouldBe List()
-      action.asInstanceOf[SelectExprAction].exprChoiceName shouldBe "Eq"
+      action.asInstanceOf[SelectExprAction].exprChoiceName shouldBe "Equal"
     }
 
     "create a SelectTypeAction" in {
@@ -74,7 +74,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
   "SelectExprAction" should {
     "replace a root ExprChoiceNode with selection" in {
       val selectOptions =
-        TableFor1("exprChoiceName", "Num", "Plus", "Times", "IfThenElse", "Eq", "Bool", "Let", "Var", "Lambda")
+        TableFor1("exprChoiceName", "Num", "Plus", "Times", "IfThenElse", "Equal", "Bool", "Let", "Var", "Lambda")
 
       val tree = ExprChoiceNode()
       forAll(selectOptions) { exprChoiceName =>
@@ -123,7 +123,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
         ("tree", "treePath", "exprChoiceName"),
         (VariableNode.fromExpr(Num(1)), List(), "Plus"),
         (VariableNode.fromExpr(Plus(Bool(true), Num(-4))), List(0), "Num"),
-        (VariableNode.fromExpr(IfThenElse(Bool(true), BlankExprDropDown(), BlankExprDropDown())), List(0), "Eq")
+        (VariableNode.fromExpr(IfThenElse(Bool(true), BlankExprDropDown(), BlankExprDropDown())), List(0), "Equal")
       )
       forAll(trees) { (tree, treePath, exprChoiceName) =>
         an[InvalidSelectTargetException] should be thrownBy SelectExprAction(tree, treePath, exprChoiceName).newTree
@@ -253,12 +253,12 @@ class ActionSpec extends AnyWordSpec with Matchers {
         (VariableNode.fromExpr(Plus(Num(1), Num(2))), List(0, 0), "3", VariableNode.fromExpr(Plus(Num(3), Num(2)))),
         (
           VariableNode.fromExpr(
-            Times(Num(61), IfThenElse(Eq(Num(5), Bool(Literal.fromString("foo"))), Num(1), Num(-62)))
+            Times(Num(61), IfThenElse(Equal(Num(5), Bool(Literal.fromString("foo"))), Num(1), Num(-62)))
           ),
           List(1, 0, 1, 0),
           "bar",
           VariableNode.fromExpr(
-            Times(Num(61), IfThenElse(Eq(Num(5), Bool(Literal.fromString("bar"))), Num(1), Num(-62)))
+            Times(Num(61), IfThenElse(Equal(Num(5), Bool(Literal.fromString("bar"))), Num(1), Num(-62)))
           )
         ),
         (
@@ -339,7 +339,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
     }
 
     "delete a type node from a tree" in {
-      val equalsZeroFunction = Lambda("value", Func(IntType(), BoolType()), Eq(Var("value"), Num(0)))
+      val equalsZeroFunction = Lambda("value", Func(IntType(), BoolType()), Equal(Var("value"), Num(0)))
 
       val trees: TableFor3[ExprNode, List[Int], ExprNode] = TableFor3(
         ("tree", "treePath", "result"),
@@ -356,17 +356,17 @@ class ActionSpec extends AnyWordSpec with Matchers {
         (
           VariableNode.fromExpr(equalsZeroFunction),
           List(1),
-          VariableNode.fromExpr(Lambda("value", BlankTypeDropDown(), Eq(Var("value"), Num(0))))
+          VariableNode.fromExpr(Lambda("value", BlankTypeDropDown(), Equal(Var("value"), Num(0))))
         ),
         (
           VariableNode.fromExpr(equalsZeroFunction),
           List(1, 0),
-          VariableNode.fromExpr(Lambda("value", Func(BlankTypeDropDown(), BoolType()), Eq(Var("value"), Num(0))))
+          VariableNode.fromExpr(Lambda("value", Func(BlankTypeDropDown(), BoolType()), Equal(Var("value"), Num(0))))
         ),
         (
           VariableNode.fromExpr(equalsZeroFunction),
           List(1, 1),
-          VariableNode.fromExpr(Lambda("value", Func(IntType(), BlankTypeDropDown()), Eq(Var("value"), Num(0))))
+          VariableNode.fromExpr(Lambda("value", Func(IntType(), BlankTypeDropDown()), Equal(Var("value"), Num(0))))
         )
       )
 
@@ -629,7 +629,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
     "throw an error when provided with too many extra arguments" in {
       val extraArgs = TableFor2(
         ("actionName", "extraArgs"),
-        ("SelectExprAction", List("Eq", "foo")),
+        ("SelectExprAction", List("Equal", "foo")),
         ("SelectTypeAction", List("IntType", "foo")),
         ("EditLiteralAction", List("foo", "bar")),
         ("PasteAction", List(VariableNode.fromExpr(Num(1)).toString, "foo")),

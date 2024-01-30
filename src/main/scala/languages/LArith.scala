@@ -80,15 +80,24 @@ class LArith extends ClickDeduceLanguage {
 
   // values
 
+  trait OrdinalValue extends Value {
+    def compare(that: OrdinalValue): Int
+  }
+
   /** A numeric value. Can be any integer.
     *
     * @param x
     *   The integer value of the number.
     */
-  case class NumV(x: BigInt) extends Value {
+  case class NumV(x: BigInt) extends Value, OrdinalValue {
     override val typ: Type = IntType()
 
     override def prettyPrint: String = x.toString
+
+    override def compare(that: OrdinalValue): Int = that match {
+      case NumV(y) => x.compare(y)
+      case other   => throw new IllegalArgumentException(s"Cannot compare NumV with non-NumV ($other)")
+    }
   }
 
   /** An error that occurs due to an incorrect argument type.
@@ -102,9 +111,11 @@ class LArith extends ClickDeduceLanguage {
 
   // types
 
+  trait OrdinalType extends Type
+
   /** Type for integers.
     */
-  case class IntType() extends Type {
+  case class IntType() extends Type, OrdinalType {
     override def prettyPrint: String = "Int"
   }
 

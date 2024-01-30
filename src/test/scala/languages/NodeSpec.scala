@@ -26,7 +26,7 @@ class NodeSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChecks 
       VariableNode.fromExpr(Plus(Times(Num(5), Var("a")), IfThenElse(Bool(true), Num(5), Num(6)))),
       VariableNode.fromExpr(Let("x", Plus(Var("y"), Num(-1)), Plus(Var("x"), Var("y")))),
       VariableNode.fromExpr(
-        Lambda("foo", Func(Func(IntType(), IntType()), BoolType()), Eq(Apply(Var("foo"), Num(1)), Num(0)))
+        Lambda("foo", Func(Func(IntType(), IntType()), BoolType()), Equal(Apply(Var("foo"), Num(1)), Num(0)))
       ),
       VariableNode.fromExpr(BlankExprDropDown()),
       VariableNode.fromExpr(Plus(BlankExprDropDown(), BlankExprDropDown())),
@@ -78,7 +78,7 @@ class NodeSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChecks 
         ("Times", VariableNode("Times", List(SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode())))),
         ("Bool", VariableNode("Bool", List(LiteralNode("")))),
         ("Var", VariableNode("Var", List(LiteralNode("")))),
-        ("Eq", VariableNode("Eq", List(SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode())))),
+        ("Equal", VariableNode("Equal", List(SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode())))),
         (
           "IfThenElse",
           VariableNode(
@@ -157,13 +157,13 @@ class NodeSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChecks 
           VariableNode("Plus", List(SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode())))
         ),
         (
-          IfThenElse(Eq(Num(65), Num(0)), Num(1), Num(0)),
+          IfThenElse(Equal(Num(65), Num(0)), Num(1), Num(0)),
           VariableNode(
             "IfThenElse",
             List(
               SubExprNode(
                 VariableNode(
-                  "Eq",
+                  "Equal",
                   List(
                     SubExprNode(VariableNode("Num", List(LiteralNode("65")))),
                     SubExprNode(VariableNode("Num", List(LiteralNode("0"))))
@@ -453,23 +453,23 @@ class NodeSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChecks 
   "Tree paths" should {
     "return the correct child" in {
       val node =
-        VariableNode.fromExpr(Apply(Lambda("x", IntType(), IfThenElse(Eq(Var("x"), Num(0)), Num(1), Num(0))), Num(5)))
+        VariableNode.fromExpr(Apply(Lambda("x", IntType(), IfThenElse(Equal(Var("x"), Num(0)), Num(1), Num(0))), Num(5)))
       node.findChild(List()) shouldBe Some(node)
       node.findChild(List(0)) shouldBe Some(
-        VariableNode.fromExpr(Lambda("x", IntType(), IfThenElse(Eq(Var("x"), Num(0)), Num(1), Num(0))))
+        VariableNode.fromExpr(Lambda("x", IntType(), IfThenElse(Equal(Var("x"), Num(0)), Num(1), Num(0))))
       )
       node.findChild(List(1)) shouldBe Some(VariableNode.fromExpr(Num(5)))
       node.findChild(List(0, 0)) shouldBe Some(LiteralNode("x"))
       node.findChild(List(0, 1)) shouldBe Some(TypeNode.fromType(IntType()))
-      node.findChild(List(0, 2)) shouldBe Some(VariableNode.fromExpr(IfThenElse(Eq(Var("x"), Num(0)), Num(1), Num(0))))
-      node.findChild(List(0, 2, 0)) shouldBe Some(VariableNode.fromExpr(Eq(Var("x"), Num(0))))
+      node.findChild(List(0, 2)) shouldBe Some(VariableNode.fromExpr(IfThenElse(Equal(Var("x"), Num(0)), Num(1), Num(0))))
+      node.findChild(List(0, 2, 0)) shouldBe Some(VariableNode.fromExpr(Equal(Var("x"), Num(0))))
       node.findChild(List(0, 2, 1)) shouldBe Some(VariableNode.fromExpr(Num(1)))
       node.findChild(List(0, 2, 2)) shouldBe Some(VariableNode.fromExpr(Num(0)))
     }
 
     "error on invalid paths" in {
       val node =
-        VariableNode.fromExpr(Apply(Lambda("x", IntType(), IfThenElse(Eq(Var("x"), Num(0)), Num(1), Num(0))), Num(5)))
+        VariableNode.fromExpr(Apply(Lambda("x", IntType(), IfThenElse(Equal(Var("x"), Num(0)), Num(1), Num(0))), Num(5)))
 
       val invalidPaths = Table(
         "path",

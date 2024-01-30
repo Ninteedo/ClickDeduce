@@ -7,7 +7,7 @@ class ComplexExpressionsTest extends TestTemplate[LRec#Expr, LRec#Value, LRec#Ty
   val ifNotEqualToZeroThenFunction: Expr = Lambda(
     "f",
     Func(IntType(), IntType()),
-    Lambda("x", IntType(), IfThenElse(Eq(Var("x"), Num(0)), Num(1), Apply(Var("f"), Var("x"))))
+    Lambda("x", IntType(), IfThenElse(Equal(Var("x"), Num(0)), Num(1), Apply(Var("f"), Var("x"))))
   )
 
   val doubleFunction: Expr = Lambda("x", IntType(), Times(Var("x"), Num(2)))

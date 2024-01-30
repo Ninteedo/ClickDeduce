@@ -409,7 +409,7 @@ describe('behaviour of manipulating trees with type selections is correct', () =
     beforeEach(async () => {
         await pressStartNodeButton();
         await changeLanguage(3);
-        await selectExprOption(getLeftmostExprDropdown(), 9);  // lambda
+        await selectExprOption(getLeftmostExprDropdown(), 10);  // lambda
     });
 
     test('can select a simple type (int)', async () => {

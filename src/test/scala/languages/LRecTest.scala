@@ -15,7 +15,7 @@ class LRecTest extends TestTemplate[Expr, Value, Type] {
     "n",
     IntType(),
     IntType(),
-    IfThenElse(Eq(Var("n"), Num(0)), Num(1), Times(Var("n"), Apply(Var("factorial"), Plus(Var("n"), Num(-1)))))
+    IfThenElse(Equal(Var("n"), Num(0)), Num(1), Times(Var("n"), Apply(Var("factorial"), Plus(Var("n"), Num(-1)))))
   )
 
   val nestedOverridingRecFunction1: Rec =
@@ -27,7 +27,7 @@ class LRecTest extends TestTemplate[Expr, Value, Type] {
       IntType(),
       IntType()
     )
-    Rec("f", "x", IntType(), Func(IntType(), BoolType()), Lambda("y", IntType(), Eq(Var("y"), Num(0))))
+    Rec("f", "x", IntType(), Func(IntType(), BoolType()), Lambda("y", IntType(), Equal(Var("y"), Num(0))))
       .typeCheck(Map("f" -> IntType(), "x" -> BoolType())) shouldEqual Func(IntType(), Func(IntType(), BoolType()))
     factorialFunction.typeCheck(Map()) shouldEqual Func(IntType(), IntType())
     nestedOverridingRecFunction1.typeCheck(Map()) shouldEqual Func(IntType(), IntType())
@@ -51,14 +51,14 @@ class LRecTest extends TestTemplate[Expr, Value, Type] {
       Num(1),
       Map("f" -> NumV(6), "x" -> BoolV(false))
     )
-    Rec("f", "x", IntType(), Func(IntType(), BoolType()), Lambda("y", IntType(), Eq(Var("y"), Num(0))))
+    Rec("f", "x", IntType(), Func(IntType(), BoolType()), Lambda("y", IntType(), Equal(Var("y"), Num(0))))
       .eval(Map("f" -> NumV(-657), "x" -> BoolV(true))) shouldEqual
       RecV(
         Literal.fromString("f"),
         Literal.fromString("x"),
         IntType(),
         Func(IntType(), BoolType()),
-        Lambda("y", IntType(), Eq(Var("y"), Num(0))),
+        Lambda("y", IntType(), Equal(Var("y"), Num(0))),
         Map("f" -> NumV(-657), "x" -> BoolV(true))
       )
     factorialFunction.eval(Map()) shouldEqual RecV(
@@ -97,7 +97,7 @@ class LRecTest extends TestTemplate[Expr, Value, Type] {
     Apply(factorialFunction, Num(5)).typeCheck(Map()) shouldEqual IntType()
     Apply(factorialFunction, Num(5))
       .typeCheck(Map("factorial" -> Func(IntType(), IntType()), "n" -> IntType())) shouldEqual IntType()
-    Apply(Rec("f", "x", IntType(), Func(IntType(), BoolType()), Lambda("y", IntType(), Eq(Var("y"), Num(0)))), Num(5))
+    Apply(Rec("f", "x", IntType(), Func(IntType(), BoolType()), Lambda("y", IntType(), Equal(Var("y"), Num(0)))), Num(5))
       .typeCheck(Map()) shouldEqual Func(IntType(), BoolType())
     Apply(nestedOverridingRecFunction1, Num(5)).typeCheck(Map()) shouldEqual IntType()
   }
@@ -108,9 +108,9 @@ class LRecTest extends TestTemplate[Expr, Value, Type] {
       .eval(Map("factorial" -> factorialFunction.eval(Map()), "n" -> NumV(6))) shouldEqual NumV(120)
 
     val recWithLambda =
-      Rec("f", "x", IntType(), Func(IntType(), BoolType()), Lambda("y", IntType(), Eq(Var("y"), Num(0))))
+      Rec("f", "x", IntType(), Func(IntType(), BoolType()), Lambda("y", IntType(), Equal(Var("y"), Num(0))))
     Apply(recWithLambda, Num(5)).eval(Map()) shouldEqual
-      LambdaV("y", IntType(), Eq(Var("y"), Num(0)), Map("f" -> recWithLambda.eval(Map()), "x" -> NumV(5)))
+      LambdaV("y", IntType(), Equal(Var("y"), Num(0)), Map("f" -> recWithLambda.eval(Map()), "x" -> NumV(5)))
   }
 
   property("Applying with Rec correctly shows a phantom tree") {

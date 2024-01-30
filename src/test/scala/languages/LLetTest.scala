@@ -64,10 +64,10 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
     createExprTable(
       (Let("x", Bool(false), Var("x")), BoolV(false), BoolType()),
       (Let("y", Num(51), Var("y")), NumV(51), IntType()),
-      (Let("gh2", Bool(false), Eq(Var("gh2"), Bool(false))), BoolV(true), BoolType()),
+      (Let("gh2", Bool(false), Equal(Var("gh2"), Bool(false))), BoolV(true), BoolType()),
       (Let("gri3hga3", Bool(true), IfThenElse(Var("gri3hga3"), Num(1), Num(2))), NumV(1), IntType()),
       (Let("iou", Plus(Num(1), Num(5)), Times(Var("iou"), Var("iou"))), NumV(36), IntType()),
-      (Eq(Num(0), Let("abc", Num(3), Plus(Num(-3), Var("abc")))), BoolV(true), BoolType()),
+      (Equal(Num(0), Let("abc", Num(3), Plus(Num(-3), Var("abc")))), BoolV(true), BoolType()),
       (Plus(Num(1), Let("x", Num(2), Plus(Var("x"), Num(3)))), NumV(6), IntType())
     )
   )
@@ -77,7 +77,7 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
     createExprTable(
       (Let("x", Num(43), Let("y", Num(12), Plus(Var("x"), Var("y")))), NumV(55), IntType()),
       (
-        Let("hello", Plus(Let("world", Num(2), Times(Var("world"), Num(-1))), Num(6)), Eq(Num(4), Var("hello"))),
+        Let("hello", Plus(Let("world", Num(2), Times(Var("world"), Num(-1))), Num(6)), Equal(Num(4), Var("hello"))),
         BoolV(true),
         BoolType()
       ),
@@ -182,8 +182,8 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
   }
 
   property("If the assign expression in a Let is an error, then that error is returned") {
-    Let("x", Eq(Num(1), Bool(false)), Var("x")).eval() shouldBe a[TypeMismatchError]
-    Let("x", Eq(Num(1), Bool(false)), Var("x")).typeCheck() shouldBe a[TypeMismatchType]
+    Let("x", Equal(Num(1), Bool(false)), Var("x")).eval() shouldBe a[TypeMismatchError]
+    Let("x", Equal(Num(1), Bool(false)), Var("x")).typeCheck() shouldBe a[TypeMismatchType]
 
     Let("x", Plus(Num(1), Bool(false)), Var("x")).eval() shouldBe a[UnexpectedArgValue]
     Let("x", Plus(Num(1), Bool(false)), Var("x")).typeCheck() shouldBe a[UnexpectedArgType]

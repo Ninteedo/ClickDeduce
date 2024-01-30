@@ -141,7 +141,7 @@ class LDataTest extends TestTemplate[Expr, Value, Type] {
             "x",
             "y",
           Left(Apply(Var("x"), Num(-1)), Func(IntType(), BoolType())),
-          Right(IntType(), Lambda("x", IntType(), Eq(Var("x"), Num(0))))
+          Right(IntType(), Lambda("x", IntType(), Equal(Var("x"), Num(0))))
         ),
         LeftV(NumV(0), Func(IntType(), BoolType())),
         UnionType(IntType(), Func(IntType(), BoolType()))

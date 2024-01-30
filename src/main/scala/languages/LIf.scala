@@ -20,14 +20,14 @@ class LIf extends LArith {
     def apply(b: Boolean): Bool = new Bool(LiteralBool(b))
   }
 
-  case class Eq(e1: Expr, e2: Expr) extends Expr {
+  case class Equal(e1: Expr, e2: Expr) extends Expr {
     override def evalInner(env: Env): Value = {
       val v1 = e1.eval(env)
       val v2 = e2.eval(env)
       if (v1.typ == v2.typ) {
         BoolV(v1 == v2)
       } else {
-        TypeMismatchError("Eq", v1.typ, v2.typ)
+        TypeMismatchError("Equal", v1.typ, v2.typ)
       }
     }
 
@@ -44,6 +44,20 @@ class LIf extends LArith {
     override def prettyPrint: String = s"(${e1.prettyPrint} == ${e2.prettyPrint})"
   }
 
+  case class LessThan(e1: Expr, e2: Expr) extends Expr {
+    override def evalInner(env: Env): Value = (e1.eval(env), e2.eval(env)) match {
+      case (v1: OrdinalValue, v2: OrdinalValue) => BoolV(v1.compare(v2) < 0)
+      case (v1, v2)                             => ComparisonWithNonOrdinalError(v1.typ, v2.typ)
+    }
+
+    override def typeCheckInner(tEnv: TypeEnv): Type = (e1.typeCheck(tEnv), e2.typeCheck(tEnv)) match {
+      case (t1: OrdinalType, t2: OrdinalType) => BoolType()
+      case (t1, t2)                           => ComparisonWithNonOrdinalType(t1, t2)
+    }
+
+    override def prettyPrint: String = s"(${e1.prettyPrint} < ${e2.prettyPrint})"
+  }
+
   case class IfThenElse(cond: Expr, then_expr: Expr, else_expr: Expr) extends Expr {
     override def evalInner(env: Env): Value = cond.eval(env) match {
       case BoolV(true)    => then_expr.eval(env)
@@ -53,15 +67,11 @@ class LIf extends LArith {
     }
 
     override def typeCheckInner(tEnv: TypeEnv): Type = cond.typeCheck(tEnv) match {
-      case BoolType() => {
+      case BoolType() =>
         val t1 = then_expr.typeCheck(tEnv)
         val t2 = else_expr.typeCheck(tEnv)
-        if (t1 == t2) {
-          t1
-        } else {
-          TypeMismatchType(t1, t2)
-        }
-      }
+        if (t1 == t2) t1
+        else TypeMismatchType(t1, t2)
       case t => TypeMismatchType(t, BoolType())
     }
 
@@ -82,16 +92,12 @@ class LIf extends LArith {
     override def prettyPrint: String = b.toString
   }
 
-  case class TypeMismatchError(exprName: String, type1: Type, type2: Type) extends EvalError {
-    override val message: String = s"$type1 not compatible with $type2 in $exprName"
-
-    override val typ: Type = TypeMismatchType(type1, type2)
-  }
-
   // types
   case class BoolType() extends Type {
     override def prettyPrint: String = "Bool"
   }
+
+  // errors
 
   case class TypeMismatchType(type1: Type, type2: Type) extends TypeError {
     override val message: String = s"$type1 not compatible with $type2"
@@ -99,8 +105,24 @@ class LIf extends LArith {
     override def prettyPrint: String = s"TypeMismatch($type1, $type2)"
   }
 
+  case class TypeMismatchError(exprName: String, type1: Type, type2: Type) extends EvalError {
+    override val message: String = s"$type1 not compatible with $type2 in $exprName"
+
+    override val typ: Type = TypeMismatchType(type1, type2)
+  }
+
+  case class ComparisonWithNonOrdinalError(type1: Type, type2: Type) extends EvalError {
+    override val message: String = s"$type1 or $type2 is not an ordinal type"
+
+    override val typ: Type = ComparisonWithNonOrdinalType(type1, type2)
+  }
+
+  case class ComparisonWithNonOrdinalType(type1: Type, type2: Type) extends TypeError {
+    override val message: String = s"$type1 or $type2 is not an ordinal type"
+  }
+
   override def calculateExprClassList: List[Class[Expr]] = {
-    super.calculateExprClassList ++ List(classOf[Bool], classOf[Eq], classOf[IfThenElse]).map(
+    super.calculateExprClassList ++ List(classOf[Bool], classOf[Equal], classOf[LessThan], classOf[IfThenElse]).map(
       _.asInstanceOf[Class[Expr]]
     )
   }

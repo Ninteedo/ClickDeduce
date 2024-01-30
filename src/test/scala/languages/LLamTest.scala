@@ -18,8 +18,8 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
     createExprTable(
       (incrementFunction, LambdaV("x", IntType(), Plus(Var("x"), Num(1)), Map()), Func(IntType(), IntType())),
       (
-        Lambda("x", BoolType(), Eq(Var("x"), Bool(true))),
-        LambdaV("x", BoolType(), Eq(Var("x"), Bool(true)), Map()),
+        Lambda("x", BoolType(), Equal(Var("x"), Bool(true))),
+        LambdaV("x", BoolType(), Equal(Var("x"), Bool(true)), Map()),
         Func(BoolType(), BoolType())
       ),
       (
@@ -80,7 +80,7 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
       Apply(incrementFunction, Bool(true)),
       Apply(incrementFunction, Var("bool")),
       Apply(incrementFunction, incrementFunction),
-      Apply(incrementFunction, Eq(Var("int"), Var("int"))),
+      Apply(incrementFunction, Equal(Var("int"), Var("int"))),
       Apply(Lambda("x", BoolType(), Var("x")), Num(4)),
       Apply(Lambda("x", BoolType(), Var("x")), Plus(Num(1), Var("int")))
     )
@@ -318,7 +318,7 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
 
   property("Apply doesn't show a third child if the left-hand side is not a function") {
     val expressions: TableFor1[Expr] =
-      Table("expr", Apply(Num(4), Num(4)), Apply(Eq(Apply(incrementFunction, Num(4)), Num(5)), Bool(false)))
+      Table("expr", Apply(Num(4), Num(4)), Apply(Equal(Apply(incrementFunction, Num(4)), Num(5)), Bool(false)))
 
     forAll(expressions) { expr =>
       expr.getChildrenEval().length shouldEqual 2

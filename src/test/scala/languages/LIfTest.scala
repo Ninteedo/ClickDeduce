@@ -18,13 +18,13 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
     Bool(true),
     Bool(false),
     Plus(Num(1), Num(2)),
-    Eq(Num(1), Num(2)),
+    Equal(Num(1), Num(2)),
     IfThenElse(Bool(true), Num(1), Num(2)),
     IfThenElse(Bool(false), Num(1), Num(2)),
-    IfThenElse(Eq(Num(1), Num(2)), Num(1), Num(2)),
-    IfThenElse(Eq(Num(1), Num(1)), IfThenElse(Bool(false), Num(5), Plus(Num(1), Num(-1))), Num(2))
+    IfThenElse(Equal(Num(1), Num(2)), Num(1), Num(2)),
+    IfThenElse(Equal(Num(1), Num(1)), IfThenElse(Bool(false), Num(5), Plus(Num(1), Num(-1))), Num(2))
   )
-  val newExprClasses: TableFor1[String] = Table("newExprClasses", "Bool", "Eq", "IfThenElse")
+  val newExprClasses: TableFor1[String] = Table("newExprClasses", "Bool", "Equal", "IfThenElse")
 
   testExpression(
     "Bool",
@@ -64,29 +64,43 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
   }
 
   property("Eq type-checks to BoolType when both sides have the same type") {
-    Eq(Num(1), Num(2)).typeCheck(Map()) shouldEqual BoolType()
-    Eq(Bool(true), Bool(false)).typeCheck(Map()) shouldEqual BoolType()
-    Eq(Bool(true), Bool(true)).typeCheck(Map()) shouldEqual BoolType()
-    Eq(Num(1), Num(1)).typeCheck(Map()) shouldEqual BoolType()
+    Equal(Num(1), Num(2)).typeCheck(Map()) shouldEqual BoolType()
+    Equal(Bool(true), Bool(false)).typeCheck(Map()) shouldEqual BoolType()
+    Equal(Bool(true), Bool(true)).typeCheck(Map()) shouldEqual BoolType()
+    Equal(Num(1), Num(1)).typeCheck(Map()) shouldEqual BoolType()
   }
 
   property("Eq type-checks to an error when the sides have different types") {
-    Eq(Num(1), Bool(false)).typeCheck(Map()) shouldBe a[TypeMismatchType]
-    Eq(Bool(true), Num(2)).typeCheck(Map()) shouldBe a[TypeMismatchType]
+    Equal(Num(1), Bool(false)).typeCheck(Map()) shouldBe a[TypeMismatchType]
+    Equal(Bool(true), Num(2)).typeCheck(Map()) shouldBe a[TypeMismatchType]
   }
 
   property("Eq evaluates to an error when the sides have different types") {
-    Eq(Num(1), Bool(false)).eval(Map()) shouldBe a[TypeMismatchError]
-    Eq(Bool(true), Num(2)).eval(Map()) shouldBe a[TypeMismatchError]
+    Equal(Num(1), Bool(false)).eval(Map()) shouldBe a[TypeMismatchError]
+    Equal(Bool(true), Num(2)).eval(Map()) shouldBe a[TypeMismatchError]
   }
+
+  testExpression(
+    "LessThan",
+    Table(
+      testExpressionTableHeading,
+      (LessThan(Num(1), Num(2)), BoolV(true), BoolType()),
+      (LessThan(Num(2), Num(1)), BoolV(false), BoolType()),
+      (LessThan(Num(1), Num(1)), BoolV(false), BoolType()),
+      (LessThan(Num(-100), Num(3)), BoolV(true), BoolType()),
+      (LessThan(Bool(true), Bool(false)), ComparisonWithNonOrdinalError(BoolType(), BoolType()), ComparisonWithNonOrdinalType(BoolType(), BoolType())),
+      (LessThan(Num(-1), Bool(true)), ComparisonWithNonOrdinalError(IntType(), BoolType()), ComparisonWithNonOrdinalType(IntType(), BoolType())),
+      (LessThan(Bool(false), Num(1)), ComparisonWithNonOrdinalError(BoolType(), IntType()), ComparisonWithNonOrdinalType(BoolType(), IntType()))
+    )
+  )
 
   testExpression(
     "Basic Eq expression",
     createExprTable(
-      (Eq(Num(1), Num(2)), BoolV(false), BoolType()),
-      (Eq(Bool(true), Bool(false)), BoolV(false), BoolType()),
-      (Eq(Bool(true), Bool(true)), BoolV(true), BoolType()),
-      (Eq(Num(1), Num(1)), BoolV(true), BoolType())
+      (Equal(Num(1), Num(2)), BoolV(false), BoolType()),
+      (Equal(Bool(true), Bool(false)), BoolV(false), BoolType()),
+      (Equal(Bool(true), Bool(true)), BoolV(true), BoolType()),
+      (Equal(Num(1), Num(1)), BoolV(true), BoolType())
     )
   )
 
@@ -108,7 +122,7 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
       ("expr", "children"),
       (IfThenElse(Bool(true), Num(1), Num(2)), List((Bool(true), exampleEnv), (Num(1), exampleEnv))),
       (IfThenElse(Bool(false), Num(1), Num(2)), List((Bool(false), exampleEnv), (Num(2), exampleEnv))),
-      (IfThenElse(Eq(Num(1), Num(2)), Num(1), Num(2)), List((Eq(Num(1), Num(2)), exampleEnv), (Num(2), exampleEnv))),
+      (IfThenElse(Equal(Num(1), Num(2)), Num(1), Num(2)), List((Equal(Num(1), Num(2)), exampleEnv), (Num(2), exampleEnv))),
       (IfThenElse(Num(5), Num(1), Num(2)), List((Num(5), exampleEnv), (Num(1), exampleEnv), (Num(2), exampleEnv)))
     )
 
@@ -245,15 +259,15 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
   }
 
   property("Eq pretty prints correctly") {
-    Eq(Num(1), Num(2)).prettyPrint shouldEqual "(1 == 2)"
-    Eq(Bool(true), Bool(false)).prettyPrint shouldEqual "(true == false)"
-    Eq(Eq(Num(1), Num(2)), Eq(Num(3), Num(4))).prettyPrint shouldEqual "((1 == 2) == (3 == 4))"
-    Eq(Plus(Num(1), Num(2)), Num(3)).prettyPrint shouldEqual "((1 + 2) == 3)"
+    Equal(Num(1), Num(2)).prettyPrint shouldEqual "(1 == 2)"
+    Equal(Bool(true), Bool(false)).prettyPrint shouldEqual "(true == false)"
+    Equal(Equal(Num(1), Num(2)), Equal(Num(3), Num(4))).prettyPrint shouldEqual "((1 == 2) == (3 == 4))"
+    Equal(Plus(Num(1), Num(2)), Num(3)).prettyPrint shouldEqual "((1 + 2) == 3)"
   }
 
   property("IfThenElse pretty prints correctly") {
     IfThenElse(Bool(true), Num(1), Num(2)).prettyPrint shouldEqual "(if true then 1 else 2)"
-    IfThenElse(Eq(Num(1), Num(2)), Num(1), Num(2)).prettyPrint shouldEqual "(if (1 == 2) then 1 else 2)"
+    IfThenElse(Equal(Num(1), Num(2)), Num(1), Num(2)).prettyPrint shouldEqual "(if (1 == 2) then 1 else 2)"
     IfThenElse(Bool(true), IfThenElse(Bool(false), Num(1), Num(2)), Num(3)).prettyPrint shouldEqual
       "(if true then (if false then 1 else 2) else 3)"
   }
