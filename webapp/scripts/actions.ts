@@ -104,6 +104,16 @@ export async function handleDropdownChange(dropdown: HTMLSelectElement, kind: st
     await runAction(actionName, dataTreePath, [selectedValue]);
 }
 
+export async function handleExprSelectorChoice(selector: HTMLDivElement, value: string): Promise<void> {
+    const input = selector.querySelector('.expr-selector-input') as HTMLInputElement;
+    const dropdown = selector.querySelector('.expr-selector-dropdown') as HTMLDivElement;
+    const button = selector.querySelector('.expr-selector-button') as HTMLButtonElement;
+
+    input.value = value;
+    const dataTreePath: string = selector.getAttribute("data-tree-path");
+    await runAction("SelectExprAction", dataTreePath, [value]);
+}
+
 /**
  * Runs the given action and updates the tree according to the server's response.
  * @param actionName the name of the action to run

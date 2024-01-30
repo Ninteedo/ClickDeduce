@@ -242,3 +242,22 @@ form {
     opacity: 0;
     visibility: hidden;
 }
+
+.expr-selector-container {
+    display: inline;
+    position: relative;
+}
+
+.expr-selector-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: var(--context-menu-background);
+    color: var(--foreground);
+    border: var(--input-outline) solid 1px;
+    z-index: 1;
+}
+
+.expr-selector-option.highlight {
+    background-color: var(--highlighted-tree);
+}
