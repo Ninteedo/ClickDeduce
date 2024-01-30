@@ -40,7 +40,7 @@ export function getLeftmostExprDropdown(): HTMLDivElement {
 
 export function getExprDropdownOptions(selector: HTMLDivElement) {
     const dropdown = selector.querySelector('.expr-selector-dropdown') as HTMLDivElement;
-    return Array.from(dropdown.querySelectorAll('option'));
+    return Array.from(dropdown.querySelectorAll('ul > li'));
 }
 
 export async function selectExprOption(selector: HTMLDivElement, exprName: string, manual: boolean = false): Promise<void> {

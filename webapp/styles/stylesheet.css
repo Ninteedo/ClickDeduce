@@ -274,9 +274,17 @@ form {
     z-index: 1;
 }
 
+.expr-selector-dropdown > ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
 .expr-selector-option {
     cursor: pointer;
     padding: 5px;
+    text-align: left;
+    z-index: 100;
 }
 
 .expr-selector-option.highlight {

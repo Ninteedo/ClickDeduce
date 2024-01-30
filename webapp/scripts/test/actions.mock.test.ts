@@ -139,7 +139,7 @@ describe("selecting an option from a non-root expr dropdown behaves correctly", 
             expect(dropdown).toBeInstanceOf(HTMLDivElement);
 
             if (dropdown instanceof HTMLDivElement) {
-                expect(dropdown.children).toHaveLength(3);
+                expect(dropdown.querySelectorAll('ul > li')).toHaveLength(3);
             }
         });
     });
