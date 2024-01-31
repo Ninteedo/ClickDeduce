@@ -5,7 +5,8 @@ import {
     handleLiteralChanged,
     handleSubmit,
     pasteTreeNode,
-    resetCopyCache
+    resetCopyCache,
+    startNodeBlank
 } from "./actions";
 import {loadTree, redo, resetTreeManipulation, saveTree, undo} from "./treeManipulation";
 import {handleTabPressed, resetInterfaceGlobals, zoomToFit} from "./interface";
@@ -23,7 +24,6 @@ export async function initialise(): Promise<void> {
     resetInterfaceGlobals();
     resetCopyCache();
     await resetTreeManipulation();
-
     tree = document.getElementById('tree') as HTMLDivElement;
 
     panzoomInstance = panzoom(tree, {
@@ -36,6 +36,8 @@ export async function initialise(): Promise<void> {
             return true;  // don't let panzoom handle this event:
         }
     });
+
+    await startNodeBlank();
 }
 
 (window as any).initialise = initialise;

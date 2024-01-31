@@ -204,10 +204,8 @@ describe('start node button has correct effect', () => {
 
     test('clicking start node button results in a single node being added to the empty tree', async () => {
         const tree = document.getElementById('tree');
-        const treeContent = tree.innerHTML;
         await pressStartNodeButton();
 
-        expect(tree.innerHTML).not.toBe(treeContent);
         expect(tree.children).toHaveLength(1);
         expect(tree.querySelectorAll('.subtree')).toHaveLength(1);
     });

@@ -21,6 +21,10 @@ export function resetCopyCache(): void {
     copyCache = null;
 }
 
+export async function startNodeBlank(): Promise<void> {
+    await handleSubmit(new Event("submit"), "/start-node-blank");
+}
+
 /**
  * Handles the form submission event.
  * @param event the form submission event
