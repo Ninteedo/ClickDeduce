@@ -261,7 +261,6 @@ form {
     margin: 0;
     border: var(--input-outline) solid 1px;
     border-radius: 0 3px 3px 0;
-    cursor: pointer;
 }
 
 .expr-selector-dropdown {

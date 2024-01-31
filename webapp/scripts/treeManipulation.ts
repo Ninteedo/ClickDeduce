@@ -228,7 +228,7 @@ function setLiteralInitialValues() {
 }
 
 function replaceSelectInputs(): void {
-    const selectInputs: NodeListOf<HTMLSelectElement> = document.querySelectorAll(
+    const selectInputs: NodeListOf<HTMLSelectElement> = tree.querySelectorAll(
         'select.expr-dropdown[data-tree-path]:not([disabled]), select.type-dropdown[data-tree-path]:not([disabled])'
     );
     selectInputs.forEach(select => {
@@ -247,7 +247,7 @@ function replaceSelectInputs(): void {
             placeholderText = 'Enter Type...';
             kind = 'type';
         }
-        const newHtml =
+        select.outerHTML =
             `<div class="expr-selector-container" data-tree-path="${treePath}" data-kind="${kind}">
               <input type="text" class="expr-selector-input" placeholder="${placeholderText}" data-tree-path="${treePath}" />
               <button class="expr-selector-button">&#9660;</button>
@@ -256,13 +256,12 @@ function replaceSelectInputs(): void {
                 ${options.map(option => `<li data-value="${option.value}">${option.innerHTML}</li>`).join('')}
                 </ul>
               </div>
-            </div>`
-        select.outerHTML = newHtml;
+            </div>`;
 
         const newSelector = tree.querySelector(`.expr-selector-container[data-tree-path="${treePath}"]`) as HTMLDivElement;
-        const input = newSelector.querySelector('.expr-selector-input') as HTMLInputElement;
-        const button = newSelector.querySelector('.expr-selector-button') as HTMLButtonElement;
-        const dropdown = newSelector.querySelector('.expr-selector-dropdown') as HTMLDivElement;
+        const input = getSelectorInput(newSelector);
+        const button = getSelectorButton(newSelector);
+        const dropdown = getSelectorDropdown(newSelector);
 
         dropdown.style.display = 'none';
 
@@ -279,7 +278,7 @@ function replaceSelectInputs(): void {
         input.addEventListener('focus', () => showExprSelectorDropdown(newSelector));
         input.addEventListener('blur', () => hideExprSelectorDropdown(newSelector));
 
-        button.addEventListener('click', () => toggleExprSelectorDropdownDisplay(newSelector));
+        button.addEventListener('click', () => input.focus());
 
         const selectorOptions = Array.from(dropdown.querySelectorAll('ul > li'));
         selectorOptions.forEach(option => {
@@ -287,7 +286,7 @@ function replaceSelectInputs(): void {
                 throw new Error('Selector option was not an HTMLLIElement');
             }
 
-            option.addEventListener('click', () => {
+            option.addEventListener('mousedown', () => {
                 console.log(option.getAttribute('data-value') + ' clicked');
                 selectorSelectOption(newSelector, option)
             });
@@ -297,8 +296,8 @@ function replaceSelectInputs(): void {
 }
 
 function updateExprSelectorDropdown(selectorDiv: HTMLDivElement, keepOpenWhenEmpty: boolean = false) {
-    const input = selectorDiv.querySelector('.expr-selector-input') as HTMLInputElement;
-    const dropdown = selectorDiv.querySelector('.expr-selector-dropdown') as HTMLDivElement;
+    const input = getSelectorInput(selectorDiv);
+    const dropdown = getSelectorDropdown(selectorDiv);
 
     if (input.value === '' && !keepOpenWhenEmpty) {
         if (dropdown.style.display !== 'none') {
@@ -324,7 +323,6 @@ function updateExprSelectorDropdown(selectorDiv: HTMLDivElement, keepOpenWhenEmp
 }
 
 function setExprSelectorOptionHighlight(selectorDiv: HTMLDivElement, highlightIndex: number) {
-    const dropdown = selectorDiv.querySelector('.expr-selector-dropdown') as HTMLDivElement;
     const options = getSelectorOptions(selectorDiv);
     options.forEach(option => option.classList.remove('highlight'));
     const filtered = options.filter(option => option.style.display !== 'none');
@@ -334,18 +332,14 @@ function setExprSelectorOptionHighlight(selectorDiv: HTMLDivElement, highlightIn
 }
 
 function getExprSelectorOptionHighlight(selectorDiv: HTMLDivElement, ignoreHidden: boolean): number {
-    const dropdown = selectorDiv.querySelector('.expr-selector-dropdown') as HTMLDivElement;
     let options = getSelectorOptions(selectorDiv);
-
     if (ignoreHidden) {
         options = options.filter(option => option.style.display !== 'none');
     }
-
     return options.findIndex(option => option.classList.contains('highlight'));
 }
 
 function moveSelectorOptionHighlight(selectorDiv: HTMLDivElement, offset: number) {
-    const dropdown = selectorDiv.querySelector('.expr-selector-dropdown') as HTMLDivElement;
     const filtered = getSelectorOptions(selectorDiv).filter(option => option.style.display !== 'none');
     const currentHighlightIndex = getExprSelectorOptionHighlight(selectorDiv, true);
     const newHighlightIndex = (currentHighlightIndex + offset) % filtered.length;
@@ -353,8 +347,7 @@ function moveSelectorOptionHighlight(selectorDiv: HTMLDivElement, offset: number
 }
 
 function toggleExprSelectorDropdownDisplay(selectorDiv: HTMLDivElement) {
-    const dropdown = selectorDiv.querySelector('.expr-selector-dropdown') as HTMLDivElement;
-    if (dropdown.style.display === 'none') {
+    if (getSelectorDropdown(selectorDiv).style.display === 'none') {
         showExprSelectorDropdown(selectorDiv);
     } else {
         hideExprSelectorDropdown(selectorDiv);
@@ -362,55 +355,53 @@ function toggleExprSelectorDropdownDisplay(selectorDiv: HTMLDivElement) {
 }
 
 function showExprSelectorDropdown(selectorDiv: HTMLDivElement) {
-    const dropdown = selectorDiv.querySelector('.expr-selector-dropdown') as HTMLDivElement;
-    const button = selectorDiv.querySelector('.expr-selector-button') as HTMLButtonElement;
-    button.innerHTML = '&#9650;';
-    dropdown.style.display = 'block';
+    getSelectorDropdown(selectorDiv).style.display = 'block';
+    getSelectorButton(selectorDiv).innerHTML = '&#9650;';
+    getSelectorButton(selectorDiv).disabled = true;
     updateExprSelectorDropdown(selectorDiv, true);
 }
 
-function hideExprSelectorDropdown(selectorDiv: HTMLDivElement) {
-    const dropdown = selectorDiv.querySelector('.expr-selector-dropdown') as HTMLDivElement;
-    const button = selectorDiv.querySelector('.expr-selector-button') as HTMLButtonElement;
-    button.innerHTML = '&#9660;';
-    dropdown.style.display = 'none';
-
-    dropdown.querySelectorAll('ul > li').forEach(option => {
+function hideExprSelectorDropdown(selectorDiv: HTMLDivElement): void {
+    getSelectorDropdown(selectorDiv).style.display = 'none';
+    getSelectorButton(selectorDiv).innerHTML = '&#9660;';
+    getSelectorButton(selectorDiv).disabled = false;
+    getSelectorOptions(selectorDiv).forEach(option => {
         option.classList.remove('highlight');
         option.removeAttribute('style');
     });
 }
 
-function selectorSelectOption(selectorDiv: HTMLDivElement, option: HTMLLIElement) {
-    const input = selectorDiv.querySelector('.expr-selector-input') as HTMLInputElement;
-    const dropdown = selectorDiv.querySelector('.expr-selector-dropdown') as HTMLDivElement;
-    const button = selectorDiv.querySelector('.expr-selector-button') as HTMLButtonElement;
-    input.value = option.innerText;
-    dropdown.style.display = 'none';
-    button.innerHTML = '&#9660;';
+function selectorSelectOption(selectorDiv: HTMLDivElement, option: HTMLLIElement): void {
+    getSelectorInput(selectorDiv).value = option.innerText;
+    getSelectorDropdown(selectorDiv).style.display = 'none';
+    getSelectorButton(selectorDiv).innerHTML = '&#9660;';
     console.log(option.outerHTML);
     handleExprSelectorChoice(selectorDiv, option.getAttribute('data-value'));
 }
 
-export function selectorEnterPressed(selectorDiv: HTMLDivElement) {
-    const input = selectorDiv.querySelector('.expr-selector-input') as HTMLInputElement;
-    const dropdown = selectorDiv.querySelector('.expr-selector-dropdown') as HTMLDivElement;
-    const button = selectorDiv.querySelector('.expr-selector-button') as HTMLButtonElement;
-    const options = getSelectorOptions(selectorDiv);
-
-    if (dropdown.style.display === 'none') {
+export function selectorEnterPressed(selectorDiv: HTMLDivElement): void {
+    if (getSelectorDropdown(selectorDiv).style.display === 'none') {
         toggleExprSelectorDropdownDisplay(selectorDiv);
         return;
     }
 
     const selectedIndex = getExprSelectorOptionHighlight(selectorDiv, false);
-    const selectedOption = options[selectedIndex];
+    const selectedOption = getSelectorOptions(selectorDiv)[selectedIndex];
     if (selectedOption) {
-        if (!(selectedOption instanceof HTMLLIElement)) {
-            throw new Error('Selected option was not an HTMLLIElement');
-        }
         selectorSelectOption(selectorDiv, selectedOption);
     }
+}
+
+function getSelectorInput(selectorDiv: HTMLDivElement): HTMLInputElement {
+    return selectorDiv.querySelector('.expr-selector-input') as HTMLInputElement;
+}
+
+function getSelectorButton(selectorDiv: HTMLDivElement): HTMLButtonElement {
+    return selectorDiv.querySelector('.expr-selector-button') as HTMLButtonElement;
+}
+
+function getSelectorDropdown(selectorDiv: HTMLDivElement): HTMLDivElement {
+    return selectorDiv.querySelector('.expr-selector-dropdown') as HTMLDivElement;
 }
 
 function getSelectorOptions(selectorDiv: HTMLDivElement): HTMLLIElement[] {
