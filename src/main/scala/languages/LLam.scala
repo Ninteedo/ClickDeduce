@@ -67,6 +67,8 @@ class LLam extends LLet {
       IncompatibleTypeErrorType(in, argType)
     }
 
+    override def typeCheck(tEnv: TypeEnv): Type = Func(in.typeCheck(tEnv), out.typeCheck(tEnv))
+
     override lazy val valueText: TypedTag[String] = div(in.toHtml, raw(" → "), out.toHtml)
 
     override def prettyPrint: String = s"(${in.prettyPrint} → ${out.prettyPrint})"

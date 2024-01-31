@@ -17,6 +17,7 @@
         <option value="languages.LRecTest" />
         <option value="languages.NodeSpec" />
         <option value="languages.LDataTest" />
+        <option value="languages.LPolyTest" />
         <option value="languages.ActionSpec" />
         <option value="languages.LArithTest" />
         <option value="languages.NodeHTMLSpec" />

@@ -12,7 +12,7 @@ class LPoly extends LData {
     }
 
     override def typeCheckInner(tEnv: TypeEnv): Type = {
-      PolyType(TypeVar(v), e, tEnv)
+      PolyType(TypeVar(v), e.typeCheck(tEnv + (v.toString -> TypeVar(v))))
     }
 
     override def prettyPrint: String = s"Λ$v. ${e.prettyPrint}"
@@ -24,7 +24,11 @@ class LPoly extends LData {
       List((v, tEnv), (e, tEnv + (v.toString -> TypeVar(v))))
 
     override def getChildrenEval(env: Env): List[(Term, Env)] =
-        List((e, env + (v.toString -> TypeVarV(v, TypeVar(v)))))
+      List((e, env + (v.toString -> TypeVarV(v, TypeVar(v)))))
+  }
+
+  object Poly {
+    def apply(v: Variable, e: Expr): Poly = Poly(Literal.fromString(v), e)
   }
 
   case class ApplyType(e: Expr, typ: Type) extends Expr {
@@ -38,9 +42,9 @@ class LPoly extends LData {
     }
 
     override def typeCheckInner(tEnv: TypeEnv): Type = e.typeCheck(tEnv) match {
-      case PolyType(tv, e, innerTEnv) =>
+      case PolyType(tv, incompleteType) =>
         tv match {
-          case TypeVar(v) => e.typeCheck(innerTEnv + (v.toString -> typ))
+          case TypeVar(v) => incompleteType.typeCheck(tEnv + (v.toString -> typ))
           case other      => PolyVRequiresTypeVarType(other)
         }
       case other => CannotApplyTypeUnlessPolyType(other)
@@ -57,18 +61,24 @@ class LPoly extends LData {
     override def typeCheck(tEnv: TypeEnv): Type = tEnv.getOrElse(v.toString, UnknownTypeVar(v))
   }
 
-  case class PolyType(typeVar: Type, e: Expr, tEnv: TypeEnv) extends Type {
-    override def prettyPrint: String = s"Λ${typeVar.prettyPrint}. ${e.prettyPrint}"
+  object TypeVar {
+    def apply(v: Variable): TypeVar = TypeVar(Literal.fromString(v))
+  }
+
+  case class PolyType(typeVar: Type, incompleteType: Type) extends Type {
+    override def prettyPrint: String = s"Λ${typeVar.prettyPrint}. ${incompleteType.prettyPrint}"
 
     override lazy val valueText: TypedTag[String] = div(
-      raw(PolyType(TypePlaceholder(typeVar.toHtml.toString), ExprPlaceholder(e.toHtml.toString), tEnv).prettyPrint)
+      raw(
+        PolyType(TypePlaceholder(typeVar.toHtml.toString), TypePlaceholder(incompleteType.toHtml.toString)).prettyPrint
+      )
     )
   }
 
   // values
 
   case class PolyV(typeVar: Type, e: Expr, env: Env) extends Value {
-    override val typ: Type = PolyType(typeVar, e, envToTypeEnv(env))
+    override val typ: Type = PolyType(typeVar, e.typeCheck(envToTypeEnv(env) + (typeVar.toString -> typeVar)))
 
     override def prettyPrint: String = s"Λ${typeVar.prettyPrint}. ${e.prettyPrint}"
 
@@ -83,8 +93,8 @@ class LPoly extends LData {
     override def prettyPrint: String = s"${v.toString}[${t.prettyPrint}]"
   }
 
-  case class PolyTypeClosure(v: Literal, typ: Type, e: Expr) extends Value {
-    override def prettyPrint: String = s"Λ$v: ${typ.prettyPrint}. ${e.prettyPrint}"
+  object TypeVarV {
+    def apply(v: Variable, t: Type): TypeVarV = TypeVarV(Literal.fromString(v), t)
   }
 
   // errors

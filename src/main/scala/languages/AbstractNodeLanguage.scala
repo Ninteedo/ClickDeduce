@@ -474,9 +474,13 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       if (isAxiom)
         (if (!isPhantom) toHtmlLine(DisplayMode.Edit) else toHtmlLineReadOnly(DisplayMode.Edit)) (display := "inline")
       else div(cls := "expr", if (!isPhantom) toHtmlLine(DisplayMode.Edit) else toHtmlLineReadOnly(DisplayMode.Edit)), {
-        val evalResult = getEditValueResult
-        if (!evalResult.isError && !evalResult.isPlaceholder) List(evalArrowSpan, editEvalResultDiv)
-        else List(typeCheckTurnstileSpan, typeCheckResultDiv)
+        val typeCheckResult = getType
+        if (typeCheckResult.isError) List(typeCheckTurnstileSpan, typeCheckResultDiv)
+        else {
+          val evalResult = getEditValueResult
+          if (!evalResult.isError && !evalResult.isPlaceholder) List(evalArrowSpan, editEvalResultDiv)
+          else List(typeCheckTurnstileSpan, typeCheckResultDiv)
+        }
       }
     )
 
@@ -554,7 +558,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
           val childExprList = getExpr.getChildrenEval(getEvalEnv).map(_._1)
           var unconsumedChildren = children
 
-          childExprList.flatMap({ 
+          childExprList.flatMap({
             case expr: Expr =>
             val matchingChild = unconsumedChildren.collectFirst {
               case c: ExprNode if c.getExpr eq expr                       => c

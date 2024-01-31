@@ -162,12 +162,16 @@ class LData extends LRec {
   // types
 
   case class PairType(l: Type, r: Type) extends Type {
+    override def typeCheck(tEnv: TypeEnv): Type = PairType(l.typeCheck(tEnv), r.typeCheck(tEnv))
+
     override def prettyPrint: String = s"(${l.prettyPrint}, ${r.prettyPrint})"
 
     override lazy val valueText: TypedTag[String] = div(l.toHtml, raw(", "), r.toHtml)
   }
 
   case class UnionType(l: Type, r: Type) extends Type {
+    override def typeCheck(tEnv: TypeEnv): Type = UnionType(l.typeCheck(tEnv), r.typeCheck(tEnv))
+
     override def prettyPrint: String = s"(${l.prettyPrint} | ${r.prettyPrint})"
 
     override lazy val valueText: TypedTag[String] = div(l.toHtml, raw(" | "), r.toHtml)
