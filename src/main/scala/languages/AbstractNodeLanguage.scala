@@ -554,7 +554,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
           val childExprList = getExpr.getChildrenEval(getEvalEnv).map(_._1)
           var unconsumedChildren = children
 
-          childExprList.flatMap({ case expr: Expr =>
+          childExprList.flatMap({ 
+            case expr: Expr =>
             val matchingChild = unconsumedChildren.collectFirst {
               case c: ExprNode if c.getExpr eq expr                       => c
               case c: ExprChoiceNode if c.getExpr == expr && !c.isPhantom => c
@@ -795,9 +796,11 @@ trait AbstractNodeLanguage extends AbstractLanguage {
         throw new IllegalArgumentException(s"Unknown expression type for ${lang.getClass.getSimpleName}: $typeName")
     }
 
-    override def toHtmlLine(mode: DisplayMode): TypedTag[String] = getType.toHtml(data("tree-path") := treePathString)
+    override def toHtmlLine(mode: DisplayMode): TypedTag[String] =
+      div(raw(getExprHtmlLine(mode)))(data("tree-path") := treePathString)
 
-    override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] = toHtmlLine(mode)(readonly, disabled)
+    override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] =
+      div(raw(getExprHtmlLineReadOnly(mode)))(readonly, disabled, display := "inline")
 
     override val children: List[OuterNode] = args.filter(_.isInstanceOf[SubTypeNode]).flatMap(_.children)
 
@@ -809,7 +812,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
         case n: LiteralNode => LiteralAny(n.toHtmlLine(mode).toString)
         case n: SubTypeNode => TypePlaceholder(n.node.toHtmlLine(mode).toString)
       }
-      constructor.newInstance(arguments: _*).asInstanceOf[Expr].prettyPrint
+      constructor.newInstance(arguments: _*).asInstanceOf[Type].prettyPrint
     }
 
     def getExprHtmlLineReadOnly(mode: DisplayMode): String = {
@@ -818,7 +821,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
         case n: LiteralNode => LiteralAny(n.toHtmlLineReadOnly(mode).toString)
         case n: SubTypeNode => TypePlaceholder(n.node.toHtmlLineReadOnly(mode).toString)
       }
-      constructor.newInstance(arguments: _*).asInstanceOf[Expr].prettyPrint
+      constructor.newInstance(arguments: _*).asInstanceOf[Type].prettyPrint
     }
 
     children.foreach(_.setParent(Some(this)))

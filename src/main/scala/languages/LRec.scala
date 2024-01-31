@@ -10,7 +10,7 @@ class LRec extends LLam {
     override def evalInner(env: Env): Value = f match {
       case LiteralIdentifier(f_id) =>
         v match {
-          case LiteralIdentifier(v_id) => RecV(f, v, inType, outType, e, env)
+          case LiteralIdentifier(v_id) => RecV(f, v, inType.typeCheck(envToTypeEnv(env)), outType.typeCheck(envToTypeEnv(env)), e, env)
           case _                       => InvalidIdentifierEvalError(v)
         }
       case _ => InvalidIdentifierEvalError(f)
@@ -20,9 +20,12 @@ class LRec extends LLam {
       case LiteralIdentifier(f_id) =>
         v match {
           case LiteralIdentifier(v_id) =>
-            val determinedOutType = e.typeCheck(tEnv + (f.toString -> Func(inType, outType)) + (v.toString -> inType))
-            if (outType == determinedOutType) Func(inType, outType)
-            else RecursiveFunctionExpressionOutTypeMismatch(outType, determinedOutType)
+            val properInType = inType.typeCheck(tEnv)
+            val properOutType = outType.typeCheck(tEnv)
+            val extendedTEnv = tEnv + (f.toString -> Func(inType, outType)) + (v.toString -> inType)
+            val determinedOutType = e.typeCheck(extendedTEnv).typeCheck(extendedTEnv)
+            if (properOutType == determinedOutType) Func(properInType, determinedOutType)
+            else RecursiveFunctionExpressionOutTypeMismatch(properOutType, determinedOutType)
           case _ => InvalidIdentifierTypeError(v)
         }
       case _ => InvalidIdentifierTypeError(f)

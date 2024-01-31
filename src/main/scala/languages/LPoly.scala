@@ -1,0 +1,123 @@
+package languages
+
+import scalatags.Text.TypedTag
+import scalatags.Text.all.*
+
+class LPoly extends LData {
+  // expressions
+
+  case class Poly(v: Literal, e: Expr) extends Expr {
+    override def evalInner(env: Env): Value = {
+      PolyV(TypeVar(v), e, env)
+    }
+
+    override def typeCheckInner(tEnv: TypeEnv): Type = {
+      PolyType(TypeVar(v), e, tEnv)
+    }
+
+    override def prettyPrint: String = s"Λ$v. ${e.prettyPrint}"
+
+    override def getChildrenBase(env: Env): List[(Term, Env)] =
+      List((v, env), (e, env + (v.toString -> TypeVarV(v, TypeVar(v)))))
+
+    override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] =
+      List((v, tEnv), (e, tEnv + (v.toString -> TypeVar(v))))
+
+    override def getChildrenEval(env: Env): List[(Term, Env)] =
+        List((e, env + (v.toString -> TypeVarV(v, TypeVar(v)))))
+  }
+
+  case class ApplyType(e: Expr, typ: Type) extends Expr {
+    override def evalInner(env: Env): Value = e.eval(env) match {
+      case PolyV(tv, e, env) =>
+        tv match {
+          case TypeVar(v) => e.eval(env + (v.toString -> TypeVarV(v, typ)))
+          case other      => PolyVRequiresTypeVar(other)
+        }
+      case other => CannotApplyTypeUnlessPolyV(other)
+    }
+
+    override def typeCheckInner(tEnv: TypeEnv): Type = e.typeCheck(tEnv) match {
+      case PolyType(tv, e, innerTEnv) =>
+        tv match {
+          case TypeVar(v) => e.typeCheck(innerTEnv + (v.toString -> typ))
+          case other      => PolyVRequiresTypeVarType(other)
+        }
+      case other => CannotApplyTypeUnlessPolyType(other)
+    }
+
+    override def prettyPrint: String = s"(${e.prettyPrint})[${typ.prettyPrint}]"
+  }
+
+  // types
+
+  case class TypeVar(v: Literal) extends Type {
+    override def prettyPrint: String = v.toString
+
+    override def typeCheck(tEnv: TypeEnv): Type = tEnv.getOrElse(v.toString, UnknownTypeVar(v))
+  }
+
+  case class PolyType(typeVar: Type, e: Expr, tEnv: TypeEnv) extends Type {
+    override def prettyPrint: String = s"Λ${typeVar.prettyPrint}. ${e.prettyPrint}"
+
+    override lazy val valueText: TypedTag[String] = div(
+      raw(PolyType(TypePlaceholder(typeVar.toHtml.toString), ExprPlaceholder(e.toHtml.toString), tEnv).prettyPrint)
+    )
+  }
+
+  // values
+
+  case class PolyV(typeVar: Type, e: Expr, env: Env) extends Value {
+    override val typ: Type = PolyType(typeVar, e, envToTypeEnv(env))
+
+    override def prettyPrint: String = s"Λ${typeVar.prettyPrint}. ${e.prettyPrint}"
+
+    override lazy val valueText: TypedTag[String] = div(
+      raw(PolyV(TypePlaceholder(typeVar.toHtml.toString), ExprPlaceholder(e.toHtml.toString), env).prettyPrint)
+    )
+  }
+
+  case class TypeVarV(v: Literal, t: Type) extends Value {
+    override val typ: Type = t
+
+    override def prettyPrint: String = s"${v.toString}[${t.prettyPrint}]"
+  }
+
+  case class PolyTypeClosure(v: Literal, typ: Type, e: Expr) extends Value {
+    override def prettyPrint: String = s"Λ$v: ${typ.prettyPrint}. ${e.prettyPrint}"
+  }
+
+  // errors
+
+  case class CannotApplyTypeUnlessPolyV(v: Value) extends EvalError {
+    override val message: String = s"Cannot apply type to non-polymorphic value $v"
+
+    override val typ: Type = CannotApplyTypeUnlessPolyType(v.typ)
+  }
+
+  case class CannotApplyTypeUnlessPolyType(t: Type) extends TypeError {
+    override val message: String = s"Cannot apply type to non-polymorphic type $t"
+  }
+
+  case class PolyVRequiresTypeVar(v: Type) extends EvalError {
+    override val message: String = s"Polymorphic value requires a type variable, not $v"
+
+    override val typ: Type = PolyVRequiresTypeVarType(v)
+  }
+
+  case class PolyVRequiresTypeVarType(t: Type) extends TypeError {
+    override val message: String = s"Polymorphic value requires a type variable, not $t"
+  }
+
+  case class UnknownTypeVar(v: Literal) extends TypeError {
+    override val message: String = s"Unknown type variable $v"
+  }
+
+  override def calculateExprClassList: List[Class[Expr]] =
+    super.calculateExprClassList ++ List(classOf[Poly], classOf[ApplyType]).map(_.asInstanceOf[Class[Expr]])
+
+  override def calculateTypeClassList: List[Class[Type]] =
+    super.calculateTypeClassList ++ List(classOf[PolyType], classOf[TypeVar]).map(_.asInstanceOf[Class[Type]])
+}
+
+object LPoly extends LPoly {}

@@ -119,10 +119,10 @@ trait AbstractLanguage {
 
     override def prettyPrint: String = toHtml.toString
   }
-  
+
   case class ValuePlaceholder(content: String) extends Value {
     override def prettyPrint: String = content
-    
+
     override val typ: Type = TypePlaceholder(content)
   }
 
@@ -137,6 +137,8 @@ trait AbstractLanguage {
     lazy val valueText: TypedTag[String] = div(prettyPrint)
 
     val isError: Boolean = false
+
+    def typeCheck(tEnv: TypeEnv): Type = this
   }
 
   case class UnknownType() extends Type {
@@ -162,6 +164,10 @@ trait AbstractLanguage {
     override lazy val valueText: TypedTag[String] = div("?")
 
     override val isError: Boolean = true
+
+    override def prettyPrint: String = message
+
+    override def toString: String = s"${getClass.getSimpleName.stripSuffix("$")}($message)"
   }
 
   /** An error that occurs due to attempting to process an unknown `Expr`.
@@ -197,6 +203,8 @@ trait AbstractLanguage {
     override val isError: Boolean = true
 
     override def prettyPrint: String = message
+
+    override def toString: String = s"${getClass.getSimpleName.stripSuffix("$")}($message)"
   }
 
   /** An error that occurs due to attempting to process an unknown `Expr`.

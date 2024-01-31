@@ -29,12 +29,15 @@ class LLam extends LLet {
 
   case class Lambda(v: Literal, typ: Type, e: Expr) extends Expr {
     override def evalInner(env: Env): Value = v match {
-      case LiteralIdentifier(identifier) => LambdaV(identifier, typ, e, env)
+      case LiteralIdentifier(identifier) => LambdaV(identifier, typ.typeCheck(envToTypeEnv(env)), e, env)
       case _                             => InvalidIdentifierEvalError(v)
     }
 
     override def typeCheckInner(tEnv: TypeEnv): Type = v match {
-      case LiteralIdentifier(identifier) => Func(typ, e.typeCheck(tEnv + (identifier -> typ)))
+      case LiteralIdentifier(identifier) => {
+        val inputType = typ.typeCheck(tEnv)
+        Func(inputType, e.typeCheck(tEnv + (identifier -> inputType)))
+      }
       case _                             => InvalidIdentifierTypeError(v)
     }
 
@@ -89,19 +92,21 @@ class LLam extends LLet {
   }
 
   case class LambdaV(v: Variable, inputType: Type, e: Expr, env: Env) extends FunctionValue {
-    override val typ: Type = Func(inputType, e.typeCheck(envToTypeEnv(env) + (v -> inputType)))
+    private val properInputType: Type = inputType.typeCheck(envToTypeEnv(env))
+
+    override val typ: Type = Func(inputType, e.typeCheck(envToTypeEnv(env) + (v -> properInputType)))
 
     override def getFunctionEvaluation(applyValue: Value): (Expr, Env) = (e, env + (v -> applyValue))
 
     override def evalApply(value: Value): Value = e.eval(env + (v -> value))
 
     override lazy val valueText: TypedTag[String] = div(
-      raw(LambdaV(v, TypePlaceholder(inputType.toHtml.toString), ExprPlaceholder(e.toHtml.toString), env).prettyPrint)
+      raw(LambdaV(v, TypePlaceholder(properInputType.toHtml.toString), ExprPlaceholder(e.toHtml.toString), env).prettyPrint)
     )
 
     override def prettyPrint: String = {
       val eString: String = if (e == BlankExprDropDown()) "?" else e.prettyPrint
-      s"λ$v: ${inputType.prettyPrint}. $eString"
+      s"λ$v: ${properInputType.prettyPrint}. $eString"
     }
   }
 

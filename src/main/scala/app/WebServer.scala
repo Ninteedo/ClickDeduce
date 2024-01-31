@@ -235,7 +235,7 @@ object WebServer {
     server.runServer(args)
   }
 
-  val knownLanguages: List[ClickDeduceLanguage] = List(LArith(), LIf(), LLet(), LLam(), LRec(), LData())
+  val knownLanguages: List[ClickDeduceLanguage] = List(LArith(), LIf(), LLet(), LLam(), LRec(), LData(), LPoly())
 
   def getLanguage(langName: String): ClickDeduceLanguage = knownLanguages.find(getLanguageName(_) == langName) match {
     case Some(lang) => lang
