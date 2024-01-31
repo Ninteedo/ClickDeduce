@@ -814,7 +814,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       val constructor = typeClass.getConstructors()(0)
       val arguments = lang +: args.map {
         case n: LiteralNode => LiteralAny(n.toHtmlLine(mode).toString)
-        case n: SubTypeNode => TypePlaceholder(n.node.toHtmlLine(mode).toString)
+        case n: SubTypeNode => TypePlaceholder(n.node.toHtmlLineReadOnly(mode).toString)
       }
       constructor.newInstance(arguments: _*).asInstanceOf[Type].prettyPrint
     }
