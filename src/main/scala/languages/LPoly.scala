@@ -15,7 +15,7 @@ class LPoly extends LData {
       PolyType(TypeVar(v), e.typeCheck(tEnv + (v.toString -> TypeVar(v))))
     }
 
-    override def prettyPrint: String = s"Λ$v. ${e.prettyPrint}"
+    override def prettyPrint: String = s"Λ$v. ${e.prettyPrintBracketed}"
 
     override def getChildrenBase(env: Env): List[(Term, Env)] =
       List((v, env), (e, env + (v.toString -> TypeVarV(v, TypeVar(v)))))
@@ -50,7 +50,7 @@ class LPoly extends LData {
       case other => CannotApplyTypeUnlessPolyType(other)
     }
 
-    override def prettyPrint: String = s"(${e.prettyPrint})[${typ.prettyPrint}]"
+    override def prettyPrint: String = s"${e.prettyPrintBracketed}[${typ.prettyPrint}]"
   }
 
   // types
@@ -59,6 +59,8 @@ class LPoly extends LData {
     override def prettyPrint: String = v.toString
 
     override def typeCheck(tEnv: TypeEnv): Type = tEnv.getOrElse(v.toString, UnknownTypeVar(v))
+
+    override val needsBrackets: Boolean = false
   }
 
   object TypeVar {
@@ -66,11 +68,11 @@ class LPoly extends LData {
   }
 
   case class PolyType(typeVar: Type, incompleteType: Type) extends Type {
-    override def prettyPrint: String = s"Λ${typeVar.prettyPrint}. ${incompleteType.prettyPrint}"
+    override def prettyPrint: String = s"Λ${typeVar.prettyPrintBracketed}. ${incompleteType.prettyPrintBracketed}"
 
     override lazy val valueText: TypedTag[String] = div(
       raw(
-        PolyType(TypePlaceholder(typeVar.toHtml.toString), TypePlaceholder(incompleteType.toHtml.toString)).prettyPrint
+        PolyType(TypePlaceholder(typeVar), TypePlaceholder(incompleteType)).prettyPrint
       )
     )
   }
@@ -80,10 +82,10 @@ class LPoly extends LData {
   case class PolyV(typeVar: Type, e: Expr, env: Env) extends Value {
     override val typ: Type = PolyType(typeVar, e.typeCheck(envToTypeEnv(env) + (typeVar.toString -> typeVar)))
 
-    override def prettyPrint: String = s"Λ${typeVar.prettyPrint}. ${e.prettyPrint}"
+    override def prettyPrint: String = s"Λ${typeVar.prettyPrintBracketed}. ${e.prettyPrintBracketed}"
 
     override lazy val valueText: TypedTag[String] = div(
-      raw(PolyV(TypePlaceholder(typeVar.toHtml.toString), ExprPlaceholder(e.toHtml.toString), env).prettyPrint)
+      raw(PolyV(TypePlaceholder(typeVar), ExprPlaceholder(e), env).prettyPrint)
     )
   }
 
@@ -91,6 +93,8 @@ class LPoly extends LData {
     override val typ: Type = t
 
     override def prettyPrint: String = s"${v.toString}[${t.prettyPrint}]"
+
+    override val needsBrackets: Boolean = false
   }
 
   object TypeVarV {

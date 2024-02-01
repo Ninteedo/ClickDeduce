@@ -15,6 +15,8 @@ class LLet extends LIf {
     }
 
     override def prettyPrint: String = v.toString
+
+    override val needsBrackets: Boolean = false
   }
 
   object Var {
@@ -45,15 +47,7 @@ class LLet extends LIf {
     override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] =
       List((assign, tEnv), (bound, tEnv + (v.toString -> assign.typeCheck(tEnv))))
 
-    override def prettyPrint: String = {
-      val assignExprString = assign match {
-        case _: Var => assign.prettyPrint
-        case _: Num => assign.prettyPrint
-        case _: Bool => assign.prettyPrint
-        case _ => s"(${assign.prettyPrint})"
-      }
-      s"let $v = $assignExprString in ${bound.prettyPrint}"
-    }
+    override def prettyPrint: String = s"let $v = ${assign.prettyPrintBracketed} in ${bound.prettyPrintBracketed}"
   }
 
   object Let {

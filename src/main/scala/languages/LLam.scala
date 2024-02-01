@@ -24,7 +24,7 @@ class LLam extends LLet {
       case _                       => List((e1, env), (e2, env))
     }
 
-    override def prettyPrint: String = s"((${e1.prettyPrint}) ${e2.prettyPrint})"
+    override def prettyPrint: String = s"${e1.prettyPrintBracketed} ${e2.prettyPrintBracketed}"
   }
 
   case class Lambda(v: Literal, typ: Type, e: Expr) extends Expr {
@@ -38,7 +38,7 @@ class LLam extends LLet {
         val inputType = typ.typeCheck(tEnv)
         Func(inputType, e.typeCheck(tEnv + (identifier -> inputType)))
       }
-      case _                             => InvalidIdentifierTypeError(v)
+      case _ => InvalidIdentifierTypeError(v)
     }
 
     override def getChildrenBase(env: Env): List[(Term, Env)] =
@@ -48,7 +48,7 @@ class LLam extends LLet {
 
     override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] = List((e, tEnv + (v.toString -> typ)))
 
-    override def prettyPrint: String = s"λ$v: ${typ.prettyPrint}. ${e.prettyPrint}"
+    override def prettyPrint: String = s"λ$v: ${typ.prettyPrintBracketed}. ${e.prettyPrint}"
   }
 
   object Lambda {
@@ -69,9 +69,11 @@ class LLam extends LLet {
 
     override def typeCheck(tEnv: TypeEnv): Type = Func(in.typeCheck(tEnv), out.typeCheck(tEnv))
 
-    override lazy val valueText: TypedTag[String] = div(in.toHtml, raw(" → "), out.toHtml)
+    override lazy val valueText: TypedTag[String] = div(
+      raw(Func(TypePlaceholder(in), TypePlaceholder(out)).prettyPrint)
+    )
 
-    override def prettyPrint: String = s"(${in.prettyPrint} → ${out.prettyPrint})"
+    override def prettyPrint: String = s"${in.prettyPrintBracketed} → ${out.prettyPrintBracketed}"
   }
 
   case class ApplyToNonFunctionErrorType(wrongType: Type) extends TypeError {
@@ -103,12 +105,19 @@ class LLam extends LLet {
     override def evalApply(value: Value): Value = e.eval(env + (v -> value))
 
     override lazy val valueText: TypedTag[String] = div(
-      raw(LambdaV(v, TypePlaceholder(properInputType.toHtml.toString), ExprPlaceholder(e.toHtml.toString), env).prettyPrint)
+      raw(
+        LambdaV(
+          v,
+          TypePlaceholder(properInputType),
+          ExprPlaceholder(e),
+          env
+        ).prettyPrint
+      )
     )
 
     override def prettyPrint: String = {
       val eString: String = if (e == BlankExprDropDown()) "?" else e.prettyPrint
-      s"λ$v: ${properInputType.prettyPrint}. $eString"
+      s"λ$v: ${properInputType.prettyPrintBracketed}. $eString"
     }
   }
 
@@ -122,6 +131,8 @@ class LLam extends LLet {
     override def isPlaceholder: Boolean = true
 
     override def prettyPrint: String = "?"
+
+    override val needsBrackets: Boolean = false
   }
 
   override def calculateExprClassList: List[Class[Expr]] = {

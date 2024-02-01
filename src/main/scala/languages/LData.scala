@@ -12,7 +12,9 @@ class LData extends LRec {
 
     override def typeCheckInner(tEnv: TypeEnv): Type = PairType(e1.typeCheck(tEnv), e2.typeCheck(tEnv))
 
-    override def prettyPrint: String = s"(${e1.prettyPrint}, ${e2.prettyPrint})"
+    override def prettyPrint: String = s"(${e1.prettyPrintBracketed}, ${e2.prettyPrintBracketed})"
+
+    override val needsBrackets: Boolean = false
   }
 
   case class Fst(e: Expr) extends Expr {
@@ -26,7 +28,9 @@ class LData extends LRec {
       case other          => TupleOperationOnNonTupleType(other)
     }
 
-    override def prettyPrint: String = s"fst ${e.prettyPrint}"
+    override def prettyPrint: String = s"fst(${e.prettyPrint})"
+
+    override val needsBrackets: Boolean = false
   }
 
   case class Snd(e: Expr) extends Expr {
@@ -40,7 +44,9 @@ class LData extends LRec {
       case other          => TupleOperationOnNonTupleType(other)
     }
 
-    override def prettyPrint: String = s"snd ${e.prettyPrint}"
+    override def prettyPrint: String = s"snd(${e.prettyPrint})"
+
+    override val needsBrackets: Boolean = false
   }
 
   case class LetPair(x: Literal, y: Literal, assign: Expr, bound: Expr) extends Expr {
@@ -60,7 +66,8 @@ class LData extends LRec {
       }
     }
 
-    override def prettyPrint: String = s"let pair ($x, $y) = ${assign.prettyPrint} in ${bound.prettyPrint}"
+    override def prettyPrint: String =
+      s"let pair ($x, $y) = ${assign.prettyPrintBracketed} in ${bound.prettyPrintBracketed}"
 
     override def getChildrenBase(env: Env): List[(Term, Env)] = List(
       (x, env),
@@ -72,11 +79,10 @@ class LData extends LRec {
     override def getChildrenEval(env: Env): List[(Term, Env)] =
       List((assign, env), (bound, env + (x.toString -> Fst(assign).eval(env)) + (y.toString -> Snd(assign).eval(env))))
 
-    override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] =
-      List(
-        (assign, tEnv),
-        (bound, tEnv + (x.toString -> Fst(assign).typeCheck(tEnv)) + (y.toString -> Snd(assign).typeCheck(tEnv)))
-      )
+    override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] = List(
+      (assign, tEnv),
+      (bound, tEnv + (x.toString -> Fst(assign).typeCheck(tEnv)) + (y.toString -> Snd(assign).typeCheck(tEnv)))
+    )
   }
 
   object LetPair {
@@ -90,6 +96,8 @@ class LData extends LRec {
     override def typeCheckInner(tEnv: TypeEnv): Type = EmptyType()
 
     override def prettyPrint: String = "()"
+
+    override val needsBrackets: Boolean = false
   }
 
   case class Left(e: Expr, rightType: Type) extends Expr {
@@ -98,6 +106,8 @@ class LData extends LRec {
     override def typeCheckInner(tEnv: TypeEnv): Type = UnionType(e.typeCheck(tEnv), rightType)
 
     override def prettyPrint: String = s"left(${e.prettyPrint})"
+
+    override val needsBrackets: Boolean = false
   }
 
   case class Right(leftType: Type, e: Expr) extends Expr {
@@ -106,6 +116,8 @@ class LData extends LRec {
     override def typeCheckInner(tEnv: TypeEnv): Type = UnionType(leftType, e.typeCheck(tEnv))
 
     override def prettyPrint: String = s"right(${e.prettyPrint})"
+
+    override val needsBrackets: Boolean = false
   }
 
   case class CaseSwitch(e: Expr, l: Literal, r: Literal, lExpr: Expr, rExpr: Expr) extends Expr {
@@ -129,7 +141,8 @@ class LData extends LRec {
     }
 
     override def prettyPrint: String =
-      s"case ${e.prettyPrint} of { left($l) ⇒ ${lExpr.prettyPrint}; right($r) ⇒ ${rExpr.prettyPrint} }"
+      s"case ${e.prettyPrintBracketed} of " +
+        s"{ left($l) ⇒ ${lExpr.prettyPrintBracketed}; right($r) ⇒ ${rExpr.prettyPrintBracketed} }"
 
     override def getChildrenBase(env: Env): List[(Term, Env)] = {
       val (lVal, rVal): (Value, Value) = e.eval(env) match {
@@ -164,25 +177,35 @@ class LData extends LRec {
   case class PairType(l: Type, r: Type) extends Type {
     override def typeCheck(tEnv: TypeEnv): Type = PairType(l.typeCheck(tEnv), r.typeCheck(tEnv))
 
-    override def prettyPrint: String = s"(${l.prettyPrint}, ${r.prettyPrint})"
+    override def prettyPrint: String = s"(${l.prettyPrintBracketed}, ${r.prettyPrintBracketed})"
 
-    override lazy val valueText: TypedTag[String] = div(l.toHtml, raw(", "), r.toHtml)
+    override lazy val valueText: TypedTag[String] = div(
+      raw(PairType(TypePlaceholder(l), TypePlaceholder(r)).prettyPrint)
+    )
+
+    override val needsBrackets: Boolean = false
   }
 
   case class UnionType(l: Type, r: Type) extends Type {
     override def typeCheck(tEnv: TypeEnv): Type = UnionType(l.typeCheck(tEnv), r.typeCheck(tEnv))
 
-    override def prettyPrint: String = s"(${l.prettyPrint} | ${r.prettyPrint})"
+    override def prettyPrint: String = s"(${l.prettyPrintBracketed} | ${r.prettyPrintBracketed})"
 
-    override lazy val valueText: TypedTag[String] = div(l.toHtml, raw(" | "), r.toHtml)
+    override lazy val valueText: TypedTag[String] = div(
+      raw(UnionType(TypePlaceholder(l), TypePlaceholder(r)).prettyPrint)
+    )
   }
 
   case class EmptyType() extends Type {
     override def prettyPrint: String = "()"
+
+    override val needsBrackets: Boolean = false
   }
 
   case class AnyType() extends Type {
     override def prettyPrint: String = "Any"
+
+    override val needsBrackets: Boolean = false
   }
 
   // values
@@ -190,17 +213,21 @@ class LData extends LRec {
   case class PairV(v1: Value, v2: Value) extends Value {
     override val typ: Type = PairType(v1.typ, v2.typ)
 
-    override def prettyPrint: String = s"(${v1.prettyPrint}, ${v2.prettyPrint})"
+    override def prettyPrint: String = s"(${v1.prettyPrintBracketed}, ${v2.prettyPrintBracketed})"
 
     override lazy val valueText: TypedTag[String] = div(
-      raw(PairV(ValuePlaceholder(v1.toHtml.toString), ValuePlaceholder(v2.toHtml.toString)).prettyPrint)
+      raw(PairV(ValuePlaceholder(v1), ValuePlaceholder(v2)).prettyPrint)
     )
+
+    override val needsBrackets: Boolean = false
   }
 
   case class UnitV() extends Value {
     override val typ: Type = EmptyType()
 
     override def prettyPrint: String = "()"
+
+    override val needsBrackets: Boolean = false
   }
 
   case class LeftV(v: Value, rightType: Type) extends Value {
@@ -209,7 +236,9 @@ class LData extends LRec {
     override def prettyPrint: String = s"left(${v.prettyPrint})"
 
     override lazy val valueText: TypedTag[String] =
-      div(raw(LeftV(ValuePlaceholder(v.toHtml.toString), TypePlaceholder(rightType.toHtml.toString)).prettyPrint))
+      div(raw(LeftV(ValuePlaceholder(v), TypePlaceholder(rightType)).prettyPrint))
+
+    override val needsBrackets: Boolean = false
   }
 
   case class RightV(leftType: Type, v: Value) extends Value {
@@ -218,7 +247,9 @@ class LData extends LRec {
     override def prettyPrint: String = s"right(${v.prettyPrint})"
 
     override lazy val valueText: TypedTag[String] =
-      div(raw(RightV(TypePlaceholder(leftType.toHtml.toString), ValuePlaceholder(v.toHtml.toString)).prettyPrint))
+      div(raw(RightV(TypePlaceholder(leftType), ValuePlaceholder(v)).prettyPrint))
+
+    override val needsBrackets: Boolean = false
   }
 
   // errors

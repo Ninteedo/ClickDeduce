@@ -14,6 +14,8 @@ class LIf extends LArith {
     }
 
     override def prettyPrint: String = b.toString
+
+    override val needsBrackets: Boolean = false
   }
 
   object Bool {
@@ -41,7 +43,7 @@ class LIf extends LArith {
       }
     }
 
-    override def prettyPrint: String = s"(${e1.prettyPrint} == ${e2.prettyPrint})"
+    override def prettyPrint: String = s"${e1.prettyPrintBracketed} == ${e2.prettyPrintBracketed}"
   }
 
   case class LessThan(e1: Expr, e2: Expr) extends Expr {
@@ -55,7 +57,7 @@ class LIf extends LArith {
       case (t1, t2)                           => ComparisonWithNonOrdinalType(t1, t2)
     }
 
-    override def prettyPrint: String = s"(${e1.prettyPrint} < ${e2.prettyPrint})"
+    override def prettyPrint: String = s"${e1.prettyPrintBracketed} < ${e2.prettyPrintBracketed}"
   }
 
   case class IfThenElse(cond: Expr, then_expr: Expr, else_expr: Expr) extends Expr {
@@ -82,7 +84,7 @@ class LIf extends LArith {
     }
 
     override def prettyPrint: String =
-      s"(if ${cond.prettyPrint} then ${then_expr.prettyPrint} else ${else_expr.prettyPrint})"
+      s"if ${cond.prettyPrintBracketed} then ${then_expr.prettyPrintBracketed} else ${else_expr.prettyPrintBracketed}"
   }
 
   // values
@@ -90,11 +92,15 @@ class LIf extends LArith {
     override val typ: Type = BoolType()
 
     override def prettyPrint: String = b.toString
+
+    override val needsBrackets: Boolean = false
   }
 
   // types
   case class BoolType() extends Type {
     override def prettyPrint: String = "Bool"
+
+    override val needsBrackets: Boolean = false
   }
 
   // errors

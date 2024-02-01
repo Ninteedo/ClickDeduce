@@ -205,11 +205,11 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
     Let("z", Num(3), Var("z")).prettyPrint shouldEqual "let z = 3 in z"
 
     Let("x", Num(1), Let("y", Num(2), Plus(Var("x"), Var("y")))).prettyPrint shouldEqual
-      "let x = 1 in let y = 2 in (x + y)"
+      "let x = 1 in (let y = 2 in (x + y))"
     Let("x", Bool(true), Let("y", Num(2), Plus(Var("x"), Var("y")))).prettyPrint shouldEqual
-      "let x = true in let y = 2 in (x + y)"
+      "let x = true in (let y = 2 in (x + y))"
     Let("x", Var("y"), Let("y", Num(2), Times(Var("x"), Bool(false)))).prettyPrint shouldEqual
-      "let x = y in let y = 2 in (x × false)"
+      "let x = y in (let y = 2 in (x × false))"
 
     Let("x", Let("y", Num(3), Var("y")), Var("x")).prettyPrint shouldEqual
       "let x = (let y = 3 in y) in x"

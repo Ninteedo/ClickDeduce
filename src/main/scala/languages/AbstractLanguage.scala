@@ -37,6 +37,10 @@ trait AbstractLanguage {
     def isPlaceholder: Boolean = false
 
     def prettyPrint: String = toHtml.toString
+
+    final def prettyPrintBracketed: String = if (needsBrackets) s"($prettyPrint)" else prettyPrint
+
+    val needsBrackets: Boolean = true
   }
 
   /** An unevaluated expression.
@@ -99,8 +103,12 @@ trait AbstractLanguage {
 
   case class MissingExpr() extends Expr
 
-  case class ExprPlaceholder(content: String) extends Expr {
+  case class ExprPlaceholder(content: String, override val needsBrackets: Boolean = false) extends Expr {
     override def prettyPrint: String = content
+  }
+
+  object ExprPlaceholder {
+    def apply(expr: Expr): ExprPlaceholder = ExprPlaceholder(expr.toHtml.toString, expr.needsBrackets)
   }
 
   /** A value resulting from an expression being evaluated.
@@ -120,10 +128,14 @@ trait AbstractLanguage {
     override def prettyPrint: String = toHtml.toString
   }
 
-  case class ValuePlaceholder(content: String) extends Value {
+  case class ValuePlaceholder(content: String, override val needsBrackets: Boolean = false) extends Value {
     override def prettyPrint: String = content
 
-    override val typ: Type = TypePlaceholder(content)
+    override val typ: Type = TypePlaceholder(content, needsBrackets)
+  }
+
+  object ValuePlaceholder {
+    def apply(value: Value): ValuePlaceholder = ValuePlaceholder(value.toHtml.toString, value.needsBrackets)
   }
 
   /** The type of a value.
@@ -145,8 +157,12 @@ trait AbstractLanguage {
     override def prettyPrint: String = "Unknown"
   }
 
-  case class TypePlaceholder(content: String) extends Type {
+  case class TypePlaceholder(content: String, override val needsBrackets: Boolean = true) extends Type {
     override def prettyPrint: String = content
+  }
+
+  object TypePlaceholder {
+    def apply(typ: Type): TypePlaceholder = TypePlaceholder(typ.toHtml.toString, typ.needsBrackets)
   }
 
   trait TermError extends Term {

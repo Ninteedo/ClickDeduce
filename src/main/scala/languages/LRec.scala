@@ -67,9 +67,9 @@ class LRec extends LLam {
         RecV(
           f,
           v,
-          TypePlaceholder(in_typ.toHtml.toString),
-          TypePlaceholder(out_typ.toHtml.toString),
-          ExprPlaceholder(e.toHtml.toString),
+          TypePlaceholder(in_typ),
+          TypePlaceholder(out_typ),
+          ExprPlaceholder(e),
           env
         ).prettyPrint
       )
@@ -79,7 +79,7 @@ class LRec extends LLam {
   }
 
   private def prettyPrintRec(f: Literal, v: Literal, in_typ: Type, out_typ: Type, e: Expr) =
-    s"rec $f($v: ${in_typ.prettyPrint}): ${out_typ.prettyPrint}. ${e.prettyPrint}"
+    s"rec $f($v: ${in_typ.prettyPrint}): ${out_typ.prettyPrintBracketed}. ${e.prettyPrintBracketed}"
 
   override def calculateExprClassList: List[Class[Expr]] = {
     super.calculateExprClassList ++ List(classOf[Rec]).map(_.asInstanceOf[Class[Expr]])

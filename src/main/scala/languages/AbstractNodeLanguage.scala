@@ -642,21 +642,25 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     private def getExprHtmlLine(mode: DisplayMode): String = {
       val constructor = exprClass.getConstructors.head
       val arguments = lang +: args.map {
-        case n: SubExprNode => ExprPlaceholder(n.toHtmlLineReadOnly(mode).toString)
+        case n: SubExprNode => ExprPlaceholder(n.toHtmlLineReadOnly(mode).toString, n.node.getExpr.needsBrackets)
         case n: LiteralNode => LiteralAny(n.toHtmlLine(mode).toString)
-        case n: SubTypeNode => TypePlaceholder(n.node.toHtmlLineReadOnly(mode).toString)
+        case n: SubTypeNode => TypePlaceholder(n.node.toHtmlLineReadOnly(mode).toString, n.node.getType.needsBrackets)
       }
-      constructor.newInstance(arguments: _*).asInstanceOf[Expr].prettyPrint
+      val instance = constructor.newInstance(arguments: _*).asInstanceOf[Expr]
+//      if (getParent.isEmpty) instance.prettyPrint else instance.prettyPrintBracketed
+      instance.prettyPrint
     }
 
     private def getExprHtmlLineReadOnly(mode: DisplayMode): String = {
       val constructor = exprClass.getConstructors.head
       val arguments = lang +: args.map {
-        case n: SubExprNode => ExprPlaceholder(n.toHtmlLineReadOnly(mode).toString)
+        case n: SubExprNode => ExprPlaceholder(n.toHtmlLineReadOnly(mode).toString, n.node.getExpr.needsBrackets)
         case n: LiteralNode => LiteralAny(n.toHtmlLineReadOnly(mode).toString)
-        case n: SubTypeNode => TypePlaceholder(n.node.toHtmlLineReadOnly(mode).toString)
+        case n: SubTypeNode => TypePlaceholder(n.node.toHtmlLineReadOnly(mode).toString, n.node.getType.needsBrackets)
       }
-      constructor.newInstance(arguments: _*).asInstanceOf[Expr].prettyPrint
+      val instance = constructor.newInstance(arguments: _*).asInstanceOf[Expr]
+//      if (getParent.isEmpty) instance.prettyPrint else instance.prettyPrintBracketed
+      instance.prettyPrint
     }
 
     override def toString: String = s"VariableNode(${UtilityFunctions.quote(exprName)}, $args)"
@@ -825,7 +829,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
         case n: LiteralNode => LiteralAny(n.toHtmlLine(mode).toString)
         case n: SubTypeNode => TypePlaceholder(n.node.toHtmlLineReadOnly(mode).toString)
       }
-      constructor.newInstance(arguments: _*).asInstanceOf[Type].prettyPrint
+      constructor.newInstance(arguments: _*).asInstanceOf[Type].prettyPrintBracketed
     }
 
     private def getExprHtmlLineReadOnly(mode: DisplayMode): String = {

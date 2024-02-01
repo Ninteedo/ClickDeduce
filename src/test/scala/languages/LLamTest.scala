@@ -351,26 +351,26 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
   }
 
   property("Lambda pretty prints correctly") {
-    incrementFunction.prettyPrint shouldEqual "λx: Int. (x + 1)"
-    twiceFunction.prettyPrint shouldEqual "λf: (Int → Int). λx: Int. ((f) ((f) x))"
+    incrementFunction.prettyPrint shouldEqual "λx: Int. x + 1"
+    twiceFunction.prettyPrint shouldEqual "λf: (Int → Int). λx: Int. f (f x)"
 
-    incrementFunction.eval().prettyPrint shouldEqual "λx: Int. (x + 1)"
-    twiceFunction.eval().prettyPrint shouldEqual "λf: (Int → Int). λx: Int. ((f) ((f) x))"
+    incrementFunction.eval().prettyPrint shouldEqual "λx: Int. x + 1"
+    twiceFunction.eval().prettyPrint shouldEqual "λf: (Int → Int). λx: Int. f (f x)"
   }
 
   property("Apply pretty prints correctly") {
-    Apply(incrementFunction, Num(8)).prettyPrint shouldEqual "((λx: Int. (x + 1)) 8)"
-    Apply(Bool(false), Num(45)).prettyPrint shouldEqual "((false) 45)"
+    Apply(incrementFunction, Num(8)).prettyPrint shouldEqual "(λx: Int. x + 1) 8"
+    Apply(Bool(false), Num(45)).prettyPrint shouldEqual "false 45"
     Apply(
       twiceFunction,
       incrementFunction
-    ).prettyPrint shouldEqual "((λf: (Int → Int). λx: Int. ((f) ((f) x))) λx: Int. (x + 1))"
+    ).prettyPrint shouldEqual "(λf: (Int → Int). λx: Int. f (f x)) (λx: Int. x + 1)"
   }
 
   property("Func pretty prints correctly") {
-    Func(IntType(), IntType()).prettyPrint shouldEqual "(Int → Int)"
-    Func(BoolType(), IntType()).prettyPrint shouldEqual "(Bool → Int)"
-    Func(BoolType(), Func(IntType(), IntType())).prettyPrint shouldEqual "(Bool → (Int → Int))"
-    Func(Func(IntType(), IntType()), IntType()).prettyPrint shouldEqual "((Int → Int) → Int)"
+    Func(IntType(), IntType()).prettyPrint shouldEqual "Int → Int"
+    Func(BoolType(), IntType()).prettyPrint shouldEqual "Bool → Int"
+    Func(BoolType(), Func(IntType(), IntType())).prettyPrint shouldEqual "Bool → (Int → Int)"
+    Func(Func(IntType(), IntType()), IntType()).prettyPrint shouldEqual "(Int → Int) → Int"
   }
 }

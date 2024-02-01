@@ -20,6 +20,8 @@ class LArith extends ClickDeduceLanguage {
     }
 
     override def prettyPrint: String = x.toString
+
+    override val needsBrackets: Boolean = false
   }
 
   object Num {
@@ -50,7 +52,7 @@ class LArith extends ClickDeduceLanguage {
       case (t1, t2)               => UnexpectedArgType(s"Plus cannot accept ($t1, $t2)")
     }
 
-    override def prettyPrint: String = s"(${e1.prettyPrint} + ${e2.prettyPrint})"
+    override def prettyPrint: String = s"${e1.prettyPrintBracketed} + ${e2.prettyPrintBracketed}"
   }
 
   /** A times expression. Both subexpressions must evaluate to `NumV`.
@@ -75,7 +77,7 @@ class LArith extends ClickDeduceLanguage {
       case (t1, t2)               => UnexpectedArgType(s"Times cannot accept ($t1, $t2)")
     }
 
-    override def prettyPrint: String = s"(${e1.prettyPrint} × ${e2.prettyPrint})"
+    override def prettyPrint: String = s"${e1.prettyPrintBracketed} × ${e2.prettyPrintBracketed}"
   }
 
   // values
@@ -93,6 +95,8 @@ class LArith extends ClickDeduceLanguage {
     override val typ: Type = IntType()
 
     override def prettyPrint: String = x.toString
+
+    override val needsBrackets: Boolean = false
 
     override def compare(that: OrdinalValue): Int = that match {
       case NumV(y) => x.compare(y)
@@ -117,6 +121,8 @@ class LArith extends ClickDeduceLanguage {
     */
   case class IntType() extends Type, OrdinalType {
     override def prettyPrint: String = "Int"
+
+    override val needsBrackets: Boolean = false
   }
 
   /** An error that occurs due to an incorrect argument type.
