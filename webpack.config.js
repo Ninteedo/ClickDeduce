@@ -49,7 +49,8 @@ module.exports = {
     plugins: [
         new HtmlWebpackPlugin({
             template: './webapp/pages/index.html',  // Path to your HTML file
-            filename: 'index.html'  // Output filename (optional)
+            filename: 'index.html',  // Output filename (optional)
+            inject: false
         })
     ],
 

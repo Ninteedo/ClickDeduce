@@ -54,5 +54,24 @@
 
 <div id="error-message" class="error-message fade-out"></div>
 
+<script>
+  (function() {
+    function showErrorMessage() {
+      document.body.innerHTML = `
+        <h1>Failed to load ClickDeduce</h1>
+        <p>ClickDeduce failed to load.
+        This is likely because the server is not running, or it was not possible to connect to it.</p>
+      `;
+    }
+
+    const scriptTag = document.createElement('script');
+    scriptTag.src = 'dist/bundle.js';
+    scriptTag.addEventListener('error', showErrorMessage);
+
+    // Append script tag into body
+    document.body.appendChild(scriptTag);
+  })();
+</script>
+
 </body>
 </html>
