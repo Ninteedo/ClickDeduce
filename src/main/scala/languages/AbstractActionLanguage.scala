@@ -1,5 +1,7 @@
 package languages
 
+import app.ClickDeduceException
+
 trait AbstractActionLanguage extends AbstractNodeLanguage {
   private def getActionClass(actionName: String): Class[Action] = (actionName match {
     case "SelectExprAction"  => classOf[SelectExprAction]
@@ -137,15 +139,17 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
     override lazy val newTree: OuterNode = originalTree
   }
 
-  class ActionInvocationException(message: String) extends Exception(message)
+  class ActionInvocationException(message: String) extends ClickDeduceException(message)
 
-  class InvalidSelectTargetException(found: Option[Node]) extends Exception(s"Invalid select target: $found")
+  class InvalidSelectTargetException(found: Option[Node]) extends ClickDeduceException(s"Invalid select target: $found")
 
-  class InvalidSelectValueNameException(valueName: String) extends Exception(s"Invalid select value name: $valueName")
+  class InvalidSelectValueNameException(valueName: String)
+      extends ClickDeduceException(s"Invalid select value name: $valueName")
 
-  class InvalidEditTargetException(found: Option[Node]) extends Exception(s"Invalid literal edit target: $found")
+  class InvalidEditTargetException(found: Option[Node])
+      extends ClickDeduceException(s"Invalid literal edit target: $found")
 
-  class InvalidDeleteTargetException(found: Option[Node]) extends Exception(s"Invalid delete target: $found")
+  class InvalidDeleteTargetException(found: Option[Node]) extends ClickDeduceException(s"Invalid delete target: $found")
 
-  class InvalidPasteTargetException(found: Option[Node]) extends Exception(s"Invalid paste target: $found")
+  class InvalidPasteTargetException(found: Option[Node]) extends ClickDeduceException(s"Invalid paste target: $found")
 }

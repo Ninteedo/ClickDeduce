@@ -49,6 +49,7 @@ val customExceptionHandler: ExceptionHandler = ExceptionHandler { case exception
 
     val statusCode = exception match {
       case _: IllegalArgumentException => StatusCodes.BadRequest
+      case _: ClickDeduceException     => StatusCodes.BadRequest
       case _                           => StatusCodes.InternalServerError
     }
 

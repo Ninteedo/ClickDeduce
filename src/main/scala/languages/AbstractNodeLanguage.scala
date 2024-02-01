@@ -1,6 +1,6 @@
 package languages
 
-import app.UtilityFunctions
+import app.{ClickDeduceException, UtilityFunctions}
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
@@ -371,7 +371,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
           case _                 => false
         })
         if (index == -1) {
-          if (isPhantom) Nil else throw new Exception("Could not find self in parent node's args")
+          if (isPhantom) Nil else throw new ClickDeduceException("Could not find self in parent node's args")
         } else value.treePath :+ index
       case None => Nil
     }
@@ -671,7 +671,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
             case c if classOf[Expr] isAssignableFrom c                 => Some(SubExprNode(ExprChoiceNode()))
             case c if classOf[Literal] isAssignableFrom c              => Some(LiteralNode(""))
             case c if classOf[Type] isAssignableFrom c                 => Some(SubTypeNode(TypeChoiceNode()))
-            case c => throw new Exception(s"Unexpected parameter type in createFromExpr: $c")
+            case c => throw new ClickDeduceException(s"Unexpected parameter type in createFromExpr: $c")
           }
           .filter(_.isDefined)
           .map(_.get)
@@ -904,18 +904,18 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
   private val depthLimit: Int = 100
 
-  class DepthLimitExceededException extends Exception(s"Depth limit ($depthLimit) exceeded")
+  class DepthLimitExceededException extends ClickDeduceException(s"Depth limit ($depthLimit) exceeded")
 
-  class InvalidTreePathStringException(s: String) extends Exception(s"Invalid tree path string: $s")
+  class InvalidTreePathStringException(s: String) extends ClickDeduceException(s"Invalid tree path string: $s")
 
-  class InvalidTreePathException(treePath: List[Int]) extends Exception(s"Invalid tree path: $treePath")
+  class InvalidTreePathException(treePath: List[Int]) extends ClickDeduceException(s"Invalid tree path: $treePath")
 
-  class NodeStringParseException(nodeString: String) extends Exception(s"Could not parse node string: $nodeString")
+  class NodeStringParseException(nodeString: String) extends ClickDeduceException(s"Could not parse node string: $nodeString")
 
-  class NodeParentNotInitialisedException extends Exception("Node parent not initialised")
+  class NodeParentNotInitialisedException extends ClickDeduceException("Node parent not initialised")
 
   class NodeParentWrongTypeException(expected: Class[_ <: OuterNode], actual: Class[_ <: OuterNode])
-      extends Exception(s"Node parent has wrong type: expected $expected, got $actual")
+      extends ClickDeduceException(s"Node parent has wrong type: expected $expected, got $actual")
 
-  class InnerNodeCannotBeRootException extends Exception("Inner node cannot be root")
+  class InnerNodeCannotBeRootException extends ClickDeduceException("Inner node cannot be root")
 }
