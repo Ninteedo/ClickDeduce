@@ -177,19 +177,17 @@ class LData extends LRec {
   case class PairType(l: Type, r: Type) extends Type {
     override def typeCheck(tEnv: TypeEnv): Type = PairType(l.typeCheck(tEnv), r.typeCheck(tEnv))
 
-    override def prettyPrint: String = s"(${l.prettyPrintBracketed}, ${r.prettyPrintBracketed})"
+    override def prettyPrint: String = s"${l.prettyPrintBracketed} × ${r.prettyPrintBracketed}"
 
     override lazy val valueText: TypedTag[String] = div(
       raw(PairType(TypePlaceholder(l), TypePlaceholder(r)).prettyPrint)
     )
-
-    override val needsBrackets: Boolean = false
   }
 
   case class UnionType(l: Type, r: Type) extends Type {
     override def typeCheck(tEnv: TypeEnv): Type = UnionType(l.typeCheck(tEnv), r.typeCheck(tEnv))
 
-    override def prettyPrint: String = s"(${l.prettyPrintBracketed} | ${r.prettyPrintBracketed})"
+    override def prettyPrint: String = s"${l.prettyPrintBracketed} + ${r.prettyPrintBracketed}"
 
     override lazy val valueText: TypedTag[String] = div(
       raw(UnionType(TypePlaceholder(l), TypePlaceholder(r)).prettyPrint)

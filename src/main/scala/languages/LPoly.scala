@@ -68,7 +68,7 @@ class LPoly extends LData {
   }
 
   case class PolyType(typeVar: Type, incompleteType: Type) extends Type {
-    override def prettyPrint: String = s"Λ${typeVar.prettyPrintBracketed}. ${incompleteType.prettyPrintBracketed}"
+    override def prettyPrint: String = s"∀${typeVar.prettyPrintBracketed}. ${incompleteType.prettyPrintBracketed}"
 
     override lazy val valueText: TypedTag[String] = div(
       raw(
