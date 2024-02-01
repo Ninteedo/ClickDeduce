@@ -671,7 +671,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
         innerNodes.foreach(_.setParent(Some(result)))
         Some(result)
       } catch {
-        case _ => None
+        case _: Throwable => None
       }
     }
 
@@ -738,10 +738,10 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     private val htmlLineShared: TypedTag[String] = input(`type` := "text", cls := "literal", value := literalText)
 
     override def toHtmlLine(mode: DisplayMode): TypedTag[String] =
-      htmlLineShared(width := Math.max(2, literalText.length) + "ch", data("tree-path") := treePathString)
+      htmlLineShared(width := s"${Math.max(2, literalText.length)}ch", data("tree-path") := treePathString)
 
     override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] =
-      htmlLineShared(width := Math.max(1, literalText.length) + "ch", readonly, disabled)
+      htmlLineShared(width := s"${Math.max(1, literalText.length)}ch", readonly, disabled)
 
     override val children: List[OuterNode] = Nil
 
@@ -810,7 +810,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     override def toString: String = s"TypeNode(${UtilityFunctions.quote(typeName)}, $args)"
 
-    def getExprHtmlLine(mode: DisplayMode): String = {
+    private def getExprHtmlLine(mode: DisplayMode): String = {
       val constructor = typeClass.getConstructors()(0)
       val arguments = lang +: args.map {
         case n: LiteralNode => LiteralAny(n.toHtmlLine(mode).toString)
@@ -819,7 +819,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       constructor.newInstance(arguments: _*).asInstanceOf[Type].prettyPrint
     }
 
-    def getExprHtmlLineReadOnly(mode: DisplayMode): String = {
+    private def getExprHtmlLineReadOnly(mode: DisplayMode): String = {
       val constructor = typeClass.getConstructors()(0)
       val arguments = lang +: args.map {
         case n: LiteralNode => LiteralAny(n.toHtmlLineReadOnly(mode).toString)
