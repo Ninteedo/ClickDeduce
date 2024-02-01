@@ -7,5 +7,6 @@
 /dataSources/
 /dataSources.local.xml
 
-google-java-format.xml
-discord.xml
+/google-java-format.xml
+/discord.xml
+/git_toolbox_prj.xml
