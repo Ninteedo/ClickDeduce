@@ -148,6 +148,10 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       result
   }
 
+  /** Superclass for all nodes in the expression tree.
+    *
+    * Has a parent (or no parent if root) and a list of children.
+    */
   abstract class Node {
     val children: List[OuterNode] = Nil
 
@@ -189,6 +193,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     val outerNodeClasses: List[Class[_ <: Object]] = List(VariableNode.getClass)
 
+    /** Creates a node from a correct string representation of a node (from Node.toString).
+      */
     def read(s: String): Option[Node] = {
       def makeNode(name: String, args: List[Any], env: Env | TypeEnv = Map()): Option[Node] = {
         val nodeClass = nodeClassList.find(_.getSimpleName == name)
@@ -274,6 +280,10 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     }
   }
 
+  /** Parent class for visible nodes in the expression tree.
+    *
+    * Has a list of inner nodes as arguments. Can be converted to HTML.
+    */
   abstract class OuterNode extends Node {
     val args: List[InnerNode]
 
@@ -443,7 +453,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     def toHtmlSubtree(mode: DisplayMode): TypedTag[String] = {
       if (mode == DisplayMode.Evaluation && getParent.isEmpty) {
-        // check whether depth limit will be exceeded
         checkDepthLimitWillBeExceeded()
       }
 
@@ -552,32 +561,34 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       visibleChildrenCache,
       mode,
       mode match {
-        case DisplayMode.Edit      => children
-        case DisplayMode.TypeCheck => children
-        case DisplayMode.Evaluation =>
-          val childExprList = getExpr.getChildrenEval(getEvalEnv).map(_._1)
-          var unconsumedChildren = children
-
-          childExprList.flatMap({
-            case expr: Expr =>
-            val matchingChild = unconsumedChildren.collectFirst {
-              case c: ExprNode if c.getExpr eq expr                       => c
-              case c: ExprChoiceNode if c.getExpr == expr && !c.isPhantom => c
-            }
-
-            matchingChild match {
-              case Some(childNode) =>
-                unconsumedChildren = unconsumedChildren.filter(_ ne childNode)
-                Some(childNode)
-              case None =>
-                val newNode = VariableNode.fromExpr(expr)
-                newNode.setParent(Some(this))
-                newNode.markPhantom()
-                Some(newNode)
-            }
-          })
+        case DisplayMode.Edit       => children
+        case DisplayMode.TypeCheck  => children
+        case DisplayMode.Evaluation => visibleEvaluationChildren
       }
     )
+
+    private def visibleEvaluationChildren: List[OuterNode] = {
+      val childExprList = getExpr.getChildrenEval(getEvalEnv).map(_._1)
+      var unconsumedChildren = children
+
+      childExprList.flatMap({ case expr: Expr =>
+        val matchingChild = unconsumedChildren.collectFirst {
+          case c: ExprNode if c.getExpr eq expr                       => c
+          case c: ExprChoiceNode if c.getExpr == expr && !c.isPhantom => c
+        }
+
+        matchingChild match {
+          case Some(childNode) =>
+            unconsumedChildren = unconsumedChildren.filter(_ ne childNode)
+            Some(childNode)
+          case None =>
+            val newNode = VariableNode.fromExpr(expr)
+            newNode.setParent(Some(this))
+            newNode.markPhantom()
+            Some(newNode)
+        }
+      })
+    }
 
     private var isPhantomStore = false
 
@@ -590,6 +601,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     private def phantomClassName: String = if (isPhantom) " phantom" else ""
   }
 
+  /** Concrete implementation of an expression node.
+    */
   case class VariableNode(exprName: String, args: List[InnerNode] = Nil) extends ExprNode {
     override val children: List[OuterNode] = args.flatMap(_.children)
 
@@ -763,25 +776,21 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       }
     }
 
-    def toHtmlAxiom(mode: DisplayMode): TypedTag[String] = {
-      div(
-        cls := "subtree axiom",
-        data("tree-path") := treePathString,
-        data("node-string") := toString,
-        div(cls := "expr", toHtmlLine(mode)(display := "inline")),
-        div(cls := "annotation-axiom", getTypeName)
-      )
-    }
+    def toHtmlAxiom(mode: DisplayMode): TypedTag[String] = div(
+      cls := "subtree axiom",
+      data("tree-path") := treePathString,
+      data("node-string") := toString,
+      div(cls := "expr", toHtmlLine(mode)(display := "inline")),
+      div(cls := "annotation-axiom", getTypeName)
+    )
 
-    def toHtmlSubtree(mode: DisplayMode): TypedTag[String] = {
-      div(
-        cls := "subtree",
-        data("tree-path") := treePathString,
-        data("node-string") := toString,
-        div(cls := "node", div(cls := "expr", toHtmlLine(mode))),
-        div(cls := "args", children.map(_.toHtml(mode)), div(cls := "annotation-new", getTypeName))
-      )
-    }
+    def toHtmlSubtree(mode: DisplayMode): TypedTag[String] = div(
+      cls := "subtree",
+      data("tree-path") := treePathString,
+      data("node-string") := toString,
+      div(cls := "node", div(cls := "expr", toHtmlLine(mode))),
+      div(cls := "args", children.map(_.toHtml(mode)), div(cls := "annotation-new", getTypeName))
+    )
   }
 
   case class TypeNode(typeName: String, args: List[InnerNode]) extends TypeNodeParent {
