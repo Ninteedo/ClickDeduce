@@ -18,10 +18,14 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
   case class BlankExprDropDown() extends Expr, BlankSpace {
     override lazy val toHtml: TypedTag[String] = exprClassListDropdownHtml
+
+    override val needsBrackets: Boolean = false
   }
 
   case class BlankTypeDropDown() extends Type, BlankSpace {
     override lazy val toHtml: TypedTag[String] = typeClassListDropdownHtml
+
+    override val needsBrackets: Boolean = false
   }
 
   private lazy val exprClassList: List[Class[Expr]] = calculateExprClassList
@@ -48,17 +52,13 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   private lazy val exprClassListDropdownHtml: TypedTag[String] = select(
     cls := "expr-dropdown",
     option(value := "", "Select Expr..."),
-    exprClassList.map(e => {
-      option(value := e.getSimpleName, e.getSimpleName)
-    })
+    exprClassList.map(e => option(value := e.getSimpleName, e.getSimpleName))
   )
 
   private lazy val typeClassListDropdownHtml: TypedTag[String] = select(
     cls := "type-dropdown",
     option(value := "", "Select Type..."),
-    typeClassList.map(e => {
-      option(value := e.getSimpleName, e.getSimpleName)
-    })
+    typeClassList.map(e => option(value := e.getSimpleName, e.getSimpleName))
   )
 
   /** Create an `Term` given its string representation.
@@ -114,8 +114,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     TermParser.parseTerm(s) match {
       case TermParser.Success(matched, _) => matched
-      case x =>
-        None
+      case x => None
     }
   }
 
