@@ -1,5 +1,6 @@
 package languages
 
+import convertors.DisplayMode
 import languages.LRec.*
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor1}

@@ -1,5 +1,6 @@
 package languages
 
+import convertors.DisplayMode
 import languages.LIf.*
 import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.prop.{TableFor1, TableFor2}

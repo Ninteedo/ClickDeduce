@@ -1,5 +1,6 @@
 package languages
 
+import convertors.DisplayMode
 import languages.LRec.*
 import org.scalatest.concurrent.TimeLimits.failAfter
 import org.scalatest.matchers.must.Matchers.noException

@@ -1,6 +1,7 @@
 package languages
 
 import app.{ClickDeduceException, UtilityFunctions}
+import convertors.DisplayMode
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 

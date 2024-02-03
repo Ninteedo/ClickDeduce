@@ -1,5 +1,6 @@
 package languages
 
+import convertors.DisplayMode
 import languages.LLam.*
 import org.scalatest.matchers.should.Matchers.{an, shouldBe, shouldEqual}
 import org.scalatest.prop.TableFor1

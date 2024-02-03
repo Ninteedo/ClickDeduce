@@ -1,5 +1,6 @@
 package languages
 
+import convertors.DisplayMode
 import languages.LLam.*
 import net.ruippeixotog.scalascraper.browser.JsoupBrowser
 import net.ruippeixotog.scalascraper.dsl.DSL.*

@@ -7,6 +7,7 @@ import akka.http.scaladsl.model.{HttpEntity, HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import akka.http.scaladsl.settings.ServerSettings
+import convertors.{DisplayMode, HTMLConvertor}
 import languages.*
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
@@ -188,7 +189,7 @@ class WebServer extends JsonSupport {
         entity(as[EvalRequest]) { request =>
           val lang = WebServer.getLanguage(request.langName)
           val tree = lang.ExprChoiceNode()
-          val response = NodeResponse(tree.toString, tree.toHtml(lang.DisplayMode.Edit).toString)
+          val response = NodeResponse(tree.toString, tree.toHtml(DisplayMode.Edit).toString)
           complete(response)
         }
       } ~
@@ -205,6 +206,7 @@ class WebServer extends JsonSupport {
             val updatedTree = action.newTree
             val displayMode: lang.DisplayMode = lang.DisplayMode.fromString(request.modeName)
             val response = NodeResponse(updatedTree.toString, updatedTree.toHtml(displayMode).toString)
+            val displayMode: DisplayMode = DisplayMode.fromString(request.modeName)
             complete(response)
           }
         }

@@ -277,16 +277,4 @@ trait AbstractLanguage {
   }
 
   def envToTypeEnv(env: Env): TypeEnv = env.map((k: String, v: Value) => (k, v.typ))
-
-  enum DisplayMode:
-    case Edit, Evaluation, TypeCheck
-
-  object DisplayMode {
-    def fromString(s: String): DisplayMode = s match {
-      case "edit"       => Edit
-      case "eval"       => Evaluation
-      case "type-check" => TypeCheck
-      case _            => throw new IllegalArgumentException(s"Unknown display mode: $s")
-    }
-  }
 }
