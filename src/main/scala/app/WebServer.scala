@@ -169,13 +169,13 @@ class WebServer extends JsonSupport {
   private def bundleScripts(): Unit = {
     println("Bundling scripts...")
 
-    val osName = System.getProperty("os.name").toLowerCase
-    val command = if (osName.contains("win")) "cmd.exe /c npm run build" else "npm run build"
+    val osName: String = System.getProperty("os.name").toLowerCase
+    val command: String = s"${if (osName.contains("win")) "cmd.exe /c " else ""}npm run build"
 
-    val process = Process(command, new File("webapp")).!
+    val exitCode: Int = Process(command, new File("webapp")).!
 
-    if (process != 0) {
-      System.exit(process)
+    if (exitCode != 0) {
+      System.exit(exitCode)
     }
   }
 

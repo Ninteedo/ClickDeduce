@@ -4,7 +4,9 @@ import app.{ClickDeduceException, UtilityFunctions}
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
+import java.lang.reflect
 import scala.annotation.tailrec
+import scala.reflect.ClassTag
 import scala.util.parsing.combinator.*
 
 trait AbstractNodeLanguage extends AbstractLanguage {
@@ -28,31 +30,9 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     override val needsBrackets: Boolean = false
   }
 
-  private lazy val exprClassList: List[Class[Expr]] = calculateExprClassList
-
-  protected def calculateExprClassList: List[Class[Expr]]
-
-  private lazy val typeClassList: List[Class[Type]] = calculateTypeClassList
-
-  protected def calculateTypeClassList: List[Class[Type]] = List(classOf[UnknownType]).map(_.asInstanceOf[Class[Type]])
-
-  private lazy val blankClassList: List[Class[BlankSpace]] =
-    List(classOf[BlankExprDropDown], classOf[BlankTypeDropDown]).map(_.asInstanceOf[Class[BlankSpace]])
-
-  private lazy val nodeClassList: List[Class[Node]] = List(
-    classOf[VariableNode],
-    classOf[ExprChoiceNode],
-    classOf[SubExprNode],
-    classOf[LiteralNode],
-    classOf[TypeNode],
-    classOf[TypeChoiceNode],
-    classOf[SubTypeNode]
-  ).map(_.asInstanceOf[Class[Node]])
-
   private lazy val exprClassListDropdownHtml: TypedTag[String] = select(
     cls := "expr-dropdown",
-    option(value := "", "Select Expr..."),
-    exprClassList.map(e => option(value := e.getSimpleName, e.getSimpleName))
+    option(value := "", "Select Expr..."), exprClassList.map(e => option(value := e.getSimpleName, e.getSimpleName))
   )
 
   private lazy val typeClassListDropdownHtml: TypedTag[String] = select(
@@ -114,7 +94,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     TermParser.parseTerm(s) match {
       case TermParser.Success(matched, _) => matched
-      case x => None
+      case x                              => None
     }
   }
 
@@ -133,18 +113,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   def readType(s: String): Option[Type] = parseTerm(s) match {
     case Some(t: Type) => Some(t)
     case _             => None
-  }
-
-  private def exprNameToClass(name: String): Option[Class[Expr]] = exprClassList.find(_.getSimpleName == name)
-
-  private def typeNameToClass(name: String): Option[Class[Type]] = typeClassList.find(_.getSimpleName == name)
-
-  private def cacheQuery[A, B](cache: collection.mutable.Map[A, B], key: A, value: => B): B = cache.get(key) match {
-    case Some(value) => value
-    case None =>
-      val result = value
-      cache += (key -> result)
-      result
   }
 
   /** Superclass for all nodes in the expression tree.
@@ -910,7 +878,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
   class InvalidTreePathException(treePath: List[Int]) extends ClickDeduceException(s"Invalid tree path: $treePath")
 
-  class NodeStringParseException(nodeString: String) extends ClickDeduceException(s"Could not parse node string: $nodeString")
+  class NodeStringParseException(nodeString: String)
+      extends ClickDeduceException(s"Could not parse node string: $nodeString")
 
   class NodeParentNotInitialisedException extends ClickDeduceException("Node parent not initialised")
 
@@ -918,4 +887,65 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       extends ClickDeduceException(s"Node parent has wrong type: expected $expected, got $actual")
 
   class InnerNodeCannotBeRootException extends ClickDeduceException("Inner node cannot be root")
+
+  // class lists
+
+  private lazy val exprClassList: List[Class[Expr]] = calculateExprClassList
+
+  protected def calculateExprClassList: List[Class[Expr]]
+
+  lazy val nodeLanguageInterface: Class[AbstractNodeLanguage] = findInterface(
+    this.getClass, classOf[AbstractNodeLanguage]
+  )
+
+  private lazy val typeClassList: List[Class[Type]] = findSubClassesOf(
+    getClass, classOf[Type], includeInterfaces = false
+  )
+
+  protected def calculateTypeClassList: List[Class[Type]] = calculateTypeClassList
+
+  private lazy val blankClassList: List[Class[BlankSpace]] =
+    List(classOf[BlankExprDropDown], classOf[BlankTypeDropDown]).map(_.asInstanceOf[Class[BlankSpace]])
+
+  private lazy val nodeClassList: List[Class[Node]] = findSubClassesOf(nodeLanguageInterface, classOf[Node])
+
+  private def exprNameToClass(name: String): Option[Class[Expr]] = exprClassList.find(_.getSimpleName == name)
+
+  private def typeNameToClass(name: String): Option[Class[Type]] = typeClassList.find(_.getSimpleName == name)
+
+  // utility
+
+  def findSubClassesOf[T](
+    clazz: Class[_ <: AbstractNodeLanguage],
+    superclass: Class[T],
+    includeInterfaces: Boolean = true
+  ): List[Class[T]] = {
+    val subclasses = clazz.getDeclaredClasses.toList
+      .filter(cls => superclass.isAssignableFrom(cls))
+    val parentSubclasses = (List(clazz.getSuperclass) ++ (if (includeInterfaces) clazz.getInterfaces else Nil))
+      .flatMap {
+        case c: Class[_ <: AbstractNodeLanguage] => findSubClassesOf(c, superclass)
+        case _ => Nil
+      }
+    val classes = parentSubclasses ++ subclasses.asInstanceOf[List[Class[T]]]
+    classes.filterNot(cls => reflect.Modifier.isAbstract(cls.getModifiers)).filterNot(_.isInterface)
+  }
+
+  def findInterface[T](clazz: Class[_ <: AbstractNodeLanguage], interface: Class[T]): Class[T] = {
+    clazz.getInterfaces.find(_ == interface) match {
+      case Some(value) => value.asInstanceOf[Class[T]]
+      case None => clazz.getSuperclass match {
+        case c: Class[_ <: AbstractNodeLanguage] => findInterface(c, interface)
+        case _ => throw new Exception(s"Could not find interface $interface in class $clazz")
+      }
+    }
+  }
+
+  private def cacheQuery[A, B](cache: collection.mutable.Map[A, B], key: A, value: => B): B = cache.get(key) match {
+    case Some(value) => value
+    case None =>
+      val result = value
+      cache += (key -> result)
+      result
+  }
 }
