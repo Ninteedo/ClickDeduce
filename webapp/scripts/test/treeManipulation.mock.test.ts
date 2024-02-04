@@ -20,6 +20,7 @@ import {
 } from "./helper";
 import * as NS from "../../test_resources/node_strings";
 import {numNodeArithHTML, plusNodeArithHTML} from "./serverMock.test";
+import {getNodeStringFromPath} from "../treeManipulation";
 
 beforeAll(() => {
     setUpFetchMock();
@@ -249,3 +250,25 @@ describe("phantom inputs are made read-only and disabled", () => {
         });
     });
 });
+
+describe("node string can be queried correctly", () => {
+    const nodeString = NS.NODE_STRING_PATH_TEST_EXAMPLE;
+    const html = loadHtmlTemplate('times_left_filled_num_right_empty');
+
+    beforeEach(async () => {
+        await handleSubmit(mockEvent, '/start-node-blank');
+        setActionFetchResponse(nodeString, html);
+        await selectExprOption(getLeftmostExprDropdown(), "Times");
+    });
+
+    test("node string can be queried correctly", async () => {
+        expect(getNodeStringFromPath("")).toEqual(NS.NODE_STRING_PATH_TEST_EXAMPLE);
+        expect(getNodeStringFromPath("0")).toEqual(`VariableNode("Times", List(SubExprNode(VariableNode("Bool", List(LiteralNode("test\\"()\\\\(\\\\)\\\\\\")")))), SubExprNode(VariableNode("Num", List(LiteralNode(""))))))`);
+        expect(getNodeStringFromPath("1")).toEqual(`VariableNode("IfThenElse", List(SubExprNode(VariableNode("Bool", List(LiteralNode("eg")))), SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode())))`);
+        expect(getNodeStringFromPath("0-0")).toEqual(`VariableNode("Bool", List(LiteralNode("test\\"()\\\\(\\\\)\\\\\\")")))`);
+        expect(getNodeStringFromPath("0-1")).toEqual(`VariableNode("Num", List(LiteralNode("")))`);
+        expect(getNodeStringFromPath("1-0")).toEqual(`VariableNode("Bool", List(LiteralNode("eg")))`);
+        expect(getNodeStringFromPath("1-1")).toEqual(`ExprChoiceNode()`);
+        expect(getNodeStringFromPath("1-2")).toEqual(`ExprChoiceNode()`);
+    });
+})

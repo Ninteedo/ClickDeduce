@@ -18,3 +18,6 @@ export const TABBING_EXAMPLE: string =
 
 export const PHANTOM_EXAMPLE: string =
     `VariableNode(&quot;Apply&quot;, List(SubExprNode(VariableNode(&quot;Lambda&quot;, List(LiteralNode(&quot;x&quot;), SubTypeNode(TypeNode(&quot;IntType&quot;, List())), SubExprNode(VariableNode(&quot;Plus&quot;, List(SubExprNode(VariableNode(&quot;Var&quot;, List(LiteralNode(&quot;x&quot;)))), SubExprNode(ExprChoiceNode()))))))), SubExprNode(VariableNode(&quot;Num&quot;, List(LiteralNode(&quot;1&quot;))))))`
+
+export const NODE_STRING_PATH_TEST_EXAMPLE: string =
+    `VariableNode("Plus", List(SubExprNode(VariableNode("Times", List(SubExprNode(VariableNode("Bool", List(LiteralNode("test\\"()\\\\(\\\\)\\\\\\")")))), SubExprNode(VariableNode("Num", List(LiteralNode(""))))))), SubExprNode(VariableNode("IfThenElse", List(SubExprNode(VariableNode("Bool", List(LiteralNode("eg")))), SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode()))))))`

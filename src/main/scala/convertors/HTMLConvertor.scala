@@ -32,7 +32,6 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
     div(
       cls := f"${ClassDict.SUBTREE} ${if (isAxiom) ClassDict.AXIOM else ""} ${phantomClassName(node)}".strip,
       data("tree-path") := node.treePathString,
-      data("node-string") := node.toString,
       fullExprBottomDiv(node),
       if (isAxiom)
         div(cls := ClassDict.ANNOTATION_AXIOM, node.exprName)
@@ -90,7 +89,6 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
     div(
       cls := List(ClassDict.SUBTREE, {if (isAxiom) ClassDict.AXIOM else ""}, ClassDict.TYPE_TREE, phantomClassName(node)).mkString(" "),
       data("tree-path") := node.treePathString,
-      data("node-string") := node.toString,
       fullTypeBottomDiv(node),
       if (isAxiom)
         div(cls := ClassDict.ANNOTATION_AXIOM, node.getTypeName)

@@ -77,6 +77,7 @@ async function loadLangSelector(): Promise<void> {
  * @param addToHistory whether to add this change to the history
  */
 export function updateTree(newTreeHtml: string, newNodeString: string, modeName: string, lang: string, addToHistory: boolean = false): void {
+    console.log(newNodeString);
     tree.innerHTML = newTreeHtml;
     lastNodeString = newNodeString;
     treeCleanup();
@@ -559,4 +560,64 @@ export function loadTree(): void {
 async function loadTreeFromString(nodeString: string): Promise<void> {
     lastNodeString = nodeString;
     await runAction("IdentityAction", "", [])
+}
+
+export function getNodeStringFromPath(path: string): string {
+    function nodeArgs(node: string): string[] {
+        let stack: string[] = [];
+        let current: string = '';
+        let nodes: string[] = [];
+        let depth: number = 0;
+        let escaped: boolean = false;
+        let inString: boolean = false;
+        for (let char of node) {
+            if (escaped) {
+                current += "\\" + char;
+                escaped = false;
+            } else if (char === '\\') {
+                escaped = true;
+            } else if (char === '(' && !inString) {
+                if (depth === 0) {
+                    current = '';
+                } else {
+                    current += char;
+                }
+                depth += 1;
+            } else if (char === ')' && !inString) {
+                depth -= 1;
+                if (depth === 0) {
+                    nodes.push(current);
+                } else {
+                    current += char;
+                }
+            } else if (char === ',' && depth === 1 && !inString) {
+                nodes.push(current);
+                current = '';
+            } else if (char === '"' && !escaped) {
+                inString = !inString;
+                current += char;
+            } else {
+                current += char;
+            }
+        }
+        return nodes;
+    }
+
+    function recurse(curr: string, remaining: number[]): string {
+        if (remaining.length === 0) {
+            return curr;
+        }
+
+        const next = remaining.shift();
+        if (next === undefined) {
+            throw new Error('Unexpected undefined value');
+        }
+
+        const nodeArgsList = nodeArgs(curr)[1];
+        const innerNode = nodeArgs(nodeArgsList)[next];
+        const nextNodeString = nodeArgs(innerNode)[0];
+        return recurse(nextNodeString, remaining);
+    }
+
+    return recurse(lastNodeString, path.split('-').map(s => parseInt(s)).filter(n => !isNaN(n)));
 }

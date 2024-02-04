@@ -4,6 +4,7 @@ import {
     disableInputs,
     enableInputs,
     getActiveInputs,
+    getNodeStringFromPath,
     initialValues,
     lastNodeString,
     treeHistoryIndex,
@@ -186,7 +187,8 @@ export async function clearTreeNode(event: Event): Promise<void> {
  * Copies the node string of the selected subtree to the copy cache.
  */
 export function copyTreeNode(): void {
-    copyCache = contextMenuSelectedElement.getAttribute("data-node-string");
+    // copyCache = contextMenuSelectedElement.getAttribute("data-node-string");
+    copyCache = getNodeStringFromPath(contextMenuSelectedElement.getAttribute("data-tree-path"));
 }
 
 /**
