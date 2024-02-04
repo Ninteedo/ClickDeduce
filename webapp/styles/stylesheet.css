@@ -121,6 +121,10 @@ form {
     justify-content: space-between;
 }
 
+.node div {
+    display: inline;
+}
+
 div.scoped-variables {
     display: inline-flex;
 }

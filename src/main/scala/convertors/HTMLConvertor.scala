@@ -30,22 +30,22 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
     }
 
     div(
-      cls := f"subtree ${if (isAxiom) "axiom" else ""} ${phantomClassName(node)}".strip,
+      cls := f"${ClassDict.SUBTREE} ${if (isAxiom) ClassDict.AXIOM else ""} ${phantomClassName(node)}".strip,
       data("tree-path") := node.treePathString,
       data("node-string") := node.toString,
       fullExprBottomDiv(node),
       if (isAxiom)
-        div(cls := "annotation-axiom", node.exprName)
+        div(cls := ClassDict.ANNOTATION_AXIOM, node.exprName)
       else
         div(
-          cls := "args",
+          cls := ClassDict.ARGS,
           node.getVisibleChildren(mode).map(outerNodeToHTML),
-          div(cls := "annotation-new", node.exprName)
+          div(cls := ClassDict.ANNOTATION, node.exprName)
         )
     )
   }
 
-  def fullExprBottomDiv(node: ExprNode): HTML = div(cls := "node", envDiv(node), exprDiv(node), resultDiv(node))
+  def fullExprBottomDiv(node: ExprNode): HTML = div(cls := ClassDict.NODE, envDiv(node), exprDiv(node), resultDiv(node))
 
   def envDiv(node: ExprNode): HTML = {
     val env = mode match {
@@ -59,7 +59,7 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
       if (mode == DisplayMode.TypeCheck) Some(raw(" &#x22a2;")) else if (env.nonEmpty) Some(raw(",")) else None
 
     div(
-      cls := "scoped-variables",
+      cls := ClassDict.SCOPED_VARIABLES,
       variablesHtml,
       delimiter,
       paddingRight := (if (env.isEmpty && mode != DisplayMode.TypeCheck) "0ch" else "0.5ch")
@@ -67,10 +67,10 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
   }
 
   def exprDiv(node: ExprNode): HTML = div(if (node.isPhantom) {
-    node.toHtmlLineReadOnly(mode)(display := "inline")
+    node.toHtmlLineReadOnly(mode)
   } else {
     node.toHtmlLine(mode)
-  })(cls := "expr")
+  })(cls := ClassDict.EXPR)
 
   def resultDiv(node: ExprNode): Seq[HTML] = mode match {
     case DisplayMode.Edit =>
@@ -88,32 +88,32 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
   def typeNode(node: TypeNode): HTML = {
     val isAxiom = node.getVisibleChildren(mode).isEmpty
     div(
-      cls := f"subtree ${if (isAxiom) "axiom" else ""} type-tree ${phantomClassName(node)}".strip,
+      cls := List(ClassDict.SUBTREE, {if (isAxiom) ClassDict.AXIOM else ""}, ClassDict.TYPE_TREE, phantomClassName(node)).mkString(" "),
       data("tree-path") := node.treePathString,
       data("node-string") := node.toString,
       fullTypeBottomDiv(node),
       if (isAxiom)
-        div(cls := "annotation-axiom", node.getTypeName)
+        div(cls := ClassDict.ANNOTATION_AXIOM, node.getTypeName)
       else
         div(
-          cls := "args",
+          cls := ClassDict.ARGS,
           node.getVisibleChildren(mode).map(outerNodeToHTML),
-          div(cls := "annotation-new", node.getTypeName)
+          div(cls := ClassDict.ANNOTATION, node.getTypeName)
         )
     )
   }
 
-  def fullTypeBottomDiv(node: TypeNode): HTML = div(cls := "node", typeDiv(node))
+  def fullTypeBottomDiv(node: TypeNode): HTML = div(cls := ClassDict.NODE, typeDiv(node))
 
-  def typeDiv(node: TypeNode): HTML = node.toHtmlLine(mode)(cls := "type")
+  def typeDiv(node: TypeNode): HTML = node.toHtmlLine(mode)(cls := ClassDict.TYPE)
 
   private val typeCheckTurnstileSpan: HTML = span(paddingLeft := "0.5ch", paddingRight := "0.5ch", raw(":"))
   private def typeCheckResultDiv(node: ExprNode): HTML =
-    div(cls := "type-check-result", display := "inline", node.getType.toHtml)
+    div(cls := ClassDict.TYPE_CHECK_RESULT, node.getType.toHtml)
   private val evalArrowSpan: HTML = span(paddingLeft := "1ch", paddingRight := "1ch", raw("&DoubleDownArrow;"))
-  private def evalResultDiv(node: ExprNode): HTML = div(cls := "eval-result", display := "inline", node.getValue.toHtml)
+  private def evalResultDiv(node: ExprNode): HTML = div(cls := ClassDict.EVAL_RESULT, node.getValue.toHtml)
   private def editEvalResultDiv(node: ExprNode): HTML =
-    div(cls := "eval-result", display := "inline", node.getEditValueResult.toHtml)
+    div(cls := ClassDict.EVAL_RESULT, node.getEditValueResult.toHtml)
 
-  def phantomClassName(node: OuterNode): String = if (node.isPhantom) " phantom" else ""
+  def phantomClassName(node: OuterNode): String = if (node.isPhantom) ClassDict.PHANTOM else ""
 }

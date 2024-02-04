@@ -1,0 +1,25 @@
+package convertors
+
+object ClassDict {
+  val ANNOTATION = "annotation-new"
+  val ANNOTATION_AXIOM = "annotation-axiom"
+  val ARGS = "args"
+  val AXIOM = "axiom"
+  val ERROR_ORIGIN = "error-origin"
+  val EVAL_RESULT = "eval-result"
+  val EXPR = "expr"
+  val EXPR_DROPDOWN = "expr-dropdown"
+  val LITERAL = "literal"
+  val NODE = "node"
+  val PHANTOM = "phantom"
+  val SCOPED_VARIABLES = "scoped-variables"
+  val SUBTREE = "subtree"
+  val TOOLTIP = "tooltip"
+  val TOOLTIP_TEXT = "tooltip-text"
+  val TYPE = "type"
+  val TYPE_CHECK_RESULT = "type-check-result"
+  val TYPE_DROPDOWN = "type-dropdown"
+  val TYPE_TREE = "type-tree"
+  val VALUE = "value"
+  val VALUE_TYPE = "value-type"
+}

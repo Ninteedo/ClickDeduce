@@ -1,7 +1,7 @@
 package languages
 
 import app.{ClickDeduceException, UtilityFunctions}
-import convertors.DisplayMode
+import convertors.{ClassDict, DisplayMode}
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
@@ -32,12 +32,13 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   }
 
   private lazy val exprClassListDropdownHtml: TypedTag[String] = select(
-    cls := "expr-dropdown",
-    option(value := "", "Select Expr..."), exprClassList.map(e => option(value := e.getSimpleName, e.getSimpleName))
+    cls := ClassDict.EXPR_DROPDOWN,
+    option(value := "", "Select Expr..."),
+    exprClassList.map(e => option(value := e.getSimpleName, e.getSimpleName))
   )
 
   private lazy val typeClassListDropdownHtml: TypedTag[String] = select(
-    cls := "type-dropdown",
+    cls := ClassDict.TYPE_DROPDOWN,
     option(value := "", "Select Type..."),
     typeClassList.map(e => option(value := e.getSimpleName, e.getSimpleName))
   )
@@ -444,8 +445,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     }
 
     override def isPhantom: Boolean = isPhantomStore
-
-    private def phantomClassName: String = if (isPhantom) " phantom" else ""
   }
 
   /** Concrete implementation of an expression node.
@@ -484,7 +483,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       cacheQuery(htmlLineCache, mode, div(raw(getExprHtmlLine(mode))))
 
     override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] =
-      cacheQuery(htmlLineReadOnlyCache, mode, div(display := "inline", raw(getExprHtmlLineReadOnly(mode))))
+      cacheQuery(htmlLineReadOnlyCache, mode, div(raw(getExprHtmlLineReadOnly(mode))))
 
     private def getExprHtmlLine(mode: DisplayMode): String = {
       val constructor = exprClass.getConstructors.head
@@ -595,7 +594,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   }
 
   case class LiteralNode(literalText: String) extends InnerNode {
-    private val htmlLineShared: TypedTag[String] = input(`type` := "text", cls := "literal", value := literalText)
+    private val htmlLineShared: TypedTag[String] =
+      input(`type` := "text", cls := ClassDict.LITERAL, value := literalText)
 
     override def toHtmlLine(mode: DisplayMode): TypedTag[String] =
       htmlLineShared(width := s"${Math.max(2, literalText.length)}ch", data("tree-path") := treePathString)
@@ -650,7 +650,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       div(raw(getExprHtmlLine(mode)))(data("tree-path") := treePathString)
 
     override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] =
-      div(raw(getExprHtmlLineReadOnly(mode)))(readonly, disabled, display := "inline")
+      div(raw(getExprHtmlLineReadOnly(mode)))(readonly, disabled)
 
     override val children: List[OuterNode] = args.filter(_.isInstanceOf[SubTypeNode]).flatMap(_.children)
 
@@ -660,7 +660,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       val constructor = typeClass.getConstructors()(0)
       val arguments = lang +: args.map {
         case n: LiteralNode => n.getPlaceholder(mode, false)
-        case other => other.getPlaceholder(mode)
+        case other          => other.getPlaceholder(mode)
       }
       constructor.newInstance(arguments: _*).asInstanceOf[Type].prettyPrint
     }
@@ -760,9 +760,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
   protected def calculateExprClassList: List[Class[Expr]]
 
-  lazy val nodeLanguageInterface: Class[AbstractNodeLanguage] = findInterface(
-    this.getClass, classOf[AbstractNodeLanguage]
-  )
+  lazy val nodeLanguageInterface: Class[AbstractNodeLanguage] =
+    findInterface(this.getClass, classOf[AbstractNodeLanguage])
 
   private lazy val typeClassList: List[Class[Type]] = calculateTypeClassList
 
@@ -789,7 +788,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     val parentSubclasses = (List(clazz.getSuperclass) ++ (if (includeInterfaces) clazz.getInterfaces else Nil))
       .flatMap {
         case c: Class[_ <: AbstractNodeLanguage] => findSubClassesOf(c, superclass)
-        case _ => Nil
+        case _                                   => Nil
       }
     val classes = parentSubclasses ++ subclasses.asInstanceOf[List[Class[T]]]
     classes.filterNot(cls => reflect.Modifier.isAbstract(cls.getModifiers)).filterNot(_.isInterface)
@@ -798,10 +797,11 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   def findInterface[T](clazz: Class[_ <: AbstractNodeLanguage], interface: Class[T]): Class[T] = {
     clazz.getInterfaces.find(_ == interface) match {
       case Some(value) => value.asInstanceOf[Class[T]]
-      case None => clazz.getSuperclass match {
-        case c: Class[_ <: AbstractNodeLanguage] => findInterface(c, interface)
-        case _ => throw new Exception(s"Could not find interface $interface in class $clazz")
-      }
+      case None =>
+        clazz.getSuperclass match {
+          case c: Class[_ <: AbstractNodeLanguage] => findInterface(c, interface)
+          case _ => throw new Exception(s"Could not find interface $interface in class $clazz")
+        }
     }
   }
 

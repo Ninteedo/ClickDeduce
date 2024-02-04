@@ -1,5 +1,6 @@
 package languages
 
+import convertors.ClassDict
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
@@ -116,7 +117,7 @@ trait AbstractLanguage {
     */
   abstract class Value extends Term {
     override lazy val toHtml: TypedTag[String] =
-      span(cls := "tooltip", valueText(display := "inline"), div(cls := "tooltip-text", tooltipText))
+      span(cls := ClassDict.TOOLTIP, valueText, div(cls := ClassDict.TOOLTIP_TEXT, tooltipText))
 
     lazy val tooltipText: String = toString + ": " + typ.toString
 
@@ -134,7 +135,11 @@ trait AbstractLanguage {
           })
       }
       val valueInstance = constructor.newInstance(lang +: arguments: _*).asInstanceOf[Value]
-      div(div(raw(valueInstance.prettyPrint), cls := "value"), span(": "), div(typ.valueText, cls := "value-type"))
+      div(
+        div(raw(valueInstance.prettyPrint), cls := ClassDict.VALUE),
+        span(": "),
+        div(typ.valueText, cls := ClassDict.VALUE_TYPE)
+      )
     }
 
     val typ: Type
@@ -158,7 +163,7 @@ trait AbstractLanguage {
     */
   abstract class Type extends Term {
     override lazy val toHtml: TypedTag[String] =
-      span(cls := "tooltip", valueText(display := "inline"), div(cls := "tooltip-text", tooltipText))
+      span(cls := ClassDict.TOOLTIP, valueText, div(cls := ClassDict.TOOLTIP_TEXT, tooltipText))
 
     lazy val tooltipText: String = toString
 
@@ -167,14 +172,13 @@ trait AbstractLanguage {
       val arguments = this match {
         case v0: Product =>
           v0.productIterator.toList.collect({
-            case v: Value => ValuePlaceholder(v.valueText.toString, v.needsBrackets)
-            case t: Type => TypePlaceholder(t.valueText.toString, t.needsBrackets)
-            case e: Expr => ExprPlaceholder(e)
-            case s: String => s
+            case v: Value   => ValuePlaceholder(v.valueText.toString, v.needsBrackets)
+            case t: Type    => TypePlaceholder(t.valueText.toString, t.needsBrackets)
+            case e: Expr    => ExprPlaceholder(e)
+            case s: String  => s
             case l: Literal => l
-            case other => other
-          }
-          )
+            case other      => other
+          })
       }
       val valueInstance = constructor.newInstance(lang +: arguments: _*).asInstanceOf[Type]
       div(raw(valueInstance.prettyPrint))
@@ -205,11 +209,16 @@ trait AbstractLanguage {
     */
   abstract class EvalError extends Value, TermError {
     override lazy val toHtml: TypedTag[String] =
-      span(cls := "tooltip", valueText, div(cls := "tooltip-text", tooltipText), cls := "error-origin")
+      span(
+        cls := ClassDict.TOOLTIP,
+        valueText,
+        div(cls := ClassDict.TOOLTIP_TEXT, tooltipText),
+        cls := ClassDict.ERROR_ORIGIN
+      )
 
     override lazy val tooltipText: String = message
 
-    override lazy val valueText: TypedTag[String] = div("?", cls := "error-origin")
+    override lazy val valueText: TypedTag[String] = div("?", cls := ClassDict.ERROR_ORIGIN)
 
     override val isError: Boolean = true
 
@@ -238,15 +247,15 @@ trait AbstractLanguage {
     */
   abstract class TypeError extends Type, TermError {
     override lazy val toHtml: TypedTag[String] = span(
-      cls := "tooltip",
-      valueText(display := "inline"),
-      div(cls := "tooltip-text", tooltipText),
-      cls := "error-origin"
+      cls := ClassDict.TOOLTIP,
+      valueText,
+      div(cls := ClassDict.TOOLTIP_TEXT, tooltipText),
+      cls := ClassDict.ERROR_ORIGIN
     )
 
     override lazy val tooltipText: String = message
 
-    override lazy val valueText: TypedTag[String] = div("?", cls := "error-origin")
+    override lazy val valueText: TypedTag[String] = div("?", cls := ClassDict.ERROR_ORIGIN)
 
     override val isError: Boolean = true
 
