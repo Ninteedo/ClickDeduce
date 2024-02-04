@@ -1,6 +1,6 @@
 package languages
 
-import convertors.DisplayMode
+import convertors.{DisplayMode, HTMLConvertor}
 import languages.LRec.*
 import org.scalatest.concurrent.TimeLimits.failAfter
 import org.scalatest.matchers.must.Matchers.noException
@@ -172,15 +172,15 @@ class LRecTest extends TestTemplate[Expr, Value, Type] {
     )
 
     failAfter(Span(500, Millis)) {
-      noException should be thrownBy node.toHtml(DisplayMode.Edit)
+      noException should be thrownBy HTMLConvertor(LRec, DisplayMode.Edit).convert(node)
     }
 
     failAfter(Span(500, Millis)) {
-      noException should be thrownBy node.toHtml(DisplayMode.TypeCheck)
+      noException should be thrownBy HTMLConvertor(LRec, DisplayMode.TypeCheck).convert(node)
     }
 
     failAfter(Span(500, Millis)) {
-      a[DepthLimitExceededException] should be thrownBy node.toHtml(DisplayMode.Evaluation)
+      a[DepthLimitExceededException] should be thrownBy HTMLConvertor(LRec, DisplayMode.Evaluation).convert(node)
     }
   }
 

@@ -1,6 +1,6 @@
 package languages
 
-import convertors.DisplayMode
+import convertors.{DisplayMode, HTMLConvertor}
 import languages.LIf.*
 import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.prop.{TableFor1, TableFor2}
@@ -216,9 +216,9 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
       )
     )
 
-    tree.toHtml(DisplayMode.Edit)
-    tree.toHtml(DisplayMode.TypeCheck)
-    tree.toHtml(DisplayMode.Evaluation)
+    HTMLConvertor(LIf, DisplayMode.Edit).convert(tree)
+    HTMLConvertor(LIf, DisplayMode.TypeCheck).convert(tree)
+    HTMLConvertor(LIf, DisplayMode.Evaluation).convert(tree)
   }
 
   property("Plus and Times return an error when given an argument other than a NumV") {

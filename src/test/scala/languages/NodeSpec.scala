@@ -1,6 +1,6 @@
 package languages
 
-import convertors.DisplayMode
+import convertors.{DisplayMode, HTMLConvertor}
 import languages.LRec.*
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor1}
@@ -354,9 +354,8 @@ class NodeSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChecks 
   "TypeNode" should {
     "convert to HTML without error with multiple levels" in {
       forAll(Table("mode", DisplayMode.values: _*)) { mode =>
-        noException should be thrownBy TypeNode
-          .fromType(Func(Func(Func(IntType(), IntType()), Func(IntType(), BoolType())), BoolType()))
-          .toHtml(mode)
+        val node = TypeNode.fromType(Func(Func(Func(IntType(), IntType()), Func(IntType(), BoolType())), BoolType()))
+        noException should be thrownBy HTMLConvertor(LRec, mode).convert(node)
       }
     }
 
@@ -444,7 +443,8 @@ class NodeSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChecks 
         "\"test\"",
         "\\\"test\\\"",
         "\"Hello\"!, \"World\"!",
-        "1\\\"'.--';\\\"\\\\\\4 \\t \\\\", "1\\\"'.--';\\\"\\\\\\4 \\t \\\\"
+        "1\\\"'.--';\\\"\\\\\\4 \\t \\\\",
+        "1\\\"'.--';\\\"\\\\\\4 \\t \\\\"
       )
 
       testLiteralNodeStringConversion(literals)
@@ -454,7 +454,9 @@ class NodeSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChecks 
   "Tree paths" should {
     "return the correct child" in {
       val node =
-        VariableNode.fromExpr(Apply(Lambda("x", IntType(), IfThenElse(Equal(Var("x"), Num(0)), Num(1), Num(0))), Num(5)))
+        VariableNode.fromExpr(
+          Apply(Lambda("x", IntType(), IfThenElse(Equal(Var("x"), Num(0)), Num(1), Num(0))), Num(5))
+        )
       node.findChild(List()) shouldBe Some(node)
       node.findChild(List(0)) shouldBe Some(
         VariableNode.fromExpr(Lambda("x", IntType(), IfThenElse(Equal(Var("x"), Num(0)), Num(1), Num(0))))
@@ -462,7 +464,9 @@ class NodeSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChecks 
       node.findChild(List(1)) shouldBe Some(VariableNode.fromExpr(Num(5)))
       node.findChild(List(0, 0)) shouldBe Some(LiteralNode("x"))
       node.findChild(List(0, 1)) shouldBe Some(TypeNode.fromType(IntType()))
-      node.findChild(List(0, 2)) shouldBe Some(VariableNode.fromExpr(IfThenElse(Equal(Var("x"), Num(0)), Num(1), Num(0))))
+      node.findChild(List(0, 2)) shouldBe Some(
+        VariableNode.fromExpr(IfThenElse(Equal(Var("x"), Num(0)), Num(1), Num(0)))
+      )
       node.findChild(List(0, 2, 0)) shouldBe Some(VariableNode.fromExpr(Equal(Var("x"), Num(0))))
       node.findChild(List(0, 2, 1)) shouldBe Some(VariableNode.fromExpr(Num(1)))
       node.findChild(List(0, 2, 2)) shouldBe Some(VariableNode.fromExpr(Num(0)))
@@ -470,7 +474,9 @@ class NodeSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChecks 
 
     "error on invalid paths" in {
       val node =
-        VariableNode.fromExpr(Apply(Lambda("x", IntType(), IfThenElse(Equal(Var("x"), Num(0)), Num(1), Num(0))), Num(5)))
+        VariableNode.fromExpr(
+          Apply(Lambda("x", IntType(), IfThenElse(Equal(Var("x"), Num(0)), Num(1), Num(0))), Num(5))
+        )
 
       val invalidPaths = Table(
         "path",

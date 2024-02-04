@@ -1,6 +1,6 @@
 package languages
 
-import convertors.DisplayMode
+import convertors.{DisplayMode, HTMLConvertor}
 import languages.LLam.*
 import org.scalatest.matchers.should.Matchers.{an, shouldBe, shouldEqual}
 import org.scalatest.prop.TableFor1
@@ -231,7 +231,7 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
 
     modes.forEvery({ mode =>
       nodes.forEvery({ node =>
-        node.toHtml(mode).toString
+        HTMLConvertor(LLam, mode).convert(node)
       })
     })
   }

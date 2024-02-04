@@ -259,13 +259,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       setParent(None)
     }
 
-    def toHtml(mode: DisplayMode): TypedTag[String] =
-      if (getVisibleChildren(mode).isEmpty) toHtmlAxiom(mode) else toHtmlSubtree(mode)
-
-    def toHtmlAxiom(mode: DisplayMode): TypedTag[String]
-
-    def toHtmlSubtree(mode: DisplayMode): TypedTag[String]
-
     def getVisibleChildren(mode: DisplayMode): List[OuterNode] = children
 
     /** Find the child of this expression tree at the given path.
@@ -408,121 +401,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     lazy val getEvalEnv: Env = getCorrectEnv(_.getChildrenEval, _.getEvalEnv)
 
     lazy val getTypeEnv: TypeEnv = getCorrectEnv(_.getChildrenTypeCheck, _.getTypeEnv)
-
-    def toHtmlAxiom(mode: DisplayMode): TypedTag[String] = {
-      div(
-        cls := "subtree axiom" + phantomClassName,
-        data("tree-path") := treePathString,
-        data("node-string") := toString,
-        divByMode(mode, true),
-        div(cls := "annotation-axiom", exprName)
-      )
-    }
-
-    def toHtmlSubtree(mode: DisplayMode): TypedTag[String] = {
-      if (mode == DisplayMode.Evaluation && getParent.isEmpty) {
-        checkDepthLimitWillBeExceeded()
-      }
-
-      div(
-        cls := "subtree" + phantomClassName,
-        data("tree-path") := treePathString,
-        data("node-string") := toString,
-        divByMode(mode, false),
-        div(cls := "args", getVisibleChildren(mode).map(_.toHtml(mode)), div(cls := "annotation-new", exprName))
-      )
-    }
-
-    private val divByModeCache = collection.mutable.Map[(DisplayMode, Boolean), TypedTag[String]]()
-
-    private def divByMode(mode: DisplayMode, isAxiom: Boolean): TypedTag[String] = cacheQuery(
-      divByModeCache,
-      (mode, isAxiom),
-      mode match {
-        case DisplayMode.Edit       => editDiv(isAxiom)
-        case DisplayMode.Evaluation => evalDiv(isAxiom)
-        case DisplayMode.TypeCheck  => typeCheckDiv(isAxiom)
-      }
-    )
-
-    private def editDiv(isAxiom: Boolean): TypedTag[String] = div(
-      cls := (if (isAxiom) "expr" else "node"),
-      envDiv(DisplayMode.Edit),
-      if (isAxiom)
-        (if (!isPhantom) toHtmlLine(DisplayMode.Edit) else toHtmlLineReadOnly(DisplayMode.Edit)) (display := "inline")
-      else div(cls := "expr", if (!isPhantom) toHtmlLine(DisplayMode.Edit) else toHtmlLineReadOnly(DisplayMode.Edit)), {
-        val typeCheckResult = getType
-        if (typeCheckResult.isError) List(typeCheckTurnstileSpan, typeCheckResultDiv)
-        else {
-          val evalResult = getEditValueResult
-          if (!evalResult.isError && !evalResult.isPlaceholder) List(evalArrowSpan, editEvalResultDiv)
-          else List(typeCheckTurnstileSpan, typeCheckResultDiv)
-        }
-      }
-    )
-
-    private def typeCheckDiv(isAxiom: Boolean): TypedTag[String] = div(
-      cls := (if (isAxiom) "expr" else "node"),
-      envDiv(DisplayMode.TypeCheck),
-      if (isAxiom) toHtmlLine(DisplayMode.TypeCheck)(display := "inline")
-      else div(cls := "expr", toHtmlLine(DisplayMode.TypeCheck)),
-      typeCheckTurnstileSpan,
-      typeCheckResultDiv
-    )
-
-    private def evalDiv(isAxiom: Boolean): TypedTag[String] = div(
-      cls := (if (isAxiom) "expr" else "node"),
-      envDiv(DisplayMode.Evaluation),
-      if (isAxiom) {
-        (if (!isPhantom) toHtmlLine(DisplayMode.Evaluation) else toHtmlLineReadOnly(DisplayMode.Evaluation)) (
-          display := "inline"
-        )
-      } else {
-        div(
-          cls := "expr",
-          if (!isPhantom) toHtmlLine(DisplayMode.Evaluation) else toHtmlLineReadOnly(DisplayMode.Evaluation)
-        )
-      },
-      evalArrowSpan,
-      evalResultDiv
-    )
-
-    private lazy val typeCheckTurnstileSpan: TypedTag[String] =
-      span(paddingLeft := "0.5ch", paddingRight := "0.5ch", raw(":"))
-
-    private lazy val typeCheckResultDiv: TypedTag[String] =
-      div(cls := "type-check-result", display := "inline", getType.toHtml)
-
-    private lazy val evalArrowSpan: TypedTag[String] =
-      span(paddingLeft := "1ch", paddingRight := "1ch", raw("&DoubleDownArrow;"))
-
-    private lazy val evalResultDiv: TypedTag[String] = div(cls := "eval-result", display := "inline", getValue.toHtml)
-
-    private lazy val editEvalResultDiv: TypedTag[String] =
-      div(cls := "eval-result", display := "inline", getEditValueResult.toHtml)
-
-    private def envDiv(mode: DisplayMode): TypedTag[String] = {
-      val env: Env | TypeEnv = mode match {
-        case DisplayMode.Edit       => getEditEnv
-        case DisplayMode.Evaluation => getEvalEnv
-        case DisplayMode.TypeCheck  => getTypeEnv
-      }
-      val envHtml: String =
-        (if (env.nonEmpty)
-           env.map((k: String, v: Value | Type) => s"$k &rarr; ${v.toHtml}").mkString("[", ", ", "]")
-         else "") +
-          (if (mode == DisplayMode.TypeCheck) " &#x22a2;" else if (env.nonEmpty) "," else "")
-
-      div(
-        cls := "scoped-variables",
-        display := "inline",
-        raw(envHtml),
-        paddingRight := {
-          if (envHtml.isEmpty) "0ch" else "0.5ch"
-        }
-      )
-    }
-
+    
     private val visibleChildrenCache = collection.mutable.Map[DisplayMode, List[OuterNode]]()
 
     override def getVisibleChildren(mode: DisplayMode): List[OuterNode] = cacheQuery(
@@ -705,8 +584,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       case Some(n)           => throw new NodeParentWrongTypeException(classOf[ExprNode], n.getClass)
     }
 
-    override def toHtmlLine(mode: DisplayMode): TypedTag[String] =
-      node.toHtmlLineReadOnly(mode)
+    override def toHtmlLine(mode: DisplayMode): TypedTag[String] = node.toHtmlLineReadOnly(mode)
 
     override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] = toHtmlLine(mode)
 
@@ -750,22 +628,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
         case None    => None
       }
     }
-
-    def toHtmlAxiom(mode: DisplayMode): TypedTag[String] = div(
-      cls := "subtree axiom",
-      data("tree-path") := treePathString,
-      data("node-string") := toString,
-      div(cls := "expr", toHtmlLine(mode)(display := "inline")),
-      div(cls := "annotation-axiom", getTypeName)
-    )
-
-    def toHtmlSubtree(mode: DisplayMode): TypedTag[String] = div(
-      cls := "subtree",
-      data("tree-path") := treePathString,
-      data("node-string") := toString,
-      div(cls := "node", div(cls := "expr", toHtmlLine(mode))),
-      div(cls := "args", children.map(_.toHtml(mode)), div(cls := "annotation-new", getTypeName))
-    )
   }
 
   case class TypeNode(typeName: String, args: List[InnerNode]) extends TypeNodeParent {
