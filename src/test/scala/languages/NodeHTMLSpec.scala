@@ -1,6 +1,6 @@
 package languages
 
-import convertors.DisplayMode
+import convertors.{DisplayMode, HTMLConvertor}
 import languages.LLam.*
 import net.ruippeixotog.scalascraper.browser.JsoupBrowser
 import net.ruippeixotog.scalascraper.dsl.DSL.*
@@ -14,7 +14,9 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
   val modes: TableFor1[DisplayMode] = TableFor1("mode", DisplayMode.values: _*)
 
   def checkHtmlDoc(tree: OuterNode)(mode: DisplayMode)(test: Document => Unit): Unit = {
-    test(JsoupBrowser().parseString(tree.toHtml(mode).toString))
+//    val convertor = HTMLConvertor(LLam, mode)
+//    val convertorTree = convertor.fixOuterNodeType(tree)
+    test(JsoupBrowser().parseString(HTMLConvertor(LLam, mode).convert(tree)))
   }
 
   def checkHtmlDocAllModes(tree: OuterNode)(test: Document => Unit): Unit = {

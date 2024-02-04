@@ -372,7 +372,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       case None        => 0
     }
 
-    private def checkDepthLimitWillBeExceeded(currDepth: Int = 0): Unit = {
+    def checkDepthLimitWillBeExceeded(currDepth: Int = 0): Unit = {
       if (currDepth + 1 >= depthLimit) throw new DepthLimitExceededException()
 
       getVisibleChildren(DisplayMode.Evaluation).foreach({
@@ -899,11 +899,9 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     this.getClass, classOf[AbstractNodeLanguage]
   )
 
-  private lazy val typeClassList: List[Class[Type]] = findSubClassesOf(
-    getClass, classOf[Type], includeInterfaces = false
-  )
+  private lazy val typeClassList: List[Class[Type]] = calculateTypeClassList
 
-  protected def calculateTypeClassList: List[Class[Type]] = calculateTypeClassList
+  protected def calculateTypeClassList: List[Class[Type]] = List(classOf[UnknownType]).map(_.asInstanceOf[Class[Type]])
 
   private lazy val blankClassList: List[Class[BlankSpace]] =
     List(classOf[BlankExprDropDown], classOf[BlankTypeDropDown]).map(_.asInstanceOf[Class[BlankSpace]])

@@ -188,15 +188,18 @@ class WebServer extends JsonSupport {
       path("start-node-blank") {
         entity(as[EvalRequest]) { request =>
           val lang = WebServer.getLanguage(request.langName)
-          val tree = lang.ExprChoiceNode()
-          val response = NodeResponse(tree.toString, tree.toHtml(DisplayMode.Edit).toString)
+          val convertor = HTMLConvertor(lang, DisplayMode.Edit)
+          val tree = convertor.lang.ExprChoiceNode()
+          val response = NodeResponse(tree.toString, convertor.convert(tree))
           complete(response)
         }
       } ~
         path("process-action") {
           entity(as[ActionRequest]) { request =>
-            val lang = WebServer.getLanguage(request.langName)
-            val action = lang.createAction(
+            val originalLang = WebServer.getLanguage(request.langName)
+            val displayMode: DisplayMode = DisplayMode.fromString(request.modeName)
+            val convertor = HTMLConvertor(originalLang, displayMode)
+            val action = convertor.lang.createAction(
               request.actionName,
               request.nodeString,
               request.treePath,
@@ -204,9 +207,7 @@ class WebServer extends JsonSupport {
               request.modeName
             )
             val updatedTree = action.newTree
-            val displayMode: lang.DisplayMode = lang.DisplayMode.fromString(request.modeName)
-            val response = NodeResponse(updatedTree.toString, updatedTree.toHtml(displayMode).toString)
-            val displayMode: DisplayMode = DisplayMode.fromString(request.modeName)
+            val response = NodeResponse(updatedTree.toString, convertor.convert(updatedTree))
             complete(response)
           }
         }
