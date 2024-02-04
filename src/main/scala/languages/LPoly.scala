@@ -1,5 +1,6 @@
 package languages
 
+import convertors.ClassDict
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
@@ -87,7 +88,7 @@ class LPoly extends LData {
 
     override def prettyPrint: String = s"${v.toString}[${t.prettyPrint}]"
 
-    override lazy val valueText: TypedTag[String] = div(raw(t.prettyPrint))
+    override lazy val valueText: TypedTag[String] = div(raw(t.prettyPrint), cls := ClassDict.VALUE_TYPE)
 
     override val needsBrackets: Boolean = false
   }

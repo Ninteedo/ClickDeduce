@@ -228,6 +228,14 @@ div.scoped-variables {
     display: inline;
 }
 
+.value {
+    color: var(--green);
+}
+
+.value-type {
+    color: var(--yellow);
+}
+
 .error-origin {
     color: var(--red);
 }

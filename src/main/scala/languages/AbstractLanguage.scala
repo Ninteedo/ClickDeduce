@@ -181,7 +181,7 @@ trait AbstractLanguage {
           })
       }
       val valueInstance = constructor.newInstance(lang +: arguments: _*).asInstanceOf[Type]
-      div(raw(valueInstance.prettyPrint))
+      div(raw(valueInstance.prettyPrint), cls := ClassDict.VALUE_TYPE)
     }
 
     val isError: Boolean = false
