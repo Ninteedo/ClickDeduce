@@ -30,7 +30,7 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
     }
 
     div(
-      cls := f"subtree ${if (isAxiom) "axiom" else ""} ${phantomClassName(node)}",
+      cls := f"subtree ${if (isAxiom) "axiom" else ""} ${phantomClassName(node)}".strip,
       data("tree-path") := node.treePathString,
       data("node-string") := node.toString,
       fullExprBottomDiv(node),
@@ -66,11 +66,11 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
     )
   }
 
-  def exprDiv(node: ExprNode): HTML = div((if (node.isPhantom) {
+  def exprDiv(node: ExprNode): HTML = div(if (node.isPhantom) {
     node.toHtmlLineReadOnly(mode)(display := "inline")
   } else {
     node.toHtmlLine(mode)
-  }))(cls := "expr")
+  })(cls := "expr")
 
   def resultDiv(node: ExprNode): Seq[HTML] = mode match {
     case DisplayMode.Edit =>
@@ -88,7 +88,7 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
   def typeNode(node: TypeNode): HTML = {
     val isAxiom = node.getVisibleChildren(mode).isEmpty
     div(
-      cls := f"subtree ${if (isAxiom) "axiom" else ""} type-tree ${phantomClassName(node)}",
+      cls := f"subtree ${if (isAxiom) "axiom" else ""} type-tree ${phantomClassName(node)}".strip,
       data("tree-path") := node.treePathString,
       data("node-string") := node.toString,
       fullTypeBottomDiv(node),

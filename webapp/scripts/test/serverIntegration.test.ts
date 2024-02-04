@@ -493,13 +493,14 @@ describe("delete, copy, and paste buttons behave correctly", () => {
     }
 
     beforeEach(async () => {
+        await slightDelay(50);
         await pressStartNodeButton();
         await changeLanguage(3);
         await selectExprOption(getLeftmostExprDropdown(), "Plus");
         await selectExprOption(getLeftmostExprDropdown(), "Num");
-        await doLiteralEdit(getTree().querySelector('input[data-tree-path="0-0"]') as HTMLInputElement, 'foo');
+        await doLiteralEdit(getTree().querySelector('input.literal[data-tree-path="0-0"]') as HTMLInputElement, 'foo');
         await selectExprOption(getLeftmostExprDropdown(), "Bool");
-        await doLiteralEdit(getTree().querySelector('input[data-tree-path="1-0"]') as HTMLInputElement, 'bar');
+        await doLiteralEdit(getTree().querySelector('input.literal[data-tree-path="1-0"]') as HTMLInputElement, 'bar');
         console.log('Tree setup done');
     });
 
