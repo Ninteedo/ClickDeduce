@@ -6,6 +6,7 @@ import scalatags.Text.all.*
 import scala.collection.immutable.List
 
 trait AbstractLanguage {
+  lang =>
 
   /** A variable name.
     *
@@ -119,7 +120,22 @@ trait AbstractLanguage {
 
     lazy val tooltipText: String = toString + ": " + typ.toString
 
-    lazy val valueText: TypedTag[String] = div(prettyPrint + ": " + typ.prettyPrint)
+    lazy val valueText: TypedTag[String] = {
+      val constructor = getClass.getConstructors.head
+      val arguments = this match {
+        case v0: Product =>
+          v0.productIterator.toList.collect({
+            case v: Value   => ValuePlaceholder(v)
+            case t: Type    => TypePlaceholder(t)
+            case e: Expr    => ExprPlaceholder(e)
+            case s: String  => s
+            case l: Literal => l
+            case other      => other
+          })
+      }
+      val valueInstance = constructor.newInstance(lang +: arguments: _*).asInstanceOf[Value]
+      div(raw(valueInstance.prettyPrint + ": " + typ.prettyPrint))
+    }
 
     val typ: Type
 

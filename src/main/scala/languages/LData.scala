@@ -1,8 +1,6 @@
 package languages
 
 import scalatags.Text
-import scalatags.Text.TypedTag
-import scalatags.Text.all.{div, raw}
 
 class LData extends LRec {
   // expressions
@@ -178,20 +176,12 @@ class LData extends LRec {
     override def typeCheck(tEnv: TypeEnv): Type = PairType(l.typeCheck(tEnv), r.typeCheck(tEnv))
 
     override def prettyPrint: String = s"${l.prettyPrintBracketed} × ${r.prettyPrintBracketed}"
-
-    override lazy val valueText: TypedTag[String] = div(
-      raw(PairType(TypePlaceholder(l), TypePlaceholder(r)).prettyPrint)
-    )
   }
 
   case class UnionType(l: Type, r: Type) extends Type {
     override def typeCheck(tEnv: TypeEnv): Type = UnionType(l.typeCheck(tEnv), r.typeCheck(tEnv))
 
     override def prettyPrint: String = s"${l.prettyPrintBracketed} + ${r.prettyPrintBracketed}"
-
-    override lazy val valueText: TypedTag[String] = div(
-      raw(UnionType(TypePlaceholder(l), TypePlaceholder(r)).prettyPrint)
-    )
   }
 
   case class EmptyType() extends Type {
@@ -213,10 +203,6 @@ class LData extends LRec {
 
     override def prettyPrint: String = s"(${v1.prettyPrintBracketed}, ${v2.prettyPrintBracketed})"
 
-    override lazy val valueText: TypedTag[String] = div(
-      raw(PairV(ValuePlaceholder(v1), ValuePlaceholder(v2)).prettyPrint)
-    )
-
     override val needsBrackets: Boolean = false
   }
 
@@ -233,9 +219,6 @@ class LData extends LRec {
 
     override def prettyPrint: String = s"left(${v.prettyPrint})"
 
-    override lazy val valueText: TypedTag[String] =
-      div(raw(LeftV(ValuePlaceholder(v), TypePlaceholder(rightType)).prettyPrint))
-
     override val needsBrackets: Boolean = false
   }
 
@@ -243,9 +226,6 @@ class LData extends LRec {
     override val typ: Type = UnionType(leftType, v.typ)
 
     override def prettyPrint: String = s"right(${v.prettyPrint})"
-
-    override lazy val valueText: TypedTag[String] =
-      div(raw(RightV(TypePlaceholder(leftType), ValuePlaceholder(v)).prettyPrint))
 
     override val needsBrackets: Boolean = false
   }

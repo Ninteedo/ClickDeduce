@@ -1,7 +1,6 @@
 package languages
 
 import scalatags.Text
-import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
 import scala.collection.immutable.List
@@ -69,10 +68,6 @@ class LLam extends LLet {
 
     override def typeCheck(tEnv: TypeEnv): Type = Func(in.typeCheck(tEnv), out.typeCheck(tEnv))
 
-    override lazy val valueText: TypedTag[String] = div(
-      raw(Func(TypePlaceholder(in), TypePlaceholder(out)).prettyPrint)
-    )
-
     override def prettyPrint: String = s"${in.prettyPrintBracketed} → ${out.prettyPrintBracketed}"
   }
 
@@ -103,17 +98,6 @@ class LLam extends LLet {
     override def getFunctionEvaluation(applyValue: Value): (Expr, Env) = (e, env + (v -> applyValue))
 
     override def evalApply(value: Value): Value = e.eval(env + (v -> value))
-
-    override lazy val valueText: TypedTag[String] = div(
-      raw(
-        LambdaV(
-          v,
-          TypePlaceholder(properInputType),
-          ExprPlaceholder(e),
-          env
-        ).prettyPrint
-      )
-    )
 
     override def prettyPrint: String = {
       val eString: String = if (e == BlankExprDropDown()) "?" else e.prettyPrint

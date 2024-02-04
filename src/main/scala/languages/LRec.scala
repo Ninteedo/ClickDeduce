@@ -62,19 +62,6 @@ class LRec extends LLam {
 
     override def evalApply(value: Value): Value = e.eval(env ++ Map(f.toString -> this, v.toString -> value))
 
-    override lazy val valueText: Text.TypedTag[String] = div(
-      raw(
-        RecV(
-          f,
-          v,
-          TypePlaceholder(in_typ),
-          TypePlaceholder(out_typ),
-          ExprPlaceholder(e),
-          env
-        ).prettyPrint
-      )
-    )
-
     override def prettyPrint: String = prettyPrintRec(f, v, in_typ, out_typ, e)
   }
 

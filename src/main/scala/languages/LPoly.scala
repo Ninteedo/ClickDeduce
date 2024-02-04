@@ -1,6 +1,5 @@
 package languages
 
-import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
 class LPoly extends LData {
@@ -69,24 +68,17 @@ class LPoly extends LData {
 
   case class PolyType(typeVar: Type, incompleteType: Type) extends Type {
     override def prettyPrint: String = s"∀${typeVar.prettyPrintBracketed}. ${incompleteType.prettyPrintBracketed}"
-
-    override lazy val valueText: TypedTag[String] = div(
-      raw(
-        PolyType(TypePlaceholder(typeVar), TypePlaceholder(incompleteType)).prettyPrint
-      )
-    )
   }
 
   // values
 
   case class PolyV(typeVar: Type, e: Expr, env: Env) extends Value {
-    override val typ: Type = PolyType(typeVar, e.typeCheck(envToTypeEnv(env) + (typeVar.toString -> typeVar)))
+    override val typ: Type = typeVar match {
+      case TypeVar(v) => PolyType(typeVar, e.typeCheck(envToTypeEnv(env) + (v.toString -> typeVar)))
+      case other      => PolyVRequiresTypeVarType(other)
+    }
 
     override def prettyPrint: String = s"Λ${typeVar.prettyPrintBracketed}. ${e.prettyPrintBracketed}"
-
-    override lazy val valueText: TypedTag[String] = div(
-      raw(PolyV(TypePlaceholder(typeVar), ExprPlaceholder(e), env).prettyPrint)
-    )
   }
 
   case class TypeVarV(v: Literal, t: Type) extends Value {
