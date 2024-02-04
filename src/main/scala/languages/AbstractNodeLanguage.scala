@@ -401,7 +401,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     lazy val getEvalEnv: Env = getCorrectEnv(_.getChildrenEval, _.getEvalEnv)
 
     lazy val getTypeEnv: TypeEnv = getCorrectEnv(_.getChildrenTypeCheck, _.getTypeEnv)
-    
+
     private val visibleChildrenCache = collection.mutable.Map[DisplayMode, List[OuterNode]]()
 
     override def getVisibleChildren(mode: DisplayMode): List[OuterNode] = cacheQuery(
@@ -658,7 +658,10 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     private def getExprHtmlLine(mode: DisplayMode): String = {
       val constructor = typeClass.getConstructors()(0)
-      val arguments = lang +: args.map(_.getPlaceholder(mode))
+      val arguments = lang +: args.map {
+        case n: LiteralNode => n.getPlaceholder(mode, false)
+        case other => other.getPlaceholder(mode)
+      }
       constructor.newInstance(arguments: _*).asInstanceOf[Type].prettyPrint
     }
 
