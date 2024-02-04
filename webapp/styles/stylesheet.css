@@ -18,6 +18,13 @@
     --input-outline: #14141a;
     --disabled-input: #3c3f4e;
     --disabled-input-text: #b6b7b6;
+
+    --value-colour-on: #50fa7b;
+    --value-type-colour-on: #f1fa8c;
+    --value-colour-off: var(--foreground);
+    --value-type-colour-off: var(--foreground);
+    --value-colour: var(--value-colour-on);
+    --value-type-colour: var(--value-type-colour-on);
 }
 
 body {
@@ -229,11 +236,11 @@ div.scoped-variables {
 }
 
 .value {
-    color: var(--green);
+    color: var(--value-colour);
 }
 
 .value-type {
-    color: var(--yellow);
+    color: var(--value-type-colour);
 }
 
 .error-origin {
@@ -309,4 +316,10 @@ div.scoped-variables {
 
 .expr-selector-option.highlight {
     background-color: var(--highlighted-tree);
+}
+
+label, .prevent-select {
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
 }

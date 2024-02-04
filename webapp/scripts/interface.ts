@@ -14,6 +14,7 @@ export function resetInterfaceGlobals(): void {
     contextMenuSelectedElement = null;
     nextFocusElement = null;
     errorDiv = document.getElementById('error-message') as HTMLDivElement;
+    setupValueTypeColourHighlightingCheckbox();
 
     document.addEventListener('contextmenu', openContextMenu);
     document.addEventListener('click', closeContextMenu);
@@ -158,4 +159,23 @@ export function displayError(error: any): void {
         errorDiv.classList.add('fade-out');
         errorDiv.classList.remove('fade-in');
     }, 5000);
+}
+
+function setupValueTypeColourHighlightingCheckbox(): void {
+    const valueTypeColourCheckbox = document.getElementById('value-highlighting-toggle') as HTMLInputElement;
+    valueTypeColourCheckbox.checked = true;
+    valueTypeColourCheckbox.addEventListener('change', () => {
+        toggleValueTypeColourHighlighting(valueTypeColourCheckbox.checked);
+    });
+}
+
+function toggleValueTypeColourHighlighting(newState: boolean): void {
+    const rootStyle = document.documentElement.style;
+    if (newState) {
+        rootStyle.setProperty('--value-colour', 'var(--value-colour-on)');
+        rootStyle.setProperty('--value-type-colour', 'var(--value-type-colour-on)');
+    } else {
+        rootStyle.setProperty('--value-colour', 'var(--value-colour-off)');
+        rootStyle.setProperty('--value-type-colour', 'var(--value-type-colour-off)');
+    }
 }
