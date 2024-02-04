@@ -47,12 +47,6 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
       }
     }
 
-    "root should have the correct 'data-node-string'" in {
-      checkHtmlDocAllModes(tree) { doc =>
-        getRootElement(doc).attr("data-node-string") shouldBe tree.toString
-      }
-    }
-
     "have a child '.expr' div" should {
       "should exist" in {
         checkHtmlDocAllModes(tree) { doc =>
@@ -153,12 +147,6 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
         }
       }
 
-      "have the correct 'data-node-string'" in {
-        checkHtmlDocAllModes(tree) { doc =>
-          getRootElement(doc).attr("data-node-string") shouldBe tree.toString
-        }
-      }
-
       "have a correct '.node' div" should {
         val selector = "body > div.subtree > div.node"
 
@@ -218,8 +206,6 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
           forAll(modes) { mode =>
             checkHtmlDoc(tree)(mode) { doc =>
               (doc >> elementList(leftSubtreeSelector)).head.attr("data-tree-path") shouldBe "0"
-              (doc >> elementList(leftSubtreeSelector)).head.attr("data-node-string") shouldBe
-                tree.findChild(List(0)).get.toString
             }
           }
         }
@@ -271,8 +257,6 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
               forAll(modes) { mode =>
                 checkHtmlDoc(tree)(mode) { doc =>
                   getElement(doc).attr("data-tree-path") shouldBe "0-1"
-                  getElement(doc).attr("data-node-string") shouldBe
-                    tree.findChild(List(0, 1)).get.toString
                 }
               }
             }
@@ -293,8 +277,6 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
               forAll(modes) { mode =>
                 checkHtmlDoc(tree)(mode) { doc =>
                   getElement(doc).attr("data-tree-path") shouldBe "0-2"
-                  getElement(doc).attr("data-node-string") shouldBe
-                    tree.findChild(List(0, 2)).get.toString
                 }
               }
             }
@@ -317,15 +299,6 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
           forAll(modes) { mode =>
             checkHtmlDoc(tree)(mode) { doc =>
               (doc >> elementList(rightSubtreeSelector)).head.attr("data-tree-path") shouldBe "1"
-            }
-          }
-        }
-
-        "have the correct 'data-node-string'" in {
-          forAll(modes) { mode =>
-            checkHtmlDoc(tree)(mode) { doc =>
-              (doc >> elementList(rightSubtreeSelector)).head.attr("data-node-string") shouldBe
-                tree.findChild(List(1)).get.toString
             }
           }
         }
@@ -369,8 +342,6 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
         "match the node" in {
           checkHtmlDoc(tree)(mode) { doc =>
             (doc >> elementList(selector)).head.attr("data-tree-path") shouldBe "0"
-            (doc >> elementList(selector)).head.attr("data-node-string") shouldBe
-              tree.findChild(List(0)).get.toString
           }
         }
 
@@ -398,8 +369,6 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
         "match the node" in {
           checkHtmlDoc(tree)(mode) { doc =>
             (doc >> elementList(selector)).head.attr("data-tree-path") shouldBe "1"
-            (doc >> elementList(selector)).head.attr("data-node-string") shouldBe
-              tree.findChild(List(1)).get.toString
           }
         }
       }
@@ -425,7 +394,6 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
             elements should have size 2
             forAll(Table(("element", "index"), elements.zipWithIndex: _*)) { (el, i) =>
               classesOf(el) should contain("axiom")
-              el.attr("data-node-string") shouldBe tree.findChild(List(0, 2, i)).get.toString
             }
           }
         }

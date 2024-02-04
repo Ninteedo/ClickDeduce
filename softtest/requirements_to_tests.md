@@ -268,7 +268,7 @@ A lot of the uncovered requirements are purely visual and rely on CSS styling, w
          should have two subtrees"
       3. Not tested
    5. NodeHMTLSpec -> all tests mentioning 'data-tree-path'
-   6. NodeHTMLSpec -> all tests mentioning 'data-node-string'
+   6. (Removed) NodeHTMLSpec -> all tests mentioning 'data-node-string'
    7. Not tested
 
 ### Actions

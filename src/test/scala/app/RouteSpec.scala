@@ -74,13 +74,6 @@ class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with J
         }
       }
 
-      "has a subtree + axiom div with the correct node string data" in {
-        checkHtmlDoc { doc =>
-          val nodeString = responseAs[NodeResponse].nodeString
-          doc >> elementList(s"div.subtree.axiom[data-node-string='$nodeString']") should not be empty
-        }
-      }
-
       "has only one subtree div" in {
         checkHtmlDoc { doc =>
           doc >> elementList("div.subtree") should have size 1

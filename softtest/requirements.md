@@ -406,7 +406,7 @@ Node trees are represented in the interface as HTML.
       3. It should also contain an annotation for the evaluation rule used, on the right-hand side of the
          subexpressions
    5. Each subtree should have a `data-tree-path` attribute, containing the [tree path](#tree-paths) of that subtree
-   6. Each subtree should have a `data-node-string` attribute, containing the [node string](#node-tree) of that subtree
+   6. (Removed) Each subtree should have a `data-node-string` attribute, containing the [node string](#node-tree) of that subtree
    7. Any tooltips in the tree should have the `tooltip` class and be hidden by default
 
 ### Actions
