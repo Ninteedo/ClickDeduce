@@ -56,12 +56,12 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
     "have a child '.expr' div" should {
       "should exist" in {
         checkHtmlDocAllModes(tree) { doc =>
-          doc >> elementList("div.subtree > div.expr") should have size 1
+          doc >> elementList("div.subtree > div.node > div.expr") should have size 1
         }
       }
 
       "contain a div which contains an input" should {
-        val selector = "div.subtree > div.expr > div > input"
+        val selector = "div.subtree > div.node > div.expr > div > input"
 
         "should exist" in {
           checkHtmlDocAllModes(tree) { doc =>
@@ -91,7 +91,7 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
 
       "contain a result div" should {
         "have eval results in edit and eval modes" should {
-          val selector = "div.subtree > div.expr > div.eval-result"
+          val selector = "div.subtree > div.node > div.eval-result"
           val modes = TableFor1("mode", DisplayMode.Edit, DisplayMode.Evaluation)
 
           "should exist" in {
@@ -104,7 +104,7 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
         }
 
         "have type-check results in type-check mode" should {
-          val selector = "div.subtree > div.expr > div.type-check-result"
+          val selector = "div.subtree > div.node > div.type-check-result"
 
           "should exist" in {
             checkHtmlDoc(tree)(DisplayMode.TypeCheck) { doc =>
@@ -204,10 +204,12 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
       }
 
       "left subtree" should {
+        val leftSubtreeSelector = rootArgsSelector + " > div.subtree:nth-child(1)"
+
         "not be an axiom" in {
           forAll(modes) { mode =>
             checkHtmlDoc(tree)(mode) { doc =>
-              classesOf((doc >> elementList(rootArgsSelector + " > div.subtree")).head) should not contain "axiom"
+              classesOf((doc >> elementList(leftSubtreeSelector)).head) should not contain "axiom"
             }
           }
         }
@@ -215,8 +217,8 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
         "match the node" in {
           forAll(modes) { mode =>
             checkHtmlDoc(tree)(mode) { doc =>
-              (doc >> elementList(rootArgsSelector + " > div.subtree")).head.attr("data-tree-path") shouldBe "0"
-              (doc >> elementList(rootArgsSelector + " > div.subtree")).head.attr("data-node-string") shouldBe
+              (doc >> elementList(leftSubtreeSelector)).head.attr("data-tree-path") shouldBe "0"
+              (doc >> elementList(leftSubtreeSelector)).head.attr("data-node-string") shouldBe
                 tree.findChild(List(0)).get.toString
             }
           }
@@ -225,13 +227,13 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
         "have an '.expr' div" in {
           forAll(modes) { mode =>
             checkHtmlDoc(tree)(mode) { doc =>
-              doc >> elementList(rootArgsSelector + " > div.subtree > div.expr") should have size 1
+              doc >> elementList(leftSubtreeSelector + " > div.node > div.expr") should have size 1
             }
           }
         }
 
         "have an input for the lambda variable name" in {
-          val inputSelector = rootArgsSelector + "> div.subtree:nth-child(1) > div.node > div.expr > div > input"
+          val inputSelector = leftSubtreeSelector + " > div.node > div.expr > div > input"
           forAll(modes) { mode =>
             checkHtmlDoc(tree)(mode) { doc =>
               doc >> elementList(inputSelector) should have size 1
@@ -244,7 +246,7 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
         }
 
         "have correct subtrees" should {
-          val depth2Selector = rootArgsSelector + " > div.subtree > div.args > div.subtree"
+          val depth2Selector = leftSubtreeSelector + " > div.args > div.subtree"
 
           "have two subtrees" in {
             forAll(modes) { mode =>
@@ -301,10 +303,12 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
       }
 
       "right subtree" should {
+        val rightSubtreeSelector = rootArgsSelector + " > div.subtree:nth-child(2)"
+
         "be an axiom" in {
           forAll(modes) { mode =>
             checkHtmlDoc(tree)(mode) { doc =>
-              classesOf((doc >> elementList(rootArgsSelector + " > div.subtree"))(1)) should contain("axiom")
+              classesOf((doc >> elementList(rightSubtreeSelector)).head) should contain("axiom")
             }
           }
         }
@@ -312,7 +316,7 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
         "have 'data-tree-path' equal to '1'" in {
           forAll(modes) { mode =>
             checkHtmlDoc(tree)(mode) { doc =>
-              (doc >> elementList(rootArgsSelector + " > div.subtree"))(1).attr("data-tree-path") shouldBe "1"
+              (doc >> elementList(rightSubtreeSelector)).head.attr("data-tree-path") shouldBe "1"
             }
           }
         }
@@ -320,7 +324,7 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
         "have the correct 'data-node-string'" in {
           forAll(modes) { mode =>
             checkHtmlDoc(tree)(mode) { doc =>
-              (doc >> elementList(rootArgsSelector + " > div.subtree"))(1).attr("data-node-string") shouldBe
+              (doc >> elementList(rightSubtreeSelector)).head.attr("data-node-string") shouldBe
                 tree.findChild(List(1)).get.toString
             }
           }
@@ -329,7 +333,7 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
         "have an '.expr' div" in {
           forAll(modes) { mode =>
             checkHtmlDoc(tree)(mode) { doc =>
-              doc >> elementList(rootArgsSelector + " > div.subtree > div.expr") should have size 1
+              doc >> elementList(rightSubtreeSelector + " > div.node > div.expr") should have size 1
             }
           }
         }
@@ -337,7 +341,7 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
         "have an '.annotation-axiom' div" in {
           forAll(modes) { mode =>
             checkHtmlDoc(tree)(mode) { doc =>
-              doc >> elementList(rootArgsSelector + " > div.subtree > div.annotation-axiom") should have size 1
+              doc >> elementList(rightSubtreeSelector + " > div.annotation-axiom") should have size 1
             }
           }
         }
@@ -371,7 +375,7 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
         }
 
         "have an input for the lambda variable name" in {
-          val inputSelector = selector + " > div.expr > div > input"
+          val inputSelector = selector + " > div.node > div.expr > div > input"
           checkHtmlDoc(tree)(mode) { doc =>
             doc >> elementList(inputSelector) should have size 1
             val element = (doc >> elementList(inputSelector)).head

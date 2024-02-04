@@ -93,15 +93,21 @@ class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with J
         }
       }
 
-      "the subtree has a child .expr div" in {
+      "the subtree has a child .node div" in {
         checkHtmlDoc { doc =>
-          doc >> elementList("div.subtree > div.expr") should not be empty
+          doc >> elementList("div.subtree > div.node") should not be empty
+        }
+      }
+
+      "the child .node div has a child .expr div" in {
+        checkHtmlDoc { doc =>
+          doc >> elementList("div.subtree > div.node > div.expr") should not be empty
         }
       }
 
       "the subtree has a child .expr div which has a child .expr-dropdown select" in {
         checkHtmlDoc { doc =>
-          doc >> elementList("div.subtree > div.expr > select.expr-dropdown") should not be empty
+          doc >> elementList("div.subtree > div.node > div.expr > select.expr-dropdown") should not be empty
         }
       }
 

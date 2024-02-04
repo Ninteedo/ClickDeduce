@@ -45,8 +45,7 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
     )
   }
 
-
-  def fullExprBottomDiv(node: ExprNode): HTML = div(cls := "expr node", envDiv(node), exprDiv(node), resultDiv(node))
+  def fullExprBottomDiv(node: ExprNode): HTML = div(cls := "node", envDiv(node), exprDiv(node), resultDiv(node))
 
   def envDiv(node: ExprNode): HTML = {
     val env = mode match {
@@ -54,10 +53,10 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
       case DisplayMode.Evaluation => node.getEvalEnv
       case DisplayMode.TypeCheck  => node.getTypeEnv
     }
-    val variablesHtml: HTML = div(
-      raw(if (env.isEmpty) "" else env.map((k, v) => s"$k &rarr; ${v.toHtml}").mkString("[", ", ", "]"))
-    )
-    val delimiter = raw(if (mode == DisplayMode.TypeCheck) " &#x22a2;" else if (env.nonEmpty) "," else "")
+    val variablesHtml: Option[HTML] =
+      if (env.isEmpty) None else Some(div(raw(env.map((k, v) => s"$k &rarr; ${v.toHtml}").mkString("[", ", ", "]"))))
+    val delimiter =
+      if (mode == DisplayMode.TypeCheck) Some(raw(" &#x22a2;")) else if (env.nonEmpty) Some(raw(",")) else None
 
     div(
       cls := "scoped-variables",
@@ -67,23 +66,23 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
     )
   }
 
-  def exprDiv(node: ExprNode): HTML = if (node.isPhantom) {
+  def exprDiv(node: ExprNode): HTML = div((if (node.isPhantom) {
     node.toHtmlLineReadOnly(mode)(display := "inline")
   } else {
     node.toHtmlLine(mode)
-  }
+  }))(cls := "expr")
 
-  def resultDiv(node: ExprNode): HTML = mode match {
+  def resultDiv(node: ExprNode): Seq[HTML] = mode match {
     case DisplayMode.Edit =>
       val typeCheckResult = node.getType
-      if (typeCheckResult.isError) div(typeCheckTurnstileSpan, typeCheckResultDiv(node))
+      if (typeCheckResult.isError) List(typeCheckTurnstileSpan, typeCheckResultDiv(node))
       else {
         val evalResult = node.getEditValueResult
-        if (!evalResult.isError && !evalResult.isPlaceholder) div(evalArrowSpan, editEvalResultDiv(node))
-        else div(typeCheckTurnstileSpan, typeCheckResultDiv(node))
+        if (!evalResult.isError && !evalResult.isPlaceholder) List(evalArrowSpan, editEvalResultDiv(node))
+        else List(typeCheckTurnstileSpan, typeCheckResultDiv(node))
       }
-    case DisplayMode.TypeCheck  => div(typeCheckTurnstileSpan, typeCheckResultDiv(node))
-    case DisplayMode.Evaluation => div(evalArrowSpan, evalResultDiv(node))
+    case DisplayMode.TypeCheck  => List(typeCheckTurnstileSpan, typeCheckResultDiv(node))
+    case DisplayMode.Evaluation => List(evalArrowSpan, evalResultDiv(node))
   }
 
   def typeNode(node: TypeNode): HTML = {
@@ -104,9 +103,9 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
     )
   }
 
-  def fullTypeBottomDiv(node: TypeNode): HTML = div(cls := "type node", typeDiv(node))
+  def fullTypeBottomDiv(node: TypeNode): HTML = div(cls := "node", typeDiv(node))
 
-  def typeDiv(node: TypeNode): HTML = node.toHtmlLine(mode)
+  def typeDiv(node: TypeNode): HTML = node.toHtmlLine(mode)(cls := "type")
 
   private val typeCheckTurnstileSpan: HTML = span(paddingLeft := "0.5ch", paddingRight := "0.5ch", raw(":"))
   private def typeCheckResultDiv(node: ExprNode): HTML =
