@@ -125,8 +125,8 @@ trait AbstractLanguage {
       val arguments = this match {
         case v0: Product =>
           v0.productIterator.toList.collect({
-            case v: Value   => ValuePlaceholder(v)
-            case t: Type    => TypePlaceholder(t)
+            case v: Value   => ValuePlaceholder(v.valueText.toString, v.needsBrackets)
+            case t: Type    => TypePlaceholder(t.valueText.toString, t.needsBrackets)
             case e: Expr    => ExprPlaceholder(e)
             case s: String  => s
             case l: Literal => l
@@ -134,7 +134,7 @@ trait AbstractLanguage {
           })
       }
       val valueInstance = constructor.newInstance(lang +: arguments: _*).asInstanceOf[Value]
-      div(raw(valueInstance.prettyPrint + ": " + typ.prettyPrint))
+      div(div(raw(valueInstance.prettyPrint), cls := "value"), span(": "), div(typ.valueText, cls := "value-type"))
     }
 
     val typ: Type
@@ -162,7 +162,23 @@ trait AbstractLanguage {
 
     lazy val tooltipText: String = toString
 
-    lazy val valueText: TypedTag[String] = div(prettyPrint)
+    lazy val valueText: TypedTag[String] = {
+      val constructor = getClass.getConstructors.head
+      val arguments = this match {
+        case v0: Product =>
+          v0.productIterator.toList.collect({
+            case v: Value => ValuePlaceholder(v.valueText.toString, v.needsBrackets)
+            case t: Type => TypePlaceholder(t.valueText.toString, t.needsBrackets)
+            case e: Expr => ExprPlaceholder(e)
+            case s: String => s
+            case l: Literal => l
+            case other => other
+          }
+          )
+      }
+      val valueInstance = constructor.newInstance(lang +: arguments: _*).asInstanceOf[Type]
+      div(raw(valueInstance.prettyPrint))
+    }
 
     val isError: Boolean = false
 
@@ -193,7 +209,7 @@ trait AbstractLanguage {
 
     override lazy val tooltipText: String = message
 
-    override lazy val valueText: TypedTag[String] = div("?")
+    override lazy val valueText: TypedTag[String] = div("?", cls := "error-origin")
 
     override val isError: Boolean = true
 
@@ -230,7 +246,7 @@ trait AbstractLanguage {
 
     override lazy val tooltipText: String = message
 
-    override lazy val valueText: TypedTag[String] = div("?")
+    override lazy val valueText: TypedTag[String] = div("?", cls := "error-origin")
 
     override val isError: Boolean = true
 
@@ -259,18 +275,16 @@ trait AbstractLanguage {
   }
 
   object Literal {
-    def fromString(s: String): Literal = {
-      if (List("true", "false").contains(s.toLowerCase)) {
-        LiteralBool(s.toBoolean)
-      } else if (s.startsWith("\"") && s.endsWith("\"") && s.length > 1) {
-        LiteralString(s.substring(1, s.length - 1))
-      } else if ("-?\\d+".r.matches(s)) {
-        LiteralInt(BigInt(s))
-      } else if ("[A-Za-z_$][\\w_$]*".r.matches(s)) {
-        LiteralIdentifier(s)
-      } else {
-        LiteralAny(s)
-      }
+    def fromString(s: String): Literal = if (List("true", "false").contains(s.toLowerCase)) {
+      LiteralBool(s.toBoolean)
+    } else if (s.startsWith("\"") && s.endsWith("\"") && s.length > 1) {
+      LiteralString(s.substring(1, s.length - 1))
+    } else if ("-?\\d+".r.matches(s)) {
+      LiteralInt(BigInt(s))
+    } else if ("[A-Za-z_$][\\w_$]*".r.matches(s)) {
+      LiteralIdentifier(s)
+    } else {
+      LiteralAny(s)
     }
   }
 

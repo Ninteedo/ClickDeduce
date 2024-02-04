@@ -1,5 +1,6 @@
 package languages
 
+import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
 class LPoly extends LData {
@@ -86,6 +87,8 @@ class LPoly extends LData {
 
     override def prettyPrint: String = s"${v.toString}[${t.prettyPrint}]"
 
+    override lazy val valueText: TypedTag[String] = div(raw(t.prettyPrint))
+
     override val needsBrackets: Boolean = false
   }
 
@@ -117,6 +120,8 @@ class LPoly extends LData {
 
   case class UnknownTypeVar(v: Literal) extends TypeError {
     override val message: String = s"Unknown type variable $v"
+
+    override def prettyPrint: String = v.toString
   }
 
   override def calculateExprClassList: List[Class[Expr]] =

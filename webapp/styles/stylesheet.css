@@ -220,7 +220,7 @@ div.scoped-variables {
     opacity: 1;
 }
 
-.tooltip > div {
+.tooltip div {
     display: inline;
 }
 
