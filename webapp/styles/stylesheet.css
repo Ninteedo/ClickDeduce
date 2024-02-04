@@ -22,7 +22,7 @@
     --value-colour-on: #50fa7b;
     --value-type-colour-on: #f1fa8c;
     --value-colour-off: var(--foreground);
-    --value-type-colour-off: var(--foreground);
+    --value-type-colour-off: #c3c5c7;
     --value-colour: var(--value-colour-on);
     --value-type-colour: var(--value-type-colour-on);
 }
@@ -128,7 +128,7 @@ form {
     justify-content: space-between;
 }
 
-.node div {
+.node div:not(.expr-selector-container) {
     display: inline;
 }
 
@@ -136,16 +136,8 @@ div.scoped-variables {
     display: inline-flex;
 }
 
-/*.node {*/
-/*    display: flex;*/
-/*    align-items: center;*/
-/*    justify-content: space-between;*/
-/*    margin-top: 7px;*/
-/*}*/
-
 .annotation-axiom {
     align-self: end;
-    /*margin-bottom: 7px;*/
     font-size: 12px;
     color: var(--comment);
 }
@@ -275,7 +267,7 @@ div.scoped-variables {
     visibility: hidden;
 }
 
-.expr-selector-container {
+div.expr-selector-container {
     display: inline-flex;
     position: relative;
 }
@@ -318,7 +310,7 @@ div.scoped-variables {
     background-color: var(--highlighted-tree);
 }
 
-label, .prevent-select {
+label, .prevent-select, #tree :not(input) {
     user-select: none;
     -webkit-user-select: none;
     -ms-user-select: none;
