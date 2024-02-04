@@ -218,7 +218,7 @@ trait AbstractLanguage {
 
     override lazy val tooltipText: String = message
 
-    override lazy val valueText: TypedTag[String] = div("?", cls := ClassDict.ERROR_ORIGIN)
+    override lazy val valueText: TypedTag[String] = div("!", cls := ClassDict.ERROR_ORIGIN)
 
     override val isError: Boolean = true
 
@@ -255,7 +255,7 @@ trait AbstractLanguage {
 
     override lazy val tooltipText: String = message
 
-    override lazy val valueText: TypedTag[String] = div("?", cls := ClassDict.ERROR_ORIGIN)
+    override lazy val valueText: TypedTag[String] = div("!", cls := ClassDict.ERROR_ORIGIN)
 
     override val isError: Boolean = true
 
