@@ -7,9 +7,12 @@
 
 <body onload="initialise()">
 
-<h2>ClickDeduce</h2>
+<!--<h2>ClickDeduce</h2>-->
 
-<div id="lang-selector-div">
+<div>
+  <label for="lang-selector-div">Language:</label>
+  <div id="lang-selector-div" style="display: inline;">
+  </div>
 </div>
 
 <div id="mode-selector-div">
@@ -27,15 +30,22 @@
   <input type="hidden" id="nodeUserInput" value="">
   <input type="submit" id="start-node-button" value="Start Node Blank">
 </form>
-<br>
-<button onclick="undo()" id="undoButton">Undo</button>
-<button onclick="redo()" id="redoButton">Redo</button>
 
-<button onclick="saveTree()" id="saveButton">Save</button>
-<button onclick="loadTree()" id="loadButton">Load</button>
+<div>
+  <div>
+    <button onclick="undo()" id="undoButton">Undo</button>
+    <button onclick="redo()" id="redoButton">Redo</button>
+  </div>
+  <div>
+    <button onclick="saveTree()" id="saveButton">Save</button>
+    <button onclick="loadTree()" id="loadButton">Load</button>
+  </div>
+</div>
 
-<br>
-<input type="checkbox" id="value-highlighting-toggle"/><label for="value-highlighting-toggle">Value Highlighting</label>
+<div>
+  <input type="checkbox" id="value-highlighting-toggle"/>
+  <label for="value-highlighting-toggle">Value Highlighting</label>
+</div>
 
 <div id="tree-container">
   <div id="tree-buttons">
