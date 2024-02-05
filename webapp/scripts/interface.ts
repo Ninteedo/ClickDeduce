@@ -1,7 +1,7 @@
 import {handleLiteralChanged} from "./actions";
 import {getActiveInputs, selectorEnterPressed} from "./treeManipulation";
 import {hasClassOrParentHasClass} from "./utils";
-import {panzoomInstance, tree} from "./initialise";
+import {panzoomInstance} from "./initialise";
 
 let errorDiv: HTMLDivElement;
 export let nextFocusElement: HTMLElement = null;
@@ -130,17 +130,21 @@ function closeContextMenu(e: MouseEvent): void {
 /**
  * Zooms the tree to fit the container.
  */
-export function zoomToFit(): void {
+export async function zoomToFit(): Promise<void> {
     const container: HTMLElement = document.getElementById('tree-container');
-    const firstSubtree: Element = tree.children[0];
+    const firstSubtree: Element = document.querySelector('.subtree[data-tree-path=""]');
 
-    const widthScale: number = container.clientWidth / firstSubtree.clientWidth;
-    const heightScale: number = container.clientHeight / firstSubtree.clientHeight;
-
-    const newScale: number = Math.min(widthScale, heightScale);
+    const scaleWidth = container.clientWidth / firstSubtree.clientWidth;
 
     panzoomInstance.moveTo(0, 0);
-    panzoomInstance.zoomAbs(0, 0, newScale);
+    panzoomInstance.zoomAbs(0, 0, scaleWidth);
+
+    // tiny delay to allow the panzoomInstance to update
+    await new Promise(resolve => setTimeout(resolve, 1));
+
+    const left = container.getBoundingClientRect().left - firstSubtree.getBoundingClientRect().left;
+
+    panzoomInstance.moveBy(left, 0, false);
 }
 
 /**
