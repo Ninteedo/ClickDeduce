@@ -22,6 +22,11 @@ libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % "2.8.0" % Test
 
 libraryDependencies += "net.ruippeixotog" %% "scala-scraper" % "3.1.1"
 
+enablePlugins(ScalaJSPlugin)
+scalaJSUseMainModuleInitializer := true
+
+libraryDependencies += "com.lihaoyi" %%% "scalatags" % "0.12.0"
+
 lazy val root = (project in file("."))
   .settings(
     name := "ClickDeduce"
