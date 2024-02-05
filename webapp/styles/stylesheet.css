@@ -243,6 +243,7 @@ div.scoped-variables {
 
 .error-origin {
     color: var(--red);
+    font-family: 'Roboto Mono', sans-serif;
 }
 
 .error-child {
