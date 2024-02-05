@@ -7,11 +7,13 @@ class LLet extends LIf {
     override def evalInner(env: Env): Value = v match {
       case LiteralIdentifier(identifier) => env.getOrElse(identifier, UnknownVariableEvalError(v))
       case _                             => InvalidIdentifierEvalError(v)
+    override def evalInner(env: ValueEnv): Value = v match {
     }
 
     override def typeCheckInner(tEnv: TypeEnv): Type = v match {
       case LiteralIdentifier(identifier) => tEnv.getOrElse(identifier, UnknownVariableTypeError(v))
       case _                             => InvalidIdentifierTypeError(v)
+      case LiteralIdentifier(identifier) =>
     }
 
     override def prettyPrint: String = v.toString
@@ -24,7 +26,7 @@ class LLet extends LIf {
   }
 
   case class Let(v: Literal, assign: Expr, bound: Expr) extends Expr {
-    override def evalInner(env: Env): Value = v match {
+    override def evalInner(env: ValueEnv): Value = v match {
       case LiteralIdentifier(identifier) =>
         val assign_val: Value = assign.eval(env)
         if (assign_val.isError) assign_val else bound.eval(env + (identifier -> assign_val))
@@ -38,10 +40,10 @@ class LLet extends LIf {
       case _ => InvalidIdentifierTypeError(v)
     }
 
-    override def getChildrenBase(env: Env): List[(Term, Env)] =
+    override def getChildrenBase(env: ValueEnv): List[(Term, ValueEnv)] =
       List((v, env), (assign, env), (bound, env + (v.toString -> assign.eval(env))))
 
-    override def getChildrenEval(env: Env): List[(Term, Env)] =
+    override def getChildrenEval(env: ValueEnv): List[(Term, ValueEnv)] =
       List((assign, env), (bound, env + (v.toString -> assign.eval(env))))
 
     override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] =

@@ -6,7 +6,7 @@ class LData extends LRec {
   // expressions
 
   case class Pair(e1: Expr, e2: Expr) extends Expr {
-    override def evalInner(env: Env): Value = PairV(e1.eval(env), e2.eval(env))
+    override def evalInner(env: ValueEnv): Value = PairV(e1.eval(env), e2.eval(env))
 
     override def typeCheckInner(tEnv: TypeEnv): Type = PairType(e1.typeCheck(tEnv), e2.typeCheck(tEnv))
 
@@ -16,7 +16,7 @@ class LData extends LRec {
   }
 
   case class Fst(e: Expr) extends Expr {
-    override def evalInner(env: Env): Value = e.eval(env) match {
+    override def evalInner(env: ValueEnv): Value = e.eval(env) match {
       case PairV(v1, _) => v1
       case other        => TupleOperationOnNonTupleValue(other)
     }
@@ -32,7 +32,7 @@ class LData extends LRec {
   }
 
   case class Snd(e: Expr) extends Expr {
-    override def evalInner(env: Env): Value = e.eval(env) match {
+    override def evalInner(env: ValueEnv): Value = e.eval(env) match {
       case PairV(_, v2) => v2
       case other        => TupleOperationOnNonTupleValue(other)
     }
@@ -48,7 +48,7 @@ class LData extends LRec {
   }
 
   case class LetPair(x: Literal, y: Literal, assign: Expr, bound: Expr) extends Expr {
-    override def evalInner(env: Env): Value = verifyLiteralIdentifierEval(x, y) {
+    override def evalInner(env: ValueEnv): Value = verifyLiteralIdentifierEval(x, y) {
       assign.eval(env) match {
         case PairV(v1, v2)    => bound.eval(env + (x.toString -> v1) + (y.toString -> v2))
         case error: EvalError => error
@@ -67,14 +67,14 @@ class LData extends LRec {
     override def prettyPrint: String =
       s"let pair ($x, $y) = ${assign.prettyPrintBracketed} in ${bound.prettyPrintBracketed}"
 
-    override def getChildrenBase(env: Env): List[(Term, Env)] = List(
+    override def getChildrenBase(env: ValueEnv): List[(Term, ValueEnv)] = List(
       (x, env),
       (y, env),
       (assign, env),
       (bound, env + (x.toString -> Fst(assign).eval(env)) + (y.toString -> Snd(assign).eval(env)))
     )
 
-    override def getChildrenEval(env: Env): List[(Term, Env)] =
+    override def getChildrenEval(env: ValueEnv): List[(Term, ValueEnv)] =
       List((assign, env), (bound, env + (x.toString -> Fst(assign).eval(env)) + (y.toString -> Snd(assign).eval(env))))
 
     override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] = List(
@@ -89,7 +89,7 @@ class LData extends LRec {
   }
 
   case class UnitExpr() extends Expr {
-    override def evalInner(env: Env): Value = UnitV()
+    override def evalInner(env: ValueEnv): Value = UnitV()
 
     override def typeCheckInner(tEnv: TypeEnv): Type = EmptyType()
 
@@ -99,7 +99,7 @@ class LData extends LRec {
   }
 
   case class Left(e: Expr, rightType: Type) extends Expr {
-    override def evalInner(env: Env): Value = LeftV(e.eval(env), rightType)
+    override def evalInner(env: ValueEnv): Value = LeftV(e.eval(env), rightType)
 
     override def typeCheckInner(tEnv: TypeEnv): Type = UnionType(e.typeCheck(tEnv), rightType)
 
@@ -109,7 +109,7 @@ class LData extends LRec {
   }
 
   case class Right(leftType: Type, e: Expr) extends Expr {
-    override def evalInner(env: Env): Value = RightV(leftType, e.eval(env))
+    override def evalInner(env: ValueEnv): Value = RightV(leftType, e.eval(env))
 
     override def typeCheckInner(tEnv: TypeEnv): Type = UnionType(leftType, e.typeCheck(tEnv))
 
@@ -119,7 +119,7 @@ class LData extends LRec {
   }
 
   case class CaseSwitch(e: Expr, l: Literal, r: Literal, lExpr: Expr, rExpr: Expr) extends Expr {
-    override def evalInner(env: Env): Value = verifyLiteralIdentifierEval(l, r) {
+    override def evalInner(env: ValueEnv): Value = verifyLiteralIdentifierEval(l, r) {
       e.eval(env) match {
         case LeftV(v, rightType) => lExpr.eval(env + (l.toString -> v))
         case RightV(leftType, v) => rExpr.eval(env + (r.toString -> v))
@@ -142,7 +142,7 @@ class LData extends LRec {
       s"case ${e.prettyPrintBracketed} of " +
         s"{ left($l) ⇒ ${lExpr.prettyPrintBracketed}; right($r) ⇒ ${rExpr.prettyPrintBracketed} }"
 
-    override def getChildrenBase(env: Env): List[(Term, Env)] = {
+    override def getChildrenBase(env: ValueEnv): List[(Term, ValueEnv)] = {
       val (lVal, rVal): (Value, Value) = e.eval(env) match {
         case LeftV(v, rTyp)  => (v, HiddenValue(rTyp))
         case RightV(lTyp, v) => (HiddenValue(lTyp), v)
@@ -151,7 +151,7 @@ class LData extends LRec {
       List((e, env), (lExpr, env + (l.toString -> lVal)), (rExpr, env + (r.toString -> rVal)))
     }
 
-    override def getChildrenEval(env: Env): List[(Term, Env)] = e.eval(env) match {
+    override def getChildrenEval(env: ValueEnv): List[(Term, ValueEnv)] = e.eval(env) match {
       case LeftV(v, _)  => List((e, env), (lExpr, env + (l.toString -> v)))
       case RightV(_, v) => List((e, env), (rExpr, env + (r.toString -> v)))
       case other        => List((e, env))

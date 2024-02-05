@@ -13,11 +13,11 @@ class LArithTest extends TestTemplate[Expr, Value, Type] {
   }
 
   property("Num type-checks to IntType") {
-    forAll(nums)(n => Num(n).typeCheck(Map()) shouldBe IntType())
+    forAll(nums)(n => Num(n).typeCheck() shouldBe IntType())
   }
 
   property("Num correctly evaluates to NumV") {
-    forAll(nums)(n => Num(n).eval(Map()) shouldBe NumV(n))
+    forAll(nums)(n => Num(n).eval() shouldBe NumV(n))
   }
 
   /** Run tests for binary arithmetic operations.
@@ -103,18 +103,18 @@ class LArithTest extends TestTemplate[Expr, Value, Type] {
 
   property("Commutativity of expressions") {
     forAll(nested3DepthExpressionsTable) {
-      case (Plus(e1, e2), _, _)  => Plus(e1, e2).eval(Map()) shouldBe Plus(e2, e1).eval(Map())
-      case (Times(e1, e2), _, _) => Times(e1, e2).eval(Map()) shouldBe Times(e2, e1).eval(Map())
+      case (Plus(e1, e2), _, _)  => Plus(e1, e2).eval() shouldBe Plus(e2, e1).eval()
+      case (Times(e1, e2), _, _) => Times(e1, e2).eval() shouldBe Times(e2, e1).eval()
     }
   }
 
   property("Identity expressions have no effect") {
     forAll(nested3DepthExpressionsTable) {
       if (Random.nextBoolean()) { case (e, res, _) =>
-        Plus(e, Num(0)).eval(Map()) shouldBe res
+        Plus(e, Num(0)).eval() shouldBe res
       }
       else { case (e, res, _) =>
-        Times(e, Num(1)).eval(Map()) shouldBe res
+        Times(e, Num(1)).eval() shouldBe res
       }
     }
   }
@@ -157,8 +157,8 @@ class LArithTest extends TestTemplate[Expr, Value, Type] {
     val invalidNumLiteralsTable = Table("InvalidNumLiterals", invalidNumLiterals: _*)
     forAll(invalidNumLiteralsTable) { literal =>
       {
-        Num(literal).eval(Map()) shouldBe an[EvalError]
-        Num(literal).typeCheck(Map()) shouldBe an[TypeError]
+        Num(literal).eval() shouldBe an[EvalError]
+        Num(literal).typeCheck() shouldBe an[TypeError]
       }
     }
   }
@@ -166,8 +166,8 @@ class LArithTest extends TestTemplate[Expr, Value, Type] {
   property("Num with integer literal inputs is correctly interpreted") {
     forAll(nums) { num =>
       {
-        Num(Literal.fromString(num.toString)).eval(Map()) shouldBe NumV(num)
-        Num(LiteralInt(num)).eval(Map()) shouldBe NumV(num)
+        Num(Literal.fromString(num.toString)).eval() shouldBe NumV(num)
+        Num(LiteralInt(num)).eval() shouldBe NumV(num)
       }
     }
   }
@@ -190,17 +190,17 @@ class LArithTest extends TestTemplate[Expr, Value, Type] {
   }
 
   property("Plus and Times pass errors on") {
-    val invalidNumType = Num(LiteralString("invalid")).typeCheck(Map())
-    Plus(Num(LiteralString("invalid")), Num(5)).typeCheck(Map()) shouldEqual invalidNumType
-    Plus(Num(5), Num(LiteralString("invalid"))).typeCheck(Map()) shouldEqual invalidNumType
-    Times(Num(LiteralString("invalid")), Num(5)).typeCheck(Map()) shouldEqual invalidNumType
-    Times(Num(5), Num(LiteralString("invalid"))).typeCheck(Map()) shouldEqual invalidNumType
+    val invalidNumType = Num(LiteralString("invalid")).typeCheck()
+    Plus(Num(LiteralString("invalid")), Num(5)).typeCheck() shouldEqual invalidNumType
+    Plus(Num(5), Num(LiteralString("invalid"))).typeCheck() shouldEqual invalidNumType
+    Times(Num(LiteralString("invalid")), Num(5)).typeCheck() shouldEqual invalidNumType
+    Times(Num(5), Num(LiteralString("invalid"))).typeCheck() shouldEqual invalidNumType
 
-    val invalidNumValue = Num(LiteralString("invalid")).eval(Map())
-    Plus(Num(LiteralString("invalid")), Num(5)).eval(Map()) shouldEqual invalidNumValue
-    Plus(Num(5), Num(LiteralString("invalid"))).eval(Map()) shouldEqual invalidNumValue
-    Times(Num(LiteralString("invalid")), Num(5)).eval(Map()) shouldEqual invalidNumValue
-    Times(Num(5), Num(LiteralString("invalid"))).eval(Map()) shouldEqual invalidNumValue
+    val invalidNumValue = Num(LiteralString("invalid")).eval()
+    Plus(Num(LiteralString("invalid")), Num(5)).eval() shouldEqual invalidNumValue
+    Plus(Num(5), Num(LiteralString("invalid"))).eval() shouldEqual invalidNumValue
+    Times(Num(LiteralString("invalid")), Num(5)).eval() shouldEqual invalidNumValue
+    Times(Num(5), Num(LiteralString("invalid"))).eval() shouldEqual invalidNumValue
   }
 
   property("Attempting to evaluate an expression not defined in LArith results in an error") {

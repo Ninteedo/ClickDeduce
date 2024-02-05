@@ -23,13 +23,13 @@ trait TestTemplate[E <: ClickDeduceLanguage#Expr, V <: ClickDeduceLanguage#Value
   def testExpression(expressionName: String, table: TableFor3[E, V, T]): Unit = {
     property(s"$expressionName type-checks correctly") {
       forAll(table)((expr, _, typ) => {
-        expr.typeCheck(Map()) shouldBe typ
+        expr.typeCheck() shouldBe typ
       })
     }
 
     property(s"$expressionName evaluates correctly") {
       forAll(table)((expr, res, _) => {
-        expr.eval(Map()) shouldBe res
+        expr.eval() shouldBe res
       })
     }
   }

@@ -17,48 +17,48 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
   testExpression(
     "Lambda",
     createExprTable(
-      (incrementFunction, LambdaV("x", IntType(), Plus(Var("x"), Num(1)), Map()), Func(IntType(), IntType())),
+      (incrementFunction, LambdaV("x", IntType(), Plus(Var("x"), Num(1)), Env()), Func(IntType(), IntType())),
       (
         Lambda("x", BoolType(), Equal(Var("x"), Bool(true))),
-        LambdaV("x", BoolType(), Equal(Var("x"), Bool(true)), Map()),
+        LambdaV("x", BoolType(), Equal(Var("x"), Bool(true)), Env()),
         Func(BoolType(), BoolType())
       ),
       (
         twiceFunction,
-        LambdaV("f", twiceFunction.typ, twiceFunction.e, Map()),
+        LambdaV("f", twiceFunction.typ, twiceFunction.e, Env()),
         Func(Func(IntType(), IntType()), Func(IntType(), IntType()))
       )
     )
   )
 
   property("Lambda correctly type-checks with existing environment") {
-    val exampleEnv: TypeEnv = Map("x" -> BoolType(), "y" -> BoolType())
+    val exampleEnv: TypeEnv = Env("x" -> BoolType(), "y" -> BoolType())
     incrementFunction.typeCheck(exampleEnv) shouldEqual Func(IntType(), IntType())
   }
 
   property("Lambda correctly evaluates with existing environment") {
-    val exampleEnv: Env = Map("x" -> BoolV(true), "y" -> NumV(76))
+    val exampleEnv: ValueEnv = Env("x" -> BoolV(true), "y" -> NumV(76))
     incrementFunction.eval(exampleEnv) shouldEqual LambdaV("x", IntType(), Plus(Var("x"), Num(1)), exampleEnv)
   }
 
   property("Apply correctly type-checks") {
-    Apply(incrementFunction, Num(24)).typeCheck(Map()) shouldEqual IntType()
-    Apply(incrementFunction, Num(24)).typeCheck(Map("x" -> BoolType(), "y" -> IntType())) shouldEqual IntType()
+    Apply(incrementFunction, Num(24)).typeCheck() shouldEqual IntType()
+    Apply(incrementFunction, Num(24)).typeCheck(Env("x" -> BoolType(), "y" -> IntType())) shouldEqual IntType()
 
     Apply(Lambda("a", BoolType(), IfThenElse(Var("a"), Num(5), Num(10))), Bool(true))
-      .typeCheck(Map()) shouldEqual IntType()
+      .typeCheck() shouldEqual IntType()
     Apply(IfThenElse(Bool(false), incrementFunction, Lambda("b", IntType(), Times(Var("b"), Num(-1)))), Num(-3))
-      .typeCheck(Map()) shouldEqual IntType()
+      .typeCheck() shouldEqual IntType()
   }
 
   property("Apply correctly evaluates") {
-    Apply(incrementFunction, Num(24)).eval(Map()) shouldEqual NumV(25)
-    Apply(incrementFunction, Num(78)).eval(Map("x" -> NumV(2))) shouldEqual NumV(79)
+    Apply(incrementFunction, Num(24)).eval() shouldEqual NumV(25)
+    Apply(incrementFunction, Num(78)).eval(Env("x" -> NumV(2))) shouldEqual NumV(79)
 
     Apply(IfThenElse(Bool(false), incrementFunction, Lambda("b", IntType(), Times(Var("b"), Num(-1)))), Num(-3))
-      .eval(Map()) shouldEqual NumV(3)
+      .eval() shouldEqual NumV(3)
 
-    Apply(Apply(twiceFunction, incrementFunction), Num(4)).eval(Map()) shouldEqual NumV(6)
+    Apply(Apply(twiceFunction, incrementFunction), Num(4)).eval() shouldEqual NumV(6)
   }
 
   property("Apply results in error when left side is not a function") {
@@ -69,13 +69,13 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
       Apply(incrementFunction, Num(8))
     )
     leftExpressions.foreach { l =>
-      Apply(l, Num(4)).typeCheck(Map()) shouldBe an[ApplyToNonFunctionErrorType]
-      Apply(l, Num(4)).eval(Map()) shouldBe an[ApplyToNonFunctionError]
+      Apply(l, Num(4)).typeCheck() shouldBe an[ApplyToNonFunctionErrorType]
+      Apply(l, Num(4)).eval() shouldBe an[ApplyToNonFunctionError]
     }
   }
 
   property("Apply results in error when the right side does not match the function input type") {
-    val env = Map("bool" -> BoolType(), "int" -> IntType())
+    val env = Env("bool" -> BoolType(), "int" -> IntType())
     val expressions: TableFor1[Expr] = Table(
       "expr",
       Apply(incrementFunction, Bool(true)),
@@ -92,10 +92,10 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
   }
 
   property("Lambda has appropriate children expressions in type-check mode") {
-    incrementFunction.getChildrenTypeCheck(Map()) shouldEqual List((incrementFunction.e, Map("x" -> IntType())))
+    incrementFunction.getChildrenTypeCheck() shouldEqual List((incrementFunction.e, Env("x" -> IntType())))
 
-    incrementFunction.getChildrenTypeCheck(Map("y" -> BoolType())) shouldEqual List(
-      (incrementFunction.e, Map("x" -> IntType(), "y" -> BoolType()))
+    incrementFunction.getChildrenTypeCheck(Env("y" -> BoolType())) shouldEqual List(
+      (incrementFunction.e, Env("x" -> IntType(), "y" -> BoolType()))
     )
   }
 
@@ -306,7 +306,7 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
 
     val phantomTree = tree.getVisibleChildren(DisplayMode.Evaluation).last.asInstanceOf[ExprNode]
     phantomTree.getExpr shouldEqual Plus(Var("x"), Num(1))
-    phantomTree.getEvalEnv shouldEqual Map("x" -> NumV(8))
+    phantomTree.getEvalEnv shouldEqual Env("x" -> NumV(8))
     phantomTree.getValue shouldEqual NumV(9)
 
     val exprChoicePhantomExpr =
@@ -346,8 +346,8 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
     )
 
     val subExprNode = tree.children.last.asInstanceOf[VariableNode]
-    subExprNode.getEditEnv shouldEqual Map("x" -> HiddenValue(IntType()))
-    subExprNode.getTypeEnv shouldEqual Map("x" -> IntType())
+    subExprNode.getEditEnv shouldEqual Env("x" -> HiddenValue(IntType()))
+    subExprNode.getTypeEnv shouldEqual Env("x" -> IntType())
     subExprNode.getType shouldEqual IntType()
   }
 

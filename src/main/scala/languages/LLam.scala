@@ -8,7 +8,7 @@ import scala.collection.immutable.List
 class LLam extends LLet {
   // expressions
   case class Apply(e1: Expr, e2: Expr) extends Expr {
-    override def evalInner(env: Env): Value = e1.eval(env) match {
+    override def evalInner(env: ValueEnv): Value = e1.eval(env) match {
       case v1: FunctionValue => v1.evalApply(e2.eval(env))
       case v1                => ApplyToNonFunctionError(v1)
     }
@@ -18,7 +18,7 @@ class LLam extends LLet {
       case t1               => ApplyToNonFunctionErrorType(t1)
     }
 
-    override def getChildrenEval(env: Env = Map()): List[(Term, Env)] = (e1.eval(env), e2.eval(env)) match {
+    override def getChildrenEval(env: ValueEnv = ValueEnv.empty): List[(Term, ValueEnv)] = (e1.eval(env), e2.eval(env)) match {
       case (v1: FunctionValue, v2) => List((e1, env), (e2, env), v1.getFunctionEvaluation(v2))
       case _                       => List((e1, env), (e2, env))
     }
@@ -27,7 +27,7 @@ class LLam extends LLet {
   }
 
   case class Lambda(v: Literal, typ: Type, e: Expr) extends Expr {
-    override def evalInner(env: Env): Value = v match {
+    override def evalInner(env: ValueEnv): Value = v match {
       case LiteralIdentifier(identifier) => LambdaV(identifier, typ.typeCheck(envToTypeEnv(env)), e, env)
       case _                             => InvalidIdentifierEvalError(v)
     }
@@ -40,10 +40,10 @@ class LLam extends LLet {
       case _ => InvalidIdentifierTypeError(v)
     }
 
-    override def getChildrenBase(env: Env): List[(Term, Env)] =
+    override def getChildrenBase(env: ValueEnv): List[(Term, ValueEnv)] =
       List((v, env), (typ, env), (e, env + (v.toString -> HiddenValue(typ))))
 
-    override def getChildrenEval(env: Env): List[(Term, Env)] = Nil
+    override def getChildrenEval(env: ValueEnv): List[(Term, ValueEnv)] = Nil
 
     override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] = List((e, tEnv + (v.toString -> typ)))
 
@@ -85,17 +85,17 @@ class LLam extends LLet {
 
   // values
   trait FunctionValue extends Value {
-    def getFunctionEvaluation(applyValue: Value): (Expr, Env)
+    def getFunctionEvaluation(applyValue: Value): (Expr, ValueEnv)
 
     def evalApply(value: Value): Value
   }
 
-  case class LambdaV(v: Variable, inputType: Type, e: Expr, env: Env) extends FunctionValue {
+  case class LambdaV(v: Variable, inputType: Type, e: Expr, env: ValueEnv) extends FunctionValue {
     private val properInputType: Type = inputType.typeCheck(envToTypeEnv(env))
 
     override val typ: Type = Func(inputType, e.typeCheck(envToTypeEnv(env) + (v -> properInputType)))
 
-    override def getFunctionEvaluation(applyValue: Value): (Expr, Env) = (e, env + (v -> applyValue))
+    override def getFunctionEvaluation(applyValue: Value): (Expr, ValueEnv) = (e, env + (v -> applyValue))
 
     override def evalApply(value: Value): Value = e.eval(env + (v -> value))
 

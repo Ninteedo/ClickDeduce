@@ -3,7 +3,7 @@ package languages
 class LIf extends LArith {
   // expressions
   case class Bool(b: Literal) extends Expr {
-    override def evalInner(env: Env): Value = b match {
+    override def evalInner(env: ValueEnv): Value = b match {
       case LiteralBool(b) => BoolV(b)
       case _              => UnexpectedArgValue(s"Bool can only accept LiteralBool, not $b")
     }
@@ -23,7 +23,7 @@ class LIf extends LArith {
   }
 
   case class Equal(e1: Expr, e2: Expr) extends Expr {
-    override def evalInner(env: Env): Value = {
+    override def evalInner(env: ValueEnv): Value = {
       val v1 = e1.eval(env)
       val v2 = e2.eval(env)
       if (v1.typ == v2.typ) {
@@ -47,7 +47,7 @@ class LIf extends LArith {
   }
 
   case class LessThan(e1: Expr, e2: Expr) extends Expr {
-    override def evalInner(env: Env): Value = (e1.eval(env), e2.eval(env)) match {
+    override def evalInner(env: ValueEnv): Value = (e1.eval(env), e2.eval(env)) match {
       case (v1: OrdinalValue, v2: OrdinalValue) => BoolV(v1.compare(v2) < 0)
       case (v1, v2)                             => ComparisonWithNonOrdinalError(v1.typ, v2.typ)
     }
@@ -61,7 +61,7 @@ class LIf extends LArith {
   }
 
   case class IfThenElse(cond: Expr, then_expr: Expr, else_expr: Expr) extends Expr {
-    override def evalInner(env: Env): Value = cond.eval(env) match {
+    override def evalInner(env: ValueEnv): Value = cond.eval(env) match {
       case BoolV(true)    => then_expr.eval(env)
       case BoolV(false)   => else_expr.eval(env)
       case v if v.isError => v
@@ -77,7 +77,7 @@ class LIf extends LArith {
       case t => TypeMismatchType(t, BoolType())
     }
 
-    override def getChildrenEval(env: Env): List[(Term, Env)] = cond.eval(env) match {
+    override def getChildrenEval(env: ValueEnv): List[(Term, ValueEnv)] = cond.eval(env) match {
       case BoolV(true)  => List((cond, env), (then_expr, env))
       case BoolV(false) => List((cond, env), (else_expr, env))
       case _            => List((cond, env), (then_expr, env), (else_expr, env))

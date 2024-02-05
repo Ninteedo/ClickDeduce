@@ -49,36 +49,36 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
   )
 
   property("IfThenElse correctly type-checks when both branches have the same type") {
-    IfThenElse(Bool(true), Num(1), Num(2)).typeCheck(Map()) shouldEqual IntType()
-    IfThenElse(Bool(true), Bool(true), Bool(false)).typeCheck(Map()) shouldEqual BoolType()
+    IfThenElse(Bool(true), Num(1), Num(2)).typeCheck() shouldEqual IntType()
+    IfThenElse(Bool(true), Bool(true), Bool(false)).typeCheck() shouldEqual BoolType()
   }
 
   property("IfThenElse type-checks to an error when the branches have different types") {
-    IfThenElse(Bool(true), Num(1), Bool(false)).typeCheck(Map()) shouldBe a[TypeError]
-    IfThenElse(Bool(true), Bool(true), Num(2)).typeCheck(Map()) shouldBe a[TypeError]
+    IfThenElse(Bool(true), Num(1), Bool(false)).typeCheck() shouldBe a[TypeError]
+    IfThenElse(Bool(true), Bool(true), Num(2)).typeCheck() shouldBe a[TypeError]
   }
 
   property("IfThenElse type-checks to an error when the condition is not a BoolType") {
-    IfThenElse(Num(1), Num(1), Num(2)).typeCheck(Map()) shouldBe a[TypeMismatchType]
-    IfThenElse(Plus(Num(1), Num(2)), Bool(true), Bool(false)).typeCheck(Map()) shouldBe a[TypeMismatchType]
-    IfThenElse(IfThenElse(Bool(true), Num(1), Num(0)), Num(1), Num(2)).typeCheck(Map()) shouldBe a[TypeMismatchType]
+    IfThenElse(Num(1), Num(1), Num(2)).typeCheck() shouldBe a[TypeMismatchType]
+    IfThenElse(Plus(Num(1), Num(2)), Bool(true), Bool(false)).typeCheck() shouldBe a[TypeMismatchType]
+    IfThenElse(IfThenElse(Bool(true), Num(1), Num(0)), Num(1), Num(2)).typeCheck() shouldBe a[TypeMismatchType]
   }
 
   property("Eq type-checks to BoolType when both sides have the same type") {
-    Equal(Num(1), Num(2)).typeCheck(Map()) shouldEqual BoolType()
-    Equal(Bool(true), Bool(false)).typeCheck(Map()) shouldEqual BoolType()
-    Equal(Bool(true), Bool(true)).typeCheck(Map()) shouldEqual BoolType()
-    Equal(Num(1), Num(1)).typeCheck(Map()) shouldEqual BoolType()
+    Equal(Num(1), Num(2)).typeCheck() shouldEqual BoolType()
+    Equal(Bool(true), Bool(false)).typeCheck() shouldEqual BoolType()
+    Equal(Bool(true), Bool(true)).typeCheck() shouldEqual BoolType()
+    Equal(Num(1), Num(1)).typeCheck() shouldEqual BoolType()
   }
 
   property("Eq type-checks to an error when the sides have different types") {
-    Equal(Num(1), Bool(false)).typeCheck(Map()) shouldBe a[TypeMismatchType]
-    Equal(Bool(true), Num(2)).typeCheck(Map()) shouldBe a[TypeMismatchType]
+    Equal(Num(1), Bool(false)).typeCheck() shouldBe a[TypeMismatchType]
+    Equal(Bool(true), Num(2)).typeCheck() shouldBe a[TypeMismatchType]
   }
 
   property("Eq evaluates to an error when the sides have different types") {
-    Equal(Num(1), Bool(false)).eval(Map()) shouldBe a[TypeMismatchError]
-    Equal(Bool(true), Num(2)).eval(Map()) shouldBe a[TypeMismatchError]
+    Equal(Num(1), Bool(false)).eval() shouldBe a[TypeMismatchError]
+    Equal(Bool(true), Num(2)).eval() shouldBe a[TypeMismatchError]
   }
 
   testExpression(
@@ -118,8 +118,8 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
   }
 
   property("IfThenElse.getChildrenEval returns the appropriate children") {
-    val exampleEnv: Env = Map("a" -> NumV(1), "b" -> NumV(2), "c" -> NumV(3))
-    val ifThenElseTable: TableFor2[Expr, List[(Expr, Env)]] = Table(
+    val exampleEnv: ValueEnv = Env("a" -> NumV(1), "b" -> NumV(2), "c" -> NumV(3))
+    val ifThenElseTable: TableFor2[Expr, List[(Expr, ValueEnv)]] = Table(
       ("expr", "children"),
       (IfThenElse(Bool(true), Num(1), Num(2)), List((Bool(true), exampleEnv), (Num(1), exampleEnv))),
       (IfThenElse(Bool(false), Num(1), Num(2)), List((Bool(false), exampleEnv), (Num(2), exampleEnv))),

@@ -165,7 +165,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     /** Creates a node from a correct string representation of a node (from Node.toString).
       */
     def read(s: String): Option[Node] = {
-      def makeNode(name: String, args: List[Any], env: Env | TypeEnv = Map()): Option[Node] = {
+      def makeNode(name: String, args: List[Any], env: ValueEnv | TypeEnv = Env()): Option[Node] = {
         val nodeClass = nodeClassList.find(_.getSimpleName == name)
         nodeClass match {
           case Some(value) =>
@@ -175,7 +175,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
               case Some(e)    => e
               case x          => x
             }
-            if (constructor.getParameterTypes.last.isAssignableFrom(classOf[Env])) {
+            if (constructor.getParameterTypes.last.isAssignableFrom(classOf[ValueEnv])) {
               arguments = arguments :+ env
             }
             if (constructor.getParameterTypes.length != arguments.length) {
@@ -386,20 +386,20 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     lazy val getType: Type = getExpr.typeCheck(getTypeEnv)
 
     private def getCorrectEnv[T](
-      childrenFunction: Expr => Map[Variable, T] => List[(Term, Map[Variable, T])],
-      parentEnvFunction: ExprNode => Map[Variable, T]
-    ): Map[Variable, T] = getParent match {
+      childrenFunction: Expr => Env[T] => List[(Term, Env[T])],
+      parentEnvFunction: ExprNode => Env[T]
+    ): Env[T] = getParent match {
       case Some(value) =>
         val parentEnv = parentEnvFunction(value)
         val parentExpr = value.getExpr
         val parentChildren = childrenFunction(parentExpr)(parentEnv)
         parentChildren.find(_._1 eq getExpr).map(_._2).getOrElse(parentEnv)
-      case None => Map()
+      case None => Env()
     }
 
-    lazy val getEditEnv: Env = getCorrectEnv(_.getChildrenBase, _.getEditEnv)
+    lazy val getEditEnv: ValueEnv = getCorrectEnv(_.getChildrenBase, _.getEditEnv)
 
-    lazy val getEvalEnv: Env = getCorrectEnv(_.getChildrenEval, _.getEvalEnv)
+    lazy val getEvalEnv: ValueEnv = getCorrectEnv(_.getChildrenEval, _.getEvalEnv)
 
     lazy val getTypeEnv: TypeEnv = getCorrectEnv(_.getChildrenTypeCheck, _.getTypeEnv)
 

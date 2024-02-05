@@ -32,8 +32,8 @@ class ComplexExpressionsTest extends TestTemplate[LRec#Expr, LRec#Value, LRec#Ty
     Apply(doubleIfNotZeroFunction, Num(6)).typeCheck() shouldBe IntType()
     Apply(doubleIfNotZeroFunction, Num(6)).eval() shouldBe NumV(12)
 
-    Apply(doubleIfNotZeroFunction, Num(-58)).typeCheck(Map("x" -> BoolType())) shouldBe IntType()
-    Apply(doubleIfNotZeroFunction, Num(0)).eval(Map("x" -> BoolV(true))) shouldBe NumV(1)
+    Apply(doubleIfNotZeroFunction, Num(-58)).typeCheck(Env("x" -> BoolType())) shouldBe IntType()
+    Apply(doubleIfNotZeroFunction, Num(0)).eval(Env("x" -> BoolV(true))) shouldBe NumV(1)
 
     factorialFunction.typeCheck() shouldBe Func(IntType(), IntType())
     Apply(factorialFunction, Num(5878578)).typeCheck() shouldBe IntType()

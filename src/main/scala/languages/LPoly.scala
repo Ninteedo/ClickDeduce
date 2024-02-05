@@ -8,23 +8,20 @@ class LPoly extends LData {
   // expressions
 
   case class Poly(v: Literal, e: Expr) extends Expr {
-    override def evalInner(env: Env): Value = {
-      PolyV(TypeVar(v), e, env)
-    }
+    override def evalInner(env: ValueEnv): Value = PolyV(TypeVar(v), e, env)
 
-    override def typeCheckInner(tEnv: TypeEnv): Type = {
+    override def typeCheckInner(tEnv: TypeEnv): Type =
       PolyType(TypeVar(v), e.typeCheck(tEnv + (v.toString -> TypeVar(v))))
-    }
 
     override def prettyPrint: String = s"Λ$v. ${e.prettyPrintBracketed}"
 
-    override def getChildrenBase(env: Env): List[(Term, Env)] =
+    override def getChildrenBase(env: ValueEnv): List[(Term, ValueEnv)] =
       List((v, env), (e, env + (v.toString -> TypeVarV(v, TypeVar(v)))))
 
     override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] =
       List((v, tEnv), (e, tEnv + (v.toString -> TypeVar(v))))
 
-    override def getChildrenEval(env: Env): List[(Term, Env)] =
+    override def getChildrenEval(env: ValueEnv): List[(Term, ValueEnv)] =
       List((e, env + (v.toString -> TypeVarV(v, TypeVar(v)))))
   }
 
@@ -33,7 +30,7 @@ class LPoly extends LData {
   }
 
   case class ApplyType(e: Expr, typ: Type) extends Expr {
-    override def evalInner(env: Env): Value = e.eval(env) match {
+    override def evalInner(env: ValueEnv): Value = e.eval(env) match {
       case PolyV(tv, e, env) =>
         tv match {
           case TypeVar(v) => e.eval(env + (v.toString -> TypeVarV(v, typ)))
@@ -74,7 +71,7 @@ class LPoly extends LData {
 
   // values
 
-  case class PolyV(typeVar: Type, e: Expr, env: Env) extends Value {
+  case class PolyV(typeVar: Type, e: Expr, env: ValueEnv) extends Value {
     override val typ: Type = typeVar match {
       case TypeVar(v) => PolyType(typeVar, e.typeCheck(envToTypeEnv(env) + (v.toString -> typeVar)))
       case other      => PolyVRequiresTypeVarType(other)

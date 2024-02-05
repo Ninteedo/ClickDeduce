@@ -8,8 +8,6 @@ import org.scalatest.matchers.should.Matchers.{a, an, be, shouldBe, shouldEqual}
 import org.scalatest.prop.TableFor1
 import org.scalatest.time.{Millis, Span}
 
-import scala.collection.immutable.Map
-
 class LRecTest extends TestTemplate[Expr, Value, Type] {
   val factorialFunction: Rec = Rec(
     "factorial",
@@ -23,60 +21,60 @@ class LRecTest extends TestTemplate[Expr, Value, Type] {
     Rec("f", "x", IntType(), IntType(), Apply(Rec("f", "x", IntType(), IntType(), Num(1)), Var("x")))
 
   property("Rec type-checks correctly") {
-    Rec("f", "x", IntType(), IntType(), Num(1)).typeCheck(Map()) shouldEqual Func(IntType(), IntType())
-    Rec("f", "x", IntType(), IntType(), Num(1)).typeCheck(Map("f" -> IntType(), "x" -> IntType())) shouldEqual Func(
+    Rec("f", "x", IntType(), IntType(), Num(1)).typeCheck() shouldEqual Func(IntType(), IntType())
+    Rec("f", "x", IntType(), IntType(), Num(1)).typeCheck(Env("f" -> IntType(), "x" -> IntType())) shouldEqual Func(
       IntType(),
       IntType()
     )
     Rec("f", "x", IntType(), Func(IntType(), BoolType()), Lambda("y", IntType(), Equal(Var("y"), Num(0))))
-      .typeCheck(Map("f" -> IntType(), "x" -> BoolType())) shouldEqual Func(IntType(), Func(IntType(), BoolType()))
-    factorialFunction.typeCheck(Map()) shouldEqual Func(IntType(), IntType())
-    nestedOverridingRecFunction1.typeCheck(Map()) shouldEqual Func(IntType(), IntType())
+      .typeCheck(Env("f" -> IntType(), "x" -> BoolType())) shouldEqual Func(IntType(), Func(IntType(), BoolType()))
+    factorialFunction.typeCheck() shouldEqual Func(IntType(), IntType())
+    nestedOverridingRecFunction1.typeCheck() shouldEqual Func(IntType(), IntType())
   }
 
   property("Rec evaluates correctly") {
-    Rec("f", "x", IntType(), IntType(), Num(1)).eval(Map()) shouldEqual RecV(
+    Rec("f", "x", IntType(), IntType(), Num(1)).eval() shouldEqual RecV(
       Literal.fromString("f"),
       Literal.fromString("x"),
       IntType(),
       IntType(),
       Num(1),
-      Map()
+      Env()
     )
     Rec("f", "x", IntType(), IntType(), Num(1))
-      .eval(Map("f" -> NumV(6), "x" -> BoolV(false))) shouldEqual RecV(
+      .eval(Env("f" -> NumV(6), "x" -> BoolV(false))) shouldEqual RecV(
       Literal.fromString("f"),
       Literal.fromString("x"),
       IntType(),
       IntType(),
       Num(1),
-      Map("f" -> NumV(6), "x" -> BoolV(false))
+      Env("f" -> NumV(6), "x" -> BoolV(false))
     )
     Rec("f", "x", IntType(), Func(IntType(), BoolType()), Lambda("y", IntType(), Equal(Var("y"), Num(0))))
-      .eval(Map("f" -> NumV(-657), "x" -> BoolV(true))) shouldEqual
+      .eval(Env("f" -> NumV(-657), "x" -> BoolV(true))) shouldEqual
       RecV(
         Literal.fromString("f"),
         Literal.fromString("x"),
         IntType(),
         Func(IntType(), BoolType()),
         Lambda("y", IntType(), Equal(Var("y"), Num(0))),
-        Map("f" -> NumV(-657), "x" -> BoolV(true))
+        Env("f" -> NumV(-657), "x" -> BoolV(true))
       )
-    factorialFunction.eval(Map()) shouldEqual RecV(
+    factorialFunction.eval() shouldEqual RecV(
       factorialFunction.f,
       factorialFunction.v,
       factorialFunction.inType,
       factorialFunction.outType,
       factorialFunction.e,
-      Map()
+      Env()
     )
-    nestedOverridingRecFunction1.eval(Map()) shouldEqual RecV(
+    nestedOverridingRecFunction1.eval() shouldEqual RecV(
       nestedOverridingRecFunction1.f,
       nestedOverridingRecFunction1.v,
       nestedOverridingRecFunction1.inType,
       nestedOverridingRecFunction1.outType,
       nestedOverridingRecFunction1.e,
-      Map()
+      Env()
     )
   }
 
@@ -95,23 +93,23 @@ class LRecTest extends TestTemplate[Expr, Value, Type] {
   }
 
   property("Applying with Rec type-checks correctly") {
-    Apply(factorialFunction, Num(5)).typeCheck(Map()) shouldEqual IntType()
+    Apply(factorialFunction, Num(5)).typeCheck() shouldEqual IntType()
     Apply(factorialFunction, Num(5))
-      .typeCheck(Map("factorial" -> Func(IntType(), IntType()), "n" -> IntType())) shouldEqual IntType()
+      .typeCheck(Env("factorial" -> Func(IntType(), IntType()), "n" -> IntType())) shouldEqual IntType()
     Apply(Rec("f", "x", IntType(), Func(IntType(), BoolType()), Lambda("y", IntType(), Equal(Var("y"), Num(0)))), Num(5))
-      .typeCheck(Map()) shouldEqual Func(IntType(), BoolType())
-    Apply(nestedOverridingRecFunction1, Num(5)).typeCheck(Map()) shouldEqual IntType()
+      .typeCheck() shouldEqual Func(IntType(), BoolType())
+    Apply(nestedOverridingRecFunction1, Num(5)).typeCheck() shouldEqual IntType()
   }
 
   property("Applying with Rec evaluates correctly") {
-    Apply(factorialFunction, Num(5)).eval(Map()) shouldEqual NumV(120)
+    Apply(factorialFunction, Num(5)).eval() shouldEqual NumV(120)
     Apply(factorialFunction, Num(5))
-      .eval(Map("factorial" -> factorialFunction.eval(Map()), "n" -> NumV(6))) shouldEqual NumV(120)
+      .eval(Env("factorial" -> factorialFunction.eval(), "n" -> NumV(6))) shouldEqual NumV(120)
 
     val recWithLambda =
       Rec("f", "x", IntType(), Func(IntType(), BoolType()), Lambda("y", IntType(), Equal(Var("y"), Num(0))))
-    Apply(recWithLambda, Num(5)).eval(Map()) shouldEqual
-      LambdaV("y", IntType(), Equal(Var("y"), Num(0)), Map("f" -> recWithLambda.eval(Map()), "x" -> NumV(5)))
+    Apply(recWithLambda, Num(5)).eval() shouldEqual
+      LambdaV("y", IntType(), Equal(Var("y"), Num(0)), Env("f" -> recWithLambda.eval(), "x" -> NumV(5)))
   }
 
   property("Applying with Rec correctly shows a phantom tree") {
@@ -129,15 +127,15 @@ class LRecTest extends TestTemplate[Expr, Value, Type] {
     children(2) shouldBe a[VariableNode]
     val phantomNode = children(2).asInstanceOf[VariableNode]
     phantomNode.isPhantom shouldEqual true
-    phantomNode.getEvalEnv shouldEqual Map("factorial" -> factorialFunction.eval(Map()), "n" -> NumV(3))
+    phantomNode.getEvalEnv shouldEqual Env("factorial" -> factorialFunction.eval(), "n" -> NumV(3))
     phantomNode.getValue shouldEqual NumV(6)
   }
 
   property("Infinite recursion results in a stack overflow error") {
     val infiniteRec = Rec("f", "x", IntType(), IntType(), Apply(Var("f"), Var("x")))
     failAfter(Span(1000, Millis)) {
-      Apply(infiniteRec, Num(1)).eval(Map()) shouldBe a[EvalException]
-      Apply(infiniteRec, Num(1)).eval(Map()) match {
+      Apply(infiniteRec, Num(1)).eval() shouldBe an[EvalException]
+      Apply(infiniteRec, Num(1)).eval() match {
         case EvalException(message) => message shouldEqual "Stack overflow"
       }
     }

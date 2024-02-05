@@ -16,25 +16,65 @@ trait AbstractLanguage {
   type Variable = String
 
   /** The evaluation environment at a particular point.
-    *
-    * Contains variables with bound values.
-    */
-  type Env = Map[Variable, Value]
+   *
+   * Contains variables with bound values.
+   */
+  case class Env[T](protected val env: Map[Variable, T] = Map()) {
+    def get(key: Variable): Option[T] = env.get(key)
+
+    def set(key: Variable, value: T): Env[T] = new Env(env + (key -> value))
+
+    def +(key: Variable, value: T): Env[T] = set(key, value)
+
+    def +(kv: (Variable, T)): Env[T] = set(kv._1, kv._2)
+
+    def ++(other: Env[T]): Env[T] = new Env(env ++ other.env)
+
+    def getOrElse(key: Variable, default: => T): T = env.getOrElse(key, default)
+
+    def isEmpty: Boolean = env.isEmpty
+
+    def nonEmpty: Boolean = env.nonEmpty
+
+    def map[U](f: ((Variable, T)) => U): Iterable[U] = env.map(f)
+
+    def mapToEnv[U](f: ((Variable, T)) => (Variable, U)): Env[U] = new Env(env.map(f))
+
+    def keys: Iterable[Variable] = env.keys
+  }
+
+  object Env {
+    def apply[T](items: (Variable, T)*): Env[T] = new Env[T](Map(items: _*))
+  }
+
+  /** The evaluation environment at a particular point.
+   *
+   * Contains variables with bound values.
+   */
+  type ValueEnv = Env[Value]
 
   /** The type environment at a particular point.
-    *
-    * Contains variables with bound types.
-    */
-  type TypeEnv = Map[Variable, Type]
+   *
+   * Contains variables with bound types.
+   */
+  type TypeEnv = Env[Type]
+
+  object ValueEnv {
+    val empty = new ValueEnv(Map())
+  }
+
+  object TypeEnv {
+    val empty = new TypeEnv(Map())
+  }
 
   trait Term {
     lazy val toHtml: TypedTag[String] = span(raw(prettyPrint))
 
-    def getChildrenBase(env: Env = Map()): List[(Term, Env)] = Nil
+    def getChildrenBase(env: ValueEnv = ValueEnv.empty): List[(Term, ValueEnv)] = Nil
 
-    def getChildrenEval(env: Env = Map()): List[(Term, Env)] = Nil
+    def getChildrenEval(env: ValueEnv = ValueEnv.empty): List[(Term, ValueEnv)] = Nil
 
-    def getChildrenTypeCheck(tEnv: TypeEnv = Map()): List[(Term, TypeEnv)] = Nil
+    def getChildrenTypeCheck(tEnv: TypeEnv = TypeEnv.empty): List[(Term, TypeEnv)] = Nil
 
     def isPlaceholder: Boolean = false
 
@@ -57,16 +97,18 @@ trait AbstractLanguage {
       }
     }
 
-    override def getChildrenBase(env: Env = Map()): List[(Term, Env)] =
+    override def getChildrenBase(env: ValueEnv = ValueEnv.empty): List[(Term, ValueEnv)] =
       getExprFields(this).zip(LazyList.continually(env))
 
-    override def getChildrenEval(env: Env = Map()): List[(Term, Env)] =
+    override def getChildrenEval(env: ValueEnv = ValueEnv.empty): List[(Term, ValueEnv)] =
       getExprFields(this).zip(LazyList.continually(env))
 
     override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] =
       getExprFields(this).zip(LazyList.continually(tEnv))
 
     lazy val childVersion: Expr = this
+
+    final def eval(): Value = eval(ValueEnv.empty)
 
     /** Function which evaluates this `Expr` to a `Value`, given an environment.
       *
@@ -75,7 +117,7 @@ trait AbstractLanguage {
       * @return
       *   The `Value` resulting from evaluating this.
       */
-    final def eval(env: Env = Map()): Value = {
+    final def eval(env: ValueEnv): Value = {
       try {
         evalInner(env)
       } catch {
@@ -83,7 +125,9 @@ trait AbstractLanguage {
       }
     }
 
-    protected def evalInner(env: Env): Value = UnexpectedExpr(toString)
+    protected def evalInner(env: ValueEnv): Value = UnexpectedExpr(toString)
+
+    final def typeCheck(): Type = typeCheck(TypeEnv.empty)
 
     /** Function to perform type checking on this `Expr` in the given type environment.
       *
@@ -92,7 +136,7 @@ trait AbstractLanguage {
       * @return
       *   The `Type` of this expression after type checking.
       */
-    final def typeCheck(tEnv: TypeEnv = Map()): Type = {
+    final def typeCheck(tEnv: TypeEnv): Type = {
       try {
         typeCheckInner(tEnv)
       } catch {
@@ -315,5 +359,5 @@ trait AbstractLanguage {
     override lazy val toString: String = value
   }
 
-  def envToTypeEnv(env: Env): TypeEnv = env.map((k: String, v: Value) => (k, v.typ))
+  def envToTypeEnv(env: ValueEnv): TypeEnv = env.mapToEnv((k: String, v: Value) => (k, v.typ))
 }

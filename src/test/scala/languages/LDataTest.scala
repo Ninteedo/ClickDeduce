@@ -12,7 +12,7 @@ class LDataTest extends TestTemplate[Expr, Value, Type] {
       (Pair(Num(1), Bool(true)), PairV(NumV(1), BoolV(true)), PairType(IntType(), BoolType())),
       (
         Pair(Lambda("x", IntType(), Num(1)), Num(-1)),
-        PairV(LambdaV("x", IntType(), Num(1), Map()), NumV(-1)),
+        PairV(LambdaV("x", IntType(), Num(1), Env()), NumV(-1)),
         PairType(Func(IntType(), IntType()), IntType())
       ),
       (
@@ -31,7 +31,7 @@ class LDataTest extends TestTemplate[Expr, Value, Type] {
       (Fst(Pair(Num(1), Bool(true))), NumV(1), IntType()),
       (
         Fst(Pair(Lambda("x", IntType(), Num(1)), Num(-1))),
-        LambdaV("x", IntType(), Num(1), Map()),
+        LambdaV("x", IntType(), Num(1), Env()),
         Func(IntType(), IntType())
       ),
       (
@@ -78,7 +78,7 @@ class LDataTest extends TestTemplate[Expr, Value, Type] {
       (Left(Bool(true), IntType()), LeftV(BoolV(true), IntType()), UnionType(BoolType(), IntType())),
       (
         Left(Lambda("x", IntType(), Num(1)), IntType()),
-        LeftV(LambdaV("x", IntType(), Num(1), Map()), IntType()),
+        LeftV(LambdaV("x", IntType(), Num(1), Env()), IntType()),
         UnionType(Func(IntType(), IntType()), IntType())
       ),
       (
@@ -97,7 +97,7 @@ class LDataTest extends TestTemplate[Expr, Value, Type] {
       (Right(IntType(), Bool(true)), RightV(IntType(), BoolV(true)), UnionType(IntType(), BoolType())),
       (
         Right(BoolType(), Lambda("x", IntType(), Num(1))),
-        RightV(BoolType(), LambdaV("x", IntType(), Num(1), Map())),
+        RightV(BoolType(), LambdaV("x", IntType(), Num(1), Env())),
         UnionType(BoolType(), Func(IntType(), IntType()))
       ),
       (

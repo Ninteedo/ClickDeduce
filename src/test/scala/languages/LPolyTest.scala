@@ -12,12 +12,12 @@ class LPolyTest extends TestTemplate[Expr, Value, Type] {
       .typeCheck() shouldEqual PolyType(TypeVar(literalT), Func(TypeVar(literalT), TypeVar(literalT)))
 
     ApplyType(identityFunction, IntType())
-      .eval() shouldEqual LambdaV("x", IntType(), Var("x"), Map("T" -> TypeVarV(literalT, IntType())))
+      .eval() shouldEqual LambdaV("x", IntType(), Var("x"), Env("T" -> TypeVarV(literalT, IntType())))
     ApplyType(identityFunction, Func(IntType(), BoolType())).eval() shouldEqual LambdaV(
       "x",
       Func(IntType(), BoolType()),
       Var("x"),
-      Map("T" -> TypeVarV(literalT, Func(IntType(), BoolType())))
+      Env("T" -> TypeVarV(literalT, Func(IntType(), BoolType())))
     )
 
     Apply(ApplyType(identityFunction, IntType()), Num(1)).typeCheck() shouldEqual IntType()
@@ -39,10 +39,10 @@ class LPolyTest extends TestTemplate[Expr, Value, Type] {
     "Poly",
     Table(
       testExpressionTableHeading,
-      (Poly("A", Num(1)), PolyV(TypeVar("A"), Num(1), Map()), PolyType(TypeVar("A"), IntType())),
+      (Poly("A", Num(1)), PolyV(TypeVar("A"), Num(1), Env()), PolyType(TypeVar("A"), IntType())),
       (
         Poly("T", Lambda("x", TypeVar("T"), Var("x"))),
-        PolyV(TypeVar("T"), Lambda("x", TypeVar("T"), Var("x")), Map()),
+        PolyV(TypeVar("T"), Lambda("x", TypeVar("T"), Var("x")), Env()),
         PolyType(TypeVar("T"), Func(TypeVar("T"), TypeVar("T")))
       )
     )
@@ -56,12 +56,12 @@ class LPolyTest extends TestTemplate[Expr, Value, Type] {
       (ApplyType(Poly("foo", Num(1)), BoolType()), NumV(1), IntType()),
       (
         ApplyType(Poly("T", Lambda("x", TypeVar("T"), Var("x"))), IntType()),
-        LambdaV("x", IntType(), Var("x"), Map("T" -> TypeVarV("T", IntType()))),
+        LambdaV("x", IntType(), Var("x"), Env("T" -> TypeVarV("T", IntType()))),
         Func(IntType(), IntType())
       ),
       (
         ApplyType(Poly("T", Lambda("x", TypeVar("T"), Var("x"))), BoolType()),
-        LambdaV("x", BoolType(), Var("x"), Map("T" -> TypeVarV("T", BoolType()))),
+        LambdaV("x", BoolType(), Var("x"), Env("T" -> TypeVarV("T", BoolType()))),
         Func(BoolType(), BoolType())
       ),
       (
@@ -73,7 +73,7 @@ class LPolyTest extends TestTemplate[Expr, Value, Type] {
           ),
           IntType()
         ),
-        LambdaV("x", Func(BoolType(), IntType()), Apply(Var("x"), Bool(false)), Map("T" -> TypeVarV("T", IntType()))),
+        LambdaV("x", Func(BoolType(), IntType()), Apply(Var("x"), Bool(false)), Env("T" -> TypeVarV("T", IntType()))),
         Func(Func(BoolType(), IntType()), IntType())
       )
     )
@@ -94,7 +94,7 @@ class LPolyTest extends TestTemplate[Expr, Value, Type] {
             "Y",
             Lambda("f", Func(TypeVar("X"), TypeVar("Y")), Lambda("x", TypeVar("X"), Apply(Var("f"), Var("x"))))
           ),
-          Map()
+          Env()
         ),
         PolyType(
           TypeVar("X"),

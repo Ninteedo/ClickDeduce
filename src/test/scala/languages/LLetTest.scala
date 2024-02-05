@@ -16,7 +16,7 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
     forAll(assortedValues) { value =>
       {
         val v = randomElement(variableNames)
-        Var(v).typeCheck(Map(v -> value.typ)) shouldEqual value.typ
+        Var(v).typeCheck(Env(v -> value.typ)) shouldEqual value.typ
       }
     }
   }
@@ -24,14 +24,14 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
   property("Var correctly type-checks with big environment") {
     forAll(assortedValues) { value =>
       {
-        var env: TypeEnv = Map()
+        var env: TypeEnv = Env()
         for (i <- 0 until Math.min(assortedValues.length, variableNames.length)) {
           val v = randomElement(variableNames)
           val value = randomElement(assortedValues.toList)
           env += v -> value.typ
         }
         val v: Variable = randomElement(env.keys.toList)
-        Var(v).typeCheck(env) shouldEqual env(v)
+        Var(v).typeCheck(env) shouldEqual env.get(v).get
       }
     }
   }
@@ -40,21 +40,21 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
     forAll(assortedValues) { value =>
       {
         val v = randomElement(variableNames)
-        Var(v).eval(Map(v -> value)) shouldEqual value
+        Var(v).eval(Env(v -> value)) shouldEqual value
       }
     }
   }
 
   property("Var correctly evaluates with big environment") {
     forAll(assortedValues) { value => {
-      var env: Env = Map()
+      var env: ValueEnv = Env()
       for (i <- 0 until Math.min(assortedValues.length, variableNames.length)) {
         val v = randomElement(variableNames)
         val value = randomElement(assortedValues.toList)
         env += v -> value
       }
       val v: Variable = randomElement(env.keys.toList)
-      Var(v).eval(env) shouldEqual env(v)
+      Var(v).eval(env) shouldEqual env.get(v).get
     }
     }
   }
@@ -97,10 +97,10 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
 
   property("Var results an error when variable not found") {
     Var("x")
-      .typeCheck(Map("y" -> IntType(), "xx" -> IntType(), "w" -> BoolType())) shouldBe an[UnknownVariableTypeError]
-    Var("x").eval(Map("y" -> NumV(4), "xx" -> NumV(1), "w" -> BoolV(true))) shouldBe an[UnknownVariableEvalError]
+      .typeCheck(Env("y" -> IntType(), "xx" -> IntType(), "w" -> BoolType())) shouldBe an[UnknownVariableTypeError]
+    Var("x").eval(Env("y" -> NumV(4), "xx" -> NumV(1), "w" -> BoolV(true))) shouldBe an[UnknownVariableEvalError]
 
-    Plus(Var("foo"), Let("foo", Num(1), Var("foo"))).eval(Map()) shouldBe an[UnknownVariableEvalError]
+    Plus(Var("foo"), Let("foo", Num(1), Var("foo"))).eval(Env()) shouldBe an[UnknownVariableEvalError]
   }
 
   property("Let behaviour is correct with actions") {
@@ -147,13 +147,13 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
     val finalTree = boundExprValueAction.newTree.asInstanceOf[ExprNode]
 
     finalTree.getExpr shouldEqual Let(v, Num(assignValue), Var(v))
-    finalTree.getEvalEnv shouldEqual Map()
-    finalTree.findChild(List(1)).get.asInstanceOf[ExprNode].getEvalEnv shouldEqual Map()
-    finalTree.findChild(List(2)).get.asInstanceOf[ExprNode].getEvalEnv shouldEqual Map(v -> NumV(assignValue))
+    finalTree.getEvalEnv shouldEqual Env()
+    finalTree.findChild(List(1)).get.asInstanceOf[ExprNode].getEvalEnv shouldEqual Env()
+    finalTree.findChild(List(2)).get.asInstanceOf[ExprNode].getEvalEnv shouldEqual Env(v -> NumV(assignValue))
   }
 
   property("Invalid variable names result in an error") {
-    val env = Map("x" -> NumV(1), "y" -> NumV(2), "z" -> NumV(3))
+    val env: ValueEnv = Env("x" -> NumV(1), "y" -> NumV(2), "z" -> NumV(3))
     val tEnv = envToTypeEnv(env)
     forAll(Table("name", invalidVariableNames: _*)) { name =>
       val expr1 = Var(name)
@@ -219,11 +219,11 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
     val let = Let("x", Num(1), Var("x"))
 
     let.getChildrenBase() shouldEqual List(
-      (LiteralIdentifier("x"), Map()),
-      (Num(1), Map()),
-      (Var("x"), Map("x" -> NumV(1)))
+      (LiteralIdentifier("x"), Env()),
+      (Num(1), Env()),
+      (Var("x"), Env("x" -> NumV(1)))
     )
-    let.getChildrenEval() shouldEqual List((Num(1), Map()), (Var("x"), Map("x" -> NumV(1))))
-    let.getChildrenTypeCheck() shouldEqual List((Num(1), Map()), (Var("x"), Map("x" -> IntType())))
+    let.getChildrenEval() shouldEqual List((Num(1), Env()), (Var("x"), Env("x" -> NumV(1))))
+    let.getChildrenTypeCheck() shouldEqual List((Num(1), Env()), (Var("x"), Env("x" -> IntType())))
   }
 }
