@@ -403,6 +403,12 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     lazy val getTypeEnv: TypeEnv = getCorrectEnv(_.getChildrenTypeCheck, _.getTypeEnv)
 
+    def getEnv(mode: DisplayMode): ValueEnv | TypeEnv = mode match {
+      case DisplayMode.Edit       => getEditEnv
+      case DisplayMode.TypeCheck  => getTypeEnv
+      case DisplayMode.Evaluation => getEvalEnv
+    }
+
     private val visibleChildrenCache = collection.mutable.Map[DisplayMode, List[OuterNode]]()
 
     override def getVisibleChildren(mode: DisplayMode): List[OuterNode] = cacheQuery(
@@ -628,6 +634,14 @@ trait AbstractNodeLanguage extends AbstractLanguage {
         case None    => None
       }
     }
+
+    def getEnv(mode: DisplayMode): TypeEnv = getParent match {
+      case Some(n: ExprNode) => typeVariableEnv(n.getEnv(mode))
+      case Some(n: TypeNodeParent) => n.getEnv(mode)
+      case _ => Env()
+    }
+
+    def getTypeCheckResult(mode: DisplayMode): Type = getType.typeCheck(getEnv(mode))
   }
 
   case class TypeNode(typeName: String, args: List[InnerNode]) extends TypeNodeParent {

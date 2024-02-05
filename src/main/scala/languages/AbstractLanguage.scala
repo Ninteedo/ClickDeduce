@@ -181,14 +181,18 @@ trait AbstractLanguage {
       val valueInstance = constructor.newInstance(lang +: arguments: _*).asInstanceOf[Value]
       div(
         div(raw(valueInstance.prettyPrint), cls := ClassDict.VALUE),
-        span(": "),
-        div(typ.valueText, cls := ClassDict.VALUE_TYPE)
+        if (valueTextShowType) List(
+          span(": "),
+          div(typ.valueText, cls := ClassDict.VALUE_TYPE)
+        ) else div()
       )
     }
 
     val typ: Type
 
     val isError: Boolean = false
+
+    def valueTextShowType: Boolean = true
 
     override def prettyPrint: String = toHtml.toString
   }
@@ -253,6 +257,8 @@ trait AbstractLanguage {
 
   case class TypeValueContainer(typ: Type) extends Value {
     override def prettyPrint: String = typ.prettyPrint
+
+    override def valueTextShowType: Boolean = false
   }
 
   trait TermError extends Term {
@@ -374,6 +380,7 @@ trait AbstractLanguage {
   def typeVariableEnv(env: ValueEnv | TypeEnv): TypeEnv = {
     Env(env.env.collect({
       case (k, TypeValueContainer(t)) => (k, t)
+      case (k, TypeContainer(t))      => (k, t)
     }))
   }
 }

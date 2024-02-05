@@ -44,14 +44,10 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
     )
   }
 
-  def fullExprBottomDiv(node: ExprNode): HTML = div(cls := ClassDict.NODE, envDiv(node), exprDiv(node), resultDiv(node))
+  def fullExprBottomDiv(node: ExprNode): HTML =
+    div(cls := ClassDict.NODE, envDiv(node.getEnv(mode)), exprDiv(node), resultDiv(node))
 
-  def envDiv(node: ExprNode): HTML = {
-    val env = mode match {
-      case DisplayMode.Edit       => node.getEditEnv
-      case DisplayMode.Evaluation => node.getEvalEnv
-      case DisplayMode.TypeCheck  => node.getTypeEnv
-    }
+  def envDiv(env: lang.ValueEnv | lang.TypeEnv): HTML = {
     val variablesHtml: Option[HTML] =
       if (env.isEmpty) None else Some(div(raw(env.map((k, v) => s"$k &rarr; ${v.toHtml}").mkString("[", ", ", "]"))))
     val delimiter =
@@ -87,7 +83,12 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
   def typeNode(node: TypeNode): HTML = {
     val isAxiom = node.getVisibleChildren(mode).isEmpty
     div(
-      cls := List(ClassDict.SUBTREE, {if (isAxiom) ClassDict.AXIOM else ""}, ClassDict.TYPE_TREE, phantomClassName(node)).mkString(" "),
+      cls := List(
+        ClassDict.SUBTREE,
+        { if (isAxiom) ClassDict.AXIOM else "" },
+        ClassDict.TYPE_TREE,
+        phantomClassName(node)
+      ).mkString(" "),
       data("tree-path") := node.treePathString,
       fullTypeBottomDiv(node),
       if (isAxiom)
@@ -101,9 +102,13 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
     )
   }
 
-  def fullTypeBottomDiv(node: TypeNode): HTML = div(cls := ClassDict.NODE, typeDiv(node))
+  def fullTypeBottomDiv(node: TypeNode): HTML =
+    div(cls := ClassDict.NODE, envDiv(node.getEnv(mode)), typeDiv(node), typeResultDiv(node))
 
   def typeDiv(node: TypeNode): HTML = node.toHtmlLine(mode)(cls := ClassDict.TYPE)
+
+  def typeResultDiv(node: TypeNode): HTML =
+    div(cls := ClassDict.TYPE_CHECK_RESULT, typeCheckTurnstileSpan, node.getTypeCheckResult(mode).toHtml)
 
   private val typeCheckTurnstileSpan: HTML = span(paddingLeft := "0.5ch", paddingRight := "0.5ch", raw(":"))
   private def typeCheckResultDiv(node: ExprNode): HTML =
