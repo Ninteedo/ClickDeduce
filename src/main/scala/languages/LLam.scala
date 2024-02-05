@@ -33,10 +33,9 @@ class LLam extends LLet {
     }
 
     override def typeCheckInner(tEnv: TypeEnv): Type = v match {
-      case LiteralIdentifier(identifier) => {
+      case LiteralIdentifier(identifier) =>
         val inputType = typ.typeCheck(tEnv)
         Func(inputType, e.typeCheck(tEnv + (identifier -> inputType)))
-      }
       case _ => InvalidIdentifierTypeError(v)
     }
 

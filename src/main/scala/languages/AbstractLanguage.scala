@@ -19,7 +19,7 @@ trait AbstractLanguage {
    *
    * Contains variables with bound values.
    */
-  case class Env[T](protected val env: Map[Variable, T] = Map()) {
+  case class Env[T](env: Map[Variable, T] = Map()) {
     def get(key: Variable): Option[T] = env.get(key)
 
     def set(key: Variable, value: T): Env[T] = new Env(env + (key -> value))
@@ -245,6 +245,16 @@ trait AbstractLanguage {
     def apply(typ: Type): TypePlaceholder = TypePlaceholder(typ.toHtml.toString, typ.needsBrackets)
   }
 
+  case class TypeContainer(typ: Type) extends Type {
+    override def prettyPrint: String = typ.prettyPrint
+
+    override def typeCheck(tEnv: TypeEnv): Type = typ
+  }
+
+  case class TypeValueContainer(typ: Type) extends Value {
+    override def prettyPrint: String = typ.prettyPrint
+  }
+
   trait TermError extends Term {
     val message: String = "Error"
   }
@@ -360,4 +370,10 @@ trait AbstractLanguage {
   }
 
   def envToTypeEnv(env: ValueEnv): TypeEnv = env.mapToEnv((k: String, v: Value) => (k, v.typ))
+
+  def typeVariableEnv(env: ValueEnv | TypeEnv): TypeEnv = {
+    Env(env.env.collect({
+      case (k, TypeValueContainer(t)) => (k, t)
+    }))
+  }
 }

@@ -12,12 +12,12 @@ class LPolyTest extends TestTemplate[Expr, Value, Type] {
       .typeCheck() shouldEqual PolyType(TypeVar(literalT), Func(TypeVar(literalT), TypeVar(literalT)))
 
     ApplyType(identityFunction, IntType())
-      .eval() shouldEqual LambdaV("x", IntType(), Var("x"), Env("T" -> TypeVarV(literalT, IntType())))
+      .eval() shouldEqual LambdaV("x", IntType(), Var("x"), Env("T" -> TypeValueContainer(IntType())))
     ApplyType(identityFunction, Func(IntType(), BoolType())).eval() shouldEqual LambdaV(
       "x",
       Func(IntType(), BoolType()),
       Var("x"),
-      Env("T" -> TypeVarV(literalT, Func(IntType(), BoolType())))
+      Env("T" -> TypeValueContainer(Func(IntType(), BoolType())))
     )
 
     Apply(ApplyType(identityFunction, IntType()), Num(1)).typeCheck() shouldEqual IntType()
@@ -56,12 +56,12 @@ class LPolyTest extends TestTemplate[Expr, Value, Type] {
       (ApplyType(Poly("foo", Num(1)), BoolType()), NumV(1), IntType()),
       (
         ApplyType(Poly("T", Lambda("x", TypeVar("T"), Var("x"))), IntType()),
-        LambdaV("x", IntType(), Var("x"), Env("T" -> TypeVarV("T", IntType()))),
+        LambdaV("x", IntType(), Var("x"), Env("T" -> TypeValueContainer(IntType()))),
         Func(IntType(), IntType())
       ),
       (
         ApplyType(Poly("T", Lambda("x", TypeVar("T"), Var("x"))), BoolType()),
-        LambdaV("x", BoolType(), Var("x"), Env("T" -> TypeVarV("T", BoolType()))),
+        LambdaV("x", BoolType(), Var("x"), Env("T" -> TypeValueContainer(BoolType()))),
         Func(BoolType(), BoolType())
       ),
       (
@@ -73,7 +73,7 @@ class LPolyTest extends TestTemplate[Expr, Value, Type] {
           ),
           IntType()
         ),
-        LambdaV("x", Func(BoolType(), IntType()), Apply(Var("x"), Bool(false)), Env("T" -> TypeVarV("T", IntType()))),
+        LambdaV("x", Func(BoolType(), IntType()), Apply(Var("x"), Bool(false)), Env("T" -> TypeValueContainer(IntType()))),
         Func(Func(BoolType(), IntType()), IntType())
       )
     )
@@ -127,4 +127,32 @@ class LPolyTest extends TestTemplate[Expr, Value, Type] {
       )
     )
   )
+
+  testExpression(
+    "Var using a TypeVar results in an error",
+    Table(
+      testExpressionTableHeading,
+      (
+        ApplyType(Poly("T", Var("T")), IntType()),
+        VariableOnlyEvalError(Literal.fromString("T")),
+        VariableOnlyTypeError(Literal.fromString("T"))
+      )
+    )
+  )
+
+  property("Lambda using TypeVar is handled correctly") {
+    Lambda("x", TypeVar("X"), Var("x")).typeCheck(Env("X" -> TypeContainer(TypeVar("X")))) shouldEqual
+      Func(TypeVar("X"), TypeVar("X"))
+    Lambda("x", TypeVar("X"), Var("x")).eval(Env("X" -> TypeValueContainer(TypeVar("X")))) shouldEqual
+      LambdaV("x", TypeVar("X"), Var("x"), Env("X" -> TypeValueContainer(TypeVar("X"))))
+
+    val env: ValueEnv = Env("X" -> TypeValueContainer(TypeVar("Y")), "Y" -> TypeValueContainer(TypeVar("X")))
+    Lambda("x", TypeVar("X"), Var("x")).eval(env) shouldEqual
+      LambdaV("x", TypeVar("Y"), Var("x"), env)
+
+    Lambda("x", TypeVar("X"), Var("x")).typeCheck(Env("X" -> TypeContainer(IntType()))) shouldEqual
+      Func(IntType(), IntType())
+    Lambda("x", TypeVar("X"), Var("x")).eval(Env("X" -> TypeValueContainer(IntType()))) shouldEqual
+      LambdaV("x", IntType(), Var("x"), Env("X" -> TypeValueContainer(IntType())))
+  }
 }

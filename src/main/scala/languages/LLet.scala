@@ -4,16 +4,24 @@ class LLet extends LIf {
   // expressions
 
   case class Var(v: Literal) extends Expr {
-    override def evalInner(env: Env): Value = v match {
-      case LiteralIdentifier(identifier) => env.getOrElse(identifier, UnknownVariableEvalError(v))
-      case _                             => InvalidIdentifierEvalError(v)
     override def evalInner(env: ValueEnv): Value = v match {
+      case LiteralIdentifier(identifier) =>
+        env.get(identifier) match {
+          case None => UnknownVariableEvalError(v)
+          case Some(TypeValueContainer(typ)) => VariableOnlyEvalError(v)
+          case Some(value) => value
+        }
+      case _ => InvalidIdentifierEvalError(v)
     }
 
     override def typeCheckInner(tEnv: TypeEnv): Type = v match {
-      case LiteralIdentifier(identifier) => tEnv.getOrElse(identifier, UnknownVariableTypeError(v))
-      case _                             => InvalidIdentifierTypeError(v)
       case LiteralIdentifier(identifier) =>
+        tEnv.get(identifier) match {
+          case None => UnknownVariableTypeError(v)
+          case Some(TypeContainer(typ)) => VariableOnlyTypeError(v)
+          case Some(typ) => typ
+        }
+      case _ => InvalidIdentifierTypeError(v)
     }
 
     override def prettyPrint: String = v.toString
@@ -66,8 +74,16 @@ class LLet extends LIf {
 
   case class UnknownVariableTypeError(v: Literal) extends TypeError {
     override val message: String = s"Unknown variable identifier '$v'"
+  }
 
-    override def prettyPrint: String = s"UnknownVariable($v)"
+  case class VariableOnlyTypeError(v: Literal) extends TypeError {
+    override val message: String = s"Variable '$v' can only be used as a type"
+  }
+
+  case class VariableOnlyEvalError(v: Literal) extends EvalError {
+    override val message: String = s"Variable '$v' can only be used as a type"
+
+    override val typ: Type = VariableOnlyTypeError(v)
   }
 
   case class InvalidIdentifierEvalError(v: Literal) extends EvalError {

@@ -1,7 +1,5 @@
 package languages
 
-import convertors.ClassDict
-import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
 class LPoly extends LData {
@@ -11,18 +9,18 @@ class LPoly extends LData {
     override def evalInner(env: ValueEnv): Value = PolyV(TypeVar(v), e, env)
 
     override def typeCheckInner(tEnv: TypeEnv): Type =
-      PolyType(TypeVar(v), e.typeCheck(tEnv + (v.toString -> TypeVar(v))))
+      PolyType(TypeVar(v), e.typeCheck(tEnv + (v.toString -> TypeContainer(TypeVar(v)))))
 
     override def prettyPrint: String = s"Λ$v. ${e.prettyPrintBracketed}"
 
     override def getChildrenBase(env: ValueEnv): List[(Term, ValueEnv)] =
-      List((v, env), (e, env + (v.toString -> TypeVarV(v, TypeVar(v)))))
+      List((v, env), (e, env + (v.toString -> TypeValueContainer(TypeVar(v)))))
 
     override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] =
-      List((v, tEnv), (e, tEnv + (v.toString -> TypeVar(v))))
+      List((v, tEnv), (e, tEnv + (v.toString -> TypeContainer(TypeVar(v)))))
 
     override def getChildrenEval(env: ValueEnv): List[(Term, ValueEnv)] =
-      List((e, env + (v.toString -> TypeVarV(v, TypeVar(v)))))
+      List((e, env + (v.toString -> TypeValueContainer(TypeVar(v)))))
   }
 
   object Poly {
@@ -33,7 +31,7 @@ class LPoly extends LData {
     override def evalInner(env: ValueEnv): Value = e.eval(env) match {
       case PolyV(tv, e, env) =>
         tv match {
-          case TypeVar(v) => e.eval(env + (v.toString -> TypeVarV(v, typ)))
+          case TypeVar(v) => e.eval(env + (v.toString -> TypeValueContainer(typ)))
           case other      => PolyVRequiresTypeVar(other)
         }
       case other => CannotApplyTypeUnlessPolyV(other)
@@ -56,7 +54,11 @@ class LPoly extends LData {
   case class TypeVar(v: Literal) extends Type {
     override def prettyPrint: String = v.toString
 
-    override def typeCheck(tEnv: TypeEnv): Type = tEnv.getOrElse(v.toString, UnknownTypeVar(v))
+    override def typeCheck(tEnv: TypeEnv): Type = tEnv.get(v.toString) match {
+      case None => UnknownTypeVar(v)
+      case Some(TypeVar(t)) => TypeVar(t)
+      case Some(other) => other.typeCheck(tEnv)
+    }
 
     override val needsBrackets: Boolean = false
   }
@@ -73,25 +75,11 @@ class LPoly extends LData {
 
   case class PolyV(typeVar: Type, e: Expr, env: ValueEnv) extends Value {
     override val typ: Type = typeVar match {
-      case TypeVar(v) => PolyType(typeVar, e.typeCheck(envToTypeEnv(env) + (v.toString -> typeVar)))
+      case TypeVar(v) => PolyType(typeVar, e.typeCheck(envToTypeEnv(env) + (v.toString -> TypeContainer(typeVar))))
       case other      => PolyVRequiresTypeVarType(other)
     }
 
     override def prettyPrint: String = s"Λ${typeVar.prettyPrintBracketed}. ${e.prettyPrintBracketed}"
-  }
-
-  case class TypeVarV(v: Literal, t: Type) extends Value {
-    override val typ: Type = t
-
-    override def prettyPrint: String = s"${v.toString}[${t.prettyPrint}]"
-
-    override lazy val valueText: TypedTag[String] = div(raw(t.prettyPrint), cls := ClassDict.VALUE_TYPE)
-
-    override val needsBrackets: Boolean = false
-  }
-
-  object TypeVarV {
-    def apply(v: Variable, t: Type): TypeVarV = TypeVarV(Literal.fromString(v), t)
   }
 
   // errors
