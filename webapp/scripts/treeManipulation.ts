@@ -111,6 +111,7 @@ function treeCleanup(): void {
     addHoverListeners();
     makeOrphanedInputsReadOnly();
     makePhantomInputsReadOnly();
+    makeDisabledInputsFocusOriginal();
     setLiteralInitialValues();
 }
 
@@ -185,6 +186,42 @@ function makePhantomInputsReadOnly(): void {
             el.setAttribute('disabled', "true");
         }
     })
+}
+
+function makeDisabledInputsFocusOriginal(): void {
+    document.querySelectorAll('input[disabled], select[disabled]').forEach(input => {
+        const treePath = input.getAttribute('data-tree-path');
+        if (treePath === null) {
+            return;
+        }
+
+        const origin = tree.querySelector(`input:not([disabled])[data-tree-path="${treePath}"]`) as HTMLInputElement;
+        const parent = input.parentElement;
+        input.outerHTML = `<div>${input.outerHTML}</div>`
+        const newInput = parent.querySelector(`input[disabled][data-tree-path="${treePath}"], select[disabled][data-tree-path="${treePath}"]`);
+        const container = newInput.parentElement;
+
+        container.addEventListener('mouseover', () => {
+            origin.parentElement.classList.add('guide-highlight');
+        });
+        container.addEventListener('mouseout', () => {
+            origin.parentElement.classList.remove('guide-highlight');
+        });
+
+        // if (input instanceof HTMLInputElement) {
+        //     console.log('adding click listener to ' + container.outerHTML);
+        //     container.addEventListener('mouseover', () => {
+        //         console.log('focusing ' + origin.outerHTML);
+        //         origin.focus();
+        //     });
+        // } else if (input instanceof HTMLSelectElement) {
+        //     console.log('adding click listener to ' + container.outerHTML);
+        //     container.addEventListener('mouseover', () => {
+        //         console.log('focusing ' + origin.outerHTML);
+        //         origin.focus();
+        //     });
+        // }
+    });
 }
 
 /**
