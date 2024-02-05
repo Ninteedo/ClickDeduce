@@ -3,15 +3,35 @@ package languages
 import app.ClickDeduceException
 
 trait AbstractActionLanguage extends AbstractNodeLanguage {
-  private def getActionClass(actionName: String): Class[Action] = (actionName match {
-    case "SelectExprAction"  => classOf[SelectExprAction]
-    case "SelectTypeAction"  => classOf[SelectTypeAction]
-    case "EditLiteralAction" => classOf[EditLiteralAction]
-    case "DeleteAction"      => classOf[DeleteAction]
-    case "PasteAction"       => classOf[PasteAction]
-    case "IdentityAction"    => classOf[IdentityAction]
+  private def actionArgCount(actionName: String): Int = actionName match {
+    case "SelectExprAction"  => 1
+    case "SelectTypeAction"  => 1
+    case "EditLiteralAction" => 1
+    case "DeleteAction"      => 0
+    case "PasteAction"       => 1
+    case "IdentityAction"    => 0
     case _                   => throw new ActionInvocationException(s"Unknown action name: $actionName")
-  }).asInstanceOf[Class[Action]]
+  }
+
+  private def instantiateAction(
+    actionName: String,
+    node: OuterNode,
+    treePath: List[Int],
+    extraArgs: List[String]
+  ): Action = {
+    if (actionArgCount(actionName) != extraArgs.length)
+      throw new ActionInvocationException(s"Expected ${actionArgCount(actionName)} extra args, got ${extraArgs.length}")
+
+    actionName match {
+      case "SelectExprAction"  => SelectExprAction(node, treePath, extraArgs.head)
+      case "SelectTypeAction"  => SelectTypeAction(node, treePath, extraArgs.head)
+      case "EditLiteralAction" => EditLiteralAction(node, treePath, extraArgs.head)
+      case "DeleteAction"      => DeleteAction(node, treePath)
+      case "PasteAction"       => PasteAction(node, treePath, extraArgs.head)
+      case "IdentityAction"    => IdentityAction(node, treePath)
+      case _                   => throw new ActionInvocationException(s"Unknown action name: $actionName")
+    }
+  }
 
   def createAction(
     actionName: String,
@@ -26,34 +46,7 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
       case _                  => throw new NodeStringParseException(nodeString)
     }
     val treePath = Node.readPathString(treePathString)
-    val actionClass = getActionClass(actionName)
-    val constructor = actionClass.getConstructors.headOption match {
-      case Some(c) => c
-      case None    => throw new ActionInvocationException(s"No constructor found for $actionClass")
-    }
-    var remainingExtraArgs = extraArgs
-    val arguments = constructor.getParameterTypes.map {
-      case c if classOf[AbstractActionLanguage] isAssignableFrom c => this
-      case c if classOf[Node] isAssignableFrom c                   => node
-      case c if classOf[List[Int]] isAssignableFrom c              => treePath
-      case c if classOf[String] isAssignableFrom c =>
-        if (remainingExtraArgs.isEmpty) {
-          throw new ActionInvocationException(s"Missing parameter for $actionClass")
-        }
-        val arg = remainingExtraArgs.head
-        remainingExtraArgs = remainingExtraArgs.tail
-        arg
-      case c => throw new ActionInvocationException(s"Unexpected parameter type in createAction: $c")
-    }
-    if (remainingExtraArgs.nonEmpty) {
-      throw new ActionInvocationException(s"Too many parameters for $actionClass")
-    }
-    try {
-      val result = constructor.newInstance(arguments: _*)
-      result.asInstanceOf[Action]
-    } catch {
-      case e: Exception => throw new ActionInvocationException(s"Error invoking constructor for $actionClass: $e")
-    }
+    instantiateAction(actionName, node, treePath, extraArgs)
   }
 
   abstract class Action(val originalTree: OuterNode, val treePath: List[Int]) {
