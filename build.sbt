@@ -26,6 +26,7 @@ enablePlugins(ScalaJSPlugin)
 scalaJSUseMainModuleInitializer := true
 
 libraryDependencies += "com.lihaoyi" %%% "scalatags" % "0.12.0"
+libraryDependencies += "org.scala-lang.modules" %%% "scala-parser-combinators" % "2.2.0"
 
 lazy val root = (project in file("."))
   .settings(
