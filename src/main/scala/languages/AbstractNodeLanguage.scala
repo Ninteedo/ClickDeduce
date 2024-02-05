@@ -7,7 +7,6 @@ import scalatags.Text.all.*
 
 import java.lang.reflect
 import scala.annotation.tailrec
-import scala.reflect.ClassTag
 import scala.util.parsing.combinator.*
 
 trait AbstractNodeLanguage extends AbstractLanguage {
@@ -157,34 +156,11 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   }
 
   object Node {
-    val innerNodeClasses: List[Class[_ <: Object]] =
-      List(ExprChoiceNode.getClass, SubExprNode.getClass, LiteralNode.getClass)
-
-    val outerNodeClasses: List[Class[_ <: Object]] = List(VariableNode.getClass)
 
     /** Creates a node from a correct string representation of a node (from Node.toString).
       */
     def read(s: String): Option[Node] = {
-      def makeNode(name: String, args: List[Any], env: ValueEnv | TypeEnv = Env()): Option[Node] = {
-        val nodeClass = nodeClassList.find(_.getSimpleName == name)
-        nodeClass match {
-          case Some(value) =>
-            val constructor = value.getConstructors()(0)
-            var arguments = AbstractNodeLanguage.this +: args.map {
-              case l: Literal => l.toString
-              case Some(e)    => e
-              case x          => x
-            }
-            if (constructor.getParameterTypes.last.isAssignableFrom(classOf[ValueEnv])) {
-              arguments = arguments :+ env
-            }
-            if (constructor.getParameterTypes.length != arguments.length) {
-              throw new NodeStringParseException(s"$name(${args.mkString(", ")})")
-            }
-            Some(constructor.newInstance(arguments: _*).asInstanceOf[Node])
-          case None => None
-        }
-      }
+      def makeNode(name: String, args: List[Any]): Option[Node] = instantiate(name, args)
 
       object NodeParser extends JavaTokenParsers {
         def outerNode: Parser[Option[OuterNode | Expr | Type]] =
@@ -246,6 +222,52 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       case s =>
         if (s.split("-").forall(_.matches("\\d+"))) s.split("-").map(_.toInt).toList
         else throw new InvalidTreePathStringException(s)
+    }
+
+    def instantiate(nodeName: String, args: List[Any]): Option[Node] = {
+      val parsedArgs = args.map({
+        case l: Literal => l.toString
+        case Some(e)    => e
+        case other      => other
+      })
+      nodeName match {
+        case "VariableNode" =>
+          parsedArgs match {
+            case List(exprName: String, innerNodes: List[InnerNode]) => Some(VariableNode(exprName, innerNodes))
+            case _                                                   => None
+          }
+        case "ExprChoiceNode" =>
+          parsedArgs match {
+            case Nil => Some(ExprChoiceNode())
+            case _   => None
+          }
+        case "TypeChoiceNode" =>
+          parsedArgs match {
+            case Nil => Some(TypeChoiceNode())
+            case _   => None
+          }
+        case "TypeNode" =>
+          parsedArgs match {
+            case List(typeName: String, innerNodes: List[InnerNode]) => Some(TypeNode(typeName, innerNodes))
+            case _                                                   => None
+          }
+        case "SubExprNode" =>
+          parsedArgs match {
+            case List(node: ExprNode) => Some(SubExprNode(node))
+            case _                    => None
+          }
+        case "SubTypeNode" =>
+          parsedArgs match {
+            case List(node: TypeNodeParent) => Some(SubTypeNode(node))
+            case _                          => None
+          }
+        case "LiteralNode" =>
+          parsedArgs match {
+            case List(s: String) => Some(LiteralNode(s))
+            case _               => None
+          }
+        case _ => None
+      }
     }
   }
 
@@ -636,9 +658,9 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     }
 
     def getEnv(mode: DisplayMode): TypeEnv = getParent match {
-      case Some(n: ExprNode) => typeVariableEnv(n.getEnv(mode))
+      case Some(n: ExprNode)       => typeVariableEnv(n.getEnv(mode))
       case Some(n: TypeNodeParent) => n.getEnv(mode)
-      case _ => Env()
+      case _                       => Env()
     }
 
     def getTypeCheckResult(mode: DisplayMode): Type = getType.typeCheck(getEnv(mode))
@@ -784,7 +806,15 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   private lazy val blankClassList: List[Class[BlankSpace]] =
     List(classOf[BlankExprDropDown], classOf[BlankTypeDropDown]).map(_.asInstanceOf[Class[BlankSpace]])
 
-  private lazy val nodeClassList: List[Class[Node]] = findSubClassesOf(nodeLanguageInterface, classOf[Node])
+  private lazy val nodeClassList: List[Class[Node]] = List(
+    classOf[VariableNode],
+    classOf[ExprChoiceNode],
+    classOf[TypeChoiceNode],
+    classOf[TypeNode],
+    classOf[SubExprNode],
+    classOf[LiteralNode],
+    classOf[SubTypeNode]
+  ).map(_.asInstanceOf[Class[Node]])
 
   private def exprNameToClass(name: String): Option[Class[Expr]] = exprClassList.find(_.getSimpleName == name)
 
