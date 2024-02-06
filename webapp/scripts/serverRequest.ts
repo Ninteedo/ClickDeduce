@@ -21,6 +21,7 @@ export async function postStartNodeBlank(selectedLanguage: string): Promise<Resp
 }
 
 export function postStartNodeBlankNew(selectedLanguage: string): [string, string] {
+    // @ts-ignore
     return startNodeBlank(selectedLanguage);
 }
 
@@ -53,5 +54,6 @@ export function postProcessActionNew(
     extraArgs: any[]
 ): [string, string] {
     const extraArgsStrings: string[] = extraArgs.map(arg => arg.toString());
+    // @ts-ignore
     return processAction(langName, modeName, actionName, nodeString, treePath, extraArgsStrings);
 }
