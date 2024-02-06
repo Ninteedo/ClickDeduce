@@ -1,34 +1,13 @@
-import {afterAll, beforeAll, beforeEach, describe, expect, jest, test} from "@jest/globals";
+import {beforeEach, describe, expect, test} from "@jest/globals";
 import {initialise} from "../initialise";
 import {contextMenuSelect, getLeftmostExprDropdown, selectExprOption, slightDelay} from "./helper";
-import {
-    checkActionRequestExecuted,
-    defaultHtml,
-    getRequestsReceived,
-    langSelectorLanguages,
-    mockEvent,
-    prepareExampleTimesTree,
-    resetRequestTracking,
-    setActionFetchResponse,
-    setActionFetchResponseData,
-    setUpFetchMock
-} from "./requestMocking";
 import {doStartNodeBlank} from "../actions";
 import * as NS from "../../test_resources/node_strings";
-import {numNodeArithHTML, plusNodeArithHTML} from "./serverMock.test";
-
-beforeAll(() => {
-    setUpFetchMock();
-});
 
 beforeEach(async () => {
     resetRequestTracking();
     document.body.innerHTML = defaultHtml;
     await initialise(true);
-});
-
-afterAll(() => {
-    jest.clearAllMocks();
 });
 
 describe("start new node button behaves correctly", () => {

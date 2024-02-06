@@ -1,20 +1,12 @@
-import {afterAll, beforeAll, beforeEach, describe, expect, jest, test} from "@jest/globals";
-import {defaultHtml, getRequestsReceived, optionsHtml, resetRequestTracking, setUpFetchMock} from "./requestMocking";
+import {beforeEach, describe, expect, test} from "@jest/globals";
+import {defaultHtml, getRequestsReceived, optionsHtml, resetRequestTracking} from "./requestMocking";
 import {removeWhitespace} from "./helper";
 import {initialise} from "../initialise";
-
-beforeAll(() => {
-    setUpFetchMock();
-});
 
 beforeEach(async () => {
     resetRequestTracking();
     document.body.innerHTML = defaultHtml;
     await initialise(true);
-});
-
-afterAll(() => {
-    jest.clearAllMocks();
 });
 
 describe("initialise behaves correctly", () => {

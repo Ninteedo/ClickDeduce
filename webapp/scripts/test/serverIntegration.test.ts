@@ -14,11 +14,6 @@ import {
     slightDelay
 } from "./helper";
 
-const port = 9005;
-const command = `sbt "run --port ${port}"`;
-let online = false;
-const siteUrl = `http://localhost:${port}/`
-
 const indexHtml = loadHtmlTemplate('../pages/index');
 
 beforeEach(async () => {
@@ -330,7 +325,7 @@ describe("delete, copy, and paste buttons behave correctly", () => {
     }
 
     beforeEach(async () => {
-        await slightDelay(50);
+        await slightDelay(10);
         await pressStartNodeButton();
         await changeLanguage(3);
         await selectExprOption(getLeftmostExprDropdown(), "Plus");

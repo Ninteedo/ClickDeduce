@@ -30,9 +30,9 @@ export async function startNodeBlank(): Promise<void> {
  * Handles the form submission event.
  * @param event the form submission event
  */
-export async function doStartNodeBlank(event: Event): Promise<void> {
+export async function doStartNodeBlank(event?: Event): Promise<void> {
     // prevent the form from submitting the old-fashioned way
-    event.preventDefault();
+    if (event) event.preventDefault();
 
     // send a POST request to the server
     const [newNodeString, newHtml] = postStartNodeBlankNew(getSelectedLanguage());

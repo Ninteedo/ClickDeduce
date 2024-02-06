@@ -1,17 +1,13 @@
-import {afterAll, beforeAll, beforeEach, describe, expect, jest, test} from "@jest/globals";
+import {beforeEach, describe, expect, test} from "@jest/globals";
 import {initialise} from "../initialise";
-import {
-    defaultHtml,
-    mockEvent,
-    resetRequestTracking,
-    setActionFetchResponse,
-    setUpFetchMock,
-    startNodeBlankArithHTML
-} from "./requestMocking";
 import {doStartNodeBlank, handleLiteralChanged} from "../actions";
 import {
+    changeLanguage,
     contextMenuSelect,
+    doLiteralEdit,
+    getDropdownAt,
     getLeftmostExprDropdown,
+    getLiteralInputAt,
     getRedoButton,
     getUndoButton,
     loadHtmlTemplate,
@@ -19,42 +15,17 @@ import {
     slightDelay
 } from "./helper";
 import * as NS from "../../test_resources/node_strings";
-import {numNodeArithHTML, plusNodeArithHTML} from "./serverMock.test";
 import {getNodeStringFromPath} from "../treeManipulation";
 
-beforeAll(() => {
-    setUpFetchMock();
-});
+const indexHtml = loadHtmlTemplate('../pages/index');
 
 beforeEach(async () => {
-    resetRequestTracking();
-    document.body.innerHTML = defaultHtml;
+    document.body.innerHTML = indexHtml;
     await initialise(true);
 });
 
-afterAll(() => {
-    jest.clearAllMocks();
-});
-
 describe("undo and redo buttons behave correctly", () => {
-    const nodeString1 = `ExprChoiceNode()`;
-    const nodeString2 = `VariableNode("Plus", List(SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode())))`;
-    const nodeString3 = `VariableNode("Num", List(LiteralNode("")))`;
-    const nodeString4 = `VariableNode("Num", List(LiteralNode("foo")))`;
-
-    const html1 = startNodeBlankArithHTML;
-    const html2 = plusNodeArithHTML;
-    const html3 = numNodeArithHTML;
-    const html4 = numNodeArithHTML.replace(
-        `LiteralNode(&quot;&quot;)`,
-        `LiteralNode(&quot;foo&quot;)`
-    ).replace(
-        `<input type="text" style="width: 2ch;" data-tree-path="0" value=""></div>`,
-        `<input type="text" style="width: 2ch;" data-tree-path="0" value="foo"></div>`
-    );
-
     async function updateTree(nodeString: string, html: string): Promise<void> {
-        setActionFetchResponse(nodeString, html);
         const dropdown = getLeftmostExprDropdown();
         if (dropdown) {
             await selectExprOption(getLeftmostExprDropdown(), "Num");
@@ -67,8 +38,20 @@ describe("undo and redo buttons behave correctly", () => {
         }
     }
 
+    async function doEdit1() {
+        await selectExprOption(getDropdownAt(""), "Num");
+    }
+
+    async function doEdit2() {
+        await doLiteralEdit(getLiteralInputAt("0"), "5871");
+    }
+
+    async function doEdit3() {
+        await selectExprOption(getDropdownAt(""), "Bool");
+    }
+
     beforeEach(async () => {
-        await doStartNodeBlank(mockEvent);
+        await doStartNodeBlank();
     });
 
     test("undo and redo buttons begin disabled", () => {
@@ -78,26 +61,26 @@ describe("undo and redo buttons behave correctly", () => {
 
     test("undo button is enabled after an action", async () => {
         expect.assertions(1);
-        await updateTree(nodeString2, html2);
+        await doEdit1();
         expect(getUndoButton().getAttributeNames()).not.toContain('disabled');
     });
 
     test("redo button is still disabled after an action", async () => {
         expect.assertions(1);
-        await updateTree(nodeString2, html2);
+        await doEdit1();
         expect(getRedoButton().getAttributeNames()).toContain('disabled');
     });
 
     test("undo button is disabled when there are no more history", async () => {
         expect.assertions(1);
-        await updateTree(nodeString2, html2);
+        await doEdit1();
         getUndoButton().click();
         expect(getUndoButton().getAttributeNames()).toContain('disabled');
     });
 
     test("redo button is enabled after an undo", async () => {
         expect.assertions(1);
-        await updateTree(nodeString2, html2);
+        await doEdit1();
         getUndoButton().click();
         expect(getRedoButton().getAttributeNames()).not.toContain('disabled');
     });
@@ -105,7 +88,7 @@ describe("undo and redo buttons behave correctly", () => {
     test("pressing undo reverts the tree to the previous state", async () => {
         expect.assertions(1);
         const prevHtml = document.getElementById('tree').innerHTML;
-        await updateTree(nodeString2, html2);
+        await doEdit1();
         getUndoButton().click();
         expect(document.getElementById('tree').innerHTML).toEqual(prevHtml);
     });
@@ -113,9 +96,9 @@ describe("undo and redo buttons behave correctly", () => {
     test("pressing undo twice reverts the tree to the state before the previous state", async () => {
         expect.assertions(2);
         const state1Html = document.getElementById('tree').innerHTML;
-        await updateTree(nodeString2, html2);
+        await doEdit1();
         const state2Html = document.getElementById('tree').innerHTML;
-        await updateTree(nodeString3, html3);
+        await doEdit2();
 
         getUndoButton().click();
         expect(document.getElementById('tree').innerHTML).toEqual(state2Html);
@@ -126,7 +109,7 @@ describe("undo and redo buttons behave correctly", () => {
 
     test("pressing undo and then redo reverts the tree to the most recent state", async () => {
         expect.assertions(1);
-        await updateTree(nodeString2, html2);
+        await doEdit1();
         const state2Html = document.getElementById('tree').innerHTML;
         getUndoButton().click();
         getRedoButton().click();
@@ -135,9 +118,9 @@ describe("undo and redo buttons behave correctly", () => {
 
     test("pressing undo and then redo twice reverts the tree to the state before the most recent state", async () => {
         expect.assertions(2);
-        await updateTree(nodeString2, html2);
+        await doEdit1();
         const state2Html = document.getElementById('tree').innerHTML;
-        await updateTree(nodeString3, html3);
+        await doEdit2();
         const state3Html = document.getElementById('tree').innerHTML;
 
         getUndoButton().click();
@@ -151,40 +134,39 @@ describe("undo and redo buttons behave correctly", () => {
 
     test("pressing undo then performing an action disables redo", async () => {
         expect.assertions(1);
-        await updateTree(nodeString2, html2);
+        await doEdit1();
         getUndoButton().click();
-        await updateTree(nodeString3, html3);
+        await doEdit3();
         expect(getRedoButton().getAttributeNames()).toContain('disabled');
     });
 
     test("pressing undo then performing an action then undoing again enables redo", async () => {
         expect.assertions(1);
-        await updateTree(nodeString2, html2);
+        await doEdit1();
         getUndoButton().click();
-        await updateTree(nodeString3, html3);
+        await doEdit3();
         getUndoButton().click();
         expect(getRedoButton().getAttributeNames()).not.toContain('disabled');
     });
 
     test("pressing undo then performing an action then undoing again can be redone correctly", async () => {
         expect.assertions(1);
-        await updateTree(nodeString2, html2);
+        await doEdit1();
         getUndoButton().click();
-        await updateTree(nodeString3, html3);
+        await doEdit3();
+        const state2Html = document.getElementById('tree').innerHTML;
         getUndoButton().click();
         getRedoButton().click();
-        expect(document.getElementById('tree').innerHTML).toEqual(html3);
+        expect(document.getElementById('tree').innerHTML).toEqual(state2Html);
     });
 });
 
 describe("hovering over a node behaves correctly", () => {
-    const nodeString = NS.PLUS_LEFT_NUM_RIGHT_EMPTY;
-    const html = loadHtmlTemplate('plus_left_num_right_empty');
-
     beforeEach(async () => {
-        await doStartNodeBlank(mockEvent);
-        setActionFetchResponse(nodeString, html);
-        await selectExprOption(getLeftmostExprDropdown(), "Num");
+        await doStartNodeBlank();
+        await selectExprOption(getLeftmostExprDropdown(), "Plus");
+        await selectExprOption(getDropdownAt("0"), "Num");
+        await doLiteralEdit(getLiteralInputAt("0-0"), "51617812");
     });
 
     test("mousing over a node highlights it", async () => {
@@ -228,14 +210,21 @@ describe("hovering over a node behaves correctly", () => {
 });
 
 describe("phantom inputs are made read-only and disabled", () => {
-    const html = loadHtmlTemplate('phantom_example');
-
-    const selector = `input.literal[name="eg"], select[name="77"]`;
+    const selector = `.phantom input.literal, select[class="expr-dropdown"]`;
 
     beforeEach(async () => {
-        await doStartNodeBlank(mockEvent);
+        await doStartNodeBlank();
 
-        setActionFetchResponse(NS.PHANTOM_EXAMPLE, html);
+        await changeLanguage(4);  // LLambda
+        await selectExprOption(getLeftmostExprDropdown(), "Apply");
+        await selectExprOption(getDropdownAt("0"), "Lambda");
+        await doLiteralEdit(getLiteralInputAt("0-0"), "x");
+        await selectExprOption(getDropdownAt("0-1"), "IntType");
+        await selectExprOption(getDropdownAt("0-2"), "Plus");
+        await selectExprOption(getDropdownAt("0-2-0"), "Var");
+        await doLiteralEdit(getLiteralInputAt("0-2-0-0"), "x");
+        await selectExprOption(getDropdownAt("1"), "Num");
+        await doLiteralEdit(getLiteralInputAt("1-0"), "hi");
 
         document.getElementById("eval-mode-radio").click();
         await slightDelay();
@@ -252,13 +241,16 @@ describe("phantom inputs are made read-only and disabled", () => {
 });
 
 describe("node string can be queried correctly", () => {
-    const nodeString = NS.NODE_STRING_PATH_TEST_EXAMPLE;
-    const html = loadHtmlTemplate('times_left_filled_num_right_empty');
-
     beforeEach(async () => {
-        await doStartNodeBlank(mockEvent);
-        setActionFetchResponse(nodeString, html);
-        await selectExprOption(getLeftmostExprDropdown(), "Times");
+        await doStartNodeBlank();
+        await selectExprOption(getLeftmostExprDropdown(), "Plus");
+        await selectExprOption(getDropdownAt("0"), "Times");
+        await selectExprOption(getDropdownAt("0-0"), "Bool");
+        await doLiteralEdit(getLiteralInputAt("0-0-0"), "test\"()\\(\\)\\\")");
+        await selectExprOption(getDropdownAt("0-1"), "Num");
+        await selectExprOption(getDropdownAt("1"), "IfThenElse");
+        await selectExprOption(getDropdownAt("1-0"), "Bool");
+        await doLiteralEdit(getLiteralInputAt("1-0-0"), "eg");
     });
 
     test("node string can be queried correctly", async () => {

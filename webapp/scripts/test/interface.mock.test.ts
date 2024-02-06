@@ -1,4 +1,4 @@
-import {afterAll, beforeAll, beforeEach, describe, expect, jest, test} from "@jest/globals";
+import {beforeEach, describe, expect, jest, test} from "@jest/globals";
 import {
     defaultHtml,
     mockEvent,
@@ -6,7 +6,6 @@ import {
     resetRequestTracking,
     setActionErrorMessage,
     setActionFetchResponse,
-    setUpFetchMock
 } from "./requestMocking";
 import {
     contextMenuSelect,
@@ -23,18 +22,10 @@ import * as NS from "../../test_resources/node_strings";
 import {doStartNodeBlank, handleLiteralChanged} from "../actions";
 import {ClickDeduceResponseError} from "../ClickDeduceResponseError";
 
-beforeAll(() => {
-    setUpFetchMock();
-});
-
 beforeEach(async () => {
     resetRequestTracking();
     document.body.innerHTML = defaultHtml;
     await initialise(true);
-});
-
-afterAll(() => {
-    jest.clearAllMocks();
 });
 
 describe("context menu behaves correctly", () => {

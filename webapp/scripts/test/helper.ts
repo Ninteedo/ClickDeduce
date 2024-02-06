@@ -38,6 +38,14 @@ export function getLeftmostExprDropdown(): HTMLDivElement {
     return document.querySelector('.expr-selector-container[data-kind="expr"]') as HTMLDivElement;
 }
 
+export function getDropdownAt(treePath: string): HTMLDivElement {
+    return document.querySelector(`.expr-selector-container[data-tree-path="${treePath}"]`) as HTMLDivElement;
+}
+
+export function getLiteralInputAt(treePath: string): HTMLInputElement {
+    return document.querySelector(`input[data-tree-path="${treePath}"]`) as HTMLInputElement;
+}
+
 export function getExprDropdownOptions(selector: HTMLDivElement) {
     const dropdown = selector.querySelector('.expr-selector-dropdown') as HTMLDivElement;
     return Array.from(dropdown.querySelectorAll('ul > li'));
@@ -49,7 +57,7 @@ export async function selectExprOption(selector: HTMLDivElement, exprName: strin
     input.value = exprName;
     input.dispatchEvent(new Event('input'));
     input.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter'}));
-    await slightDelay(50);
+    await slightDelay();
 }
 
 export async function doLiteralEdit(input: HTMLInputElement, newValue: string): Promise<void> {
