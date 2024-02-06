@@ -137,6 +137,46 @@ class LArith extends ClickDeduceLanguage {
 
   override def calculateTypeClassList: List[Class[Type]] = super.calculateTypeClassList ++ List(classOf[IntType])
     .map(_.asInstanceOf[Class[Type]])
+
+  addExprBuilder(
+    "Num",
+    {
+      case List(l: Literal) => Some(Num(l))
+      case _               => None
+    }
+  )
+
+  addExprBuilder(
+    "Plus",
+    {
+      case List(e1: Expr, e2: Expr) => Some(Plus(e1, e2))
+      case _                        => None
+    }
+  )
+
+  addExprBuilder(
+    "Times",
+    {
+      case List(e1: Expr, e2: Expr) => Some(Times(e1, e2))
+      case _                        => None
+    }
+  )
+
+  addTypeBuilder(
+    "IntType",
+    {
+      case List() => Some(IntType())
+      case _      => None
+    }
+  )
+
+  addValueBuilder(
+    "NumV",
+    {
+      case List(x: BigInt) => Some(NumV(x))
+      case _               => None
+    }
+  )
 }
 
 object LArith extends LArith {}

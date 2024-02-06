@@ -9,8 +9,9 @@ class LRec extends LLam {
     override def evalInner(env: ValueEnv): Value = f match {
       case LiteralIdentifier(f_id) =>
         v match {
-          case LiteralIdentifier(v_id) => RecV(f, v, inType.typeCheck(envToTypeEnv(env)), outType.typeCheck(envToTypeEnv(env)), e, env)
-          case _                       => InvalidIdentifierEvalError(v)
+          case LiteralIdentifier(v_id) =>
+            RecV(f, v, inType.typeCheck(envToTypeEnv(env)), outType.typeCheck(envToTypeEnv(env)), e, env)
+          case _ => InvalidIdentifierEvalError(v)
         }
       case _ => InvalidIdentifierEvalError(f)
     }
@@ -75,6 +76,23 @@ class LRec extends LLam {
     override val message: String =
       s"Recursive function expression declared return type $declared does not match actual return type $actual"
   }
+
+  addExprBuilder(
+    "Rec",
+    {
+      case List(f: Literal, v: Literal, inType: Type, outType: Type, e: Expr) => Some(Rec(f, v, inType, outType, e))
+      case _                                                                  => None
+    }
+  )
+
+  addValueBuilder(
+    "RecV",
+    {
+      case List(f: Literal, v: Literal, inType: Type, outType: Type, e: Expr, env: ValueEnv) =>
+        Some(RecV(f, v, inType, outType, e, env))
+      case _ => None
+    }
+  )
 }
 
 object LRec extends LRec {}

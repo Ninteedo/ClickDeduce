@@ -1,5 +1,6 @@
 package languages
 
+import app.ClickDeduceException
 import convertors.ClassDict
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
@@ -16,9 +17,9 @@ trait AbstractLanguage {
   type Variable = String
 
   /** The evaluation environment at a particular point.
-   *
-   * Contains variables with bound values.
-   */
+    *
+    * Contains variables with bound values.
+    */
   case class Env[T](env: Map[Variable, T] = Map()) {
     def get(key: Variable): Option[T] = env.get(key)
 
@@ -48,15 +49,15 @@ trait AbstractLanguage {
   }
 
   /** The evaluation environment at a particular point.
-   *
-   * Contains variables with bound values.
-   */
+    *
+    * Contains variables with bound values.
+    */
   type ValueEnv = Env[Value]
 
   /** The type environment at a particular point.
-   *
-   * Contains variables with bound types.
-   */
+    *
+    * Contains variables with bound types.
+    */
   type TypeEnv = Env[Type]
 
   object ValueEnv {
@@ -68,6 +69,8 @@ trait AbstractLanguage {
   }
 
   trait Term {
+    val name: String = getClass.getSimpleName.stripSuffix("$")
+
     lazy val toHtml: TypedTag[String] = span(raw(prettyPrint))
 
     def getChildrenBase(env: ValueEnv = ValueEnv.empty): List[(Term, ValueEnv)] = Nil
@@ -166,7 +169,6 @@ trait AbstractLanguage {
     lazy val tooltipText: String = toString + ": " + typ.toString
 
     lazy val valueText: TypedTag[String] = {
-      val constructor = getClass.getConstructors.head
       val arguments = this match {
         case v0: Product =>
           v0.productIterator.toList.collect({
@@ -178,13 +180,17 @@ trait AbstractLanguage {
             case other      => other
           })
       }
-      val valueInstance = constructor.newInstance(lang +: arguments: _*).asInstanceOf[Value]
+      val valueInstance = getValueBuilder(name) match {
+        case Some(builder) =>
+          builder.apply(arguments) match {
+            case Some(v) => v
+            case None    => throw InvalidValueBuilderArgs(name, arguments)
+          }
+        case None => throw UnknownValueBuilder(name)
+      }
       div(
         div(raw(valueInstance.prettyPrint), cls := ClassDict.VALUE),
-        if (valueTextShowType) List(
-          span(": "),
-          div(typ.valueText, cls := ClassDict.VALUE_TYPE)
-        ) else div()
+        if (valueTextShowType) List(span(": "), div(typ.valueText, cls := ClassDict.VALUE_TYPE)) else div()
       )
     }
 
@@ -216,7 +222,6 @@ trait AbstractLanguage {
     lazy val tooltipText: String = toString
 
     lazy val valueText: TypedTag[String] = {
-      val constructor = getClass.getConstructors.head
       val arguments = this match {
         case v0: Product =>
           v0.productIterator.toList.collect({
@@ -228,7 +233,14 @@ trait AbstractLanguage {
             case other      => other
           })
       }
-      val valueInstance = constructor.newInstance(lang +: arguments: _*).asInstanceOf[Type]
+      val valueInstance = getTypeBuilder(name) match {
+        case Some(builder) =>
+          builder.apply(arguments) match {
+            case Some(t) => t
+            case None    => throw InvalidTypeBuilderArgs(name, arguments)
+          }
+        case None => throw UnknownTypeBuilder(name)
+      }
       div(raw(valueInstance.prettyPrint), cls := ClassDict.VALUE_TYPE)
     }
 
@@ -383,4 +395,105 @@ trait AbstractLanguage {
       case (k, TypeContainer(t))      => (k, t)
     }))
   }
+
+  // new class lists
+
+  type ExprBuilder = List[Any] => Option[Expr]
+
+  private var exprBuilders: Map[String, ExprBuilder] = Map()
+
+  protected def addExprBuilder(name: String, builder: ExprBuilder): Unit = {
+    exprBuilders += (name -> builder)
+  }
+
+  type TypeBuilder = List[Any] => Option[Type]
+
+  private var typeBuilders: Map[String, TypeBuilder] = Map()
+
+  protected def addTypeBuilder(name: String, builder: TypeBuilder): Unit = {
+    typeBuilders += (name -> builder)
+  }
+
+  type ValueBuilder = List[Any] => Option[Value]
+
+  private var valueBuilders: Map[String, ValueBuilder] = Map()
+
+  protected def addValueBuilder(name: String, builder: ValueBuilder): Unit = {
+    valueBuilders += (name -> builder)
+  }
+
+  def getExprBuilder(name: String): Option[ExprBuilder] = exprBuilders.get(name)
+
+  def buildExpr(name: String, args: List[Any]): Option[Expr] = getExprBuilder(name).flatMap(_.apply(args))
+
+  def getTypeBuilder(name: String): Option[TypeBuilder] = typeBuilders.get(name)
+
+  def buildType(name: String, args: List[Any]): Option[Type] = getTypeBuilder(name).flatMap(_.apply(args))
+
+  def getValueBuilder(name: String): Option[ValueBuilder] = valueBuilders.get(name)
+
+  def buildValue(name: String, args: List[Any]): Option[Value] = getValueBuilder(name).flatMap(_.apply(args))
+
+  case class UnknownExprBuilder(name: String) extends ClickDeduceException(s"Unknown expression builder: $name")
+
+  case class InvalidExprBuilderArgs(name: String, args: List[Any])
+      extends ClickDeduceException(s"Invalid arguments for expression builder: $name, $args")
+
+  case class UnknownTypeBuilder(name: String) extends ClickDeduceException(s"Unknown type builder: $name")
+
+  case class InvalidTypeBuilderArgs(name: String, args: List[Any])
+      extends ClickDeduceException(s"Invalid arguments for type builder: $name, $args")
+
+  case class UnknownValueBuilder(name: String) extends ClickDeduceException(s"Unknown value builder: $name")
+
+  case class InvalidValueBuilderArgs(name: String, args: List[Any])
+      extends ClickDeduceException(s"Invalid arguments for value builder: $name, $args")
+
+  addExprBuilder(
+    "ExprPlaceholder",
+    {
+      case List(s: String) => Some(ExprPlaceholder(s))
+      case _               => None
+    }
+  )
+
+  addTypeBuilder(
+    "TypePlaceholder",
+    {
+      case List(s: String) => Some(TypePlaceholder(s))
+      case _               => None
+    }
+  )
+
+  addValueBuilder(
+    "ValuePlaceholder",
+    {
+      case List(s: String) => Some(ValuePlaceholder(s))
+      case _               => None
+    }
+  )
+
+  addValueBuilder(
+    "TypeValueContainer",
+    {
+      case List(t: Type) => Some(TypeValueContainer(t))
+      case _             => None
+    }
+  )
+
+  addTypeBuilder(
+    "TypeContainer",
+    {
+      case List(t: Type) => Some(TypeContainer(t))
+      case _             => None
+    }
+  )
+
+  addTypeBuilder(
+    "UnknownType",
+    {
+      case Nil => Some(UnknownType())
+      case _   => None
+    }
+  )
 }

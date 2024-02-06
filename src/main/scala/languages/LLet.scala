@@ -7,9 +7,9 @@ class LLet extends LIf {
     override def evalInner(env: ValueEnv): Value = v match {
       case LiteralIdentifier(identifier) =>
         env.get(identifier) match {
-          case None => UnknownVariableEvalError(v)
+          case None                          => UnknownVariableEvalError(v)
           case Some(TypeValueContainer(typ)) => VariableOnlyEvalError(v)
-          case Some(value) => value
+          case Some(value)                   => value
         }
       case _ => InvalidIdentifierEvalError(v)
     }
@@ -17,9 +17,9 @@ class LLet extends LIf {
     override def typeCheckInner(tEnv: TypeEnv): Type = v match {
       case LiteralIdentifier(identifier) =>
         tEnv.get(identifier) match {
-          case None => UnknownVariableTypeError(v)
+          case None                     => UnknownVariableTypeError(v)
           case Some(TypeContainer(typ)) => VariableOnlyTypeError(v)
-          case Some(typ) => typ
+          case Some(typ)                => typ
         }
       case _ => InvalidIdentifierTypeError(v)
     }
@@ -99,6 +99,22 @@ class LLet extends LIf {
   override def calculateExprClassList: List[Class[Expr]] = {
     super.calculateExprClassList ++ List(classOf[Var], classOf[Let]).map(_.asInstanceOf[Class[Expr]])
   }
+
+  addExprBuilder(
+    "Let",
+    {
+      case List(v: Literal, assign: Expr, bound: Expr) => Some(Let(v, assign, bound))
+      case _                                            => None
+    }
+  )
+
+  addExprBuilder(
+    "Var",
+    {
+      case List(v: Literal) => Some(Var(v))
+      case _                 => None
+    }
+  )
 }
 
 object LLet extends LLet {}

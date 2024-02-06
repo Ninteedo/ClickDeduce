@@ -136,6 +136,54 @@ class LIf extends LArith {
   override def calculateTypeClassList: List[Class[Type]] = {
     super.calculateTypeClassList ++ List(classOf[BoolType]).map(_.asInstanceOf[Class[Type]])
   }
+
+  addExprBuilder(
+    "Bool",
+    {
+      case List(b: Literal) => Some(Bool(b))
+      case _                => None
+    }
+  )
+
+  addExprBuilder(
+    "Equal",
+    {
+      case List(e1: Expr, e2: Expr) => Some(Equal(e1, e2))
+      case _                        => None
+    }
+  )
+
+  addExprBuilder(
+    "LessThan",
+    {
+      case List(e1: Expr, e2: Expr) => Some(LessThan(e1, e2))
+      case _                        => None
+    }
+  )
+
+  addExprBuilder(
+    "IfThenElse",
+    {
+      case List(cond: Expr, then_expr: Expr, else_expr: Expr) => Some(IfThenElse(cond, then_expr, else_expr))
+      case _                                                  => None
+    }
+  )
+
+  addTypeBuilder(
+    "BoolType",
+    {
+      case Nil => Some(BoolType())
+      case _   => None
+    }
+  )
+
+  addValueBuilder(
+    "BoolV",
+    {
+      case List(b: Boolean) => Some(BoolV(b))
+      case _                => None
+    }
+  )
 }
 
 object LIf extends LIf {}

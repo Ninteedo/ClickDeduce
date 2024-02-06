@@ -6,7 +6,6 @@ import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
 import java.lang.reflect
-import scala.annotation.tailrec
 import scala.util.parsing.combinator.*
 
 trait AbstractNodeLanguage extends AbstractLanguage {
@@ -48,29 +47,17 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     *   The `Term` created, if successful.
     */
   private def parseTerm(s: String): Option[Term] = {
-    @tailrec
     def makeTerm(name: String, args: List[Any]): Option[Term] = {
-      def constructTermFromArgs[T](termClass: Class[T]): T = {
-        val constructor = termClass.getConstructors()(0)
-        val arguments = this +: args.map {
-          case Some(e) => e
-          case x       => x
-        }
-        constructor.newInstance(arguments: _*).asInstanceOf[T]
+      val parsedArgs = args.map {
+        case Some(e) => e
+        case other   => other
       }
-
-      val exprClass = exprClassList.find(_.getSimpleName == name)
-      exprClass match {
-        case Some(value) => Some(constructTermFromArgs(value))
+      getExprBuilder(name) match {
+        case Some(builder) => builder(parsedArgs)
         case None =>
-          val blankClass = blankClassList.find(_.getSimpleName == name)
-          blankClass match {
-            case Some(value) => makeTerm("MissingExpr", Nil)
-            case None =>
-              typeClassList.find(_.getSimpleName == name) match {
-                case Some(value) => Some(constructTermFromArgs(value))
-                case None        => None
-              }
+          getTypeBuilder(name) match {
+            case Some(builder) => builder(parsedArgs)
+            case None          => None
           }
       }
     }
@@ -561,8 +548,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     def fromExpr(e: Expr): ExprNode = e match {
       case blank: BlankExprDropDown => ExprChoiceNode()
       case e =>
-        val exprClass = e.getClass
-        val constructor = exprClass.getConstructors()(0)
         val innerNodes = e match {
           case e0: Product =>
             val values = e0.productIterator.toList
@@ -572,7 +557,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
               case c: Type    => SubTypeNode(TypeNode.fromType(c))
             })
         }
-        val result = VariableNode(e.getClass.getSimpleName, innerNodes)
+        val result = VariableNode(e.name, innerNodes)
         result.overrideExpr(e)
         innerNodes.foreach(_.setParent(Some(result)))
         result
@@ -647,7 +632,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   abstract class TypeNodeParent extends OuterNode {
     lazy val getType: Type
 
-    lazy val getTypeName: String = getType.getClass.getSimpleName
+    lazy val getTypeName: String = getType.name
 
     override def getParent: Option[OuterNode] = {
       if (!isParentInitialised) markRoot()
@@ -678,8 +663,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     private lazy val typeClass: Class[Type] = typeNameToClass(typeName) match {
       case Some(value) => value
-      case None =>
-        throw new IllegalArgumentException(s"Unknown expression type for ${lang.getClass.getSimpleName}: $typeName")
+      case None        => throw new IllegalArgumentException(s"Unknown expression type: $typeName")
     }
 
     override def toHtmlLine(mode: DisplayMode): TypedTag[String] =
@@ -734,17 +718,14 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     def fromType(typ: Type): TypeNodeParent = typ match {
       case blank: BlankTypeDropDown => TypeChoiceNode()
       case _ =>
-        val typeClass = typ.getClass
-        val constructor = typeClass.getConstructors()(0)
         val innerNodes = typ match {
           case e0: Product =>
-            val values = e0.productIterator.toList
-            values.collect({
+            e0.productIterator.toList.collect({
               case c: Literal => LiteralNode(c.toString)
               case c: Type    => SubTypeNode(TypeNode.fromType(c))
             })
         }
-        val result = TypeNode(typ.getClass.getSimpleName, innerNodes)
+        val result = TypeNode(typ.name, innerNodes)
         innerNodes.foreach(_.setParent(Some(result)))
         result
     }
@@ -795,9 +776,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   private lazy val exprClassList: List[Class[Expr]] = calculateExprClassList
 
   protected def calculateExprClassList: List[Class[Expr]]
-
-  lazy val nodeLanguageInterface: Class[AbstractNodeLanguage] =
-    findInterface(this.getClass, classOf[AbstractNodeLanguage])
 
   private lazy val typeClassList: List[Class[Type]] = calculateTypeClassList
 
