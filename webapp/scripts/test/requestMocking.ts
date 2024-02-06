@@ -151,7 +151,7 @@ export function setUpJestBeforeAndAfter(): void {
     beforeEach(async () => {
         resetRequestTracking();
         document.body.innerHTML = defaultHtml;
-        await initialise();
+        await initialise(true);
     });
 
     afterAll(() => {

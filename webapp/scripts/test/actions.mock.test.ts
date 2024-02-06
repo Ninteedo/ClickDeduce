@@ -24,7 +24,7 @@ beforeAll(() => {
 beforeEach(async () => {
     resetRequestTracking();
     document.body.innerHTML = defaultHtml;
-    await initialise();
+    await initialise(true);
 });
 
 afterAll(() => {

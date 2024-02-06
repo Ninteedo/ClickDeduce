@@ -142,7 +142,7 @@ describe('fetch works correctly', () => {
 
 beforeEach(async () => {
     document.body.innerHTML = indexHtml;
-    await initialise();
+    await initialise(true);
 });
 
 describe('lang selector is correctly initialised on load', () => {
