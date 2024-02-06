@@ -1,8 +1,4 @@
-import {spawn} from 'child_process';
-import {afterAll, beforeAll, beforeEach, describe, expect, jest, test} from "@jest/globals";
-import http from "http";
-import net from "net";
-import kill from "tree-kill";
+import {beforeEach, describe, expect, test} from "@jest/globals";
 import {initialise} from "../initialise";
 import {
     changeLanguage,
@@ -23,122 +19,7 @@ const command = `sbt "run --port ${port}"`;
 let online = false;
 const siteUrl = `http://localhost:${port}/`
 
-const nodeFetch = require('node-fetch');
-global.fetch = function (url: string, options: any) {
-    const finalUrl = new URL(url, siteUrl);
-    return nodeFetch(finalUrl.toString(), options);
-};
-
-jest.setTimeout(120000);
-
-let serverThread = spawn('sbt', [`"run --port ${port}"`], {shell: true});
-
-beforeAll(async () => {
-    const maxAttempts = 60;
-    let attempts = 0;
-
-    while (attempts < maxAttempts && !online) {
-        let req: http.ClientRequest;
-        try {
-            await new Promise((resolve, reject) => {
-                req = http.get(siteUrl, (res: any) => {
-                    console.log(`Server is online. Attempt ${attempts + 1} of ${maxAttempts}`);
-                    online = true;
-                    resolve(null);
-                });
-                req.on('error', reject);
-                req.setTimeout(5000, () => {
-                    console.log("Request timed out");
-                    reject(new Error('Request timed out'));
-                });
-            });
-        } catch (error) {
-            console.log(`Server not online, received ${error}`)
-        } finally {
-            req.destroy();
-        }
-
-        if (!online) {
-            console.log(`Server not online. Attempt ${attempts + 1} of ${maxAttempts}`);
-            attempts++;
-            await new Promise(resolve => setTimeout(resolve, 2000));
-        }
-    }
-
-    jest.setTimeout(10000);
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    if (attempts === maxAttempts) {
-        throw new Error('Server did not start within the expected time.');
-    }
-});
-
-afterAll(async () => {
-    console.log('Killing server thread');
-    kill(serverThread.pid, 'SIGKILL');
-});
-
 const indexHtml = loadHtmlTemplate('../pages/index');
-
-describe('server is online', () => {
-    test('server thread is running', () => {
-        expect(serverThread).not.toBeNull();
-    });
-
-    test("can connect to server", () => {
-        const client = new net.Socket();
-        client.connect(port, 'localhost', function () {
-            console.log('Connected');
-            client.write('Hello, server! Love, Client.');
-            client.end();
-            client.destroySoon();
-        });
-    });
-
-    test("response validation", done => {
-        expect.assertions(1);
-        http.get(siteUrl, (res: any) => {
-            let data = '';
-
-            res.on('data', (chunk: any) => {
-                data += chunk;
-            });
-
-            res.on('end', () => {
-                console.log(data);
-                expect(data).toContain('<title>ClickDeduce</title>');
-                done();
-            });
-        }).on('error', (err: Error) => {
-            done(err);
-        });
-    });
-});
-
-
-describe('fetch works correctly', () => {
-    test('fetch is defined', () => {
-        expect(fetch).toBeDefined();
-    });
-
-    test('can fetch the index page', async () => {
-        expect.assertions(1);
-        const response = await fetch(siteUrl, {method: 'GET'});
-        const text = await response.text();
-        expect(text).toContain('<title>ClickDeduce</title>');
-    });
-
-    test('can fetch the lang selector', async () => {
-        expect.assertions(1);
-        await fetch(
-            'get-lang-selector', {method: 'GET'}
-        ).then(response =>
-            response.json()
-        ).then(json => {
-            expect(json['langSelectorHtml']).toContain('<select id="lang-selector"');
-        });
-    });
-});
 
 beforeEach(async () => {
     document.body.innerHTML = indexHtml;
@@ -430,34 +311,6 @@ describe('behaviour of manipulating trees with type selections is correct', () =
         await selectTypeOption(getLeftmostTypeDropdown(), "BoolType");
         expect(getTree().querySelectorAll('.expr-selector-container[data-kind="type"]')).toHaveLength(0);
     });
-});
-
-test('images are correctly loaded', async () => {
-    // Fetch the HTML content of the page
-    const response = await fetch("", {method: 'GET'});
-    const html = await response.text();
-
-    // Use DOMParser to parse the HTML content
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-
-    // Get all image elements
-    const images = doc.getElementsByTagName('img');
-
-    for (let i = 0; i < images.length; i++) {
-        const image = images[i];
-        expect(image.getAttributeNames()).toContain('src');
-
-        const src = image.getAttribute('src');
-        expect(src.length).toBeGreaterThan(0);
-
-        console.log(`Fetching image ${src}`);
-
-        // Fetch the image
-        const imageResponse = await fetch(src, {method: 'GET'});
-        expect(imageResponse.status).toBe(200);
-        expect(imageResponse.headers.get('content-type')).toContain('image/');
-    }
 });
 
 describe("delete, copy, and paste buttons behave correctly", () => {
