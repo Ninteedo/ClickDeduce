@@ -20,7 +20,7 @@ import {
 } from "./helper";
 import {initialise} from "../initialise";
 import * as NS from "../../test_resources/node_strings";
-import {handleLiteralChanged, handleSubmit} from "../actions";
+import {doStartNodeBlank, handleLiteralChanged} from "../actions";
 import {ClickDeduceResponseError} from "../ClickDeduceResponseError";
 
 beforeAll(() => {
@@ -95,7 +95,7 @@ describe("tab cycling between input elements behaves correctly", () => {
     const html = loadHtmlTemplate('tabbing_example');
 
     beforeEach(async () => {
-        await handleSubmit(mockEvent, '/start-node-blank');
+        await doStartNodeBlank(mockEvent);
         setActionFetchResponse(nodeString, html);
         await selectExprOption(getLeftmostExprDropdown(), "Num");
     });

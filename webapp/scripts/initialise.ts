@@ -2,8 +2,8 @@ import '../styles/stylesheet.css';
 import {
     clearTreeNode,
     copyTreeNode,
+    doStartNodeBlank,
     handleLiteralChanged,
-    handleSubmit,
     pasteTreeNode,
     resetCopyCache,
     startNodeBlank
@@ -41,7 +41,7 @@ export async function initialise(): Promise<void> {
 }
 
 (window as any).initialise = initialise;
-(window as any).handleSubmit = handleSubmit;
+(window as any).handleSubmit = doStartNodeBlank;
 (window as any).undo = undo;
 (window as any).redo = redo;
 (window as any).zoomToFit = zoomToFit;

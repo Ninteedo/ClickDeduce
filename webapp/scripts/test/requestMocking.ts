@@ -3,7 +3,7 @@ import {MockResponse} from "./MockResponse";
 import {getLeftmostExprDropdown, loadHtmlTemplate, selectExprOption} from "./helper";
 import {initialise} from "../initialise";
 import * as NS from "../../test_resources/node_strings";
-import {handleLiteralChanged, handleSubmit} from "../actions";
+import {doStartNodeBlank, handleLiteralChanged} from "../actions";
 
 let dummyFetchResponse: any = null;
 let actionFetchResponse: { nodeString: string, html: string } = null;
@@ -171,7 +171,7 @@ export async function prepareExampleTimesTree(): Promise<void> {
     const nodeString4 = NS.TIMES_LEFT_FILLED_NUM_RIGHT_EMPTY;
     const html4 = loadHtmlTemplate('times_left_filled_num_right_empty');
 
-    await handleSubmit(mockEvent, '/start-node-blank');
+    await doStartNodeBlank(mockEvent);
     setActionFetchResponse(nodeString2, html2);
     await selectExprOption(getLeftmostExprDropdown(), "Num");
     setActionFetchResponse(nodeString3, html3);

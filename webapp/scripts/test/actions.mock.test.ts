@@ -13,7 +13,7 @@ import {
     setActionFetchResponseData,
     setUpFetchMock
 } from "./requestMocking";
-import {handleSubmit} from "../actions";
+import {doStartNodeBlank} from "../actions";
 import * as NS from "../../test_resources/node_strings";
 import {numNodeArithHTML, plusNodeArithHTML} from "./serverMock.test";
 
@@ -94,7 +94,7 @@ describe("start new node button behaves correctly", () => {
 
 describe("selecting an option from the root expr dropdown behaves correctly", () => {
     beforeEach(async () => {
-        await handleSubmit(mockEvent, '/start-node-blank');
+        await doStartNodeBlank(mockEvent);
     });
 
     test("select expr dropdown is available", async () => {
@@ -121,7 +121,7 @@ describe("selecting an option from a non-root expr dropdown behaves correctly", 
     const dummyNodeString: string = NS.PLUS_EMPTY;
 
     beforeEach(async () => {
-        await handleSubmit(mockEvent, '/start-node-blank');
+        await doStartNodeBlank(mockEvent);
 
         setActionFetchResponse(dummyNodeString, plusNodeArithHTML);
 
@@ -189,7 +189,7 @@ describe("entering text into a literal input behaves correctly", () => {
     };
 
     beforeEach(async () => {
-        await handleSubmit(mockEvent, '/start-node-blank');
+        await doStartNodeBlank(mockEvent);
 
         setActionFetchResponse(dummyNodeString, numNodeArithHTML);
 
@@ -387,7 +387,7 @@ describe("delete, copy, and paste buttons behave correctly", () => {
 
 describe("mode radio buttons behave correctly", () => {
     beforeEach(async () => {
-        await handleSubmit(mockEvent, '/start-node-blank');
+        await doStartNodeBlank(mockEvent);
     });
 
     test("the initial mode is edit", async () => {
