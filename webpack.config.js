@@ -1,5 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
     // The entry point of your application
@@ -7,13 +8,13 @@ module.exports = {
 
     // The output configuration of your bundle
     output: {
-        path: path.resolve(__dirname, 'webapp', 'dist'), // Output directory
+        path: path.resolve(__dirname, 'build'), // Output directory
         filename: 'bundle.js', // Name of the output bundle
     },
 
     // Configuration for the development server
     devServer: {
-        contentBase: './webapp/dist',
+        contentBase: './build',
     },
 
     // Module/rules configuration to tell Webpack how to handle different types of modules
@@ -41,6 +42,10 @@ module.exports = {
                 use: 'ts-loader',
                 exclude: /node_modules/
             },
+            {
+                test: /\.svg$/,
+                type: 'asset/inline'
+            }
         ],
     },
     resolve: {
@@ -51,7 +56,7 @@ module.exports = {
             template: './webapp/pages/index.html',  // Path to your HTML file
             filename: 'index.html',  // Output filename (optional)
             // inject: false
-        })
+        }),
     ],
 
     // Optional: Configuration for source maps (useful for debugging)

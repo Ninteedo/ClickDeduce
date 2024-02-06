@@ -8,8 +8,6 @@
 
 <body onload="initialise()">
 
-<!--<h2>ClickDeduce</h2>-->
-
 <div>
   <label for="lang-selector-div">Language:</label>
   <div id="lang-selector-div" style="display: inline;">
@@ -50,8 +48,7 @@
 
 <div id="tree-container">
   <div id="tree-buttons">
-    <button onclick="zoomToFit()">
-      <img src="../images/zoom_to_fit.svg" alt="Zoom to Fit">
+    <button id="zoom-to-fit" onclick="zoomToFit()">
     </button>
   </div>
   <div id="tree"></div>
@@ -67,25 +64,6 @@
 </div>
 
 <div id="error-message" class="error-message fade-out"></div>
-
-<!--<script>-->
-<!--  (function() {-->
-<!--    function showErrorMessage() {-->
-<!--      document.body.innerHTML = `-->
-<!--        <h1>Failed to load ClickDeduce</h1>-->
-<!--        <p>ClickDeduce failed to load.-->
-<!--        This is likely because the server is not running, or it was not possible to connect to it.</p>-->
-<!--      `;-->
-<!--    }-->
-
-<!--    const scriptTag = document.createElement('script');-->
-<!--    scriptTag.src = 'dist/bundle.js';-->
-<!--    scriptTag.addEventListener('error', showErrorMessage);-->
-
-<!--    // Append script tag into body-->
-<!--    document.body.appendChild(scriptTag);-->
-<!--  })();-->
-<!--</script>-->
 
 </body>
 </html>
