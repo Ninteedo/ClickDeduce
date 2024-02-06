@@ -31,10 +31,10 @@ jobs:
       - name: Copy Scala.JS output to webapp scripts
         run: cp ./target/scalajs/clickdeduce-opt.js ./webapp/scripts/clickdeduce-opt.js
 
-      - name: Install and Build
-        run: |
-          npm ci
-          npm run build
+      - name: NPM install
+        run: npm install
+      - name: NPM Build
+        run: run build
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
