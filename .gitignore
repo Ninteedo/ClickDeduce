@@ -50,3 +50,6 @@ package-lock.json
 .stryker-tmp
 
 /reports/mutation
+
+/webapp/scripts/clickdeduce-opt.js
+/webapp/scripts/clickdeduce-opt.js.map

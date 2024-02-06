@@ -26,7 +26,9 @@
   },
   "scripts": {
     "test": "jest --runInBand --detectOpenHandles",
-    "build": "webpack --mode=development"
+    "build:webpack": "webpack --mode=development",
+    "build:scala": "sbt fullOptJS",
+    "build": "npm run build:scala && npm run build:webpack"
   },
   "dependencies": {
     "@panzoom/panzoom": "~4.5.1",

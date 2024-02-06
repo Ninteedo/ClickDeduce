@@ -30,8 +30,8 @@ libraryDependencies += "org.scala-lang.modules" %%% "scala-parser-combinators" %
 
 scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
 
-artifactPath in (Compile, fastOptJS) := baseDirectory.value / "target" / "scalajs" / "clickdeduce-opt.js"
-artifactPath in (Compile, fullOptJS) := baseDirectory.value / "target" / "scalajs" / "clickdeduce-opt.js"
+artifactPath in (Compile, fastOptJS) := baseDirectory.value / "webapp" / "scripts" / "clickdeduce-opt.js"
+artifactPath in (Compile, fullOptJS) := baseDirectory.value / "webapp" / "scripts" / "clickdeduce-opt.js"
 
 lazy val root = (project in file("."))
   .settings(
