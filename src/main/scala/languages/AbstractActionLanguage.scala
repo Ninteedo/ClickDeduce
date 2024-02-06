@@ -59,6 +59,8 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
     exprChoiceName: String
   ) extends Action(originalTree, treePath) {
     override lazy val newTree: OuterNode = {
+      if (getExprBuilder(exprChoiceName).isEmpty) throw new InvalidSelectValueNameException(exprChoiceName)
+
       val exprNode = VariableNode.createFromExprName(exprChoiceName)
       if (exprNode.isEmpty) throw new InvalidSelectValueNameException(exprChoiceName)
       originalTree.findChild(treePath) match {
