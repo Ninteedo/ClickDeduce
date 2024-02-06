@@ -12,7 +12,7 @@
     </style>
     <defs>
         <symbol id="corner" fill="none">
-            <path d="M3 3 L20 2 L2 20 Z" />
+            <path d="M4 4 L20 5 L5 20 Z" />
         </symbol>
     </defs>
     <rect width="50" height="50" fill="var(--background)" />
