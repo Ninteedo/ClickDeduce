@@ -69,7 +69,7 @@ trait AbstractLanguage {
   }
 
   trait Term {
-    val name: String = getClass.getSimpleName.stripSuffix("$")
+    val name: String = toString.takeWhile(_ != '(')
 
     lazy val toHtml: TypedTag[String] = span(raw(prettyPrint))
 
@@ -295,8 +295,6 @@ trait AbstractLanguage {
     override val isError: Boolean = true
 
     override def prettyPrint: String = message
-
-    override def toString: String = s"${getClass.getSimpleName.stripSuffix("$")}($message)"
   }
 
   /** An error that occurs due to attempting to process an unknown `Expr`.
@@ -332,8 +330,6 @@ trait AbstractLanguage {
     override val isError: Boolean = true
 
     override def prettyPrint: String = message
-
-    override def toString: String = s"${getClass.getSimpleName.stripSuffix("$")}($message)"
   }
 
   /** An error that occurs due to attempting to process an unknown `Expr`.
