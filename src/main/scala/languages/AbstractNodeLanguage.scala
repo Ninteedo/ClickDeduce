@@ -23,11 +23,15 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     override val needsBrackets: Boolean = false
   }
 
+  val defaultExpr: Expr = BlankExprDropDown()
+
   case class BlankTypeDropDown() extends Type, BlankSpace {
     override lazy val toHtml: TypedTag[String] = typeClassListDropdownHtml
 
     override val needsBrackets: Boolean = false
   }
+
+  val defaultType: Type = BlankTypeDropDown()
 
   private lazy val exprClassListDropdownHtml: TypedTag[String] = select(
     cls := ClassDict.EXPR_DROPDOWN,
@@ -481,17 +485,16 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     private lazy val exprClass: Class[Expr] = exprNameToClass(exprName) match {
       case Some(value) => value
-      case None => throw new IllegalArgumentException(s"Unknown expression type: $exprName")
+      case None        => throw new IllegalArgumentException(s"Unknown expression type: $exprName")
     }
 
     lazy val expr: Expr = {
-      val constructor = exprClass.getConstructors.head
-      val arguments = lang +: args.map {
+      val arguments = args.map {
         case n: SubExprNode => n.node.getExpr
         case n: LiteralNode => n.getLiteral
         case n: SubTypeNode => n.node.getType
       }
-      constructor.newInstance(arguments: _*).asInstanceOf[Expr]
+      buildExpr(exprName, arguments).get
     }
 
     private val htmlLineCache = collection.mutable.Map[DisplayMode, TypedTag[String]]()
@@ -504,19 +507,17 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       cacheQuery(htmlLineReadOnlyCache, mode, div(raw(getExprHtmlLineReadOnly(mode))))
 
     private def getExprHtmlLine(mode: DisplayMode): String = {
-      val constructor = exprClass.getConstructors.head
-      val arguments = lang +: args.map {
+      val arguments = args.map {
         case n: SubExprNode => n.getPlaceholder(mode)
         case n: LiteralNode => n.getPlaceholder(mode, false)
         case n: SubTypeNode => n.getPlaceholder(mode)
       }
-      constructor.newInstance(arguments: _*).asInstanceOf[Expr].prettyPrint
+      buildExpr(exprName, arguments).get.prettyPrint
     }
 
     private def getExprHtmlLineReadOnly(mode: DisplayMode): String = {
-      val constructor = exprClass.getConstructors.head
-      val arguments = lang +: args.map(_.getPlaceholder(mode))
-      constructor.newInstance(arguments: _*).asInstanceOf[Expr].prettyPrint
+      val arguments = args.map(_.getPlaceholder(mode))
+      buildExpr(exprName, arguments).get.prettyPrint
     }
 
     override def toString: String = s"VariableNode(${UtilityFunctions.quote(exprName)}, $args)"
@@ -527,25 +528,19 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
   object VariableNode {
     def createFromExprName(exprName: String): Option[VariableNode] = {
-      try {
-        val exprClass = exprNameToClass(exprName).get
-        val constructor = exprClass.getConstructors.head
-        val innerNodes = constructor.getParameterTypes
-          .map {
-            case c if classOf[AbstractNodeLanguage] isAssignableFrom c => None
-            case c if classOf[Expr] isAssignableFrom c                 => Some(SubExprNode(ExprChoiceNode()))
-            case c if classOf[Literal] isAssignableFrom c              => Some(LiteralNode(""))
-            case c if classOf[Type] isAssignableFrom c                 => Some(SubTypeNode(TypeChoiceNode()))
-            case c => throw new ClickDeduceException(s"Unexpected parameter type in createFromExpr: $c")
-          }
-          .filter(_.isDefined)
-          .map(_.get)
-        val result = VariableNode(exprName, innerNodes.toList)
-        innerNodes.foreach(_.setParent(Some(result)))
-        Some(result)
-      } catch {
-        case _: Throwable => None
+      val innerNodes = buildExpr(exprName, Nil) match {
+        case Some(e: Product) =>
+          e.productIterator.toList.collect({
+            case c: Expr    => SubExprNode(ExprChoiceNode())
+            case c: Literal => LiteralNode("")
+            case c: Type    => SubTypeNode(TypeChoiceNode())
+            case c          => throw new ClickDeduceException(s"Unexpected parameter type in createFromExpr: $c")
+          })
+        case _ => throw new ClickDeduceException(s"No default expression for $exprName")
       }
+      val result = VariableNode(exprName, innerNodes)
+      innerNodes.foreach(_.setParent(Some(result)))
+      Some(result)
     }
 
     def fromExpr(e: Expr): ExprNode = e match {
@@ -664,12 +659,11 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     override val name: String = "TypeNode"
 
     override lazy val getType: Type = {
-      val constructor = typeClass.getConstructors()(0)
-      val arguments = lang +: args.map {
+      val arguments = args.map {
         case tn: SubTypeNode => tn.node.getType
         case ln: LiteralNode => ln.getLiteral
       }
-      constructor.newInstance(arguments: _*).asInstanceOf[Type]
+      buildType(typeName, arguments).get
     }
 
     private lazy val typeClass: Class[Type] = typeNameToClass(typeName) match {
@@ -688,21 +682,19 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     override def toString: String = s"TypeNode(${UtilityFunctions.quote(typeName)}, $args)"
 
     private def getExprHtmlLine(mode: DisplayMode): String = {
-      val constructor = typeClass.getConstructors()(0)
-      val arguments = lang +: args.map {
+      val arguments = args.map {
         case n: LiteralNode => n.getPlaceholder(mode, false)
         case other          => other.getPlaceholder(mode)
       }
-      constructor.newInstance(arguments: _*).asInstanceOf[Type].prettyPrint
+      buildType(typeName, arguments).get.prettyPrint
     }
 
     private def getExprHtmlLineReadOnly(mode: DisplayMode): String = {
-      val constructor = typeClass.getConstructors()(0)
-      val arguments = lang +: args.map {
+      val arguments = args.map {
         case n: LiteralNode => LiteralAny(n.toHtmlLineReadOnly(mode).toString)
         case n: SubTypeNode => TypePlaceholder(n.node.toHtmlLineReadOnly(mode).toString, n.node.getType.needsBrackets)
       }
-      constructor.newInstance(arguments: _*).asInstanceOf[Type].prettyPrint
+      buildType(typeName, arguments).get.prettyPrint
     }
 
     children.foreach(_.setParent(Some(this)))
@@ -712,16 +704,15 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   object TypeNode {
     def fromTypeName(typeName: String): Option[TypeNode] = typeNameToClass(typeName) match {
       case Some(typ) =>
-        val constructor = typ.getConstructors()(0)
-        val arguments = constructor.getParameterTypes
-          .map({
-            case c if classOf[Type] isAssignableFrom c             => Some(SubTypeNode(TypeChoiceNode()))
-            case c if classOf[Literal] isAssignableFrom c          => Some(LiteralNode(""))
-            case c if classOf[AbstractLanguage] isAssignableFrom c => None
-          })
-          .filter(_.isDefined)
-          .map(_.get)
-          .toList
+        val arguments = buildType(typeName, Nil) match {
+          case Some(e: Product) =>
+            e.productIterator.toList.collect({
+              case c: Literal => LiteralNode(c.toString)
+              case c: Type    => SubTypeNode(TypeNode.fromType(c))
+              case c         => throw new ClickDeduceException(s"Unexpected parameter type in createFromTypeName: $c")
+            })
+          case _ => throw new ClickDeduceException(s"No default type for $typeName")
+        }
         Some(TypeNode(typeName, arguments))
       case None => None
     }

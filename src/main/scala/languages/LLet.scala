@@ -104,7 +104,8 @@ class LLet extends LIf {
     "Let",
     {
       case List(v: Literal, assign: Expr, bound: Expr) => Some(Let(v, assign, bound))
-      case _                                            => None
+      case Nil                                         => Some(Let(defaultLiteral, defaultExpr, defaultExpr))
+      case _                                           => None
     }
   )
 
@@ -112,7 +113,8 @@ class LLet extends LIf {
     "Var",
     {
       case List(v: Literal) => Some(Var(v))
-      case _                 => None
+      case Nil              => Some(Var(defaultLiteral))
+      case _                => None
     }
   )
 }

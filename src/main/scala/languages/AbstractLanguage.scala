@@ -449,6 +449,7 @@ trait AbstractLanguage {
     "ExprPlaceholder",
     {
       case List(s: String) => Some(ExprPlaceholder(s))
+      case Nil             => Some(ExprPlaceholder(""))
       case _               => None
     }
   )
@@ -457,6 +458,7 @@ trait AbstractLanguage {
     "TypePlaceholder",
     {
       case List(s: String) => Some(TypePlaceholder(s))
+      case Nil             => Some(TypePlaceholder(""))
       case _               => None
     }
   )
@@ -465,6 +467,7 @@ trait AbstractLanguage {
     "ValuePlaceholder",
     {
       case List(s: String) => Some(ValuePlaceholder(s))
+      case Nil             => Some(ValuePlaceholder(""))
       case _               => None
     }
   )
@@ -473,6 +476,7 @@ trait AbstractLanguage {
     "TypeValueContainer",
     {
       case List(t: Type) => Some(TypeValueContainer(t))
+      case Nil           => Some(TypeValueContainer(TypePlaceholder("")))
       case _             => None
     }
   )
@@ -481,6 +485,7 @@ trait AbstractLanguage {
     "TypeContainer",
     {
       case List(t: Type) => Some(TypeContainer(t))
+      case Nil           => Some(TypeContainer(TypePlaceholder("")))
       case _             => None
     }
   )
@@ -492,4 +497,6 @@ trait AbstractLanguage {
       case _   => None
     }
   )
+
+  val defaultLiteral: Literal = Literal.fromString("")
 }

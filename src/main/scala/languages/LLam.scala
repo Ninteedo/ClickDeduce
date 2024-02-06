@@ -131,6 +131,7 @@ class LLam extends LLet {
     "Lambda",
     {
       case List(v: Literal, typ: Type, e: Expr) => Some(Lambda(v, typ, e))
+      case Nil                                  => Some(Lambda(defaultLiteral, defaultType, defaultExpr))
       case _                                    => None
     }
   )
@@ -139,6 +140,7 @@ class LLam extends LLet {
     "Apply",
     {
       case List(e1: Expr, e2: Expr) => Some(Apply(e1, e2))
+      case Nil                      => Some(Apply(defaultExpr, defaultExpr))
       case _                        => None
     }
   )
@@ -147,6 +149,7 @@ class LLam extends LLet {
     "Func",
     {
       case List(in: Type, out: Type) => Some(Func(in, out))
+      case Nil                       => Some(Func(defaultType, defaultType))
       case _                         => None
     }
   )

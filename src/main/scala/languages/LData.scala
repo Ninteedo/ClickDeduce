@@ -283,6 +283,7 @@ class LData extends LRec {
     "Pair",
     {
       case List(e1: Expr, e2: Expr) => Some(Pair(e1, e2))
+      case Nil                      => Some(Pair(defaultExpr, defaultExpr))
       case _                        => None
     }
   )
@@ -291,6 +292,7 @@ class LData extends LRec {
     "Fst",
     {
       case List(e: Expr) => Some(Fst(e))
+      case Nil           => Some(Fst(defaultExpr))
       case _             => None
     }
   )
@@ -299,6 +301,7 @@ class LData extends LRec {
     "Snd",
     {
       case List(e: Expr) => Some(Snd(e))
+      case Nil           => Some(Snd(defaultExpr))
       case _             => None
     }
   )
@@ -307,15 +310,16 @@ class LData extends LRec {
     "LetPair",
     {
       case List(x: Literal, y: Literal, assign: Expr, bound: Expr) => Some(LetPair(x, y, assign, bound))
-      case _                                                       => None
+      case Nil => Some(LetPair(defaultLiteral, defaultLiteral, defaultExpr, defaultExpr))
+      case _   => None
     }
   )
 
   addExprBuilder(
     "UnitExpr",
     {
-      case List() => Some(UnitExpr())
-      case _      => None
+      case Nil => Some(UnitExpr())
+      case _   => None
     }
   )
 
@@ -323,6 +327,7 @@ class LData extends LRec {
     "Left",
     {
       case List(e: Expr, rightType: Type) => Some(Left(e, rightType))
+      case Nil                            => Some(Left(defaultExpr, defaultType))
       case _                              => None
     }
   )
@@ -331,6 +336,7 @@ class LData extends LRec {
     "Right",
     {
       case List(leftType: Type, e: Expr) => Some(Right(leftType, e))
+      case Nil                           => Some(Right(defaultType, defaultExpr))
       case _                             => None
     }
   )
@@ -339,7 +345,8 @@ class LData extends LRec {
     "CaseSwitch",
     {
       case List(e: Expr, l: Literal, r: Literal, lExpr: Expr, rExpr: Expr) => Some(CaseSwitch(e, l, r, lExpr, rExpr))
-      case _                                                               => None
+      case Nil => Some(CaseSwitch(defaultExpr, defaultLiteral, defaultLiteral, defaultExpr, defaultExpr))
+      case _   => None
     }
   )
 
@@ -347,6 +354,7 @@ class LData extends LRec {
     "PairType",
     {
       case List(l: Type, r: Type) => Some(PairType(l, r))
+      case Nil                    => Some(PairType(defaultType, defaultType))
       case _                      => None
     }
   )
@@ -355,6 +363,7 @@ class LData extends LRec {
     "UnionType",
     {
       case List(l: Type, r: Type) => Some(UnionType(l, r))
+      case Nil                    => Some(UnionType(defaultType, defaultType))
       case _                      => None
     }
   )
@@ -362,8 +371,8 @@ class LData extends LRec {
   addTypeBuilder(
     "EmptyType",
     {
-      case List() => Some(EmptyType())
-      case _      => None
+      case Nil => Some(EmptyType())
+      case _   => None
     }
   )
 
@@ -378,8 +387,8 @@ class LData extends LRec {
   addValueBuilder(
     "UnitV",
     {
-      case List() => Some(UnitV())
-      case _      => None
+      case Nil => Some(UnitV())
+      case _   => None
     }
   )
 

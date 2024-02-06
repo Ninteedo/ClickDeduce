@@ -142,7 +142,8 @@ class LArith extends ClickDeduceLanguage {
     "Num",
     {
       case List(l: Literal) => Some(Num(l))
-      case _               => None
+      case Nil              => Some(Num(defaultLiteral))
+      case _                => None
     }
   )
 
@@ -150,6 +151,7 @@ class LArith extends ClickDeduceLanguage {
     "Plus",
     {
       case List(e1: Expr, e2: Expr) => Some(Plus(e1, e2))
+      case Nil                      => Some(Plus(defaultExpr, defaultExpr))
       case _                        => None
     }
   )
@@ -158,6 +160,7 @@ class LArith extends ClickDeduceLanguage {
     "Times",
     {
       case List(e1: Expr, e2: Expr) => Some(Times(e1, e2))
+      case Nil                      => Some(Times(defaultExpr, defaultExpr))
       case _                        => None
     }
   )
@@ -165,7 +168,7 @@ class LArith extends ClickDeduceLanguage {
   addTypeBuilder(
     "IntType",
     {
-      case List() => Some(IntType())
+      case Nil => Some(IntType())
       case _      => None
     }
   )

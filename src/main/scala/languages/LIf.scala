@@ -141,6 +141,7 @@ class LIf extends LArith {
     "Bool",
     {
       case List(b: Literal) => Some(Bool(b))
+      case Nil              => Some(Bool(defaultLiteral))
       case _                => None
     }
   )
@@ -149,6 +150,7 @@ class LIf extends LArith {
     "Equal",
     {
       case List(e1: Expr, e2: Expr) => Some(Equal(e1, e2))
+      case Nil                      => Some(Equal(defaultExpr, defaultExpr))
       case _                        => None
     }
   )
@@ -157,6 +159,7 @@ class LIf extends LArith {
     "LessThan",
     {
       case List(e1: Expr, e2: Expr) => Some(LessThan(e1, e2))
+      case Nil                      => Some(LessThan(defaultExpr, defaultExpr))
       case _                        => None
     }
   )
@@ -165,7 +168,8 @@ class LIf extends LArith {
     "IfThenElse",
     {
       case List(cond: Expr, then_expr: Expr, else_expr: Expr) => Some(IfThenElse(cond, then_expr, else_expr))
-      case _                                                  => None
+      case Nil => Some(IfThenElse(defaultExpr, defaultExpr, defaultExpr))
+      case _   => None
     }
   )
 

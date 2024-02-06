@@ -81,7 +81,8 @@ class LRec extends LLam {
     "Rec",
     {
       case List(f: Literal, v: Literal, inType: Type, outType: Type, e: Expr) => Some(Rec(f, v, inType, outType, e))
-      case _                                                                  => None
+      case Nil => Some(Rec(defaultLiteral, defaultLiteral, defaultType, defaultType, defaultExpr))
+      case _   => None
     }
   )
 

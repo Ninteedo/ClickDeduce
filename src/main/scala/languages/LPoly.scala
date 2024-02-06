@@ -120,6 +120,7 @@ class LPoly extends LData {
     "Poly",
     {
       case List(v: Literal, e: Expr) => Some(Poly(v, e))
+      case Nil                       => Some(Poly(defaultLiteral, defaultExpr))
       case _                         => None
     }
   )
@@ -128,6 +129,7 @@ class LPoly extends LData {
     "ApplyType",
     {
       case List(e: Expr, t: Type) => Some(ApplyType(e, t))
+      case Nil                    => Some(ApplyType(defaultExpr, defaultType))
       case _                      => None
     }
   )
@@ -136,6 +138,7 @@ class LPoly extends LData {
     "PolyType",
     {
       case List(tv: Type, t: Type) => Some(PolyType(tv, t))
+      case Nil                     => Some(PolyType(defaultType, defaultType))
       case _                       => None
     }
   )
@@ -144,6 +147,7 @@ class LPoly extends LData {
     "TypeVar",
     {
       case List(v: Literal) => Some(TypeVar(v))
+      case Nil              => Some(TypeVar(defaultLiteral))
       case _                => None
     }
   )
