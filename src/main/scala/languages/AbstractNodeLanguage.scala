@@ -108,6 +108,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     * Has a parent (or no parent if root) and a list of children.
     */
   abstract class Node {
+    val name: String
+
     val children: List[OuterNode] = Nil
 
     private var parent: Option[Option[OuterNode]] = None
@@ -358,7 +360,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
         if (parentDepth >= depthLimit) throw new DepthLimitExceededException()
         super.setParent(Some(n))
       case None    => super.setParent(None)
-      case Some(n) => throw new NodeParentWrongTypeException(classOf[ExprNode], n.getClass)
+      case Some(n) => throw new NodeParentWrongTypeException("ExprNode", n.name)
     }
 
     override def getParent: Option[ExprNode] = {
@@ -366,7 +368,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       super.getParent match {
         case Some(n: ExprNode) => Some(n)
         case None              => None
-        case Some(n)           => throw new NodeParentWrongTypeException(classOf[ExprNode], n.getClass)
+        case Some(n)           => throw new NodeParentWrongTypeException("ExprNode", n.name)
       }
     }
 
@@ -465,6 +467,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   /** Concrete implementation of an expression node.
     */
   case class VariableNode(exprName: String, args: List[InnerNode] = Nil) extends ExprNode {
+    override val name: String = "VariableNode"
+
     override val children: List[OuterNode] = args.flatMap(_.children)
 
     override def getExpr: Expr = exprOverride.getOrElse(expr)
@@ -565,6 +569,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   }
 
   case class ExprChoiceNode() extends ExprNode {
+    override val name: String = "ExprChoiceNode"
+
     override val args: List[InnerNode] = Nil
 
     override val children: List[OuterNode] = Nil
@@ -584,16 +590,18 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   }
 
   case class SubExprNode(node: ExprNode) extends InnerNode {
+    override val name: String = "SubExprNode"
+
     override def setParent(parentNode: Option[OuterNode]): Unit = parentNode match {
       case Some(n: ExprNode) => super.setParent(Some(n))
       case None              => throw new InnerNodeCannotBeRootException()
-      case Some(n)           => throw new NodeParentWrongTypeException(classOf[ExprNode], n.getClass)
+      case Some(n)           => throw new NodeParentWrongTypeException("ExprName", n.name)
     }
 
     override def getParent: Option[ExprNode] = super.getParent match {
       case Some(n: ExprNode) => Some(n)
       case None              => None
-      case Some(n)           => throw new NodeParentWrongTypeException(classOf[ExprNode], n.getClass)
+      case Some(n)           => throw new NodeParentWrongTypeException("ExprNode", n.name)
     }
 
     override def toHtmlLine(mode: DisplayMode): TypedTag[String] = node.toHtmlLineReadOnly(mode)
@@ -607,6 +615,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   }
 
   case class LiteralNode(literalText: String) extends InnerNode {
+    override val name: String = "LiteralNode"
+
     private val htmlLineShared: TypedTag[String] =
       input(`type` := "text", cls := ClassDict.LITERAL, value := literalText)
 
@@ -652,6 +662,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   }
 
   case class TypeNode(typeName: String, args: List[InnerNode]) extends TypeNodeParent {
+    override val name: String = "TypeNode"
+
     override lazy val getType: Type = {
       val constructor = typeClass.getConstructors()(0)
       val arguments = lang +: args.map {
@@ -732,6 +744,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   }
 
   case class TypeChoiceNode() extends TypeNodeParent {
+    override val name: String = "TypeChoiceNode"
+
     override val args: List[InnerNode] = Nil
 
     override def toHtmlLine(mode: DisplayMode): TypedTag[String] =
@@ -743,6 +757,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   }
 
   case class SubTypeNode(node: TypeNodeParent) extends InnerNode {
+    override val name: String = "SubTypeNode"
+
     override val children: List[OuterNode] = List(node)
 
     override def toHtmlLine(mode: DisplayMode): TypedTag[String] = node.toHtmlLineReadOnly(mode)
@@ -766,7 +782,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
   class NodeParentNotInitialisedException extends ClickDeduceException("Node parent not initialised")
 
-  class NodeParentWrongTypeException(expected: Class[_ <: OuterNode], actual: Class[_ <: OuterNode])
+  class NodeParentWrongTypeException(expected: String, actual: String)
       extends ClickDeduceException(s"Node parent has wrong type: expected $expected, got $actual")
 
   class InnerNodeCannotBeRootException extends ClickDeduceException("Inner node cannot be root")
