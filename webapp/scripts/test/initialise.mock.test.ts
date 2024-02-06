@@ -1,12 +1,11 @@
 import {beforeEach, describe, expect, test} from "@jest/globals";
-import {defaultHtml, getRequestsReceived, optionsHtml, resetRequestTracking} from "./requestMocking";
 import {removeWhitespace} from "./helper";
 import {initialise} from "../initialise";
 
 beforeEach(async () => {
     resetRequestTracking();
     document.body.innerHTML = defaultHtml;
-    await initialise(true);
+    initialise(true);
 });
 
 describe("initialise behaves correctly", () => {

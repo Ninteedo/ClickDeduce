@@ -29,16 +29,16 @@ export function resetInterfaceGlobals(): void {
  *
  * @param e the keydown event
  */
-export async function handleKeyDown(e: KeyboardEvent): Promise<void> {
+export function handleKeyDown(e: KeyboardEvent): void {
     console.log('Key pressed: ' + e.key);
     if (e.key === 'Tab' && (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement)) {
-        await handleTabPressed(e);
+        handleTabPressed(e);
     } else if (e.key === 'Enter' && e.target instanceof HTMLInputElement) {
         e.preventDefault();
         nextFocusElement = e.target;
         console.log('Focus element set to ' + nextFocusElement.outerHTML);
         if (e.target.classList.contains('literal')) {
-            await handleLiteralChanged(e.target);
+            handleLiteralChanged(e.target);
         } else if (e.target.classList.contains('expr-selector-input')) {
             const selector = e.target.parentElement;
             if (selector instanceof HTMLDivElement) {
@@ -52,7 +52,7 @@ export async function handleKeyDown(e: KeyboardEvent): Promise<void> {
  * Changes the focus to the next input element when TAB is pressed.
  * @param e the keydown event
  */
-export async function handleTabPressed(e: KeyboardEvent): Promise<void> {
+export function handleTabPressed(e: KeyboardEvent): void {
     if (e.key === 'Tab' && (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement)) {
         e.preventDefault();
         const activeInputPaths: string[] = getActiveInputs().map(input => input.getAttribute('data-tree-path'));

@@ -22,15 +22,15 @@ export function resetCopyCache(): void {
     copyCache = null;
 }
 
-export async function startNodeBlank(): Promise<void> {
-    await doStartNodeBlank(new Event("submit"));
+export function startNodeBlank(): void {
+    doStartNodeBlank(new Event("submit"));
 }
 
 /**
  * Handles the form submission event.
  * @param event the form submission event
  */
-export async function doStartNodeBlank(event?: Event): Promise<void> {
+export function doStartNodeBlank(event?: Event): void {
     // prevent the form from submitting the old-fashioned way
     if (event) event.preventDefault();
 
@@ -46,7 +46,7 @@ export async function doStartNodeBlank(event?: Event): Promise<void> {
  *
  * @param textInput the literal input element
  */
-export async function handleLiteralChanged(textInput: HTMLInputElement): Promise<void> {
+export function handleLiteralChanged(textInput: HTMLInputElement): void {
     const literalValue: string = textInput.value;
     const treePath: string = textInput.getAttribute("data-tree-path");
 
@@ -61,21 +61,21 @@ export async function handleLiteralChanged(textInput: HTMLInputElement): Promise
         focusedTreePath = nextFocusElement.getAttribute("data-tree-path");
     }
 
-    await runAction("EditLiteralAction", treePath, [literalValue]).then(() => {
-        if (focusedTreePath == null) {
-            return;
+    runAction("EditLiteralAction", treePath, [literalValue])
+
+    if (focusedTreePath == null) {
+        return;
+    }
+    let focusedElement: HTMLElement = document.querySelector(`input[data-tree-path="${focusedTreePath}"]`);
+    if (focusedElement != null && focusedElement instanceof HTMLElement) {
+        focusedElement.focus();
+        if (focusedElement instanceof HTMLInputElement) {
+            focusedElement.select();
         }
-        let focusedElement: HTMLElement = document.querySelector(`input[data-tree-path="${focusedTreePath}"]`);
-        if (focusedElement != null && focusedElement instanceof HTMLElement) {
-            focusedElement.focus();
-            if (focusedElement instanceof HTMLInputElement) {
-                focusedElement.select();
-            }
-        }
-    });
+    }
 }
 
-export async function handleExprSelectorChoice(selector: HTMLDivElement, value: string): Promise<void> {
+export function handleExprSelectorChoice(selector: HTMLDivElement, value: string): void {
     const input = selector.querySelector('.expr-selector-input') as HTMLInputElement;
     const dropdown = selector.querySelector('.expr-selector-dropdown') as HTMLDivElement;
     const button = selector.querySelector('.expr-selector-button') as HTMLButtonElement;
@@ -98,22 +98,22 @@ export async function handleExprSelectorChoice(selector: HTMLDivElement, value: 
 
     input.value = value;
     const dataTreePath: string = selector.getAttribute("data-tree-path");
-    await runAction(actionName, dataTreePath, [value]).then(() => {
-        console.log(focusedTreePath);
-        if (focusedTreePath == null) {
-            return;
-        }
+    runAction(actionName, dataTreePath, [value])
 
-        const focusedElement = getActiveInputs().find(input => compareTreePaths(focusedTreePath, input.getAttribute("data-tree-path")) <= 0);
+    console.log(focusedTreePath);
+    if (focusedTreePath == null) {
+        return;
+    }
 
-        console.log(focusedElement);
-        if (focusedElement != null && focusedElement instanceof HTMLElement) {
-            focusedElement.focus();
-            if (focusedElement instanceof HTMLInputElement) {
-                focusedElement.select();
-            }
+    const focusedElement = getActiveInputs().find(input => compareTreePaths(focusedTreePath, input.getAttribute("data-tree-path")) <= 0);
+
+    console.log(focusedElement);
+    if (focusedElement != null && focusedElement instanceof HTMLElement) {
+        focusedElement.focus();
+        if (focusedElement instanceof HTMLInputElement) {
+            focusedElement.select();
         }
-    });
+    }
 }
 
 /**
@@ -122,7 +122,7 @@ export async function handleExprSelectorChoice(selector: HTMLDivElement, value: 
  * @param treePath the tree path of the node to run the action on
  * @param extraArgs any extra arguments to pass to the action
  */
-export async function runAction(actionName: string, treePath: string, extraArgs: any[]): Promise<void> {
+export function runAction(actionName: string, treePath: string, extraArgs: any[]): void {
     if (lastNodeString == null) {
         return;
     }
@@ -148,11 +148,11 @@ export async function runAction(actionName: string, treePath: string, extraArgs:
  *
  * @param event the triggering event
  */
-export async function clearTreeNode(event: Event): Promise<void> {
+export function clearTreeNode(event: Event): void {
     event.preventDefault();
     if (contextMenuSelectedElement) {
         const treePath: string = contextMenuSelectedElement.getAttribute("data-tree-path")
-        await runAction("DeleteAction", treePath, [])
+        runAction("DeleteAction", treePath, [])
     }
 }
 
@@ -169,9 +169,9 @@ export function copyTreeNode(): void {
  *
  * Executes the PasteAction.
  */
-export async function pasteTreeNode(): Promise<void> {
+export function pasteTreeNode(): void {
     if (copyCache) {
         const treePath = contextMenuSelectedElement.getAttribute("data-tree-path");
-        await runAction("PasteAction", treePath, [copyCache]);
+        runAction("PasteAction", treePath, [copyCache]);
     }
 }

@@ -21,13 +21,13 @@ export let panzoomInstance: PanZoom;
  *
  * Can be called again to reset the state of the app
  */
-export async function initialise(skipImages: boolean = false): Promise<void> {
+export function initialise(skipImages: boolean = false): void {
     resetInterfaceGlobals();
     resetCopyCache();
     if (!skipImages) {
         loadImages();
     }
-    await resetTreeManipulation();
+    resetTreeManipulation();
     tree = document.getElementById('tree') as HTMLDivElement;
 
     panzoomInstance = panzoom(tree, {
@@ -41,7 +41,7 @@ export async function initialise(skipImages: boolean = false): Promise<void> {
         }
     });
 
-    await startNodeBlank();
+    startNodeBlank();
 }
 
 (window as any).initialise = initialise;
