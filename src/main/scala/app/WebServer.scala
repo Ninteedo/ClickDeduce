@@ -217,7 +217,9 @@ class WebServer extends JsonSupport {
           val langSelector: TypedTag[String] = select(
             id := "lang-selector",
             name := "lang-name",
-            WebServer.knownLanguages.map(lang => option(value := WebServer.getLanguageName(lang), WebServer.getLanguageName(lang)))
+            WebServer.knownLanguages.map(_._1).map(langName =>
+              option(value := langName, langName)
+            )
           )
           val response = LangSelectorResponse(langSelector.toString)
           complete(response)
@@ -239,11 +241,19 @@ object WebServer {
     server.runServer(args)
   }
 
-  val knownLanguages: List[ClickDeduceLanguage] = List(LArith(), LIf(), LLet(), LLam(), LRec(), LData(), LPoly())
+  val knownLanguages: List[(String, ClickDeduceLanguage)] = List(
+    "LArith" -> LArith(),
+    "LIf" -> LIf(),
+    "LLet" -> LLet(),
+    "LLam" -> LLam(),
+    "LRec" -> LRec(),
+    "LData" -> LData(),
+    "LPoly" -> LPoly()
+  )
 
-  def getLanguage(langName: String): ClickDeduceLanguage = knownLanguages.find(getLanguageName(_) == langName) match {
-    case Some(lang) => lang
-    case None => throw new IllegalArgumentException(s"Unknown language: $langName")
+  def getLanguage(langName: String): ClickDeduceLanguage = knownLanguages.find(_._1 == langName) match {
+    case Some((_, lang)) => lang
+    case None       => throw new IllegalArgumentException(s"Unknown language: $langName")
   }
 
   def getLanguageName(lang: ClickDeduceLanguage): String = lang.getClass.getSimpleName.stripSuffix("$")

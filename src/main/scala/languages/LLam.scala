@@ -18,10 +18,11 @@ class LLam extends LLet {
       case t1               => ApplyToNonFunctionErrorType(t1)
     }
 
-    override def getChildrenEval(env: ValueEnv = ValueEnv.empty): List[(Term, ValueEnv)] = (e1.eval(env), e2.eval(env)) match {
-      case (v1: FunctionValue, v2) => List((e1, env), (e2, env), v1.getFunctionEvaluation(v2))
-      case _                       => List((e1, env), (e2, env))
-    }
+    override def getChildrenEval(env: ValueEnv = ValueEnv.empty): List[(Term, ValueEnv)] =
+      (e1.eval(env), e2.eval(env)) match {
+        case (v1: FunctionValue, v2) => List((e1, env), (e2, env), v1.getFunctionEvaluation(v2))
+        case _                       => List((e1, env), (e2, env))
+      }
 
     override def prettyPrint: String = s"${e1.prettyPrintBracketed} ${e2.prettyPrintBracketed}"
   }
@@ -125,6 +126,49 @@ class LLam extends LLet {
   override def calculateTypeClassList: List[Class[Type]] = {
     super.calculateTypeClassList ++ List(classOf[Func]).map(_.asInstanceOf[Class[Type]])
   }
+
+  addExprBuilder(
+    "Lambda",
+    {
+      case List(v: Literal, typ: Type, e: Expr) => Some(Lambda(v, typ, e))
+      case Nil                                  => Some(Lambda(defaultLiteral, defaultType, defaultExpr))
+      case _                                    => None
+    }
+  )
+
+  addExprBuilder(
+    "Apply",
+    {
+      case List(e1: Expr, e2: Expr) => Some(Apply(e1, e2))
+      case Nil                      => Some(Apply(defaultExpr, defaultExpr))
+      case _                        => None
+    }
+  )
+
+  addTypeBuilder(
+    "Func",
+    {
+      case List(in: Type, out: Type) => Some(Func(in, out))
+      case Nil                       => Some(Func(defaultType, defaultType))
+      case _                         => None
+    }
+  )
+
+  addValueBuilder(
+    "LambdaV",
+    {
+      case List(v: Variable, inputType: Type, e: Expr, env: ValueEnv) => Some(LambdaV(v, inputType, e, env))
+      case _                                                          => None
+    }
+  )
+
+  addValueBuilder(
+    "HiddenValue",
+    {
+      case List(typ: Type) => Some(HiddenValue(typ))
+      case _               => None
+    }
+  )
 }
 
 object LLam extends LLam {}

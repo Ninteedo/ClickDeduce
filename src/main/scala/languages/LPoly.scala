@@ -55,9 +55,9 @@ class LPoly extends LData {
     override def prettyPrint: String = v.toString
 
     override def typeCheck(tEnv: TypeEnv): Type = tEnv.get(v.toString) match {
-      case None => UnknownTypeVar(v)
+      case None             => UnknownTypeVar(v)
       case Some(TypeVar(t)) => TypeVar(t)
-      case Some(other) => other.typeCheck(tEnv)
+      case Some(other)      => other.typeCheck(tEnv)
     }
 
     override val needsBrackets: Boolean = false
@@ -115,6 +115,50 @@ class LPoly extends LData {
 
   override def calculateTypeClassList: List[Class[Type]] =
     super.calculateTypeClassList ++ List(classOf[PolyType], classOf[TypeVar]).map(_.asInstanceOf[Class[Type]])
+
+  addExprBuilder(
+    "Poly",
+    {
+      case List(v: Literal, e: Expr) => Some(Poly(v, e))
+      case Nil                       => Some(Poly(defaultLiteral, defaultExpr))
+      case _                         => None
+    }
+  )
+
+  addExprBuilder(
+    "ApplyType",
+    {
+      case List(e: Expr, t: Type) => Some(ApplyType(e, t))
+      case Nil                    => Some(ApplyType(defaultExpr, defaultType))
+      case _                      => None
+    }
+  )
+
+  addTypeBuilder(
+    "PolyType",
+    {
+      case List(tv: Type, t: Type) => Some(PolyType(tv, t))
+      case Nil                     => Some(PolyType(defaultType, defaultType))
+      case _                       => None
+    }
+  )
+
+  addTypeBuilder(
+    "TypeVar",
+    {
+      case List(v: Literal) => Some(TypeVar(v))
+      case Nil              => Some(TypeVar(defaultLiteral))
+      case _                => None
+    }
+  )
+
+  addValueBuilder(
+    "PolyV",
+    {
+      case List(tv: Type, e: Expr, env: ValueEnv) => Some(PolyV(tv, e, env))
+      case _                                      => None
+    }
+  )
 }
 
 object LPoly extends LPoly {}

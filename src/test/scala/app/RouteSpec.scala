@@ -28,7 +28,7 @@ class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with J
       Marshal(request).to[MessageEntity]
     }
 
-    val langRequestList: List[Future[MessageEntity]] = WebServer.knownLanguages.map(createRequest)
+    val langRequestList: List[Future[MessageEntity]] = WebServer.knownLanguages.map(_._2).map(createRequest)
 
     def checkOnAllRequests(test: Future[MessageEntity] => Unit): Unit = {
       langRequestList.foreach { request =>
@@ -191,8 +191,8 @@ class RouteSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with J
           val select = (doc >> elementList("select")).head
           val options = select >> elementList("option")
           options.zipWithIndex.foreach { case (option, index) =>
-            option.attr("value") shouldBe WebServer.getLanguageName(WebServer.knownLanguages(index))
-            option.text shouldBe WebServer.getLanguageName(WebServer.knownLanguages(index))
+            option.attr("value") shouldBe WebServer.getLanguageName(WebServer.knownLanguages(index)._2)
+            option.text shouldBe WebServer.getLanguageName(WebServer.knownLanguages(index)._2)
           }
         }
       }

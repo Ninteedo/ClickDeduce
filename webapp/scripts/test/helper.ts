@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import {handleSubmit} from "../actions";
+import {doStartNodeBlank} from "../actions";
 
 export function slightDelay(delay: number = 10): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, delay));
@@ -20,7 +20,7 @@ export function getStartNodeButton() {
 }
 
 export async function pressStartNodeButton() {
-    await handleSubmit(new Event(""), '/start-node-blank')
+    await doStartNodeBlank(new Event(""))
 }
 
 export function getLangSelector() {

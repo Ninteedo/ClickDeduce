@@ -8,7 +8,7 @@ import {
     setUpFetchMock,
     startNodeBlankArithHTML
 } from "./requestMocking";
-import {handleLiteralChanged, handleSubmit} from "../actions";
+import {doStartNodeBlank, handleLiteralChanged} from "../actions";
 import {
     contextMenuSelect,
     getLeftmostExprDropdown,
@@ -68,7 +68,7 @@ describe("undo and redo buttons behave correctly", () => {
     }
 
     beforeEach(async () => {
-        await handleSubmit(mockEvent, '/start-node-blank');
+        await doStartNodeBlank(mockEvent);
     });
 
     test("undo and redo buttons begin disabled", () => {
@@ -182,7 +182,7 @@ describe("hovering over a node behaves correctly", () => {
     const html = loadHtmlTemplate('plus_left_num_right_empty');
 
     beforeEach(async () => {
-        await handleSubmit(mockEvent, '/start-node-blank');
+        await doStartNodeBlank(mockEvent);
         setActionFetchResponse(nodeString, html);
         await selectExprOption(getLeftmostExprDropdown(), "Num");
     });
@@ -233,7 +233,7 @@ describe("phantom inputs are made read-only and disabled", () => {
     const selector = `input.literal[name="eg"], select[name="77"]`;
 
     beforeEach(async () => {
-        await handleSubmit(mockEvent, '/start-node-blank');
+        await doStartNodeBlank(mockEvent);
 
         setActionFetchResponse(NS.PHANTOM_EXAMPLE, html);
 
@@ -256,7 +256,7 @@ describe("node string can be queried correctly", () => {
     const html = loadHtmlTemplate('times_left_filled_num_right_empty');
 
     beforeEach(async () => {
-        await handleSubmit(mockEvent, '/start-node-blank');
+        await doStartNodeBlank(mockEvent);
         setActionFetchResponse(nodeString, html);
         await selectExprOption(getLeftmostExprDropdown(), "Times");
     });

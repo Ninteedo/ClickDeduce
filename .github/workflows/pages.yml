@@ -1,0 +1,42 @@
+name: Build and Deploy to GitHub Pages
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    concurrency: ci-${{ github.ref }} # Recommended if you intend to make multiple deployments in quick succession.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+      - name: Set up JDK 18
+        uses: actions/setup-java@v3
+        with:
+          java-version: '18'
+          distribution: 'adopt'
+          cache: 'sbt'
+      - name: Update sbt
+        run: sbt update
+      - name: Scala.JS Build
+        run: sbt fullOptJS
+      - name: Copy Scala.JS output to webapp scripts
+        run: cp ./target/scalajs/clickdeduce-opt.js ./webapp/scripts/clickdeduce-opt.js
+
+      - name: Install and Build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: build # The folder the action should deploy.

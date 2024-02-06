@@ -1,5 +1,4 @@
 import {compareTreePaths, getSelectedLanguage, getSelectedMode} from "./utils";
-import {ClickDeduceResponseError} from "./ClickDeduceResponseError";
 import {
     disableInputs,
     enableInputs,
@@ -12,6 +11,7 @@ import {
     useTreeFromHistory
 } from "./treeManipulation";
 import {contextMenuSelectedElement, displayError, nextFocusElement} from "./interface";
+import {postProcessActionNew, postStartNodeBlankNew} from "./serverRequest";
 
 let copyCache: string = null;
 
@@ -23,30 +23,20 @@ export function resetCopyCache(): void {
 }
 
 export async function startNodeBlank(): Promise<void> {
-    await handleSubmit(new Event("submit"), "/start-node-blank");
+    await doStartNodeBlank(new Event("submit"));
 }
 
 /**
  * Handles the form submission event.
  * @param event the form submission event
- * @param url the URL to send the POST request to
  */
-export async function handleSubmit(event: Event, url: string): Promise<void> {
+export async function doStartNodeBlank(event: Event): Promise<void> {
     // prevent the form from submitting the old-fashioned way
     event.preventDefault();
 
     // send a POST request to the server
-    await fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            langName: getSelectedLanguage(),
-        })
-    }).then(response => response.json()).then(updatedTree => {
-        updateTree(updatedTree.html, updatedTree.nodeString, getSelectedMode(), getSelectedLanguage(), true);
-    });
+    const [newNodeString, newHtml] = postStartNodeBlankNew(getSelectedLanguage());
+    updateTree(newHtml, newNodeString, getSelectedMode(), getSelectedLanguage(), true);
 }
 
 /**
@@ -140,32 +130,15 @@ export async function runAction(actionName: string, treePath: string, extraArgs:
 
     const modeName: string = getSelectedMode();
     const langName: string = getSelectedLanguage();
-    return fetch("/process-action", {
-        method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({
-            langName,
-            modeName,
-            actionName,
-            nodeString: lastNodeString,
-            treePath,
-            extraArgs
-        })
-    }).then(response => {
-        if (!response.ok) {
-            enableInputs();
-            return response.text().then(text => {
-                throw new ClickDeduceResponseError(text);
-            });
-        }
-        return response;
-    }).then(response => response.json()).then(updatedTree => {
-        updateTree(updatedTree.html, updatedTree.nodeString, modeName, langName, true);
-        enableInputs();
-    }).catch(error => {
-        enableInputs();
-        displayError(error);
+    try {
+        const [newNodeString, newHtml] = postProcessActionNew(langName, modeName, actionName, lastNodeString, treePath, extraArgs);
+        updateTree(newHtml, newNodeString, modeName, langName, true);
+    } catch (e) {
+        displayError(e);
         useTreeFromHistory(treeHistoryIndex);
-        throw new ClickDeduceResponseError(error.message);
-    });
+        throw e;
+    }
+    enableInputs();
 }
 
 /**

@@ -22,6 +22,17 @@ libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % "2.8.0" % Test
 
 libraryDependencies += "net.ruippeixotog" %% "scala-scraper" % "3.1.1"
 
+enablePlugins(ScalaJSPlugin)
+scalaJSUseMainModuleInitializer := false
+
+libraryDependencies += "com.lihaoyi" %%% "scalatags" % "0.12.0"
+libraryDependencies += "org.scala-lang.modules" %%% "scala-parser-combinators" % "2.2.0"
+
+scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
+
+artifactPath in (Compile, fastOptJS) := baseDirectory.value / "target" / "scalajs" / "clickdeduce-opt.js"
+artifactPath in (Compile, fullOptJS) := baseDirectory.value / "target" / "scalajs" / "clickdeduce-opt.js"
+
 lazy val root = (project in file("."))
   .settings(
     name := "ClickDeduce"
