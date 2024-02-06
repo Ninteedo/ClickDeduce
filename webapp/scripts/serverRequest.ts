@@ -1,4 +1,4 @@
-import {getLangSelector, processAction, startNodeBlank} from "./clickdeduce-fastopt";
+import {getLangSelector, processAction, startNodeBlank} from "./clickdeduce-opt";
 
 export async function getLangSelectorRequest(): Promise<Response> {
     return fetch('get-lang-selector', {method: 'GET'});
