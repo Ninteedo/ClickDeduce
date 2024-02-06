@@ -480,6 +480,8 @@ function setSelectedMode(mode: string): void {
     });
 }
 
+let reEnableInputsId: number = 0;
+
 export function disableInputs(): void {
     activeInputs.forEach(input => {
         input.setAttribute('readonly', "true");
@@ -488,6 +490,15 @@ export function disableInputs(): void {
     modeRadios.forEach(radio => radio.setAttribute('disabled', "true"));
     langSelector.setAttribute('disabled', "true");
     tree.querySelectorAll('.expr-selector-button').forEach(button => button.setAttribute('disabled', "true"));
+
+    // re-enable inputs after 5 seconds
+    reEnableInputsId = (reEnableInputsId + 1) % 1000;
+    const currentId = reEnableInputsId;
+    setTimeout(() => {
+        if (currentId === reEnableInputsId) {
+            enableInputs();
+        }
+    }, 5000);
 }
 
 export function enableInputs(): void {
