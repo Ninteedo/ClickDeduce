@@ -2,7 +2,7 @@ import {tree} from "./initialise";
 import {hasClassOrParentHasClass} from "./utils";
 import {handleExprSelectorChoice, handleLiteralChanged, runAction} from "./actions";
 import {clearHighlight, contextMenuSelectedElement, displayError, handleKeyDown} from "./interface";
-import {getLangSelectorRequest} from "./serverRequest";
+import {getLangSelectorNew} from "./serverRequest";
 
 let treeHistory: { mode: string; html: string; nodeString: string; lang: string }[] = [];
 export let treeHistoryIndex: number = 0;
@@ -54,14 +54,11 @@ export async function resetTreeManipulation(): Promise<void> {
 async function loadLangSelector(): Promise<void> {
     const langSelectorContainer: HTMLDivElement = document.getElementById('lang-selector-div') as HTMLDivElement;
 
-    await getLangSelectorRequest().then(response => response.json()).then(langSelector => {
-        langSelectorContainer.innerHTML = langSelector.langSelectorHtml;
-    }).then(() => {
-        const langSelector: HTMLElement = document.getElementById('lang-selector');
-        langSelector.addEventListener('change', () => {
-            runAction("IdentityAction", "", []);
-        })
-    });
+    langSelectorContainer.innerHTML = getLangSelectorNew();
+    const langSelector: HTMLElement = document.getElementById('lang-selector');
+    langSelector.addEventListener('change', () => {
+        runAction("IdentityAction", "", []);
+    })
 }
 
 /**

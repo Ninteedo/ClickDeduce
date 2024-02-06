@@ -1,5 +1,4 @@
 import {compareTreePaths, getSelectedLanguage, getSelectedMode} from "./utils";
-import {ClickDeduceResponseError} from "./ClickDeduceResponseError";
 import {
     disableInputs,
     enableInputs,
@@ -12,7 +11,7 @@ import {
     useTreeFromHistory
 } from "./treeManipulation";
 import {contextMenuSelectedElement, displayError, nextFocusElement} from "./interface";
-import {postProcessAction, postStartNodeBlank} from "./serverRequest";
+import {postProcessActionNew, postStartNodeBlankNew} from "./serverRequest";
 
 let copyCache: string = null;
 
@@ -36,9 +35,8 @@ export async function doStartNodeBlank(event: Event): Promise<void> {
     event.preventDefault();
 
     // send a POST request to the server
-    await postStartNodeBlank(getSelectedLanguage()).then(response => response.json()).then(updatedTree => {
-        updateTree(updatedTree.html, updatedTree.nodeString, getSelectedMode(), getSelectedLanguage(), true);
-    });
+    const [newNodeString, newHtml] = postStartNodeBlankNew(getSelectedLanguage());
+    updateTree(newHtml, newNodeString, getSelectedMode(), getSelectedLanguage(), true);
 }
 
 /**
@@ -132,23 +130,15 @@ export async function runAction(actionName: string, treePath: string, extraArgs:
 
     const modeName: string = getSelectedMode();
     const langName: string = getSelectedLanguage();
-    return postProcessAction(langName, modeName, actionName, lastNodeString, treePath, extraArgs).then(response => {
-        if (!response.ok) {
-            enableInputs();
-            return response.text().then(text => {
-                throw new ClickDeduceResponseError(text);
-            });
-        }
-        return response;
-    }).then(response => response.json()).then(updatedTree => {
-        updateTree(updatedTree.html, updatedTree.nodeString, modeName, langName, true);
-        enableInputs();
-    }).catch(error => {
-        enableInputs();
-        displayError(error);
+    try {
+        const [newNodeString, newHtml] = postProcessActionNew(langName, modeName, actionName, lastNodeString, treePath, extraArgs);
+        updateTree(newHtml, newNodeString, modeName, langName, true);
+    } catch (e) {
+        displayError(e);
         useTreeFromHistory(treeHistoryIndex);
-        throw new ClickDeduceResponseError(error.message);
-    });
+        throw e;
+    }
+    enableInputs();
 }
 
 /**

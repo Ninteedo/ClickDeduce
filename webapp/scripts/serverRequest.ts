@@ -1,5 +1,11 @@
+import {getLangSelector, processAction, startNodeBlank} from "./clickdeduce-fastopt";
+
 export async function getLangSelectorRequest(): Promise<Response> {
     return fetch('get-lang-selector', {method: 'GET'});
+}
+
+export function getLangSelectorNew(): string {
+    return getLangSelector();
 }
 
 export async function postStartNodeBlank(selectedLanguage: string): Promise<Response> {
@@ -12,6 +18,10 @@ export async function postStartNodeBlank(selectedLanguage: string): Promise<Resp
             langName: selectedLanguage,
         })
     });
+}
+
+export function postStartNodeBlankNew(selectedLanguage: string): [string, string] {
+    return startNodeBlank(selectedLanguage);
 }
 
 export async function postProcessAction(
@@ -31,5 +41,17 @@ export async function postProcessAction(
             treePath,
             extraArgs
         })
-    })
+    });
+}
+
+export function postProcessActionNew(
+    langName: string,
+    modeName: string,
+    actionName: string,
+    nodeString: string,
+    treePath: string,
+    extraArgs: any[]
+): [string, string] {
+    const extraArgsStrings: string[] = extraArgs.map(arg => arg.toString());
+    return processAction(langName, modeName, actionName, nodeString, treePath, extraArgsStrings);
 }
