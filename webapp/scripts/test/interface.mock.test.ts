@@ -1,16 +1,10 @@
 import {beforeEach, describe, expect, jest, test} from "@jest/globals";
 import {
-    defaultHtml,
-    mockEvent,
-    prepareExampleTimesTree,
-    resetRequestTracking,
-    setActionErrorMessage,
-    setActionFetchResponse,
-} from "./requestMocking";
-import {
     contextMenuSelect,
+    doLiteralEdit,
     getErrorDiv,
     getLeftmostExprDropdown,
+    getLiteralInputAt,
     getTabbableElements,
     leftClickOn,
     loadHtmlTemplate,
@@ -18,45 +12,48 @@ import {
     slightDelay
 } from "./helper";
 import {initialise} from "../initialise";
-import * as NS from "../../test_resources/node_strings";
-import {doStartNodeBlank, handleLiteralChanged} from "../actions";
+import {doStartNodeBlank, handleLiteralChanged, startNodeBlank} from "../actions";
 import {ClickDeduceResponseError} from "../ClickDeduceResponseError";
 
-beforeEach(async () => {
-    resetRequestTracking();
-    document.body.innerHTML = defaultHtml;
-    await initialise(true);
+const indexHtml = loadHtmlTemplate('../pages/index');
+
+beforeEach(() => {
+    document.body.innerHTML = indexHtml;
+    initialise(true);
 });
 
 describe("context menu behaves correctly", () => {
-    beforeEach(async () => {
-        await prepareExampleTimesTree();
+    beforeEach(() => {
+        doStartNodeBlank();
+        selectExprOption(getLeftmostExprDropdown(), "Times");
+        selectExprOption(getLeftmostExprDropdown(), "Num");
+        selectExprOption(getLeftmostExprDropdown(), "Plus");
     });
 
-    test("context menu is initially hidden", async () => {
+    test("context menu is initially hidden", () => {
         expect(document.getElementById('custom-context-menu').style.display).toEqual('none');
     });
 
-    test("right-clicking an element causes the context menu to appear", async () => {
+    test("right-clicking an element causes the context menu to appear", () => {
         const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
         contextMenuSelect(element);
         expect(document.getElementById('custom-context-menu').style.display).toEqual('block');
     });
 
-    test("the selected element remains highlighted after the context menu appears", async () => {
+    test("the selected element remains highlighted after the context menu appears", () => {
         const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
         contextMenuSelect(element);
         expect(element.classList).toContain('highlight');
     });
 
-    test("the context menu disappears when clicking away", async () => {
+    test("the context menu disappears when clicking away", () => {
         const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
         contextMenuSelect(element);
         leftClickOn(document.querySelector('[data-tree-path=""]'))
         expect(document.getElementById('custom-context-menu').style.display).toEqual('none');
     });
 
-    test("right-clicking another element when the context menu is out causes the context menu to disappear", async () => {
+    test("right-clicking another element when the context menu is out causes the context menu to disappear", () => {
         const element1 = document.querySelector('[data-tree-path="0"]') as HTMLElement;
         contextMenuSelect(element1);
 
@@ -66,14 +63,14 @@ describe("context menu behaves correctly", () => {
         expect(document.getElementById('custom-context-menu').style.display).toEqual('none');
     });
 
-    test("right-clicking the context menu causes the context menu to disappear", async () => {
+    test("right-clicking the context menu causes the context menu to disappear", () => {
         const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
         contextMenuSelect(element);
         contextMenuSelect(document.getElementById('custom-context-menu'));
         expect(document.getElementById('custom-context-menu').style.display).toEqual('none');
     });
 
-    test("right-clicking on the selected element again causes the context menu to disappear", async () => {
+    test("right-clicking on the selected element again causes the context menu to disappear", () => {
         const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
         contextMenuSelect(element);
         contextMenuSelect(element);
@@ -82,16 +79,25 @@ describe("context menu behaves correctly", () => {
 });
 
 describe("tab cycling between input elements behaves correctly", () => {
-    const nodeString = NS.TABBING_EXAMPLE;
-    const html = loadHtmlTemplate('tabbing_example');
-
-    beforeEach(async () => {
-        await doStartNodeBlank(mockEvent);
-        setActionFetchResponse(nodeString, html);
-        await selectExprOption(getLeftmostExprDropdown(), "Num");
+    beforeEach(() => {
+        doStartNodeBlank();
+        selectExprOption(getLeftmostExprDropdown(), "Times");
+        selectExprOption(getLeftmostExprDropdown(), "Times");
+        selectExprOption(getLeftmostExprDropdown(), "Num");
+        doLiteralEdit(getLiteralInputAt("0-0-0"), "1");
+        selectExprOption(getLeftmostExprDropdown(), "Num");
+        doLiteralEdit(getLiteralInputAt("0-1-0"), "2");
+        selectExprOption(getLeftmostExprDropdown(), "Plus");
+        selectExprOption(getLeftmostExprDropdown(), "Times");
+        selectExprOption(getLeftmostExprDropdown(), "Num");
+        doLiteralEdit(getLiteralInputAt("1-0-0-0"), "3");
+        selectExprOption(getLeftmostExprDropdown(), "Num");
+        doLiteralEdit(getLiteralInputAt("1-0-1-0"), "4");
+        selectExprOption(getLeftmostExprDropdown(), "Num");
+        doLiteralEdit(getLiteralInputAt("1-1-0"), "5");
     });
 
-    test("test can find a list of tabbable elements", async () => {
+    test("test can find a list of tabbable elements", () => {
         const tabbableElements = getTabbableElements();
         expect(tabbableElements).toHaveLength(5);
 
@@ -104,7 +110,7 @@ describe("tab cycling between input elements behaves correctly", () => {
         });
     });
 
-    test("tabbing through the elements in order works", async () => {
+    test("tabbing through the elements in order works", () => {
         const tabbableElements = getTabbableElements();
 
         tabbableElements[0].focus();
@@ -118,7 +124,7 @@ describe("tab cycling between input elements behaves correctly", () => {
         });
     });
 
-    test("tabbing through the elements in reverse order works", async () => {
+    test("tabbing through the elements in reverse order works", () => {
         const tabbableElements = getTabbableElements();
 
         tabbableElements[0].focus();
@@ -135,11 +141,13 @@ describe("tab cycling between input elements behaves correctly", () => {
 });
 
 describe("tab cycling between input and select elements behaves correctly", () => {
-    beforeEach(async () => {
-        await prepareExampleTimesTree();
+    beforeEach(() => {
+        startNodeBlank();
+        selectExprOption(getLeftmostExprDropdown(), "Times");
+        selectExprOption(getLeftmostExprDropdown(), "Num");
     });
 
-    test("test can find a list of tabbable elements", async () => {
+    test("test can find a list of tabbable elements", () => {
         const tabbableElements = getTabbableElements(true);
         expect(tabbableElements).toHaveLength(2);
 
@@ -156,7 +164,7 @@ describe("tab cycling between input and select elements behaves correctly", () =
         });
     });
 
-    test("tabbing through the elements in order works", async () => {
+    test("tabbing through the elements in order works", () => {
         const tabbableElements = getTabbableElements(true);
 
         tabbableElements[0].focus();
@@ -170,7 +178,7 @@ describe("tab cycling between input and select elements behaves correctly", () =
         });
     });
 
-    test("tabbing through the elements in reverse order works", async () => {
+    test("tabbing through the elements in reverse order works", () => {
         const tabbableElements = getTabbableElements(true);
 
         tabbableElements[0].focus();
@@ -187,18 +195,16 @@ describe("tab cycling between input and select elements behaves correctly", () =
 });
 
 describe("input focus is preserved when the tree is updated", () => {
-    beforeEach(async () => {
-        await prepareExampleTimesTree();
+    beforeEach(() => {
+        startNodeBlank();
+        selectExprOption(getLeftmostExprDropdown(), "Times");
+        selectExprOption(getLeftmostExprDropdown(), "Num");
     });
 
     test("input focus is preserved when a literal is edited and ENTER is pressed", async () => {
         const input = document.querySelector('input[data-tree-path="0-0"]') as HTMLInputElement;
         input.focus();
         input.value = "8";
-        setActionFetchResponse(
-            NS.TIMES_LEFT_NUM_RIGHT_EMPTY.replace(`LiteralNode("4")`, `LiteralNode("8")`),
-            loadHtmlTemplate('times_left_filled_num_right_empty_alt')
-        );
         expect(input.value).toEqual("8");
         input.dispatchEvent(new KeyboardEvent('keydown', {
             key: 'Enter'
@@ -210,17 +216,13 @@ describe("input focus is preserved when the tree is updated", () => {
         expect(newInput).not.toEqual(input);
     });
 
-    test("input focus is not preserved when a literal is edited and then something else is clicked", async () => {
+    test("input focus is not preserved when a literal is edited and then something else is clicked", () => {
         const input = document.querySelector('input[data-tree-path="0-0"]') as HTMLInputElement;
         input.focus();
-        setActionFetchResponse(
-            NS.TIMES_LEFT_NUM_RIGHT_EMPTY.replace(`LiteralNode("4")`, `LiteralNode("8")`),
-            loadHtmlTemplate('times_left_filled_num_right_empty_alt')
-        );
         input.value = "8";
         input.dispatchEvent(new Event('blur'));
 
-        await slightDelay();
+        slightDelay();
         const newInput = document.querySelector('input[data-tree-path="0-0"]') as HTMLInputElement;
         expect(newInput.value).toEqual("8");
         expect(document.activeElement).not.toEqual(newInput);
@@ -230,56 +232,57 @@ describe("input focus is preserved when the tree is updated", () => {
 });
 
 describe("responses to server errors are appropriate", () => {
-    async function triggerError(message: string): Promise<void> {
+    function triggerError(message: string): void {
         const input = document.querySelector('input[type="text"]') as HTMLInputElement;
         input.value = input.value + " foo";
-        setActionErrorMessage(message);
-        await handleLiteralChanged(input);
+        handleLiteralChanged(input);
     }
 
-    beforeEach(async () => {
-        await prepareExampleTimesTree();
+    beforeEach(() => {
+        doStartNodeBlank();
+        selectExprOption(getLeftmostExprDropdown(), "Times");
+        selectExprOption(getLeftmostExprDropdown(), "Num");
     });
 
-    test("an error is thrown in the console", async () => {
+    test("an error is thrown in the console", () => {
         const message = "test";
         try {
-            await triggerError(message)
+            triggerError(message)
         } catch (e) {
             expect(e).toBeInstanceOf(ClickDeduceResponseError);
         }
     });
 
-    test("error div becomes visible", async () => {
+    test("error div becomes visible", () => {
         try {
-            await triggerError("test");
+            triggerError("test");
         } catch (e) {
         }
         expect(getErrorDiv().classList).toContain('fade-in');
         expect(getErrorDiv().classList).not.toContain('fade-out');
     });
 
-    test("error div contains the error message", async () => {
+    test("error div contains the error message", () => {
         let message = "test";
         try {
-            await triggerError(message);
+            triggerError(message);
         } catch (e) {
         }
         expect(getErrorDiv().textContent).toEqual(message);
 
         message = "Stack overflow exception";
         try {
-            await triggerError(message);
+            triggerError(message);
         } catch (e) {
         }
         expect(getErrorDiv().textContent).toEqual(message);
     });
 
-    test("error div becomes invisible after a timeout", async () => {
+    test("error div becomes invisible after a timeout", () => {
         jest.useFakeTimers();
 
         try {
-            await triggerError("test");
+            triggerError("test");
         } catch (e) {
         }
 
