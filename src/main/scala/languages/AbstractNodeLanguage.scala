@@ -481,8 +481,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     private lazy val exprClass: Class[Expr] = exprNameToClass(exprName) match {
       case Some(value) => value
-      case None =>
-        throw new IllegalArgumentException(s"Unknown expression type for ${lang.getClass.getSimpleName}: $exprName")
+      case None => throw new IllegalArgumentException(s"Unknown expression type: $exprName")
     }
 
     lazy val expr: Expr = {
