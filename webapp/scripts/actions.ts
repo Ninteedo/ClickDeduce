@@ -52,8 +52,6 @@ export function handleLiteralChanged(textInput: HTMLInputElement): void {
     const treePath: string = textInput.getAttribute("data-tree-path");
 
     if (initialValues.find(([path, value]) => path === treePath && value === literalValue)) {
-        console.log(`Skipping redundant action, tree path "${treePath}" already has value "${literalValue}"`);
-        console.log(`Initial values: ${JSON.stringify(initialValues)}`);
         return;
     }
 
@@ -82,7 +80,6 @@ export function handleExprSelectorChoice(selector: HTMLDivElement, value: string
     const button = selector.querySelector('.expr-selector-button') as HTMLButtonElement;
 
     let focusedTreePath: string = null;
-    console.log(nextFocusElement);
     if (nextFocusElement != null) {
         focusedTreePath = nextFocusElement.getAttribute("data-tree-path");
     }
@@ -101,14 +98,12 @@ export function handleExprSelectorChoice(selector: HTMLDivElement, value: string
     const dataTreePath: string = selector.getAttribute("data-tree-path");
     runAction(actionName, dataTreePath, [value])
 
-    console.log(focusedTreePath);
     if (focusedTreePath == null) {
         return;
     }
 
     const focusedElement = getActiveInputs().find(input => compareTreePaths(focusedTreePath, input.getAttribute("data-tree-path")) <= 0);
 
-    console.log(focusedElement);
     if (focusedElement != null && focusedElement instanceof HTMLElement) {
         focusedElement.focus();
         if (focusedElement instanceof HTMLInputElement) {

@@ -72,7 +72,6 @@ function loadLangSelector(): void {
  * @param addToHistory whether to add this change to the history
  */
 export function updateTree(newTreeHtml: string, newNodeString: string, modeName: string, lang: string, addToHistory: boolean = false): void {
-    console.log(newNodeString);
     tree.innerHTML = newTreeHtml;
     lastNodeString = newNodeString;
     treeCleanup();
@@ -234,7 +233,6 @@ function updateActiveInputsList(): void {
         const bPath = b.getAttribute("data-tree-path");
         return aPath.localeCompare(bPath, undefined, {numeric: true, sensitivity: 'base'});
     });
-    console.log(activeInputs.map(input => input.outerHTML).join('\n'));
     activeInputs.forEach(input => {
         input.addEventListener('keydown', handleKeyDown);
         if (input instanceof HTMLInputElement && input.classList.contains('literal')) {
@@ -409,7 +407,6 @@ function selectorSelectOption(selectorDiv: HTMLDivElement, option: HTMLLIElement
     getSelectorInput(selectorDiv).value = option.innerText;
     getSelectorDropdown(selectorDiv).style.display = 'none';
     getSelectorButton(selectorDiv).innerHTML = '&#9660;';
-    console.log(option.outerHTML);
     handleExprSelectorChoice(selectorDiv, option.getAttribute('data-value'));
 }
 

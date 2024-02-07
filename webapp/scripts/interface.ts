@@ -30,13 +30,11 @@ export function resetInterfaceGlobals(): void {
  * @param e the keydown event
  */
 export function handleKeyDown(e: KeyboardEvent): void {
-    console.log('Key pressed: ' + e.key);
     if (e.key === 'Tab' && (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement)) {
         handleTabPressed(e);
     } else if (e.key === 'Enter' && e.target instanceof HTMLInputElement) {
         e.preventDefault();
         nextFocusElement = e.target;
-        console.log('Focus element set to ' + nextFocusElement.outerHTML);
         if (e.target.classList.contains('literal')) {
             handleLiteralChanged(e.target);
         } else if (e.target.classList.contains('expr-selector-input')) {
