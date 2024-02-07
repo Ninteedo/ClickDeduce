@@ -20,37 +20,14 @@ export function getActionHistory(): {
     return actionHistory;
 }
 
-export function checkActionExecuted(
-    langName: string,
-    modeName: string,
-    actionName: string,
-    nodeString: string,
-    treePath: string,
-    extraArgs: any[]
-): boolean {
-    const extraArgsStrings: string[] = extraArgs.map(arg => arg.toString());
-    return actionHistory.some(
-        action => action.langName === langName &&
-            action.modeName === modeName &&
-            action.actionName === actionName &&
-            action.nodeString === nodeString &&
-            action.treePath === treePath &&
-            action.extraArgsStrings.every((arg, i) => arg === extraArgsStrings[i])
-    );
-}
-
 export function clearActionHistory(): void {
     actionHistory = [];
 }
 
-let startNodeBlankHistory: {langName: string}[] = [];
+let startNodeBlankHistory: { langName: string }[] = [];
 
-export function getStartNodeBlankHistory(): {langName: string}[] {
+export function getStartNodeBlankHistory(): { langName: string }[] {
     return startNodeBlankHistory;
-}
-
-export function checkStartNodeBlankExecuted(langName: string): boolean {
-    return startNodeBlankHistory.some(start => start.langName === langName);
 }
 
 export function clearStartNodeBlankHistory(): void {

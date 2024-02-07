@@ -1,14 +1,21 @@
 import {beforeEach, describe, expect, test} from "@jest/globals";
 import {initialise} from "../initialise";
-import {contextMenuSelect, getDropdownAt, getLeftmostExprDropdown, loadHtmlTemplate, selectExprOption} from "./helper";
+import {
+    contextMenuSelect,
+    doLiteralEdit,
+    getDropdownAt,
+    getLeftmostExprDropdown,
+    getLiteralInputAt,
+    loadHtmlTemplate,
+    selectExprOption
+} from "./helper";
 import {doStartNodeBlank} from "../actions";
 import * as NS from "../../test_resources/node_strings";
 import {
-    checkActionExecuted,
-    checkStartNodeBlankExecuted,
     clearActionHistory,
     clearStartNodeBlankHistory,
-    getActionHistory
+    getActionHistory,
+    getStartNodeBlankHistory
 } from "../serverRequest";
 
 const indexHtml = loadHtmlTemplate('../pages/index');
@@ -22,11 +29,35 @@ beforeEach(() => {
 
 const langSelectorLanguages = ["LArith", "LIf", "LLet"];
 
+export function checkActionExecuted(
+    langName: string,
+    modeName: string,
+    actionName: string,
+    nodeString: string,
+    treePath: string,
+    extraArgs: any[]
+): void {
+    const extraArgsStrings: string[] = extraArgs.map(arg => arg.toString());
+    const history = getActionHistory();
+    expect(history).toContainEqual({
+        langName,
+        modeName,
+        actionName,
+        nodeString,
+        treePath,
+        extraArgsStrings
+    });
+}
+
+function checkStartNodeBlankExecuted(langName: string): void {
+    expect(getStartNodeBlankHistory()).toContainEqual({langName});
+}
+
 describe("start new node button behaves correctly", () => {
     test("clicking the button makes a request to the server", () => {
         const startNodeButton = document.getElementById('start-node-button') as HTMLButtonElement;
         startNodeButton.click();
-        expect(checkStartNodeBlankExecuted(langSelectorLanguages[0])).toBeTruthy();
+        checkStartNodeBlankExecuted(langSelectorLanguages[0]);
     });
 
     // test("the contents of the tree div are replaced with the new tree HTML", () => {
@@ -46,7 +77,7 @@ describe("start new node button behaves correctly", () => {
         const startNodeButton = document.getElementById('start-node-button') as HTMLButtonElement;
         startNodeButton.click();
 
-        expect(checkStartNodeBlankExecuted(langSelectorLanguages[1])).toBeTruthy();
+        checkStartNodeBlankExecuted(langSelectorLanguages[1]);
     });
 
     test("changing the selected language causes an identity action", () => {
@@ -59,8 +90,7 @@ describe("start new node button behaves correctly", () => {
         langSelector.selectedIndex = 1;
         langSelector.dispatchEvent(new Event('change'));
 
-
-        checkActionExecuted("IdentityAction", langSelectorLanguages[1], "edit",
+        checkActionExecuted(langSelectorLanguages[1], "edit", "IdentityAction",
             "ExprChoiceNode()", "", []);
     });
 });
@@ -80,7 +110,7 @@ describe("selecting an option from the root expr dropdown behaves correctly", ()
     function selectOptionResultsInCorrectRequest(exprName: string) {
         test("selecting the " + exprName + " option makes the correct request to the server", () => {
             selectExprOption(getLeftmostExprDropdown(), exprName);
-            checkActionExecuted("SelectExprAction", langSelectorLanguages[0], "edit",
+            checkActionExecuted(langSelectorLanguages[0], "edit", "SelectExprAction",
                 "ExprChoiceNode()", "", [exprName]);
         });
     }
@@ -122,7 +152,7 @@ describe("selecting an option from a non-root expr dropdown behaves correctly", 
             console.log(exprName)
             selectExprOption(leftDropdown, exprName);
 
-            checkActionExecuted("SelectExprAction", langSelectorLanguages[0], "edit",
+            checkActionExecuted(langSelectorLanguages[0], "edit", "SelectExprAction",
                 dummyNodeString, "0", [exprName]);
         });
 
@@ -132,7 +162,7 @@ describe("selecting an option from a non-root expr dropdown behaves correctly", 
             const rightSelector = document.querySelectorAll('.expr-selector-container:not([readonly])').item(1) as HTMLDivElement;
             selectExprOption(rightSelector, exprName);
 
-            checkActionExecuted("SelectExprAction", langSelectorLanguages[0], "edit",
+            checkActionExecuted(langSelectorLanguages[0], "edit", "SelectExprAction",
                 dummyNodeString, "1", [exprName]);
         });
     }
@@ -165,7 +195,7 @@ describe("entering text into a literal input behaves correctly", () => {
         input.value = "foo";
         input.dispatchEvent(new Event('change'));
 
-        checkActionExecuted("EditLiteralAction", langSelectorLanguages[0], "edit",
+        checkActionExecuted(langSelectorLanguages[0], "edit", "EditLiteralAction",
             dummyNodeString, "0", ["foo"]);
     });
 
@@ -178,7 +208,7 @@ describe("entering text into a literal input behaves correctly", () => {
         input.value = foo;
         input.dispatchEvent(new Event('change'));
 
-        checkActionExecuted("EditLiteralAction", langSelectorLanguages[0], "edit",
+        checkActionExecuted(langSelectorLanguages[0], "edit", "EditLiteralAction",
             dummyNodeString, "0", [foo]);
 
 
@@ -189,7 +219,7 @@ describe("entering text into a literal input behaves correctly", () => {
         input.value = bar;
         input.dispatchEvent(new Event('change'));
 
-        checkActionExecuted("EditLiteralAction", langSelectorLanguages[0], "edit",
+        checkActionExecuted(langSelectorLanguages[0], "edit", "EditLiteralAction",
             `VariableNode("Num", List(LiteralNode("${foo}")))`, "0", [bar]);
     });
 
@@ -243,6 +273,7 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         doStartNodeBlank();
         selectExprOption(getLeftmostExprDropdown(), "Times");
         selectExprOption(getDropdownAt("0"), "Num");
+        doLiteralEdit(getLiteralInputAt("0-0"), "4");
     });
 
     test("pressing delete makes the correct request to the server", () => {
@@ -254,7 +285,7 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         const deleteButton = document.getElementById('delete-button');
         deleteButton.click();
 
-        checkActionExecuted("DeleteAction", langSelectorLanguages[0], "edit",
+        checkActionExecuted(langSelectorLanguages[0], "edit", "DeleteAction",
             NS.TIMES_LEFT_FILLED_NUM_RIGHT_EMPTY, "0", []);
     });
 
@@ -298,7 +329,7 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         const pasteButton = document.getElementById('paste-button');
         pasteButton.click();
 
-        checkActionExecuted("PasteAction", langSelectorLanguages[0], "edit",
+        checkActionExecuted(langSelectorLanguages[0], "edit", "PasteAction",
             NS.TIMES_LEFT_FILLED_NUM_RIGHT_EMPTY, "0", ["VariableNode(\"Num\", List(LiteralNode(\"4\")))"]);
     });
 
@@ -315,7 +346,7 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         const pasteButton = document.getElementById('paste-button');
         pasteButton.click();
 
-        checkActionExecuted("PasteAction", langSelectorLanguages[0], "edit",
+        checkActionExecuted(langSelectorLanguages[0], "edit", "PasteAction",
             NS.TIMES_LEFT_FILLED_NUM_RIGHT_EMPTY, "1", ["VariableNode(\"Num\", List(LiteralNode(\"4\")))"]);
     });
 
@@ -328,7 +359,7 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         contextMenuSelect(document.querySelector('[data-tree-path=""]'));
         document.getElementById('paste-button').click();
 
-        checkActionExecuted("PasteAction", langSelectorLanguages[0], "edit",
+        checkActionExecuted(langSelectorLanguages[0], "edit", "PasteAction",
             NS.TIMES_LEFT_NUM_RIGHT_EMPTY, "", ["VariableNode(\"Num\", List(LiteralNode(\"4\")))"]);
     });
 });
@@ -345,14 +376,14 @@ describe("mode radio buttons behave correctly", () => {
     test("clicking the type-check mode button makes the correct request to the server", () => {
         document.getElementById('type-check-mode-radio').click();
 
-        checkActionExecuted("IdentityAction", langSelectorLanguages[0], "type-check",
+        checkActionExecuted(langSelectorLanguages[0], "type-check", "IdentityAction",
             "ExprChoiceNode()", "", []);
     });
 
     test("clicking the eval mode button makes the correct request to the server", () => {
         document.getElementById('eval-mode-radio').click();
 
-        checkActionExecuted("IdentityAction", langSelectorLanguages[0], "eval",
+        checkActionExecuted(langSelectorLanguages[0], "eval", "IdentityAction",
             "ExprChoiceNode()", "", []);
     });
 
@@ -361,7 +392,7 @@ describe("mode radio buttons behave correctly", () => {
 
         document.getElementById('edit-mode-radio').click();
 
-        checkActionExecuted("IdentityAction", langSelectorLanguages[0], "edit",
+        checkActionExecuted(langSelectorLanguages[0], "edit", "IdentityAction",
             "ExprChoiceNode()", "", []);
     });
 
@@ -370,7 +401,7 @@ describe("mode radio buttons behave correctly", () => {
 
         selectExprOption(getLeftmostExprDropdown(), "Num");
 
-        checkActionExecuted("SelectExprAction", langSelectorLanguages[0], "type-check",
+        checkActionExecuted(langSelectorLanguages[0], "type-check", "SelectExprAction",
             "ExprChoiceNode()", "", ["Num"]);
     });
 });
