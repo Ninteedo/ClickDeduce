@@ -109,13 +109,7 @@ class LPoly extends LData {
 
     override def prettyPrint: String = v.toString
   }
-
-  override def calculateExprClassList: List[Class[Expr]] =
-    super.calculateExprClassList ++ List(classOf[Poly], classOf[ApplyType]).map(_.asInstanceOf[Class[Expr]])
-
-  override def calculateTypeClassList: List[Class[Type]] =
-    super.calculateTypeClassList ++ List(classOf[PolyType], classOf[TypeVar]).map(_.asInstanceOf[Class[Type]])
-
+  
   addExprBuilder(
     "Poly",
     {

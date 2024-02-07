@@ -6,7 +6,6 @@ resolvers += "Artima Maven Repository" at "https://repo.artima.com/releases"
 resolvers += "Akka library repository" at "https://repo.akka.io/maven"
 
 libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "2.2.0"
-libraryDependencies += "org.scala-lang" % "scala-reflect" % "2.13.10"
 libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.17"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.17" % "test"
 libraryDependencies += "com.lihaoyi" %% "scalatags" % "0.12.0"

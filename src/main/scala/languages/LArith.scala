@@ -132,12 +132,6 @@ class LArith extends ClickDeduceLanguage {
     */
   case class UnexpectedArgType(override val message: String) extends TypeError
 
-  override def calculateExprClassList: List[Class[Expr]] = List(classOf[Num], classOf[Plus], classOf[Times])
-    .map(_.asInstanceOf[Class[Expr]])
-
-  override def calculateTypeClassList: List[Class[Type]] = super.calculateTypeClassList ++ List(classOf[IntType])
-    .map(_.asInstanceOf[Class[Type]])
-
   addExprBuilder(
     "Num",
     {

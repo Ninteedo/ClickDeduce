@@ -398,17 +398,27 @@ trait AbstractLanguage {
 
   private var exprBuilders: Map[String, ExprBuilder] = Map()
 
+  private var exprBuilderNamesList: List[String] = List()
+
   protected def addExprBuilder(name: String, builder: ExprBuilder): Unit = {
     exprBuilders += (name -> builder)
+    exprBuilderNamesList = exprBuilderNamesList :+ name
   }
+
+  def exprBuilderNames: List[String] = exprBuilderNamesList
 
   type TypeBuilder = List[Any] => Option[Type]
 
   private var typeBuilders: Map[String, TypeBuilder] = Map()
 
+  private var typeBuilderNamesList: List[String] = List()
+
   protected def addTypeBuilder(name: String, builder: TypeBuilder): Unit = {
     typeBuilders += (name -> builder)
+    typeBuilderNamesList = typeBuilderNamesList :+ name
   }
+
+  def typeBuilderNames: List[String] = typeBuilderNamesList
 
   type ValueBuilder = List[Any] => Option[Value]
 

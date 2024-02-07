@@ -95,11 +95,7 @@ class LLet extends LIf {
   case class InvalidIdentifierTypeError(v: Literal) extends TypeError {
     override val message: String = s"Invalid identifier '$v'"
   }
-
-  override def calculateExprClassList: List[Class[Expr]] = {
-    super.calculateExprClassList ++ List(classOf[Var], classOf[Let]).map(_.asInstanceOf[Class[Expr]])
-  }
-
+  
   addExprBuilder(
     "Let",
     {

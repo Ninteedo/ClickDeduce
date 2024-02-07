@@ -119,14 +119,6 @@ class LLam extends LLet {
     override val needsBrackets: Boolean = false
   }
 
-  override def calculateExprClassList: List[Class[Expr]] = {
-    super.calculateExprClassList ++ List(classOf[Lambda], classOf[Apply]).map(_.asInstanceOf[Class[Expr]])
-  }
-
-  override def calculateTypeClassList: List[Class[Type]] = {
-    super.calculateTypeClassList ++ List(classOf[Func]).map(_.asInstanceOf[Class[Type]])
-  }
-
   addExprBuilder(
     "Lambda",
     {

@@ -67,11 +67,7 @@ class LRec extends LLam {
 
   private def prettyPrintRec(f: Literal, v: Literal, in_typ: Type, out_typ: Type, e: Expr) =
     s"rec $f($v: ${in_typ.prettyPrint}): ${out_typ.prettyPrintBracketed}. ${e.prettyPrintBracketed}"
-
-  override def calculateExprClassList: List[Class[Expr]] = {
-    super.calculateExprClassList ++ List(classOf[Rec]).map(_.asInstanceOf[Class[Expr]])
-  }
-
+  
   class RecursiveFunctionExpressionOutTypeMismatch(declared: Type, actual: Type) extends TypeError {
     override val message: String =
       s"Recursive function expression declared return type $declared does not match actual return type $actual"

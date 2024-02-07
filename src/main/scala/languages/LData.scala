@@ -264,21 +264,6 @@ class LData extends LRec {
     }
   }
 
-  override def calculateExprClassList: List[Class[Expr]] = super.calculateExprClassList ++ List(
-    classOf[Pair],
-    classOf[Fst],
-    classOf[Snd],
-    classOf[LetPair],
-    classOf[UnitExpr],
-    classOf[Left],
-    classOf[Right],
-    classOf[CaseSwitch]
-  ).map(_.asInstanceOf[Class[Expr]])
-
-  override def calculateTypeClassList: List[Class[Type]] =
-    super.calculateTypeClassList ++ List(classOf[PairType], classOf[UnionType], classOf[EmptyType], classOf[AnyType])
-      .map(_.asInstanceOf[Class[Type]])
-
   addExprBuilder(
     "Pair",
     {

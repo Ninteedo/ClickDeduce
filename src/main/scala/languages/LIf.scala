@@ -127,16 +127,6 @@ class LIf extends LArith {
     override val message: String = s"$type1 or $type2 is not an ordinal type"
   }
 
-  override def calculateExprClassList: List[Class[Expr]] = {
-    super.calculateExprClassList ++ List(classOf[Bool], classOf[Equal], classOf[LessThan], classOf[IfThenElse]).map(
-      _.asInstanceOf[Class[Expr]]
-    )
-  }
-
-  override def calculateTypeClassList: List[Class[Type]] = {
-    super.calculateTypeClassList ++ List(classOf[BoolType]).map(_.asInstanceOf[Class[Type]])
-  }
-
   addExprBuilder(
     "Bool",
     {
