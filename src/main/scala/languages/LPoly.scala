@@ -27,6 +27,15 @@ class LPoly extends LData {
     def apply(v: Variable, e: Expr): Poly = Poly(Literal.fromString(v), e)
   }
 
+  addExprBuilder(
+    "Poly",
+    {
+      case List(v: Literal, e: Expr) => Some(Poly(v, e))
+      case Nil => Some(Poly(defaultLiteral, defaultExpr))
+      case _ => None
+    }
+  )
+
   case class ApplyType(e: Expr, typ: Type) extends Expr {
     override def evalInner(env: ValueEnv): Value = e.eval(env) match {
       case PolyV(tv, e, env) =>
@@ -49,6 +58,15 @@ class LPoly extends LData {
     override def prettyPrint: String = s"${e.prettyPrintBracketed}[${typ.prettyPrint}]"
   }
 
+  addExprBuilder(
+    "ApplyType",
+    {
+      case List(e: Expr, t: Type) => Some(ApplyType(e, t))
+      case Nil => Some(ApplyType(defaultExpr, defaultType))
+      case _ => None
+    }
+  )
+
   // types
 
   case class TypeVar(v: Literal) extends Type {
@@ -67,9 +85,28 @@ class LPoly extends LData {
     def apply(v: Variable): TypeVar = TypeVar(Literal.fromString(v))
   }
 
+  addTypeBuilder(
+    "TypeVar",
+    {
+      case List(v: Literal) => Some(TypeVar(v))
+      case Nil => Some(TypeVar(defaultLiteral))
+      case _ => None
+    }
+  )
+
   case class PolyType(typeVar: Type, incompleteType: Type) extends Type {
     override def prettyPrint: String = s"∀${typeVar.prettyPrintBracketed}. ${incompleteType.prettyPrintBracketed}"
   }
+
+  addTypeBuilder(
+    "PolyType",
+    {
+      case List(tv: Type, t: Type) => Some(PolyType(tv, t))
+      case Nil => Some(PolyType(defaultType, defaultType))
+      case _ => None
+    },
+    hidden = true
+  )
 
   // values
 
@@ -81,6 +118,14 @@ class LPoly extends LData {
 
     override def prettyPrint: String = s"Λ${typeVar.prettyPrintBracketed}. ${e.prettyPrintBracketed}"
   }
+
+  addValueBuilder(
+    "PolyV",
+    {
+      case List(tv: Type, e: Expr, env: ValueEnv) => Some(PolyV(tv, e, env))
+      case _ => None
+    }
+  )
 
   // errors
 
@@ -109,56 +154,6 @@ class LPoly extends LData {
 
     override def prettyPrint: String = v.toString
   }
-
-  override def calculateExprClassList: List[Class[Expr]] =
-    super.calculateExprClassList ++ List(classOf[Poly], classOf[ApplyType]).map(_.asInstanceOf[Class[Expr]])
-
-  override def calculateTypeClassList: List[Class[Type]] =
-    super.calculateTypeClassList ++ List(classOf[PolyType], classOf[TypeVar]).map(_.asInstanceOf[Class[Type]])
-
-  addExprBuilder(
-    "Poly",
-    {
-      case List(v: Literal, e: Expr) => Some(Poly(v, e))
-      case Nil                       => Some(Poly(defaultLiteral, defaultExpr))
-      case _                         => None
-    }
-  )
-
-  addExprBuilder(
-    "ApplyType",
-    {
-      case List(e: Expr, t: Type) => Some(ApplyType(e, t))
-      case Nil                    => Some(ApplyType(defaultExpr, defaultType))
-      case _                      => None
-    }
-  )
-
-  addTypeBuilder(
-    "PolyType",
-    {
-      case List(tv: Type, t: Type) => Some(PolyType(tv, t))
-      case Nil                     => Some(PolyType(defaultType, defaultType))
-      case _                       => None
-    }
-  )
-
-  addTypeBuilder(
-    "TypeVar",
-    {
-      case List(v: Literal) => Some(TypeVar(v))
-      case Nil              => Some(TypeVar(defaultLiteral))
-      case _                => None
-    }
-  )
-
-  addValueBuilder(
-    "PolyV",
-    {
-      case List(tv: Type, e: Expr, env: ValueEnv) => Some(PolyV(tv, e, env))
-      case _                                      => None
-    }
-  )
 }
 
 object LPoly extends LPoly {}

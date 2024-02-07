@@ -99,6 +99,21 @@ form {
     display: inline;
 }
 
+#tree-buttons {
+    margin: 3px;
+    z-index: 100;
+    position: relative;
+    display: inline-block;
+}
+
+#tree-buttons button {
+    padding: 0;
+}
+
+#tree-buttons button img {
+    vertical-align: middle;
+}
+
 #tree-container {
     border: var(--foreground) solid 1px;
     width: 100%;

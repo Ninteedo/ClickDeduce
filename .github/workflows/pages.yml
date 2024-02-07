@@ -26,15 +26,12 @@ jobs:
           cache: 'sbt'
       - name: Update sbt
         run: sbt update
-      - name: Scala.JS Build
-        run: sbt fullOptJS
-      - name: Copy Scala.JS output to webapp scripts
-        run: cp ./target/scalajs/clickdeduce-opt.js ./webapp/scripts/clickdeduce-opt.js
-
       - name: NPM install
         run: npm install
+      - name: Scala.JS Build
+        run: sbt fullOptJS
       - name: NPM Build
-        run: npm run build
+        run: npm run build:webpack
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4

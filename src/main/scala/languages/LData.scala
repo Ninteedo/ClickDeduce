@@ -13,6 +13,15 @@ class LData extends LRec {
     override val needsBrackets: Boolean = false
   }
 
+  addExprBuilder(
+    "Pair",
+    {
+      case List(e1: Expr, e2: Expr) => Some(Pair(e1, e2))
+      case Nil => Some(Pair(defaultExpr, defaultExpr))
+      case _ => None
+    }
+  )
+
   case class Fst(e: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = e.eval(env) match {
       case PairV(v1, _) => v1
@@ -29,6 +38,15 @@ class LData extends LRec {
     override val needsBrackets: Boolean = false
   }
 
+  addExprBuilder(
+    "Fst",
+    {
+      case List(e: Expr) => Some(Fst(e))
+      case Nil => Some(Fst(defaultExpr))
+      case _ => None
+    }
+  )
+
   case class Snd(e: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = e.eval(env) match {
       case PairV(_, v2) => v2
@@ -44,6 +62,16 @@ class LData extends LRec {
 
     override val needsBrackets: Boolean = false
   }
+
+  addExprBuilder(
+    "Snd",
+    {
+      case List(e: Expr) => Some(Snd(e))
+      case Nil => Some(Snd(defaultExpr))
+      case _ => None
+    }
+  )
+
 
   case class LetPair(x: Literal, y: Literal, assign: Expr, bound: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = verifyLiteralIdentifierEval(x, y) {
@@ -86,6 +114,16 @@ class LData extends LRec {
       LetPair(Literal.fromString(x), Literal.fromString(y), assign, bound)
   }
 
+  addExprBuilder(
+    "LetPair",
+    {
+      case List(x: Literal, y: Literal, assign: Expr, bound: Expr) => Some(LetPair(x, y, assign, bound))
+      case Nil => Some(LetPair(defaultLiteral, defaultLiteral, defaultExpr, defaultExpr))
+      case _ => None
+    }
+  )
+
+
   case class UnitExpr() extends Expr {
     override def evalInner(env: ValueEnv): Value = UnitV()
 
@@ -95,6 +133,14 @@ class LData extends LRec {
 
     override val needsBrackets: Boolean = false
   }
+
+  addExprBuilder(
+    "UnitExpr",
+    {
+      case Nil => Some(UnitExpr())
+      case _ => None
+    }
+  )
 
   case class Left(e: Expr, rightType: Type) extends Expr {
     override def evalInner(env: ValueEnv): Value = LeftV(e.eval(env), rightType)
@@ -106,6 +152,15 @@ class LData extends LRec {
     override val needsBrackets: Boolean = false
   }
 
+  addExprBuilder(
+    "Left",
+    {
+      case List(e: Expr, rightType: Type) => Some(Left(e, rightType))
+      case Nil => Some(Left(defaultExpr, defaultType))
+      case _ => None
+    }
+  )
+
   case class Right(leftType: Type, e: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = RightV(leftType, e.eval(env))
 
@@ -115,6 +170,15 @@ class LData extends LRec {
 
     override val needsBrackets: Boolean = false
   }
+
+  addExprBuilder(
+    "Right",
+    {
+      case List(leftType: Type, e: Expr) => Some(Right(leftType, e))
+      case Nil => Some(Right(defaultType, defaultExpr))
+      case _ => None
+    }
+  )
 
   case class CaseSwitch(e: Expr, l: Literal, r: Literal, lExpr: Expr, rExpr: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = verifyLiteralIdentifierEval(l, r) {
@@ -168,6 +232,16 @@ class LData extends LRec {
       CaseSwitch(e, Literal.fromString(l), Literal.fromString(r), lExpr, rExpr)
   }
 
+  addExprBuilder(
+    "CaseSwitch",
+    {
+      case List(e: Expr, l: Literal, r: Literal, lExpr: Expr, rExpr: Expr) => Some(CaseSwitch(e, l, r, lExpr, rExpr))
+      case Nil => Some(CaseSwitch(defaultExpr, defaultLiteral, defaultLiteral, defaultExpr, defaultExpr))
+      case _ => None
+    }
+  )
+
+
   // types
 
   case class PairType(l: Type, r: Type) extends Type {
@@ -176,17 +250,44 @@ class LData extends LRec {
     override def prettyPrint: String = s"${l.prettyPrintBracketed} × ${r.prettyPrintBracketed}"
   }
 
+  addTypeBuilder(
+    "PairType",
+    {
+      case List(l: Type, r: Type) => Some(PairType(l, r))
+      case Nil => Some(PairType(defaultType, defaultType))
+      case _ => None
+    }
+  )
+
+
   case class UnionType(l: Type, r: Type) extends Type {
     override def typeCheck(tEnv: TypeEnv): Type = UnionType(l.typeCheck(tEnv), r.typeCheck(tEnv))
 
     override def prettyPrint: String = s"${l.prettyPrintBracketed} + ${r.prettyPrintBracketed}"
   }
 
+  addTypeBuilder(
+    "UnionType",
+    {
+      case List(l: Type, r: Type) => Some(UnionType(l, r))
+      case Nil => Some(UnionType(defaultType, defaultType))
+      case _ => None
+    }
+  )
+
   case class EmptyType() extends Type {
     override def prettyPrint: String = "()"
 
     override val needsBrackets: Boolean = false
   }
+
+  addTypeBuilder(
+    "EmptyType",
+    {
+      case Nil => Some(EmptyType())
+      case _ => None
+    }
+  )
 
   case class AnyType() extends Type {
     override def prettyPrint: String = "Any"
@@ -204,6 +305,14 @@ class LData extends LRec {
     override val needsBrackets: Boolean = false
   }
 
+  addValueBuilder(
+    "PairV",
+    {
+      case List(v1: Value, v2: Value) => Some(PairV(v1, v2))
+      case _ => None
+    }
+  )
+
   case class UnitV() extends Value {
     override val typ: Type = EmptyType()
 
@@ -211,6 +320,14 @@ class LData extends LRec {
 
     override val needsBrackets: Boolean = false
   }
+
+  addValueBuilder(
+    "UnitV",
+    {
+      case Nil => Some(UnitV())
+      case _ => None
+    }
+  )
 
   case class LeftV(v: Value, rightType: Type) extends Value {
     override val typ: Type = UnionType(v.typ, rightType)
@@ -220,6 +337,14 @@ class LData extends LRec {
     override val needsBrackets: Boolean = false
   }
 
+  addValueBuilder(
+    "LeftV",
+    {
+      case List(v: Value, rightType: Type) => Some(LeftV(v, rightType))
+      case _ => None
+    }
+  )
+
   case class RightV(leftType: Type, v: Value) extends Value {
     override val typ: Type = UnionType(leftType, v.typ)
 
@@ -227,6 +352,14 @@ class LData extends LRec {
 
     override val needsBrackets: Boolean = false
   }
+
+  addValueBuilder(
+    "RightV",
+    {
+      case List(leftType: Type, v: Value) => Some(RightV(leftType, v))
+      case _ => None
+    }
+  )
 
   // errors
 
@@ -263,150 +396,6 @@ class LData extends LRec {
       case None      => continue
     }
   }
-
-  override def calculateExprClassList: List[Class[Expr]] = super.calculateExprClassList ++ List(
-    classOf[Pair],
-    classOf[Fst],
-    classOf[Snd],
-    classOf[LetPair],
-    classOf[UnitExpr],
-    classOf[Left],
-    classOf[Right],
-    classOf[CaseSwitch]
-  ).map(_.asInstanceOf[Class[Expr]])
-
-  override def calculateTypeClassList: List[Class[Type]] =
-    super.calculateTypeClassList ++ List(classOf[PairType], classOf[UnionType], classOf[EmptyType], classOf[AnyType])
-      .map(_.asInstanceOf[Class[Type]])
-
-  addExprBuilder(
-    "Pair",
-    {
-      case List(e1: Expr, e2: Expr) => Some(Pair(e1, e2))
-      case Nil                      => Some(Pair(defaultExpr, defaultExpr))
-      case _                        => None
-    }
-  )
-
-  addExprBuilder(
-    "Fst",
-    {
-      case List(e: Expr) => Some(Fst(e))
-      case Nil           => Some(Fst(defaultExpr))
-      case _             => None
-    }
-  )
-
-  addExprBuilder(
-    "Snd",
-    {
-      case List(e: Expr) => Some(Snd(e))
-      case Nil           => Some(Snd(defaultExpr))
-      case _             => None
-    }
-  )
-
-  addExprBuilder(
-    "LetPair",
-    {
-      case List(x: Literal, y: Literal, assign: Expr, bound: Expr) => Some(LetPair(x, y, assign, bound))
-      case Nil => Some(LetPair(defaultLiteral, defaultLiteral, defaultExpr, defaultExpr))
-      case _   => None
-    }
-  )
-
-  addExprBuilder(
-    "UnitExpr",
-    {
-      case Nil => Some(UnitExpr())
-      case _   => None
-    }
-  )
-
-  addExprBuilder(
-    "Left",
-    {
-      case List(e: Expr, rightType: Type) => Some(Left(e, rightType))
-      case Nil                            => Some(Left(defaultExpr, defaultType))
-      case _                              => None
-    }
-  )
-
-  addExprBuilder(
-    "Right",
-    {
-      case List(leftType: Type, e: Expr) => Some(Right(leftType, e))
-      case Nil                           => Some(Right(defaultType, defaultExpr))
-      case _                             => None
-    }
-  )
-
-  addExprBuilder(
-    "CaseSwitch",
-    {
-      case List(e: Expr, l: Literal, r: Literal, lExpr: Expr, rExpr: Expr) => Some(CaseSwitch(e, l, r, lExpr, rExpr))
-      case Nil => Some(CaseSwitch(defaultExpr, defaultLiteral, defaultLiteral, defaultExpr, defaultExpr))
-      case _   => None
-    }
-  )
-
-  addTypeBuilder(
-    "PairType",
-    {
-      case List(l: Type, r: Type) => Some(PairType(l, r))
-      case Nil                    => Some(PairType(defaultType, defaultType))
-      case _                      => None
-    }
-  )
-
-  addTypeBuilder(
-    "UnionType",
-    {
-      case List(l: Type, r: Type) => Some(UnionType(l, r))
-      case Nil                    => Some(UnionType(defaultType, defaultType))
-      case _                      => None
-    }
-  )
-
-  addTypeBuilder(
-    "EmptyType",
-    {
-      case Nil => Some(EmptyType())
-      case _   => None
-    }
-  )
-
-  addValueBuilder(
-    "PairV",
-    {
-      case List(v1: Value, v2: Value) => Some(PairV(v1, v2))
-      case _                          => None
-    }
-  )
-
-  addValueBuilder(
-    "UnitV",
-    {
-      case Nil => Some(UnitV())
-      case _   => None
-    }
-  )
-
-  addValueBuilder(
-    "LeftV",
-    {
-      case List(v: Value, rightType: Type) => Some(LeftV(v, rightType))
-      case _                               => None
-    }
-  )
-
-  addValueBuilder(
-    "RightV",
-    {
-      case List(leftType: Type, v: Value) => Some(RightV(leftType, v))
-      case _                              => None
-    }
-  )
 }
 
 object LData extends LData {}

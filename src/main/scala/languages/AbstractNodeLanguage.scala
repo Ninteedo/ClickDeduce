@@ -5,7 +5,6 @@ import convertors.{ClassDict, DisplayMode}
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
-import java.lang.reflect
 import scala.util.parsing.combinator.*
 
 trait AbstractNodeLanguage extends AbstractLanguage {
@@ -36,13 +35,13 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   private lazy val exprClassListDropdownHtml: TypedTag[String] = select(
     cls := ClassDict.EXPR_DROPDOWN,
     option(value := "", "Select Expr..."),
-    exprClassList.map(e => option(value := e.getSimpleName, e.getSimpleName))
+    exprBuilderNames.map(name => option(value := name, name))
   )
 
   private lazy val typeClassListDropdownHtml: TypedTag[String] = select(
     cls := ClassDict.TYPE_DROPDOWN,
     option(value := "", "Select Type..."),
-    typeClassList.map(e => option(value := e.getSimpleName, e.getSimpleName))
+    typeBuilderNames.map(name => option(value := name, name))
   )
 
   /** Create an `Term` given its string representation.
@@ -483,11 +482,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       exprOverride = Some(e)
     }
 
-    private lazy val exprClass: Class[Expr] = exprNameToClass(exprName) match {
-      case Some(value) => value
-      case None        => throw new IllegalArgumentException(s"Unknown expression type: $exprName")
-    }
-
     lazy val expr: Expr = {
       val arguments = args.map {
         case n: SubExprNode => n.node.getExpr
@@ -666,11 +660,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       buildType(typeName, arguments).get
     }
 
-    private lazy val typeClass: Class[Type] = typeNameToClass(typeName) match {
-      case Some(value) => value
-      case None        => throw new IllegalArgumentException(s"Unknown expression type: $typeName")
-    }
-
     override def toHtmlLine(mode: DisplayMode): TypedTag[String] =
       div(raw(getExprHtmlLine(mode)))(data("tree-path") := treePathString)
 
@@ -702,9 +691,9 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   }
 
   object TypeNode {
-    def fromTypeName(typeName: String): Option[TypeNode] = typeNameToClass(typeName) match {
-      case Some(typ) =>
-        val arguments = buildType(typeName, Nil) match {
+    def fromTypeName(typeName: String): Option[TypeNode] = getTypeBuilder(typeName) match {
+      case Some(builder) =>
+        val arguments = builder(Nil) match {
           case Some(e: Product) =>
             e.productIterator.toList.collect({
               case c: Literal => LiteralNode(c.toString)
@@ -777,61 +766,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
   class InnerNodeCannotBeRootException extends ClickDeduceException("Inner node cannot be root")
 
-  // class lists
-
-  private lazy val exprClassList: List[Class[Expr]] = calculateExprClassList
-
-  protected def calculateExprClassList: List[Class[Expr]]
-
-  private lazy val typeClassList: List[Class[Type]] = calculateTypeClassList
-
-  protected def calculateTypeClassList: List[Class[Type]] = List(classOf[UnknownType]).map(_.asInstanceOf[Class[Type]])
-
-  private lazy val blankClassList: List[Class[BlankSpace]] =
-    List(classOf[BlankExprDropDown], classOf[BlankTypeDropDown]).map(_.asInstanceOf[Class[BlankSpace]])
-
-  private lazy val nodeClassList: List[Class[Node]] = List(
-    classOf[VariableNode],
-    classOf[ExprChoiceNode],
-    classOf[TypeChoiceNode],
-    classOf[TypeNode],
-    classOf[SubExprNode],
-    classOf[LiteralNode],
-    classOf[SubTypeNode]
-  ).map(_.asInstanceOf[Class[Node]])
-
-  private def exprNameToClass(name: String): Option[Class[Expr]] = exprClassList.find(_.getSimpleName == name)
-
-  private def typeNameToClass(name: String): Option[Class[Type]] = typeClassList.find(_.getSimpleName == name)
-
   // utility
-
-  def findSubClassesOf[T](
-    clazz: Class[_ <: AbstractNodeLanguage],
-    superclass: Class[T],
-    includeInterfaces: Boolean = true
-  ): List[Class[T]] = {
-    val subclasses = clazz.getDeclaredClasses.toList
-      .filter(cls => superclass.isAssignableFrom(cls))
-    val parentSubclasses = (List(clazz.getSuperclass) ++ (if (includeInterfaces) clazz.getInterfaces else Nil))
-      .flatMap {
-        case c: Class[_ <: AbstractNodeLanguage] => findSubClassesOf(c, superclass)
-        case _                                   => Nil
-      }
-    val classes = parentSubclasses ++ subclasses.asInstanceOf[List[Class[T]]]
-    classes.filterNot(cls => reflect.Modifier.isAbstract(cls.getModifiers)).filterNot(_.isInterface)
-  }
-
-  def findInterface[T](clazz: Class[_ <: AbstractNodeLanguage], interface: Class[T]): Class[T] = {
-    clazz.getInterfaces.find(_ == interface) match {
-      case Some(value) => value.asInstanceOf[Class[T]]
-      case None =>
-        clazz.getSuperclass match {
-          case c: Class[_ <: AbstractNodeLanguage] => findInterface(c, interface)
-          case _ => throw new Exception(s"Could not find interface $interface in class $clazz")
-        }
-    }
-  }
 
   private def cacheQuery[A, B](cache: collection.mutable.Map[A, B], key: A, value: => B): B = cache.get(key) match {
     case Some(value) => value

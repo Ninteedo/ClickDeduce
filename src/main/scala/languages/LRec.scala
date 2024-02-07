@@ -53,6 +53,16 @@ class LRec extends LLam {
       Rec(Literal.fromString(f), Literal.fromString(v), in_typ, out_typ, e)
   }
 
+  addExprBuilder(
+    "Rec",
+    {
+      case List(f: Literal, v: Literal, inType: Type, outType: Type, e: Expr) => Some(Rec(f, v, inType, outType, e))
+      case Nil => Some(Rec(defaultLiteral, defaultLiteral, defaultType, defaultType, defaultExpr))
+      case _ => None
+    }
+  )
+
+
   // values
   case class RecV(f: Literal, v: Literal, in_typ: Type, out_typ: Type, e: Expr, env: ValueEnv) extends FunctionValue {
     override val typ: Type = Func(in_typ, out_typ)
@@ -65,27 +75,6 @@ class LRec extends LLam {
     override def prettyPrint: String = prettyPrintRec(f, v, in_typ, out_typ, e)
   }
 
-  private def prettyPrintRec(f: Literal, v: Literal, in_typ: Type, out_typ: Type, e: Expr) =
-    s"rec $f($v: ${in_typ.prettyPrint}): ${out_typ.prettyPrintBracketed}. ${e.prettyPrintBracketed}"
-
-  override def calculateExprClassList: List[Class[Expr]] = {
-    super.calculateExprClassList ++ List(classOf[Rec]).map(_.asInstanceOf[Class[Expr]])
-  }
-
-  class RecursiveFunctionExpressionOutTypeMismatch(declared: Type, actual: Type) extends TypeError {
-    override val message: String =
-      s"Recursive function expression declared return type $declared does not match actual return type $actual"
-  }
-
-  addExprBuilder(
-    "Rec",
-    {
-      case List(f: Literal, v: Literal, inType: Type, outType: Type, e: Expr) => Some(Rec(f, v, inType, outType, e))
-      case Nil => Some(Rec(defaultLiteral, defaultLiteral, defaultType, defaultType, defaultExpr))
-      case _   => None
-    }
-  )
-
   addValueBuilder(
     "RecV",
     {
@@ -94,6 +83,14 @@ class LRec extends LLam {
       case _ => None
     }
   )
+
+  private def prettyPrintRec(f: Literal, v: Literal, in_typ: Type, out_typ: Type, e: Expr) =
+    s"rec $f($v: ${in_typ.prettyPrint}): ${out_typ.prettyPrintBracketed}. ${e.prettyPrintBracketed}"
+
+  class RecursiveFunctionExpressionOutTypeMismatch(declared: Type, actual: Type) extends TypeError {
+    override val message: String =
+      s"Recursive function expression declared return type $declared does not match actual return type $actual"
+  }
 }
 
 object LRec extends LRec {}

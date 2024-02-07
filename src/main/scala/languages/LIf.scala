@@ -22,6 +22,15 @@ class LIf extends LArith {
     def apply(b: Boolean): Bool = new Bool(LiteralBool(b))
   }
 
+  addExprBuilder(
+    "Bool",
+    {
+      case List(b: Literal) => Some(Bool(b))
+      case Nil => Some(Bool(defaultLiteral))
+      case _ => None
+    }
+  )
+
   case class Equal(e1: Expr, e2: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = {
       val v1 = e1.eval(env)
@@ -46,6 +55,16 @@ class LIf extends LArith {
     override def prettyPrint: String = s"${e1.prettyPrintBracketed} == ${e2.prettyPrintBracketed}"
   }
 
+  addExprBuilder(
+    "Equal",
+    {
+      case List(e1: Expr, e2: Expr) => Some(Equal(e1, e2))
+      case Nil => Some(Equal(defaultExpr, defaultExpr))
+      case _ => None
+    }
+  )
+
+
   case class LessThan(e1: Expr, e2: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = (e1.eval(env), e2.eval(env)) match {
       case (v1: OrdinalValue, v2: OrdinalValue) => BoolV(v1.compare(v2) < 0)
@@ -59,6 +78,15 @@ class LIf extends LArith {
 
     override def prettyPrint: String = s"${e1.prettyPrintBracketed} < ${e2.prettyPrintBracketed}"
   }
+
+  addExprBuilder(
+    "LessThan",
+    {
+      case List(e1: Expr, e2: Expr) => Some(LessThan(e1, e2))
+      case Nil => Some(LessThan(defaultExpr, defaultExpr))
+      case _ => None
+    }
+  )
 
   case class IfThenElse(cond: Expr, then_expr: Expr, else_expr: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = cond.eval(env) match {
@@ -87,6 +115,16 @@ class LIf extends LArith {
       s"if ${cond.prettyPrintBracketed} then ${then_expr.prettyPrintBracketed} else ${else_expr.prettyPrintBracketed}"
   }
 
+  addExprBuilder(
+    "IfThenElse",
+    {
+      case List(cond: Expr, then_expr: Expr, else_expr: Expr) => Some(IfThenElse(cond, then_expr, else_expr))
+      case Nil => Some(IfThenElse(defaultExpr, defaultExpr, defaultExpr))
+      case _ => None
+    }
+  )
+
+
   // values
   case class BoolV(b: Boolean) extends Value {
     override val typ: Type = BoolType()
@@ -96,12 +134,28 @@ class LIf extends LArith {
     override val needsBrackets: Boolean = false
   }
 
+  addValueBuilder(
+    "BoolV",
+    {
+      case List(b: Boolean) => Some(BoolV(b))
+      case _ => None
+    }
+  )
+
   // types
   case class BoolType() extends Type {
     override def prettyPrint: String = "Bool"
 
     override val needsBrackets: Boolean = false
   }
+
+  addTypeBuilder(
+    "BoolType",
+    {
+      case Nil => Some(BoolType())
+      case _ => None
+    }
+  )
 
   // errors
 
@@ -126,68 +180,6 @@ class LIf extends LArith {
   case class ComparisonWithNonOrdinalType(type1: Type, type2: Type) extends TypeError {
     override val message: String = s"$type1 or $type2 is not an ordinal type"
   }
-
-  override def calculateExprClassList: List[Class[Expr]] = {
-    super.calculateExprClassList ++ List(classOf[Bool], classOf[Equal], classOf[LessThan], classOf[IfThenElse]).map(
-      _.asInstanceOf[Class[Expr]]
-    )
-  }
-
-  override def calculateTypeClassList: List[Class[Type]] = {
-    super.calculateTypeClassList ++ List(classOf[BoolType]).map(_.asInstanceOf[Class[Type]])
-  }
-
-  addExprBuilder(
-    "Bool",
-    {
-      case List(b: Literal) => Some(Bool(b))
-      case Nil              => Some(Bool(defaultLiteral))
-      case _                => None
-    }
-  )
-
-  addExprBuilder(
-    "Equal",
-    {
-      case List(e1: Expr, e2: Expr) => Some(Equal(e1, e2))
-      case Nil                      => Some(Equal(defaultExpr, defaultExpr))
-      case _                        => None
-    }
-  )
-
-  addExprBuilder(
-    "LessThan",
-    {
-      case List(e1: Expr, e2: Expr) => Some(LessThan(e1, e2))
-      case Nil                      => Some(LessThan(defaultExpr, defaultExpr))
-      case _                        => None
-    }
-  )
-
-  addExprBuilder(
-    "IfThenElse",
-    {
-      case List(cond: Expr, then_expr: Expr, else_expr: Expr) => Some(IfThenElse(cond, then_expr, else_expr))
-      case Nil => Some(IfThenElse(defaultExpr, defaultExpr, defaultExpr))
-      case _   => None
-    }
-  )
-
-  addTypeBuilder(
-    "BoolType",
-    {
-      case Nil => Some(BoolType())
-      case _   => None
-    }
-  )
-
-  addValueBuilder(
-    "BoolV",
-    {
-      case List(b: Boolean) => Some(BoolV(b))
-      case _                => None
-    }
-  )
 }
 
 object LIf extends LIf {}
