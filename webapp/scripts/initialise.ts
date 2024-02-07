@@ -45,7 +45,7 @@ export function initialise(skipImages: boolean = false): void {
 }
 
 (window as any).initialise = initialise;
-(window as any).handleSubmit = doStartNodeBlank;
+(window as any).startNodeBlank = doStartNodeBlank;
 (window as any).undo = undo;
 (window as any).redo = redo;
 (window as any).zoomToFit = zoomToFit;
