@@ -400,9 +400,11 @@ trait AbstractLanguage {
 
   private var exprBuilderNamesList: List[String] = List()
 
-  protected def addExprBuilder(name: String, builder: ExprBuilder): Unit = {
+  protected def addExprBuilder(name: String, builder: ExprBuilder, hidden: Boolean = false): Unit = {
     exprBuilders += (name -> builder)
-    exprBuilderNamesList = exprBuilderNamesList :+ name
+    if (!hidden) {
+      exprBuilderNamesList = exprBuilderNamesList :+ name
+    }
   }
 
   def exprBuilderNames: List[String] = exprBuilderNamesList
@@ -413,9 +415,11 @@ trait AbstractLanguage {
 
   private var typeBuilderNamesList: List[String] = List()
 
-  protected def addTypeBuilder(name: String, builder: TypeBuilder): Unit = {
+  protected def addTypeBuilder(name: String, builder: TypeBuilder, hidden: Boolean = false): Unit = {
     typeBuilders += (name -> builder)
-    typeBuilderNamesList = typeBuilderNamesList :+ name
+    if (!hidden) {
+      typeBuilderNamesList = typeBuilderNamesList :+ name
+    }
   }
 
   def typeBuilderNames: List[String] = typeBuilderNamesList
@@ -461,7 +465,8 @@ trait AbstractLanguage {
       case List(s: String) => Some(ExprPlaceholder(s))
       case Nil             => Some(ExprPlaceholder(""))
       case _               => None
-    }
+    },
+    hidden = true
   )
 
   addTypeBuilder(
@@ -470,7 +475,8 @@ trait AbstractLanguage {
       case List(s: String) => Some(TypePlaceholder(s))
       case Nil             => Some(TypePlaceholder(""))
       case _               => None
-    }
+    },
+    hidden = true
   )
 
   addValueBuilder(
@@ -488,7 +494,7 @@ trait AbstractLanguage {
       case List(t: Type) => Some(TypeValueContainer(t))
       case Nil           => Some(TypeValueContainer(TypePlaceholder("")))
       case _             => None
-    }
+    },
   )
 
   addTypeBuilder(
@@ -497,7 +503,8 @@ trait AbstractLanguage {
       case List(t: Type) => Some(TypeContainer(t))
       case Nil           => Some(TypeContainer(TypePlaceholder("")))
       case _             => None
-    }
+    },
+    hidden = true
   )
 
   addTypeBuilder(
@@ -505,7 +512,8 @@ trait AbstractLanguage {
     {
       case Nil => Some(UnknownType())
       case _   => None
-    }
+    },
+    hidden = true
   )
 
   val defaultLiteral: Literal = Literal.fromString("")

@@ -104,7 +104,8 @@ class LPoly extends LData {
       case List(tv: Type, t: Type) => Some(PolyType(tv, t))
       case Nil => Some(PolyType(defaultType, defaultType))
       case _ => None
-    }
+    },
+    hidden = true
   )
 
   // values
