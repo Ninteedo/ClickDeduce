@@ -320,8 +320,8 @@ function replaceSelectInputs(): void {
                 throw new Error('Selector option was not an HTMLLIElement');
             }
 
-            option.addEventListener('mousedown', () => {
-                console.log(option.getAttribute('data-value') + ' clicked');
+            option.addEventListener('mousedown', event => {
+                event.preventDefault();
                 selectorSelectOption(newSelector, option)
             });
             option.classList.add('expr-selector-option');
