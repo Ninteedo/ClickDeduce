@@ -30,6 +30,16 @@ class LArith extends ClickDeduceLanguage {
     def apply(x: Int): Num = new Num(LiteralInt(BigInt(x)))
   }
 
+  addExprBuilder(
+    "Num",
+    {
+      case List(l: Literal) => Some(Num(l))
+      case Nil => Some(Num(defaultLiteral))
+      case _ => None
+    }
+  )
+
+
   /** A plus expression. Both subexpressions must evaluate to `NumV`.
     *
     * @param e1
@@ -54,6 +64,15 @@ class LArith extends ClickDeduceLanguage {
 
     override def prettyPrint: String = s"${e1.prettyPrintBracketed} + ${e2.prettyPrintBracketed}"
   }
+
+  addExprBuilder(
+    "Plus",
+    {
+      case List(e1: Expr, e2: Expr) => Some(Plus(e1, e2))
+      case Nil => Some(Plus(defaultExpr, defaultExpr))
+      case _ => None
+    }
+  )
 
   /** A times expression. Both subexpressions must evaluate to `NumV`.
     *
@@ -80,6 +99,15 @@ class LArith extends ClickDeduceLanguage {
     override def prettyPrint: String = s"${e1.prettyPrintBracketed} × ${e2.prettyPrintBracketed}"
   }
 
+  addExprBuilder(
+    "Times",
+    {
+      case List(e1: Expr, e2: Expr) => Some(Times(e1, e2))
+      case Nil => Some(Times(defaultExpr, defaultExpr))
+      case _ => None
+    }
+  )
+
   // values
 
   trait OrdinalValue extends Value {
@@ -104,6 +132,14 @@ class LArith extends ClickDeduceLanguage {
     }
   }
 
+  addValueBuilder(
+    "NumV",
+    {
+      case List(x: BigInt) => Some(NumV(x))
+      case _ => None
+    }
+  )
+
   /** An error that occurs due to an incorrect argument type.
     *
     * @param message
@@ -125,55 +161,20 @@ class LArith extends ClickDeduceLanguage {
     override val needsBrackets: Boolean = false
   }
 
+  addTypeBuilder(
+    "IntType",
+    {
+      case Nil => Some(IntType())
+      case _ => None
+    }
+  )
+
   /** An error that occurs due to an incorrect argument type.
     *
     * @param message
     *   The error message.
     */
   case class UnexpectedArgType(override val message: String) extends TypeError
-
-  addExprBuilder(
-    "Num",
-    {
-      case List(l: Literal) => Some(Num(l))
-      case Nil              => Some(Num(defaultLiteral))
-      case _                => None
-    }
-  )
-
-  addExprBuilder(
-    "Plus",
-    {
-      case List(e1: Expr, e2: Expr) => Some(Plus(e1, e2))
-      case Nil                      => Some(Plus(defaultExpr, defaultExpr))
-      case _                        => None
-    }
-  )
-
-  addExprBuilder(
-    "Times",
-    {
-      case List(e1: Expr, e2: Expr) => Some(Times(e1, e2))
-      case Nil                      => Some(Times(defaultExpr, defaultExpr))
-      case _                        => None
-    }
-  )
-
-  addTypeBuilder(
-    "IntType",
-    {
-      case Nil => Some(IntType())
-      case _      => None
-    }
-  )
-
-  addValueBuilder(
-    "NumV",
-    {
-      case List(x: BigInt) => Some(NumV(x))
-      case _               => None
-    }
-  )
 }
 
 object LArith extends LArith {}

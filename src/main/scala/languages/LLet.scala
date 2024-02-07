@@ -33,6 +33,15 @@ class LLet extends LIf {
     def apply(v: Variable): Var = new Var(Literal.fromString(v))
   }
 
+  addExprBuilder(
+    "Var",
+    {
+      case List(v: Literal) => Some(Var(v))
+      case Nil => Some(Var(defaultLiteral))
+      case _ => None
+    }
+  )
+
   case class Let(v: Literal, assign: Expr, bound: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = v match {
       case LiteralIdentifier(identifier) =>
@@ -63,6 +72,15 @@ class LLet extends LIf {
   object Let {
     def apply(v: Variable, assign: Expr, bound: Expr): Let = new Let(Literal.fromString(v), assign, bound)
   }
+
+  addExprBuilder(
+    "Let",
+    {
+      case List(v: Literal, assign: Expr, bound: Expr) => Some(Let(v, assign, bound))
+      case Nil => Some(Let(defaultLiteral, defaultExpr, defaultExpr))
+      case _ => None
+    }
+  )
 
   // errors
 
@@ -95,24 +113,6 @@ class LLet extends LIf {
   case class InvalidIdentifierTypeError(v: Literal) extends TypeError {
     override val message: String = s"Invalid identifier '$v'"
   }
-  
-  addExprBuilder(
-    "Let",
-    {
-      case List(v: Literal, assign: Expr, bound: Expr) => Some(Let(v, assign, bound))
-      case Nil                                         => Some(Let(defaultLiteral, defaultExpr, defaultExpr))
-      case _                                           => None
-    }
-  )
-
-  addExprBuilder(
-    "Var",
-    {
-      case List(v: Literal) => Some(Var(v))
-      case Nil              => Some(Var(defaultLiteral))
-      case _                => None
-    }
-  )
 }
 
 object LLet extends LLet {}

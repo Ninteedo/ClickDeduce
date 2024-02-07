@@ -27,6 +27,15 @@ class LLam extends LLet {
     override def prettyPrint: String = s"${e1.prettyPrintBracketed} ${e2.prettyPrintBracketed}"
   }
 
+  addExprBuilder(
+    "Apply",
+    {
+      case List(e1: Expr, e2: Expr) => Some(Apply(e1, e2))
+      case Nil => Some(Apply(defaultExpr, defaultExpr))
+      case _ => None
+    }
+  )
+
   case class Lambda(v: Literal, typ: Type, e: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = v match {
       case LiteralIdentifier(identifier) => LambdaV(identifier, typ.typeCheck(envToTypeEnv(env)), e, env)
@@ -54,6 +63,15 @@ class LLam extends LLet {
     def apply(v: Variable, typ: Type, e: Expr): Lambda = new Lambda(Literal.fromString(v), typ, e)
   }
 
+  addExprBuilder(
+    "Lambda",
+    {
+      case List(v: Literal, typ: Type, e: Expr) => Some(Lambda(v, typ, e))
+      case Nil => Some(Lambda(defaultLiteral, defaultType, defaultExpr))
+      case _ => None
+    }
+  )
+
   // types
   trait FunctionType extends Type {
     def typeOfApply(argType: Type): Type
@@ -70,6 +88,15 @@ class LLam extends LLet {
 
     override def prettyPrint: String = s"${in.prettyPrintBracketed} → ${out.prettyPrintBracketed}"
   }
+
+  addTypeBuilder(
+    "Func",
+    {
+      case List(in: Type, out: Type) => Some(Func(in, out))
+      case Nil => Some(Func(defaultType, defaultType))
+      case _ => None
+    }
+  )
 
   case class ApplyToNonFunctionErrorType(wrongType: Type) extends TypeError {
     override val message: String = s"Cannot apply with left expression being ${wrongType.prettyPrint}"
@@ -105,6 +132,14 @@ class LLam extends LLet {
     }
   }
 
+  addValueBuilder(
+    "LambdaV",
+    {
+      case List(v: Variable, inputType: Type, e: Expr, env: ValueEnv) => Some(LambdaV(v, inputType, e, env))
+      case _ => None
+    }
+  )
+
   case class ApplyToNonFunctionError(value: Value) extends EvalError {
     override val message: String = s"Cannot apply with left expression being ${value.prettyPrint}"
 
@@ -119,46 +154,11 @@ class LLam extends LLet {
     override val needsBrackets: Boolean = false
   }
 
-  addExprBuilder(
-    "Lambda",
-    {
-      case List(v: Literal, typ: Type, e: Expr) => Some(Lambda(v, typ, e))
-      case Nil                                  => Some(Lambda(defaultLiteral, defaultType, defaultExpr))
-      case _                                    => None
-    }
-  )
-
-  addExprBuilder(
-    "Apply",
-    {
-      case List(e1: Expr, e2: Expr) => Some(Apply(e1, e2))
-      case Nil                      => Some(Apply(defaultExpr, defaultExpr))
-      case _                        => None
-    }
-  )
-
-  addTypeBuilder(
-    "Func",
-    {
-      case List(in: Type, out: Type) => Some(Func(in, out))
-      case Nil                       => Some(Func(defaultType, defaultType))
-      case _                         => None
-    }
-  )
-
-  addValueBuilder(
-    "LambdaV",
-    {
-      case List(v: Variable, inputType: Type, e: Expr, env: ValueEnv) => Some(LambdaV(v, inputType, e, env))
-      case _                                                          => None
-    }
-  )
-
   addValueBuilder(
     "HiddenValue",
     {
       case List(typ: Type) => Some(HiddenValue(typ))
-      case _               => None
+      case _ => None
     }
   )
 }
