@@ -29,7 +29,6 @@ object ScalaJsEntry {
     val lang = WebServer.getLanguage(langName)
     val convertor = HTMLConvertor(lang, DisplayMode.Edit)
     val tree = convertor.lang.ExprChoiceNode()
-    println(s"Start node: $tree")
     (tree.toString, convertor.convert(tree))
   }
 
@@ -52,7 +51,6 @@ object ScalaJsEntry {
     treePath: String,
     extraArgs: js.Array[String]
   ): js.Tuple2[String, String] = {
-    println(s"Processing action: $actionName")
     val originalLang = WebServer.getLanguage(langName)
     val displayMode: DisplayMode = DisplayMode.fromString(modeName)
     val convertor = HTMLConvertor(originalLang, displayMode)
@@ -64,7 +62,6 @@ object ScalaJsEntry {
       modeName
     )
     val updatedTree = action.newTree
-    println(s"Updated tree: $updatedTree")
     (updatedTree.toString, convertor.convert(updatedTree))
   }
 
