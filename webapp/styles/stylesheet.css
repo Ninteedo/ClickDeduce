@@ -42,6 +42,15 @@ body {
     margin: 1vh 1vw;
 }
 
+h3 {
+    margin-top: 0;
+}
+
+h4 {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
 input {
     background-color: var(--current-line);
     color: var(--foreground);
@@ -97,6 +106,18 @@ select:disabled {
 
 form {
     display: inline;
+}
+
+#controls {
+    display: flex;
+    margin-bottom: 10px;
+}
+
+#controls > div {
+    margin: 0 10px 0 0;
+    border: 2px solid var(--input-outline);
+    border-radius: 2px;
+    padding: 2px;
 }
 
 #tree-buttons {
