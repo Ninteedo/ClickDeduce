@@ -28,5 +28,7 @@ jobs:
         cache: 'sbt'
     - name: Update sbt
       run: sbt update
+    - name: ScalaJS build
+      run: sbt fastOptJS
     - name: Run Jest tests
       run: npm test
