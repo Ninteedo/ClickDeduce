@@ -1,5 +1,39 @@
 import {getLangSelector, processAction, startNodeBlank} from "./clickdeduce-opt";
 
+let actionHistory: {
+    langName: string;
+    modeName: string;
+    actionName: string;
+    nodeString: string;
+    treePath: string;
+    extraArgsStrings: string[];
+}[] = [];
+
+export function getActionHistory(): {
+    langName: string;
+    modeName: string;
+    actionName: string;
+    nodeString: string;
+    treePath: string;
+    extraArgsStrings: string[];
+}[] {
+    return actionHistory;
+}
+
+export function clearActionHistory(): void {
+    actionHistory = [];
+}
+
+let startNodeBlankHistory: { langName: string }[] = [];
+
+export function getStartNodeBlankHistory(): { langName: string }[] {
+    return startNodeBlankHistory;
+}
+
+export function clearStartNodeBlankHistory(): void {
+    startNodeBlankHistory = [];
+}
+
 export async function getLangSelectorRequest(): Promise<Response> {
     return fetch('get-lang-selector', {method: 'GET'});
 }
@@ -21,6 +55,7 @@ export async function postStartNodeBlank(selectedLanguage: string): Promise<Resp
 }
 
 export function postStartNodeBlankNew(selectedLanguage: string): [string, string] {
+    startNodeBlankHistory.push({langName: selectedLanguage});
     // @ts-ignore
     return startNodeBlank(selectedLanguage);
 }
@@ -54,6 +89,7 @@ export function postProcessActionNew(
     extraArgs: any[]
 ): [string, string] {
     const extraArgsStrings: string[] = extraArgs.map(arg => arg.toString());
+    actionHistory.push({langName, modeName, actionName, nodeString, treePath, extraArgsStrings});
     // @ts-ignore
     return processAction(langName, modeName, actionName, nodeString, treePath, extraArgsStrings);
 }

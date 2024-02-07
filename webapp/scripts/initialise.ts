@@ -11,7 +11,6 @@ import {
 import {loadTree, redo, resetTreeManipulation, saveTree, undo} from "./treeManipulation";
 import {handleTabPressed, resetInterfaceGlobals, zoomToFit} from "./interface";
 import panzoom, {PanZoom} from "panzoom";
-import '../images/zoom_to_fit.svg';
 import {loadImages} from "./imageLoading";
 
 export let tree: HTMLDivElement;
@@ -22,11 +21,13 @@ export let panzoomInstance: PanZoom;
  *
  * Can be called again to reset the state of the app
  */
-export async function initialise(): Promise<void> {
+export function initialise(skipImages: boolean = false): void {
     resetInterfaceGlobals();
     resetCopyCache();
-    loadImages();
-    await resetTreeManipulation();
+    if (!skipImages) {
+        loadImages();
+    }
+    resetTreeManipulation();
     tree = document.getElementById('tree') as HTMLDivElement;
 
     panzoomInstance = panzoom(tree, {
@@ -40,7 +41,7 @@ export async function initialise(): Promise<void> {
         }
     });
 
-    await startNodeBlank();
+    startNodeBlank();
 }
 
 (window as any).initialise = initialise;

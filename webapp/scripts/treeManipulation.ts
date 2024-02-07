@@ -22,7 +22,7 @@ const fileInput: HTMLInputElement = document.createElement('input');
 /**
  * Resets the global variables used by the tree manipulation code.
  */
-export async function resetTreeManipulation(): Promise<void> {
+export function resetTreeManipulation(): void {
     treeHistory = [];
     treeHistoryIndex = 0;
     undoButton = document.getElementById('undoButton') as HTMLButtonElement;
@@ -40,9 +40,8 @@ export async function resetTreeManipulation(): Promise<void> {
         });
     }
 
-    await loadLangSelector().then(() => {
-        langSelector = document.getElementById('lang-selector') as HTMLSelectElement;
-    });
+    loadLangSelector();
+    langSelector = document.getElementById('lang-selector') as HTMLSelectElement;
 
     setupFileInput();
     setupDragAndDrop();
@@ -51,7 +50,7 @@ export async function resetTreeManipulation(): Promise<void> {
 /**
  * Loads the language selector HTML from the server and adds it to the DOM.
  */
-async function loadLangSelector(): Promise<void> {
+function loadLangSelector(): void {
     const langSelectorContainer: HTMLDivElement = document.getElementById('lang-selector-div') as HTMLDivElement;
 
     langSelectorContainer.innerHTML = getLangSelectorNew();
@@ -602,9 +601,9 @@ export function loadTree(): void {
     fileInput.click();
 }
 
-async function loadTreeFromString(nodeString: string): Promise<void> {
+function loadTreeFromString(nodeString: string): void {
     lastNodeString = nodeString;
-    await runAction("IdentityAction", "", [])
+    runAction("IdentityAction", "", [])
 }
 
 export function getNodeStringFromPath(path: string): string {

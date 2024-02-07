@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import {doStartNodeBlank} from "../actions";
+import {doStartNodeBlank, handleExprSelectorChoice, handleLiteralChanged} from "../actions";
 
 export function slightDelay(delay: number = 10): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, delay));
@@ -19,23 +19,30 @@ export function getStartNodeButton() {
     return document.getElementById('start-node-button');
 }
 
-export async function pressStartNodeButton() {
-    await doStartNodeBlank(new Event(""))
+export function pressStartNodeButton() {
+    doStartNodeBlank(new Event(""))
 }
 
 export function getLangSelector() {
     return document.getElementById('lang-selector') as HTMLSelectElement;
 }
 
-export async function changeLanguage(langIndex: number): Promise<void> {
+export function changeLanguage(langIndex: number): void {
     const langSelector = getLangSelector();
     langSelector.selectedIndex = langIndex;
     langSelector.dispatchEvent(new Event('change'));
-    await new Promise(resolve => setTimeout(resolve, 50));
 }
 
 export function getLeftmostExprDropdown(): HTMLDivElement {
     return document.querySelector('.expr-selector-container[data-kind="expr"]') as HTMLDivElement;
+}
+
+export function getDropdownAt(treePath: string): HTMLDivElement {
+    return document.querySelector(`.expr-selector-container[data-tree-path="${treePath}"]`) as HTMLDivElement;
+}
+
+export function getLiteralInputAt(treePath: string): HTMLInputElement {
+    return document.querySelector(`input[data-tree-path="${treePath}"]`) as HTMLInputElement;
 }
 
 export function getExprDropdownOptions(selector: HTMLDivElement) {
@@ -43,19 +50,18 @@ export function getExprDropdownOptions(selector: HTMLDivElement) {
     return Array.from(dropdown.querySelectorAll('ul > li'));
 }
 
-export async function selectExprOption(selector: HTMLDivElement, exprName: string, manual: boolean = false): Promise<void> {
+export function selectExprOption(selector: HTMLDivElement, exprName: string, manual: boolean = false): void {
     const input = selector.querySelector('.expr-selector-input') as HTMLInputElement;
     input.focus();
     input.value = exprName;
-    input.dispatchEvent(new Event('input'));
-    input.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter'}));
-    await slightDelay(50);
+    handleExprSelectorChoice(selector, exprName);
+    // input.dispatchEvent(new Event('input'));
+    // input.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter'}));
 }
 
-export async function doLiteralEdit(input: HTMLInputElement, newValue: string): Promise<void> {
+export function doLiteralEdit(input: HTMLInputElement, newValue: string): void {
     input.value = newValue;
-    input.dispatchEvent(new Event('change'));
-    await new Promise(resolve => setTimeout(resolve, 100));
+    handleLiteralChanged(input);
 }
 
 export function contextMenuSelect(element: HTMLElement): void {

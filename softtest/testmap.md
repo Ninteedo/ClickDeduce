@@ -61,7 +61,7 @@ All main features of the webapp should be tested using this method.
 
 ## Server Integration
 
-See [serverIntegration.test.ts](../webapp/scripts/test/serverIntegration.test.ts)
+See [serverIntegration.test.ts](../webapp/scripts/test/languageIntegration.test.ts)
 
 The webapp should also be tested with the server running, to ensure that the webapp and server work together correctly.
 
