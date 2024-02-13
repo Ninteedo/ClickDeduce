@@ -9,7 +9,9 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/project" />
-            <option value="$PROJECT_DIR$/scalajs" />
+            <option value="$PROJECT_DIR$/scala/js" />
+            <option value="$PROJECT_DIR$/scala/jvm" />
+            <option value="$PROJECT_DIR$/scala/shared" />
           </set>
         </option>
         <option name="sbtVersion" value="1.9.6" />

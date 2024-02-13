@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ScalaCompilerConfiguration">
-    <profile name="sbt 1" modules="ClickDeduceScalaJS,scalaJS,scalajs.scalaJS">
+    <profile name="sbt 1" modules="ClickDeduceJS,ClickDeduceScalaJS,clickdeduceJS,crossProjectRootJS,js.ClickDeduceJS,scalaJS,scalajs.scalaJS">
       <parameters>
         <parameter value="-scalajs" />
       </parameters>
     </profile>
-    <profile name="sbt 2" modules="ClickDeduce,ClickDeduceLanguages,clickdeduce,root,src.root" />
+    <profile name="sbt 2" modules="ClickDeduce,ClickDeduceJVM,ClickDeduceLanguages,ClickDeduceShared,clickdeduce,clickdeduceJVM,crossProjectRootJVM,jvm.ClickDeduceJVM,root,src.root" />
   </component>
 </project>
