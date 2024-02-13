@@ -1,7 +1,14 @@
 import {tree} from "./initialise";
 import {hasClassOrParentHasClass} from "./utils";
 import {handleExprSelectorChoice, handleLiteralChanged, runAction} from "./actions";
-import {clearHighlight, contextMenuSelectedElement, displayError, handleKeyDown} from "./interface";
+import {
+    clearHighlight,
+    contextMenuSelectedElement,
+    displayError,
+    handleKeyDown,
+    isAutoZoomEnabled,
+    zoomToFit
+} from "./interface";
 import {getLangSelectorNew} from "./serverRequest";
 
 let treeHistory: { mode: string; html: string; nodeString: string; lang: string }[] = [];
@@ -92,6 +99,8 @@ export function updateTree(newTreeHtml: string, newNodeString: string, modeName:
     updateActiveInputsList();
     setSelectedMode(modeName);
     langSelector.value = lang;
+
+    if (isAutoZoomEnabled()) zoomToFit();
 }
 
 /**

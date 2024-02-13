@@ -181,3 +181,8 @@ function toggleValueTypeColourHighlighting(newState: boolean): void {
         body.classList.remove(className);
     }
 }
+
+export function isAutoZoomEnabled(): boolean {
+    const autoZoomCheckbox = document.getElementById('auto-zoom-toggle') as HTMLInputElement;
+    return autoZoomCheckbox.checked;
+}
