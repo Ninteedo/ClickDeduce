@@ -30,7 +30,8 @@
     "test": "jest --runInBand --detectOpenHandles",
     "build:webpack": "webpack --mode=production",
     "build:webpack:dev": "webpack --mode=development",
-    "build:scala": "sbt fullOptJS",
+    "build:scala": "sbt \"project scalaJS\" fullOptJS",
+    "build:scala:fast": "sbt \"project scalaJS\" fastOptJS",
     "build": "npm run build:scala && npm run build:webpack",
     "build:dev": "npm run build:scala && npm run build:webpack:dev"
   },

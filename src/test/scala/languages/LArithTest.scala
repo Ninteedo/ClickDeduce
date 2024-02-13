@@ -61,8 +61,8 @@ class LArithTest extends TestTemplate[Expr, Value, Type] {
       val n = genRandInt()
       (Num(n), n)
     } else {
-      var (left_expr, left_total) = generateExpression(depth - 1)
-      var (right_expr, right_total) = generateExpression(depth - 1)
+      var (left_expr, left_total): (Expr, BigInt) = generateExpression(depth - 1)
+      var (right_expr, right_total): (Expr, BigInt) = generateExpression(depth - 1)
       Random.nextInt(3) match {
         case 0 => (Plus(left_expr, right_expr), left_total + right_total)
         case 1 => (Times(left_expr, right_expr), left_total * right_total)

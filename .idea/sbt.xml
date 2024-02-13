@@ -9,6 +9,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/project" />
+            <option value="$PROJECT_DIR$/scalajs" />
           </set>
         </option>
         <option name="sbtVersion" value="1.9.6" />
