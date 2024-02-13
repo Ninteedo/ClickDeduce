@@ -285,7 +285,6 @@ trait AbstractLanguage {
         cls := ClassDict.TOOLTIP,
         valueText,
         div(cls := ClassDict.TOOLTIP_TEXT, tooltipText),
-        cls := ClassDict.ERROR_ORIGIN
       )
 
     override lazy val tooltipText: String = message
@@ -320,7 +319,6 @@ trait AbstractLanguage {
       cls := ClassDict.TOOLTIP,
       valueText,
       div(cls := ClassDict.TOOLTIP_TEXT, tooltipText),
-      cls := ClassDict.ERROR_ORIGIN
     )
 
     override lazy val tooltipText: String = message

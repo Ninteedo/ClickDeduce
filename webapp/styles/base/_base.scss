@@ -1,6 +1,8 @@
 @import "../abstracts/colours";
 
 body {
+  background-color: $outer-background;
+  color: $foreground;
   display: flex;
   flex-direction: column;
   width: 98%;
