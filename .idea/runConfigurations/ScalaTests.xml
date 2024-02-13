@@ -9,8 +9,6 @@
     <option name="testKind" value="All in package" />
     <option name="classBuf">
       <list>
-        <option value="app.RouteSpec" />
-        <option value="app.ArgsHandlingSpec" />
         <option value="languages.LIfTest" />
         <option value="languages.LLamTest" />
         <option value="languages.LLetTest" />

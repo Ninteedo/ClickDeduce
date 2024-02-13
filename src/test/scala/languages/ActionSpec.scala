@@ -1,6 +1,5 @@
 package languages
 
-import app.WebServer
 import languages.LLam.*
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.TableDrivenPropertyChecks.forAll
@@ -131,21 +130,20 @@ class ActionSpec extends AnyWordSpec with Matchers {
     }
 
     "throw an error if the expression kind is not defined in the language" in {
-      val cases: TableFor2[String, String] = TableFor2(
-        ("langName", "exprName"),
-        ("LRec", "fake"),
-        ("LArith", "Rec"),
-        ("LIf", "If Then Else"),
-        ("LArith", "If Then Else"),
-        ("LArith", "fake"),
-        ("LArith", "Let"),
-        ("LArith", "Var"),
-        ("LArith", "Lambda"),
-        ("LArith", "IntType")
+      val cases: TableFor2[ClickDeduceLanguage, String] = TableFor2(
+        ("lang", "exprName"),
+        (LRec(), "fake"),
+        (LArith(), "Rec"),
+        (LIf(), "If Then Else"),
+        (LArith(), "If Then Else"),
+        (LArith(), "fake"),
+        (LArith(), "Let"),
+        (LArith(), "Var"),
+        (LArith(), "Lambda"),
+        (LArith(), "IntType")
       )
 
-      forAll(cases) { (langName, exprName) =>
-        val lang = WebServer.getLanguage(langName)
+      forAll(cases) { (lang, exprName) =>
         an[InvalidSelectValueNameException] should be thrownBy lang
           .SelectExprAction(lang.ExprChoiceNode(), List(), exprName)
           .newTree
