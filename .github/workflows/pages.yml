@@ -27,7 +27,7 @@ jobs:
       - name: NPM install
         run: npm install
       - name: Scala.JS Build
-        run: sbt fullOptJS
+        run: npm run build:scala
       - name: NPM Build
         run: npm run build:webpack
 

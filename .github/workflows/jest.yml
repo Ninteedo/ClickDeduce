@@ -29,6 +29,6 @@ jobs:
     - name: Update sbt
       run: sbt update
     - name: ScalaJS build
-      run: sbt fastOptJS
+      run: npm run build:scala:fast
     - name: Run Jest tests
       run: npm test
