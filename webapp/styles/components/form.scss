@@ -1,0 +1,39 @@
+form {
+  display: inline;
+}
+
+input {
+  background-color: $current-line;
+  color: $foreground;
+  border: $input-outline solid 1px;
+  border-radius: 3px;
+  padding: 0 2px;
+  @include monospace;
+
+  &:disabled {
+    background-color: $disabled-input;
+    color: $disabled-input-text;
+    cursor: not-allowed;
+  }
+}
+
+select {
+  background-color: $current-line;
+  color: $foreground;
+  border: $input-outline solid 1px;
+  border-radius: 3px;
+  padding: 0 2px;
+
+  &:disabled {
+    background-color: $disabled-input;
+    color: $disabled-input-text;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+label, .prevent-select, #tree :not(input) {
+  user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}

@@ -1,0 +1,25 @@
+.custom-menu {
+  display: none;
+  position: absolute;
+  box-shadow: 1px 1px 2px #888;
+  border: solid 1px #ccc;
+  background-color: $context-menu-background;
+  padding: 2px;
+  z-index: 1000;
+}
+
+#custom-context-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+
+  li {
+    padding: 10px;
+    cursor: pointer;
+    text-align: left;
+
+    &:hover {
+      background-color: $highlighted-tree;
+    }
+  }
+}

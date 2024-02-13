@@ -169,15 +169,15 @@ function setupValueTypeColourHighlightingCheckbox(): void {
     valueTypeColourCheckbox.addEventListener('change', () => {
         toggleValueTypeColourHighlighting(valueTypeColourCheckbox.checked);
     });
+    toggleValueTypeColourHighlighting(valueTypeColourCheckbox.checked);
 }
 
 function toggleValueTypeColourHighlighting(newState: boolean): void {
-    const rootStyle = document.documentElement.style;
+    const body = document.querySelector('body');
+    const className = 'value-highlighting-enabled';
     if (newState) {
-        rootStyle.setProperty('--value-colour', 'var(--value-colour-on)');
-        rootStyle.setProperty('--value-type-colour', 'var(--value-type-colour-on)');
+        body.classList.add(className);
     } else {
-        rootStyle.setProperty('--value-colour', 'var(--value-colour-off)');
-        rootStyle.setProperty('--value-type-colour', 'var(--value-type-colour-off)');
+        body.classList.remove(className);
     }
 }

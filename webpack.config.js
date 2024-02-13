@@ -31,6 +31,14 @@ module.exports = {
                 },
             },
             {
+                test: /\.s[ac]ss$/i, // Look for .sass and .scss files
+                use: [
+                    "style-loader", // Creates `style` nodes from JS strings
+                    "css-loader",   // Translates CSS into CommonJS
+                    "sass-loader",  // Compiles Sass to CSS
+                ],
+            },
+            {
                 test: /\.css$/, // Look for .css files
                 use: [
                     'style-loader', // Injects CSS into the DOM via a <style> tag

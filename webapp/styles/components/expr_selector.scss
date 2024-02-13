@@ -1,0 +1,47 @@
+div.expr-selector-container {
+  display: inline-flex;
+  position: relative;
+
+  &.guide-highlight * {
+    background-color: $highlighted-tree;
+    color: $highlighted-input-text;
+  }
+
+  .expr-selector-input {
+    margin: 0;
+    border-radius: 3px 0 0 3px;
+  }
+
+  .expr-selector-button {
+    margin: 0;
+    border: $input-outline solid 1px;
+    border-radius: 0 3px 3px 0;
+  }
+
+  .expr-selector-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: $context-menu-background;
+    color: $foreground;
+    border: $input-outline solid 1px;
+    z-index: 1;
+
+    > ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+
+      .expr-selector-option {
+        cursor: pointer;
+        padding: 5px;
+        text-align: left;
+        z-index: 100;
+
+        &.highlight {
+          background-color: $highlighted-tree;
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+button {
+  background-color: $current-line;
+  color: $foreground;
+  border: $input-outline solid 2px;
+  border-radius: 3px;
+  padding: 2px;
+  font-family: 'Roboto', sans-serif;
+
+  &:disabled {
+    background-color: $disabled-input;
+    color: $disabled-input-text;
+  }
+
+  &:active {
+    background-color: $highlighted-tree;
+  }
+
+  &:not(:disabled) {
+    cursor: pointer;
+  }
+}

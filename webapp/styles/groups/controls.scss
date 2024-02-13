@@ -1,0 +1,20 @@
+#controls {
+  display: flex;
+  margin-bottom: 10px;
+
+  > div {
+    margin: 0 10px 0 0;
+    border: 2px solid $input-outline;
+    border-radius: 2px;
+    padding: 2px;
+  }
+
+  h3 {
+    margin-top: 0;
+  }
+
+  h4 {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+}

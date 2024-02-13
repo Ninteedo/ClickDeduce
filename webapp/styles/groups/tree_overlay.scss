@@ -1,0 +1,14 @@
+#tree-buttons {
+  margin: 3px;
+  z-index: 100;
+  position: relative;
+  display: inline-block;
+
+  button {
+    padding: 0;
+
+    img {
+      vertical-align: middle;
+    }
+  }
+}

@@ -1,0 +1,36 @@
+@import "../abstracts/colours";
+
+body {
+  display: flex;
+  flex-direction: column;
+  width: 98%;
+  height: 98vh;
+  margin: 1vh 1vw;
+}
+
+input, button, select {
+  background-color: $current-line;
+  color: $foreground;
+  border: $input-outline solid 1px;
+  border-radius: 3px;
+  padding: 0 2px;
+  font-family: 'Roboto Mono', sans-serif;
+
+  &:disabled {
+    background-color: $disabled-input;
+    color: $disabled-input-text;
+    cursor: not-allowed;
+  }
+}
+
+button {
+  font-family: 'Roboto', sans-serif;
+
+  &:active {
+    background-color: $highlighted-tree;
+  }
+
+  &:not(:disabled) {
+    cursor: pointer;
+  }
+}
