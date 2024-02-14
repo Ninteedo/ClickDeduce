@@ -8,13 +8,15 @@ trait ConvertableText {
   def asHtml: TypedTag[String]
   def asHtmlReadOnly: TypedTag[String]
   def asLaTeX: String
+
+  override def toString: String = asPlainText
 }
 
 case class TextElement(text: String) extends ConvertableText {
   override def asPlainText: String = text
   override def asHtml: TypedTag[String] = span(raw(text))
   override def asHtmlReadOnly: TypedTag[String] = asHtml
-  override def asLaTeX: String = text
+  override def asLaTeX: String = s"\\textrm{$text}"
 }
 
 case class MultiElement(elems: ConvertableText*) extends ConvertableText {
@@ -28,7 +30,7 @@ case class ItalicsElement(elem: ConvertableText) extends ConvertableText {
   override def asPlainText: String = elem.asPlainText
   override def asHtml: TypedTag[String] = i(elem.asHtml)
   override def asHtmlReadOnly: TypedTag[String] = i(elem.asHtmlReadOnly)
-  override def asLaTeX: String = s"\\textit{${elem.asLaTeX}"
+  override def asLaTeX: String = s"\\textit{${elem.asLaTeX}}"
 }
 
 case class BracketedElement(elem: ConvertableText) extends ConvertableText {

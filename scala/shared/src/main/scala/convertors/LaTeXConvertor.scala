@@ -26,22 +26,26 @@ class LaTeXConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) 
 
   private def createTree(below: LaTeX, ruleLabel: LaTeX, children: List[LaTeX]): LaTeX = {
     s"""\\prftree[r]{\\scriptsize $ruleLabel}
-       |{$children.mkString("\n")}
+       |{${children.mkString("\n")}}
        |{$below}""".stripMargin
   }
 
-  def fullExprBottomDiv(node: ExprNode): LaTeX = s"${envDiv(node.getEnv(mode))} ${exprDiv(node)} ${resultDiv(node)}"
+  def fullExprBottomDiv(node: ExprNode): LaTeX =
+    s"${envDiv(node.getEnv(mode))} ${exprDiv(node)} ${resultDiv(node)}".strip()
 
   def envDiv(env: lang.ValueEnv | lang.TypeEnv): LaTeX = {
     val variablesHtml: Option[LaTeX] =
-      if (env.isEmpty) None else Some(env.map((k, v) => s"$k &rarr; ${v.toHtml}").mkString("[", ", ", "]"))
+      if (env.isEmpty) None else Some(env.map((k, v) => MultiElement(TextElement(k), TextElement(" \\rightarrow "), v.toText)).mkString("[", ", ", "]"))
     val delimiter =
       if (mode == DisplayMode.TypeCheck) Some(typeCheckTurnstileSpan) else if (env.nonEmpty) Some(",") else None
 
-    s"$variablesHtml $delimiter"
+    var result: String = ""
+    if (variablesHtml.isDefined) result += variablesHtml.get
+    if (delimiter.isDefined) result += delimiter.get
+    result
   }
 
-  def exprDiv(node: ExprNode): LaTeX = node.toText(mode).asLaTeX
+  def exprDiv(node: ExprNode): LaTeX = node.getExpr.toText.asLaTeX
 
   def resultDiv(node: ExprNode): LaTeX = mode match {
     case DisplayMode.Edit =>
