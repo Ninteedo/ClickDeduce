@@ -1,5 +1,6 @@
 package languages
 
+import convertors.{ConvertableText, LambdaSymbol, MultiElement, TextElement}
 import scalatags.Text
 import scalatags.Text.all.*
 
@@ -25,14 +26,16 @@ class LLam extends LLet {
       }
 
     override def prettyPrint: String = s"${e1.prettyPrintBracketed} ${e2.prettyPrintBracketed}"
+
+    override def toText: ConvertableText = MultiElement(e1.toText, TextElement(" "), e2.toText)
   }
 
   addExprBuilder(
     "Apply",
     {
       case List(e1: Expr, e2: Expr) => Some(Apply(e1, e2))
-      case Nil => Some(Apply(defaultExpr, defaultExpr))
-      case _ => None
+      case Nil                      => Some(Apply(defaultExpr, defaultExpr))
+      case _                        => None
     }
   )
 
@@ -57,6 +60,9 @@ class LLam extends LLet {
     override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] = List((e, tEnv + (v.toString -> typ)))
 
     override def prettyPrint: String = s"λ$v: ${typ.prettyPrintBracketed}. ${e.prettyPrint}"
+
+    override def toText: ConvertableText =
+      MultiElement(LambdaSymbol(), v.toText, TextElement(": "), typ.toText, TextElement(". "), e.toText)
   }
 
   object Lambda {
@@ -67,8 +73,8 @@ class LLam extends LLet {
     "Lambda",
     {
       case List(v: Literal, typ: Type, e: Expr) => Some(Lambda(v, typ, e))
-      case Nil => Some(Lambda(defaultLiteral, defaultType, defaultExpr))
-      case _ => None
+      case Nil                                  => Some(Lambda(defaultLiteral, defaultType, defaultExpr))
+      case _                                    => None
     }
   )
 
@@ -87,14 +93,16 @@ class LLam extends LLet {
     override def typeCheck(tEnv: TypeEnv): Type = Func(in.typeCheck(tEnv), out.typeCheck(tEnv))
 
     override def prettyPrint: String = s"${in.prettyPrintBracketed} → ${out.prettyPrintBracketed}"
+
+    override def toText: ConvertableText = MultiElement(in.toText, TextElement(" → "), out.toText)
   }
 
   addTypeBuilder(
     "Func",
     {
       case List(in: Type, out: Type) => Some(Func(in, out))
-      case Nil => Some(Func(defaultType, defaultType))
-      case _ => None
+      case Nil                       => Some(Func(defaultType, defaultType))
+      case _                         => None
     }
   )
 
@@ -130,13 +138,22 @@ class LLam extends LLet {
       val eString: String = if (e == BlankExprDropDown()) "?" else e.prettyPrint
       s"λ$v: ${properInputType.prettyPrintBracketed}. $eString"
     }
+
+    override def toText: ConvertableText = MultiElement(
+      LambdaSymbol(),
+      TextElement(v),
+      TextElement(": "),
+      properInputType.toText,
+      TextElement(". "),
+      e.toText
+    )
   }
 
   addValueBuilder(
     "LambdaV",
     {
       case List(v: Variable, inputType: Type, e: Expr, env: ValueEnv) => Some(LambdaV(v, inputType, e, env))
-      case _ => None
+      case _                                                          => None
     }
   )
 
@@ -152,13 +169,15 @@ class LLam extends LLet {
     override def prettyPrint: String = "?"
 
     override val needsBrackets: Boolean = false
+
+    override def toText: ConvertableText = TextElement("?")
   }
 
   addValueBuilder(
     "HiddenValue",
     {
       case List(typ: Type) => Some(HiddenValue(typ))
-      case _ => None
+      case _               => None
     }
   )
 }

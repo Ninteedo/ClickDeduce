@@ -1,7 +1,7 @@
 package languages
 
 import app.ClickDeduceException
-import convertors.ClassDict
+import convertors.{ClassDict, ConvertableText, TextElement}
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
@@ -70,6 +70,8 @@ trait AbstractLanguage {
 
   trait Term {
     val name: String = toString.takeWhile(_ != '(')
+
+    def toText: ConvertableText
 
     lazy val toHtml: TypedTag[String] = span(raw(prettyPrint))
 
@@ -150,10 +152,14 @@ trait AbstractLanguage {
     protected def typeCheckInner(tEnv: TypeEnv): Type = UnexpectedExprType(toString)
   }
 
-  case class MissingExpr() extends Expr
+  case class MissingExpr() extends Expr {
+    override def toText: ConvertableText = TextElement("Missing")
+  }
 
   case class ExprPlaceholder(content: String, override val needsBrackets: Boolean = false) extends Expr {
     override def prettyPrint: String = content
+
+    override def toText: ConvertableText = TextElement(content)
   }
 
   object ExprPlaceholder {
@@ -172,8 +178,8 @@ trait AbstractLanguage {
       val arguments = this match {
         case v0: Product =>
           v0.productIterator.toList.collect({
-            case v: Value   => ValuePlaceholder(v.valueText.toString, v.needsBrackets)
-            case t: Type    => TypePlaceholder(t.valueText.toString, t.needsBrackets)
+            case v: Value   => ValuePlaceholder(v.toText, v.needsBrackets)
+            case t: Type    => TypePlaceholder(t.toText, t.needsBrackets)
             case e: Expr    => ExprPlaceholder(e)
             case s: String  => s
             case l: Literal => l
@@ -203,14 +209,16 @@ trait AbstractLanguage {
     override def prettyPrint: String = toHtml.toString
   }
 
-  case class ValuePlaceholder(content: String, override val needsBrackets: Boolean = false) extends Value {
-    override def prettyPrint: String = content
+  case class ValuePlaceholder(content: ConvertableText, override val needsBrackets: Boolean = false) extends Value {
+    override def prettyPrint: String = content.asPlainText
 
     override val typ: Type = TypePlaceholder(content, needsBrackets)
+
+    override def toText: ConvertableText = content
   }
 
   object ValuePlaceholder {
-    def apply(value: Value): ValuePlaceholder = ValuePlaceholder(value.toHtml.toString, value.needsBrackets)
+    def apply(value: Value): ValuePlaceholder = ValuePlaceholder(value.toText, value.needsBrackets)
   }
 
   /** The type of a value.
@@ -225,8 +233,8 @@ trait AbstractLanguage {
       val arguments = this match {
         case v0: Product =>
           v0.productIterator.toList.collect({
-            case v: Value   => ValuePlaceholder(v.valueText.toString, v.needsBrackets)
-            case t: Type    => TypePlaceholder(t.valueText.toString, t.needsBrackets)
+            case v: Value   => ValuePlaceholder(v.toText, v.needsBrackets)
+            case t: Type    => TypePlaceholder(t.toText, t.needsBrackets)
             case e: Expr    => ExprPlaceholder(e)
             case s: String  => s
             case l: Literal => l
@@ -251,26 +259,34 @@ trait AbstractLanguage {
 
   case class UnknownType() extends Type {
     override def prettyPrint: String = "Unknown"
+
+    override def toText: ConvertableText = TextElement("Unknown")
   }
 
-  case class TypePlaceholder(content: String, override val needsBrackets: Boolean = true) extends Type {
-    override def prettyPrint: String = content
+  case class TypePlaceholder(content: ConvertableText, override val needsBrackets: Boolean = true) extends Type {
+    override def prettyPrint: String = content.asPlainText
+
+    override def toText: ConvertableText = content
   }
 
   object TypePlaceholder {
-    def apply(typ: Type): TypePlaceholder = TypePlaceholder(typ.toHtml.toString, typ.needsBrackets)
+    def apply(typ: Type): TypePlaceholder = TypePlaceholder(typ.toText, typ.needsBrackets)
   }
 
   case class TypeContainer(typ: Type) extends Type {
     override def prettyPrint: String = typ.prettyPrint
 
     override def typeCheck(tEnv: TypeEnv): Type = typ
+
+    override def toText: ConvertableText = typ.toText
   }
 
   case class TypeValueContainer(typ: Type) extends Value {
     override def prettyPrint: String = typ.prettyPrint
 
     override def valueTextShowType: Boolean = false
+
+    override def toText: ConvertableText = typ.toText
   }
 
   trait TermError extends Term {
@@ -294,6 +310,8 @@ trait AbstractLanguage {
     override val isError: Boolean = true
 
     override def prettyPrint: String = message
+
+    override def toText: ConvertableText = TextElement(message)
   }
 
   /** An error that occurs due to attempting to process an unknown `Expr`.
@@ -328,6 +346,8 @@ trait AbstractLanguage {
     override val isError: Boolean = true
 
     override def prettyPrint: String = message
+
+    override def toText: ConvertableText = TextElement(message)
   }
 
   /** An error that occurs due to attempting to process an unknown `Expr`.
@@ -363,22 +383,32 @@ trait AbstractLanguage {
     }
   }
 
-  case class LiteralInt(value: BigInt) extends Literal
+  case class LiteralInt(value: BigInt) extends Literal {
+    override def toText: ConvertableText = TextElement(value.toString)
+  }
 
-  case class LiteralBool(value: Boolean) extends Literal
+  case class LiteralBool(value: Boolean) extends Literal {
+    override def toText: ConvertableText = TextElement(value.toString)
+  }
 
   case class LiteralString(value: String) extends Literal {
     //    override lazy val toHtml: TypedTag[String] = p(s""""$value"""")
 
     override lazy val toString: String = s""""$value""""
+
+    override def toText: ConvertableText = TextElement(toString)
   }
 
   case class LiteralIdentifier(value: String) extends Literal {
     override lazy val toString: String = value
+
+    override def toText: ConvertableText = TextElement(toString)
   }
 
   case class LiteralAny(value: String) extends Literal {
     override lazy val toString: String = value
+
+    override def toText: ConvertableText = TextElement(toString)
   }
 
   def envToTypeEnv(env: ValueEnv): TypeEnv = env.mapToEnv((k: String, v: Value) => (k, v.typ))
@@ -470,8 +500,8 @@ trait AbstractLanguage {
   addTypeBuilder(
     "TypePlaceholder",
     {
-      case List(s: String) => Some(TypePlaceholder(s))
-      case Nil             => Some(TypePlaceholder(""))
+      case List(s: String) => Some(TypePlaceholder(TextElement(s)))
+      case Nil             => Some(TypePlaceholder(TextElement("")))
       case _               => None
     },
     hidden = true
@@ -480,8 +510,8 @@ trait AbstractLanguage {
   addValueBuilder(
     "ValuePlaceholder",
     {
-      case List(s: String) => Some(ValuePlaceholder(s))
-      case Nil             => Some(ValuePlaceholder(""))
+      case List(s: String) => Some(ValuePlaceholder(TextElement(s)))
+      case Nil             => Some(ValuePlaceholder(TextElement("")))
       case _               => None
     }
   )
@@ -490,7 +520,7 @@ trait AbstractLanguage {
     "TypeValueContainer",
     {
       case List(t: Type) => Some(TypeValueContainer(t))
-      case Nil           => Some(TypeValueContainer(TypePlaceholder("")))
+      case Nil           => Some(TypeValueContainer(TypePlaceholder(TextElement(""))))
       case _             => None
     },
   )
@@ -499,7 +529,7 @@ trait AbstractLanguage {
     "TypeContainer",
     {
       case List(t: Type) => Some(TypeContainer(t))
-      case Nil           => Some(TypeContainer(TypePlaceholder("")))
+      case Nil           => Some(TypeContainer(TypePlaceholder(TextElement(""))))
       case _             => None
     },
     hidden = true

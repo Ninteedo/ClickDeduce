@@ -1,5 +1,7 @@
 package languages
 
+import convertors.{ConvertableText, MultiElement, TextElement}
+
 class LIf extends LArith {
   // expressions
   case class Bool(b: Literal) extends Expr {
@@ -16,6 +18,8 @@ class LIf extends LArith {
     override def prettyPrint: String = b.toString
 
     override val needsBrackets: Boolean = false
+
+    override def toText: ConvertableText = TextElement(b.toString)
   }
 
   object Bool {
@@ -26,8 +30,8 @@ class LIf extends LArith {
     "Bool",
     {
       case List(b: Literal) => Some(Bool(b))
-      case Nil => Some(Bool(defaultLiteral))
-      case _ => None
+      case Nil              => Some(Bool(defaultLiteral))
+      case _                => None
     }
   )
 
@@ -53,17 +57,18 @@ class LIf extends LArith {
     }
 
     override def prettyPrint: String = s"${e1.prettyPrintBracketed} == ${e2.prettyPrintBracketed}"
+
+    override def toText: ConvertableText = MultiElement(e1.toText, TextElement(" = "), e2.toText)
   }
 
   addExprBuilder(
     "Equal",
     {
       case List(e1: Expr, e2: Expr) => Some(Equal(e1, e2))
-      case Nil => Some(Equal(defaultExpr, defaultExpr))
-      case _ => None
+      case Nil                      => Some(Equal(defaultExpr, defaultExpr))
+      case _                        => None
     }
   )
-
 
   case class LessThan(e1: Expr, e2: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = (e1.eval(env), e2.eval(env)) match {
@@ -77,14 +82,16 @@ class LIf extends LArith {
     }
 
     override def prettyPrint: String = s"${e1.prettyPrintBracketed} < ${e2.prettyPrintBracketed}"
+
+    override def toText: ConvertableText = MultiElement(e1.toText, TextElement(" < "), e2.toText)
   }
 
   addExprBuilder(
     "LessThan",
     {
       case List(e1: Expr, e2: Expr) => Some(LessThan(e1, e2))
-      case Nil => Some(LessThan(defaultExpr, defaultExpr))
-      case _ => None
+      case Nil                      => Some(LessThan(defaultExpr, defaultExpr))
+      case _                        => None
     }
   )
 
@@ -113,17 +120,25 @@ class LIf extends LArith {
 
     override def prettyPrint: String =
       s"if ${cond.prettyPrintBracketed} then ${then_expr.prettyPrintBracketed} else ${else_expr.prettyPrintBracketed}"
+
+    override def toText: ConvertableText = MultiElement(
+      TextElement("if "),
+      cond.toText,
+      TextElement(" then "),
+      then_expr.toText,
+      TextElement(" else "),
+      else_expr.toText
+    )
   }
 
   addExprBuilder(
     "IfThenElse",
     {
       case List(cond: Expr, then_expr: Expr, else_expr: Expr) => Some(IfThenElse(cond, then_expr, else_expr))
-      case Nil => Some(IfThenElse(defaultExpr, defaultExpr, defaultExpr))
-      case _ => None
+      case Nil                                                => Some(IfThenElse(defaultExpr, defaultExpr, defaultExpr))
+      case _                                                  => None
     }
   )
-
 
   // values
   case class BoolV(b: Boolean) extends Value {
@@ -132,13 +147,15 @@ class LIf extends LArith {
     override def prettyPrint: String = b.toString
 
     override val needsBrackets: Boolean = false
+
+    override def toText: ConvertableText = TextElement(b.toString)
   }
 
   addValueBuilder(
     "BoolV",
     {
       case List(b: Boolean) => Some(BoolV(b))
-      case _ => None
+      case _                => None
     }
   )
 
@@ -147,13 +164,15 @@ class LIf extends LArith {
     override def prettyPrint: String = "Bool"
 
     override val needsBrackets: Boolean = false
+
+    override def toText: ConvertableText = TextElement("Bool")
   }
 
   addTypeBuilder(
     "BoolType",
     {
       case Nil => Some(BoolType())
-      case _ => None
+      case _   => None
     }
   )
 

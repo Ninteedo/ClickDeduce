@@ -1,5 +1,6 @@
 package languages
 
+import convertors.*
 import scalatags.Text.all.*
 
 class LPoly extends LData {
@@ -21,6 +22,9 @@ class LPoly extends LData {
 
     override def getChildrenEval(env: ValueEnv): List[(Term, ValueEnv)] =
       List((e, env + (v.toString -> TypeValueContainer(TypeVar(v)))))
+
+    override def toText: ConvertableText =
+      MultiElement(LambdaSymbol(capital = true), v.toText, TextElement(". "), e.toText)
   }
 
   object Poly {
@@ -31,8 +35,8 @@ class LPoly extends LData {
     "Poly",
     {
       case List(v: Literal, e: Expr) => Some(Poly(v, e))
-      case Nil => Some(Poly(defaultLiteral, defaultExpr))
-      case _ => None
+      case Nil                       => Some(Poly(defaultLiteral, defaultExpr))
+      case _                         => None
     }
   )
 
@@ -56,14 +60,16 @@ class LPoly extends LData {
     }
 
     override def prettyPrint: String = s"${e.prettyPrintBracketed}[${typ.prettyPrint}]"
+
+    override def toText: ConvertableText = MultiElement(e.toText, TextElement("["), typ.toText, TextElement("]"))
   }
 
   addExprBuilder(
     "ApplyType",
     {
       case List(e: Expr, t: Type) => Some(ApplyType(e, t))
-      case Nil => Some(ApplyType(defaultExpr, defaultType))
-      case _ => None
+      case Nil                    => Some(ApplyType(defaultExpr, defaultType))
+      case _                      => None
     }
   )
 
@@ -79,6 +85,8 @@ class LPoly extends LData {
     }
 
     override val needsBrackets: Boolean = false
+
+    override def toText: ConvertableText = v.toText
   }
 
   object TypeVar {
@@ -89,21 +97,24 @@ class LPoly extends LData {
     "TypeVar",
     {
       case List(v: Literal) => Some(TypeVar(v))
-      case Nil => Some(TypeVar(defaultLiteral))
-      case _ => None
+      case Nil              => Some(TypeVar(defaultLiteral))
+      case _                => None
     }
   )
 
   case class PolyType(typeVar: Type, incompleteType: Type) extends Type {
     override def prettyPrint: String = s"∀${typeVar.prettyPrintBracketed}. ${incompleteType.prettyPrintBracketed}"
+
+    override def toText: ConvertableText =
+      MultiElement(ForAllSymbol(), typeVar.toText, TextElement(". "), incompleteType.toText)
   }
 
   addTypeBuilder(
     "PolyType",
     {
       case List(tv: Type, t: Type) => Some(PolyType(tv, t))
-      case Nil => Some(PolyType(defaultType, defaultType))
-      case _ => None
+      case Nil                     => Some(PolyType(defaultType, defaultType))
+      case _                       => None
     },
     hidden = true
   )
@@ -117,13 +128,16 @@ class LPoly extends LData {
     }
 
     override def prettyPrint: String = s"Λ${typeVar.prettyPrintBracketed}. ${e.prettyPrintBracketed}"
+
+    override def toText: ConvertableText =
+      MultiElement(LambdaSymbol(capital = true), typeVar.toText, TextElement(". "), e.toText)
   }
 
   addValueBuilder(
     "PolyV",
     {
       case List(tv: Type, e: Expr, env: ValueEnv) => Some(PolyV(tv, e, env))
-      case _ => None
+      case _                                      => None
     }
   )
 

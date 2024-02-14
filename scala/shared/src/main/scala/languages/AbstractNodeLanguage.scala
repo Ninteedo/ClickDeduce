@@ -1,7 +1,7 @@
 package languages
 
 import app.{ClickDeduceException, UtilityFunctions}
-import convertors.{ClassDict, DisplayMode}
+import convertors.{ClassDict, ConvertableText, DisplayMode, HtmlElement}
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
@@ -20,6 +20,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     override lazy val toHtml: TypedTag[String] = exprClassListDropdownHtml
 
     override val needsBrackets: Boolean = false
+
+    override def toText: ConvertableText = HtmlElement(exprClassListDropdownHtml)
   }
 
   val defaultExpr: Expr = BlankExprDropDown()
@@ -28,6 +30,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     override lazy val toHtml: TypedTag[String] = typeClassListDropdownHtml
 
     override val needsBrackets: Boolean = false
+
+    override def toText: ConvertableText = HtmlElement(typeClassListDropdownHtml)
   }
 
   val defaultType: Type = BlankTypeDropDown()
@@ -145,6 +149,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     }
 
     lazy val treePathString: String = treePath.mkString("-")
+
+    def toText(mode: DisplayMode): ConvertableText
   }
 
   object Node {
@@ -500,6 +506,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] =
       cacheQuery(htmlLineReadOnlyCache, mode, div(raw(getExprHtmlLineReadOnly(mode))))
 
+    override def toText(mode: DisplayMode): ConvertableText = HtmlElement(div(raw(getExprHtmlLine(mode))))
+
     private def getExprHtmlLine(mode: DisplayMode): String = {
       val arguments = args.map {
         case n: SubExprNode => n.getPlaceholder(mode)
@@ -568,6 +576,10 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] = toHtmlLine(mode)(readonly, disabled)
 
+    override def toText(mode: DisplayMode): ConvertableText = HtmlElement(
+      BlankExprDropDown().toText.asHtml(data("tree-path") := treePathString)
+    )
+
     override val exprName: String = "ExprChoice"
 
     override def getExpr: Expr = BlankExprDropDown()
@@ -596,6 +608,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] = toHtmlLine(mode)
 
+    override def toText(mode: DisplayMode): ConvertableText = node.toText(mode)
+
     override def getPlaceholder(mode: DisplayMode, readOnly: Boolean = true): ExprPlaceholder =
       ExprPlaceholder(node.toHtmlLineReadOnly(mode).toString, node.getExpr.needsBrackets)
 
@@ -613,6 +627,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] =
       htmlLineShared(width := s"${Math.max(1, literalText.length)}ch", readonly, disabled)
+
+    override def toText(mode: DisplayMode): ConvertableText = HtmlElement(htmlLineShared)
 
     override def getPlaceholder(mode: DisplayMode, readOnly: Boolean = true): LiteralAny = if (readOnly) {
       LiteralAny(toHtmlLineReadOnly(mode).toString)
@@ -666,6 +682,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] =
       div(raw(getExprHtmlLineReadOnly(mode)))(readonly, disabled)
 
+    override def toText(mode: DisplayMode): ConvertableText = HtmlElement(div(raw(getExprHtmlLine(mode))))
+
     override val children: List[OuterNode] = args.filter(_.isInstanceOf[SubTypeNode]).flatMap(_.children)
 
     override def toString: String = s"TypeNode(${UtilityFunctions.quote(typeName)}, $args)"
@@ -681,7 +699,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     private def getExprHtmlLineReadOnly(mode: DisplayMode): String = {
       val arguments = args.map {
         case n: LiteralNode => LiteralAny(n.toHtmlLineReadOnly(mode).toString)
-        case n: SubTypeNode => TypePlaceholder(n.node.toHtmlLineReadOnly(mode).toString, n.node.getType.needsBrackets)
+        case n: SubTypeNode => TypePlaceholder(n.node.toText(mode), n.node.getType.needsBrackets)
       }
       buildType(typeName, arguments).get.prettyPrint
     }
@@ -698,7 +716,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
             e.productIterator.toList.collect({
               case c: Literal => LiteralNode(c.toString)
               case c: Type    => SubTypeNode(TypeNode.fromType(c))
-              case c         => throw new ClickDeduceException(s"Unexpected parameter type in createFromTypeName: $c")
+              case c          => throw new ClickDeduceException(s"Unexpected parameter type in createFromTypeName: $c")
             })
           case _ => throw new ClickDeduceException(s"No default type for $typeName")
         }
@@ -732,6 +750,10 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] = toHtmlLine(mode)(readonly, disabled)
 
+    override def toText(mode: DisplayMode): ConvertableText = HtmlElement(
+      BlankTypeDropDown().toText.asHtml(data("tree-path") := treePathString)
+    )
+
     override lazy val getType: Type = UnknownType()
   }
 
@@ -744,8 +766,10 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] = toHtmlLine(mode)(readonly, disabled)
 
+    override def toText(mode: DisplayMode): ConvertableText = node.toText(mode)
+
     override def getPlaceholder(mode: DisplayMode, readOnly: Boolean = true): TypePlaceholder =
-      TypePlaceholder(node.toHtmlLineReadOnly(mode).toString, node.getType.needsBrackets)
+      TypePlaceholder(node.toText(mode), node.getType.needsBrackets)
   }
 
   private val depthLimit: Int = 100

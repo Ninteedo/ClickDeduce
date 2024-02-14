@@ -1,5 +1,7 @@
 package languages
 
+import convertors.{ConvertableText, MultiElement, TextElement, TimesSymbol}
+
 class LArith extends ClickDeduceLanguage {
   // expressions
 
@@ -21,6 +23,8 @@ class LArith extends ClickDeduceLanguage {
 
     override def prettyPrint: String = x.toString
 
+    override def toText: ConvertableText = TextElement(x.toString)
+
     override val needsBrackets: Boolean = false
   }
 
@@ -34,11 +38,10 @@ class LArith extends ClickDeduceLanguage {
     "Num",
     {
       case List(l: Literal) => Some(Num(l))
-      case Nil => Some(Num(defaultLiteral))
-      case _ => None
+      case Nil              => Some(Num(defaultLiteral))
+      case _                => None
     }
   )
-
 
   /** A plus expression. Both subexpressions must evaluate to `NumV`.
     *
@@ -63,14 +66,16 @@ class LArith extends ClickDeduceLanguage {
     }
 
     override def prettyPrint: String = s"${e1.prettyPrintBracketed} + ${e2.prettyPrintBracketed}"
+
+    override def toText: ConvertableText = MultiElement(e1.toText, TextElement(" + "), e2.toText)
   }
 
   addExprBuilder(
     "Plus",
     {
       case List(e1: Expr, e2: Expr) => Some(Plus(e1, e2))
-      case Nil => Some(Plus(defaultExpr, defaultExpr))
-      case _ => None
+      case Nil                      => Some(Plus(defaultExpr, defaultExpr))
+      case _                        => None
     }
   )
 
@@ -97,14 +102,17 @@ class LArith extends ClickDeduceLanguage {
     }
 
     override def prettyPrint: String = s"${e1.prettyPrintBracketed} × ${e2.prettyPrintBracketed}"
+
+    override def toText: ConvertableText =
+      MultiElement(e1.toText, TextElement(" "), TimesSymbol(), TextElement(" "), e2.toText)
   }
 
   addExprBuilder(
     "Times",
     {
       case List(e1: Expr, e2: Expr) => Some(Times(e1, e2))
-      case Nil => Some(Times(defaultExpr, defaultExpr))
-      case _ => None
+      case Nil                      => Some(Times(defaultExpr, defaultExpr))
+      case _                        => None
     }
   )
 
@@ -130,13 +138,15 @@ class LArith extends ClickDeduceLanguage {
       case NumV(y) => x.compare(y)
       case other   => throw new IllegalArgumentException(s"Cannot compare NumV with non-NumV ($other)")
     }
+
+    override def toText: ConvertableText = TextElement(x.toString)
   }
 
   addValueBuilder(
     "NumV",
     {
       case List(x: BigInt) => Some(NumV(x))
-      case _ => None
+      case _               => None
     }
   )
 
@@ -159,13 +169,15 @@ class LArith extends ClickDeduceLanguage {
     override def prettyPrint: String = "Int"
 
     override val needsBrackets: Boolean = false
+
+    override def toText: ConvertableText = TextElement("Int")
   }
 
   addTypeBuilder(
     "IntType",
     {
       case Nil => Some(IntType())
-      case _ => None
+      case _   => None
     }
   )
 

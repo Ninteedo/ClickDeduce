@@ -1,5 +1,7 @@
 package languages
 
+import convertors.{ConvertableText, MultiElement, TextElement, TimesSymbol}
+
 class LData extends LRec {
   // expressions
 
@@ -10,6 +12,8 @@ class LData extends LRec {
 
     override def prettyPrint: String = s"(${e1.prettyPrintBracketed}, ${e2.prettyPrintBracketed})"
 
+    override def toText: ConvertableText = MultiElement(TextElement("("), e1.toText, TextElement(", "), e2.toText, TextElement(")"))
+
     override val needsBrackets: Boolean = false
   }
 
@@ -17,8 +21,8 @@ class LData extends LRec {
     "Pair",
     {
       case List(e1: Expr, e2: Expr) => Some(Pair(e1, e2))
-      case Nil => Some(Pair(defaultExpr, defaultExpr))
-      case _ => None
+      case Nil                      => Some(Pair(defaultExpr, defaultExpr))
+      case _                        => None
     }
   )
 
@@ -35,6 +39,8 @@ class LData extends LRec {
 
     override def prettyPrint: String = s"fst(${e.prettyPrint})"
 
+    override def toText: ConvertableText = MultiElement(TextElement("fst("), e.toText, TextElement(")"))
+
     override val needsBrackets: Boolean = false
   }
 
@@ -42,8 +48,8 @@ class LData extends LRec {
     "Fst",
     {
       case List(e: Expr) => Some(Fst(e))
-      case Nil => Some(Fst(defaultExpr))
-      case _ => None
+      case Nil           => Some(Fst(defaultExpr))
+      case _             => None
     }
   )
 
@@ -60,6 +66,8 @@ class LData extends LRec {
 
     override def prettyPrint: String = s"snd(${e.prettyPrint})"
 
+    override def toText: ConvertableText = MultiElement(TextElement("snd("), e.toText, TextElement(")"))
+
     override val needsBrackets: Boolean = false
   }
 
@@ -67,11 +75,10 @@ class LData extends LRec {
     "Snd",
     {
       case List(e: Expr) => Some(Snd(e))
-      case Nil => Some(Snd(defaultExpr))
-      case _ => None
+      case Nil           => Some(Snd(defaultExpr))
+      case _             => None
     }
   )
-
 
   case class LetPair(x: Literal, y: Literal, assign: Expr, bound: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = verifyLiteralIdentifierEval(x, y) {
@@ -92,6 +99,17 @@ class LData extends LRec {
 
     override def prettyPrint: String =
       s"let pair ($x, $y) = ${assign.prettyPrintBracketed} in ${bound.prettyPrintBracketed}"
+
+    override def toText: ConvertableText = MultiElement(
+      TextElement("let pair ("),
+      x.toText,
+      TextElement(", "),
+      y.toText,
+      TextElement(") = "),
+      assign.toText,
+      TextElement(" in "),
+      bound.toText
+    )
 
     override def getChildrenBase(env: ValueEnv): List[(Term, ValueEnv)] = List(
       (x, env),
@@ -119,10 +137,9 @@ class LData extends LRec {
     {
       case List(x: Literal, y: Literal, assign: Expr, bound: Expr) => Some(LetPair(x, y, assign, bound))
       case Nil => Some(LetPair(defaultLiteral, defaultLiteral, defaultExpr, defaultExpr))
-      case _ => None
+      case _   => None
     }
   )
-
 
   case class UnitExpr() extends Expr {
     override def evalInner(env: ValueEnv): Value = UnitV()
@@ -131,6 +148,8 @@ class LData extends LRec {
 
     override def prettyPrint: String = "()"
 
+    override def toText: ConvertableText = TextElement("()")
+
     override val needsBrackets: Boolean = false
   }
 
@@ -138,7 +157,7 @@ class LData extends LRec {
     "UnitExpr",
     {
       case Nil => Some(UnitExpr())
-      case _ => None
+      case _   => None
     }
   )
 
@@ -149,6 +168,8 @@ class LData extends LRec {
 
     override def prettyPrint: String = s"left(${e.prettyPrint})"
 
+    override def toText: ConvertableText = MultiElement(TextElement("left("), e.toText, TextElement(")"))
+
     override val needsBrackets: Boolean = false
   }
 
@@ -156,8 +177,8 @@ class LData extends LRec {
     "Left",
     {
       case List(e: Expr, rightType: Type) => Some(Left(e, rightType))
-      case Nil => Some(Left(defaultExpr, defaultType))
-      case _ => None
+      case Nil                            => Some(Left(defaultExpr, defaultType))
+      case _                              => None
     }
   )
 
@@ -168,6 +189,8 @@ class LData extends LRec {
 
     override def prettyPrint: String = s"right(${e.prettyPrint})"
 
+    override def toText: ConvertableText = MultiElement(TextElement("right("), e.toText, TextElement(")"))
+
     override val needsBrackets: Boolean = false
   }
 
@@ -175,8 +198,8 @@ class LData extends LRec {
     "Right",
     {
       case List(leftType: Type, e: Expr) => Some(Right(leftType, e))
-      case Nil => Some(Right(defaultType, defaultExpr))
-      case _ => None
+      case Nil                           => Some(Right(defaultType, defaultExpr))
+      case _                             => None
     }
   )
 
@@ -203,6 +226,20 @@ class LData extends LRec {
     override def prettyPrint: String =
       s"case ${e.prettyPrintBracketed} of " +
         s"{ left($l) ⇒ ${lExpr.prettyPrintBracketed}; right($r) ⇒ ${rExpr.prettyPrintBracketed} }"
+
+    override def toText: ConvertableText = MultiElement(
+      TextElement("case "),
+      e.toText,
+      TextElement(" of { left("),
+      l.toText,
+      TextElement(") ⇒ "),
+      lExpr.toText,
+      TextElement("; right("),
+      r.toText,
+      TextElement(") ⇒ "),
+      rExpr.toText,
+      TextElement(" }")
+    )
 
     override def getChildrenBase(env: ValueEnv): List[(Term, ValueEnv)] = {
       val (lVal, rVal): (Value, Value) = e.eval(env) match {
@@ -237,10 +274,9 @@ class LData extends LRec {
     {
       case List(e: Expr, l: Literal, r: Literal, lExpr: Expr, rExpr: Expr) => Some(CaseSwitch(e, l, r, lExpr, rExpr))
       case Nil => Some(CaseSwitch(defaultExpr, defaultLiteral, defaultLiteral, defaultExpr, defaultExpr))
-      case _ => None
+      case _   => None
     }
   )
-
 
   // types
 
@@ -248,30 +284,33 @@ class LData extends LRec {
     override def typeCheck(tEnv: TypeEnv): Type = PairType(l.typeCheck(tEnv), r.typeCheck(tEnv))
 
     override def prettyPrint: String = s"${l.prettyPrintBracketed} × ${r.prettyPrintBracketed}"
+
+    override def toText: ConvertableText = MultiElement(l.toText, TextElement(" "), TimesSymbol(), TextElement(" "), r.toText)
   }
 
   addTypeBuilder(
     "PairType",
     {
       case List(l: Type, r: Type) => Some(PairType(l, r))
-      case Nil => Some(PairType(defaultType, defaultType))
-      case _ => None
+      case Nil                    => Some(PairType(defaultType, defaultType))
+      case _                      => None
     }
   )
-
 
   case class UnionType(l: Type, r: Type) extends Type {
     override def typeCheck(tEnv: TypeEnv): Type = UnionType(l.typeCheck(tEnv), r.typeCheck(tEnv))
 
     override def prettyPrint: String = s"${l.prettyPrintBracketed} + ${r.prettyPrintBracketed}"
+
+    override def toText: ConvertableText = MultiElement(l.toText, TextElement(" + "), r.toText)
   }
 
   addTypeBuilder(
     "UnionType",
     {
       case List(l: Type, r: Type) => Some(UnionType(l, r))
-      case Nil => Some(UnionType(defaultType, defaultType))
-      case _ => None
+      case Nil                    => Some(UnionType(defaultType, defaultType))
+      case _                      => None
     }
   )
 
@@ -279,13 +318,15 @@ class LData extends LRec {
     override def prettyPrint: String = "()"
 
     override val needsBrackets: Boolean = false
+
+    override def toText: ConvertableText = TextElement("()")
   }
 
   addTypeBuilder(
     "EmptyType",
     {
       case Nil => Some(EmptyType())
-      case _ => None
+      case _   => None
     }
   )
 
@@ -293,6 +334,8 @@ class LData extends LRec {
     override def prettyPrint: String = "Any"
 
     override val needsBrackets: Boolean = false
+
+    override def toText: ConvertableText = TextElement("Any")
   }
 
   // values
@@ -303,13 +346,15 @@ class LData extends LRec {
     override def prettyPrint: String = s"(${v1.prettyPrintBracketed}, ${v2.prettyPrintBracketed})"
 
     override val needsBrackets: Boolean = false
+
+    override def toText: ConvertableText = MultiElement(TextElement("("), v1.toText, TextElement(", "), v2.toText, TextElement(")"))
   }
 
   addValueBuilder(
     "PairV",
     {
       case List(v1: Value, v2: Value) => Some(PairV(v1, v2))
-      case _ => None
+      case _                          => None
     }
   )
 
@@ -319,13 +364,15 @@ class LData extends LRec {
     override def prettyPrint: String = "()"
 
     override val needsBrackets: Boolean = false
+
+    override def toText: ConvertableText = TextElement("()")
   }
 
   addValueBuilder(
     "UnitV",
     {
       case Nil => Some(UnitV())
-      case _ => None
+      case _   => None
     }
   )
 
@@ -335,13 +382,15 @@ class LData extends LRec {
     override def prettyPrint: String = s"left(${v.prettyPrint})"
 
     override val needsBrackets: Boolean = false
+
+    override def toText: ConvertableText = MultiElement(TextElement("left("), v.toText, TextElement(")"))
   }
 
   addValueBuilder(
     "LeftV",
     {
       case List(v: Value, rightType: Type) => Some(LeftV(v, rightType))
-      case _ => None
+      case _                               => None
     }
   )
 
@@ -351,13 +400,15 @@ class LData extends LRec {
     override def prettyPrint: String = s"right(${v.prettyPrint})"
 
     override val needsBrackets: Boolean = false
+
+    override def toText: ConvertableText = MultiElement(TextElement("right("), v.toText, TextElement(")"))
   }
 
   addValueBuilder(
     "RightV",
     {
       case List(leftType: Type, v: Value) => Some(RightV(leftType, v))
-      case _ => None
+      case _                              => None
     }
   )
 
