@@ -1,7 +1,8 @@
 import {handleLiteralChanged} from "./actions";
-import {getActiveInputs, selectorEnterPressed} from "./treeManipulation";
-import {hasClassOrParentHasClass} from "./utils";
+import {getActiveInputs, lastNodeString, selectorEnterPressed} from "./treeManipulation";
+import {getSelectedLanguage, getSelectedMode, hasClassOrParentHasClass} from "./utils";
 import {panzoomInstance} from "./initialise";
+import {convertToLaTeX} from "./clickdeduce-opt";
 
 let errorDiv: HTMLDivElement;
 export let nextFocusElement: HTMLElement = null;
@@ -185,4 +186,38 @@ function toggleValueTypeColourHighlighting(newState: boolean): void {
 export function isAutoZoomEnabled(): boolean {
     const autoZoomCheckbox = document.getElementById('auto-zoom-toggle') as HTMLInputElement;
     return autoZoomCheckbox.checked;
+}
+
+export function exportLaTeX(): void {
+    const langName = getSelectedLanguage();
+    const modeName = getSelectedMode();
+    const nodeString = lastNodeString;
+    const output: string = convertToLaTeX(langName, modeName, nodeString);
+    showExportOutput("LaTeX Output", output);
+}
+
+function showExportOutput(title: string, output: string): void {
+    const outputDiv = document.getElementById('export-output-container') as HTMLDivElement;
+    const outputTextArea = document.getElementById('export-output') as HTMLTextAreaElement;
+    outputTextArea.value = output;
+    const outputTitle = document.getElementById('export-output-title');
+    outputTitle.textContent = title;
+    outputDiv.classList.add('visible');
+    getBlocker().classList.add('visible');
+}
+
+export function copyExportOutput() {
+    const outputTextArea = document.getElementById('export-output') as HTMLTextAreaElement;
+    outputTextArea.select();
+    navigator.clipboard.writeText(outputTextArea.value);
+}
+
+export function closeExportOutput() {
+    const outputDiv = document.getElementById('export-output-container') as HTMLDivElement;
+    outputDiv.classList.remove('visible');
+    getBlocker().classList.remove('visible');
+}
+
+function getBlocker(): HTMLElement {
+    return document.getElementById('blocker');
 }
