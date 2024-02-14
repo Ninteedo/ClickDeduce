@@ -19,6 +19,22 @@ case class TextElement(text: String) extends ConvertableText {
   override def asLaTeX: String = s"\\textrm{$text}"
 }
 
+case class MathElement(text: String) extends ConvertableText {
+  override def asPlainText: String = text
+  override def asHtml: TypedTag[String] = span(raw(text))
+  override def asHtmlReadOnly: TypedTag[String] = asHtml
+  override def asLaTeX: String = text
+}
+
+object MathElement {
+  val comma: MathElement = MathElement(",")
+  val equals: MathElement = MathElement("=")
+  val plus: MathElement = MathElement("+")
+  val colon: MathElement = MathElement(":")
+  val period: MathElement = MathElement(".")
+  val lessThan: MathElement = MathElement("<")
+}
+
 case class MultiElement(elems: ConvertableText*) extends ConvertableText {
   override def asPlainText: String = elems.map(_.asPlainText).mkString
   override def asHtml: TypedTag[String] = div(elems.map(_.asHtml): _*)
@@ -66,4 +82,32 @@ case class HtmlElement(html: TypedTag[String]) extends ConvertableText {
   override def asHtml: TypedTag[String] = html
   override def asHtmlReadOnly: TypedTag[String] = html
   override def asLaTeX: String = html.toString
+}
+
+case class DoubleRightArrow() extends ConvertableText {
+  override def asPlainText: String = "⇒"
+  override def asHtml: TypedTag[String] = span(raw("&rArr;"))
+  override def asHtmlReadOnly: TypedTag[String] = asHtml
+  override def asLaTeX: String = "\\Rightarrow"
+}
+
+case class SingleRightArrow() extends ConvertableText {
+  override def asPlainText: String = "→"
+  override def asHtml: TypedTag[String] = span(raw("&rarr;"))
+  override def asHtmlReadOnly: TypedTag[String] = asHtml
+  override def asLaTeX: String = "\\rightarrow"
+}
+
+case class SurroundSpaces(elem: ConvertableText) extends ConvertableText {
+  override def asPlainText: String = s" ${elem.asPlainText} "
+  override def asHtml: TypedTag[String] = span(raw(" "), elem.asHtml, raw(" "))
+  override def asHtmlReadOnly: TypedTag[String] = span(raw(" "), elem.asHtmlReadOnly, raw(" "))
+  override def asLaTeX: String = elem.asLaTeX
+}
+
+case class SpaceAfter(elem: ConvertableText) extends ConvertableText {
+  override def asPlainText: String = s"${elem.asPlainText} "
+  override def asHtml: TypedTag[String] = span(elem.asHtml, raw(" "))
+  override def asHtmlReadOnly: TypedTag[String] = span(elem.asHtmlReadOnly, raw(" "))
+  override def asLaTeX: String = elem.asLaTeX
 }

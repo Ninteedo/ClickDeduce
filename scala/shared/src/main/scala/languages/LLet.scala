@@ -1,6 +1,6 @@
 package languages
 
-import convertors.{ConvertableText, MultiElement, TextElement}
+import convertors.*
 
 class LLet extends LIf {
   // expressions
@@ -73,7 +73,14 @@ class LLet extends LIf {
     override def prettyPrint: String = s"let $v = ${assign.prettyPrintBracketed} in ${bound.prettyPrintBracketed}"
 
     override def toText: ConvertableText =
-      MultiElement(TextElement("let "), v.toText, TextElement(" = "), assign.toText, TextElement(" in "), bound.toText)
+      MultiElement(
+        TextElement("let"),
+        SurroundSpaces(v.toText),
+        MathElement.equals,
+        SurroundSpaces(assign.toTextBracketed),
+        SpaceAfter(TextElement("in")),
+        bound.toTextBracketed
+      )
   }
 
   object Let {

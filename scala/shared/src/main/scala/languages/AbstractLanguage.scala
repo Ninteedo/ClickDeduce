@@ -1,7 +1,7 @@
 package languages
 
 import app.ClickDeduceException
-import convertors.{ClassDict, ConvertableText, TextElement}
+import convertors.*
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
@@ -71,8 +71,6 @@ trait AbstractLanguage {
   trait Term {
     val name: String = toString.takeWhile(_ != '(')
 
-    def toText: ConvertableText
-
     lazy val toHtml: TypedTag[String] = span(raw(prettyPrint))
 
     def getChildrenBase(env: ValueEnv = ValueEnv.empty): List[(Term, ValueEnv)] = Nil
@@ -88,6 +86,10 @@ trait AbstractLanguage {
     final def prettyPrintBracketed: String = if (needsBrackets) s"($prettyPrint)" else prettyPrint
 
     val needsBrackets: Boolean = true
+
+    def toText: ConvertableText
+
+    final def toTextBracketed: ConvertableText = if (needsBrackets) BracketedElement(toText) else toText
   }
 
   /** An unevaluated expression.
@@ -402,7 +404,7 @@ trait AbstractLanguage {
   case class LiteralIdentifier(value: String) extends Literal {
     override lazy val toString: String = value
 
-    override def toText: ConvertableText = TextElement(toString)
+    override def toText: ConvertableText = ItalicsElement(TextElement(toString))
   }
 
   case class LiteralAny(value: String) extends Literal {

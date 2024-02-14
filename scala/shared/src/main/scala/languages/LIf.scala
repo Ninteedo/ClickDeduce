@@ -1,6 +1,6 @@
 package languages
 
-import convertors.{ConvertableText, MultiElement, TextElement}
+import convertors.*
 
 class LIf extends LArith {
   // expressions
@@ -58,7 +58,8 @@ class LIf extends LArith {
 
     override def prettyPrint: String = s"${e1.prettyPrintBracketed} == ${e2.prettyPrintBracketed}"
 
-    override def toText: ConvertableText = MultiElement(e1.toText, TextElement(" = "), e2.toText)
+    override def toText: ConvertableText =
+      MultiElement(e1.toTextBracketed, SurroundSpaces(MathElement.equals), e2.toTextBracketed)
   }
 
   addExprBuilder(
@@ -83,7 +84,8 @@ class LIf extends LArith {
 
     override def prettyPrint: String = s"${e1.prettyPrintBracketed} < ${e2.prettyPrintBracketed}"
 
-    override def toText: ConvertableText = MultiElement(e1.toText, TextElement(" < "), e2.toText)
+    override def toText: ConvertableText =
+      MultiElement(e1.toTextBracketed, SurroundSpaces(MathElement.lessThan), e2.toTextBracketed)
   }
 
   addExprBuilder(
@@ -122,12 +124,12 @@ class LIf extends LArith {
       s"if ${cond.prettyPrintBracketed} then ${then_expr.prettyPrintBracketed} else ${else_expr.prettyPrintBracketed}"
 
     override def toText: ConvertableText = MultiElement(
-      TextElement("if "),
-      cond.toText,
-      TextElement(" then "),
-      then_expr.toText,
-      TextElement(" else "),
-      else_expr.toText
+      TextElement("if"),
+      SurroundSpaces(cond.toTextBracketed),
+      TextElement("then"),
+      SurroundSpaces(then_expr.toTextBracketed),
+      SpaceAfter(TextElement("else")),
+      else_expr.toTextBracketed
     )
   }
 

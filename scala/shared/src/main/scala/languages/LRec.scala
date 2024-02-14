@@ -1,6 +1,6 @@
 package languages
 
-import convertors.{ConvertableText, MultiElement, TextElement}
+import convertors.*
 import scalatags.Text
 import scalatags.Text.all.*
 
@@ -52,13 +52,17 @@ class LRec extends LLam {
       TextElement("rec "),
       f.toText,
       TextElement("("),
-      v.toText,
-      TextElement(": "),
-      inType.toText,
-      TextElement("): "),
-      outType.toText,
-      TextElement(". "),
-      e.toText
+      BracketedElement(
+        MultiElement(
+          v.toText,
+          TextElement(": "),
+          inType.toTextBracketed,
+        )
+      ),
+      MathElement.colon,
+      outType.toTextBracketed,
+      MathElement.period,
+      e.toTextBracketed
     )
   }
 
@@ -88,16 +92,13 @@ class LRec extends LLam {
     override def prettyPrint: String = prettyPrintRec(f, v, in_typ, out_typ, e)
 
     override def toText: ConvertableText = MultiElement(
-      TextElement("rec "),
+      SpaceAfter(TextElement("rec")),
       f.toText,
-      TextElement("("),
-      v.toText,
-      TextElement(": "),
-      in_typ.toText,
-      TextElement("): "),
-      out_typ.toText,
-      TextElement(". "),
-      e.toText
+      BracketedElement(MultiElement(v.toText, SpaceAfter(MathElement.colon), in_typ.toTextBracketed)),
+      SpaceAfter(MathElement.colon),
+      out_typ.toTextBracketed,
+      SpaceAfter(MathElement.period),
+      e.toTextBracketed
     )
   }
 

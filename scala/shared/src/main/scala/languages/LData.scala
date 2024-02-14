@@ -1,6 +1,6 @@
 package languages
 
-import convertors.{ConvertableText, MultiElement, TextElement, TimesSymbol}
+import convertors.*
 
 class LData extends LRec {
   // expressions
@@ -12,7 +12,8 @@ class LData extends LRec {
 
     override def prettyPrint: String = s"(${e1.prettyPrintBracketed}, ${e2.prettyPrintBracketed})"
 
-    override def toText: ConvertableText = MultiElement(TextElement("("), e1.toText, TextElement(", "), e2.toText, TextElement(")"))
+    override def toText: ConvertableText =
+      BracketedElement(MultiElement(e1.toText, SpaceAfter(MathElement.comma), e2.toText))
 
     override val needsBrackets: Boolean = false
   }
@@ -39,7 +40,7 @@ class LData extends LRec {
 
     override def prettyPrint: String = s"fst(${e.prettyPrint})"
 
-    override def toText: ConvertableText = MultiElement(TextElement("fst("), e.toText, TextElement(")"))
+    override def toText: ConvertableText = MultiElement(TextElement("fst"), BracketedElement(e.toText))
 
     override val needsBrackets: Boolean = false
   }
@@ -66,7 +67,7 @@ class LData extends LRec {
 
     override def prettyPrint: String = s"snd(${e.prettyPrint})"
 
-    override def toText: ConvertableText = MultiElement(TextElement("snd("), e.toText, TextElement(")"))
+    override def toText: ConvertableText = MultiElement(TextElement("snd"), BracketedElement(e.toText))
 
     override val needsBrackets: Boolean = false
   }
@@ -101,14 +102,12 @@ class LData extends LRec {
       s"let pair ($x, $y) = ${assign.prettyPrintBracketed} in ${bound.prettyPrintBracketed}"
 
     override def toText: ConvertableText = MultiElement(
-      TextElement("let pair ("),
-      x.toText,
-      TextElement(", "),
-      y.toText,
-      TextElement(") = "),
-      assign.toText,
-      TextElement(" in "),
-      bound.toText
+      SpaceAfter(TextElement("let pair")),
+      BracketedElement(MultiElement(x.toText, SpaceAfter(MathElement.comma), y.toText)),
+      SurroundSpaces(MathElement.equals),
+      assign.toTextBracketed,
+      SurroundSpaces(TextElement("in")),
+      bound.toTextBracketed
     )
 
     override def getChildrenBase(env: ValueEnv): List[(Term, ValueEnv)] = List(
@@ -168,7 +167,7 @@ class LData extends LRec {
 
     override def prettyPrint: String = s"left(${e.prettyPrint})"
 
-    override def toText: ConvertableText = MultiElement(TextElement("left("), e.toText, TextElement(")"))
+    override def toText: ConvertableText = MultiElement(TextElement("left"), BracketedElement(e.toText))
 
     override val needsBrackets: Boolean = false
   }
@@ -189,7 +188,7 @@ class LData extends LRec {
 
     override def prettyPrint: String = s"right(${e.prettyPrint})"
 
-    override def toText: ConvertableText = MultiElement(TextElement("right("), e.toText, TextElement(")"))
+    override def toText: ConvertableText = MultiElement(TextElement("right"), BracketedElement(e.toText))
 
     override val needsBrackets: Boolean = false
   }
@@ -228,17 +227,17 @@ class LData extends LRec {
         s"{ left($l) ⇒ ${lExpr.prettyPrintBracketed}; right($r) ⇒ ${rExpr.prettyPrintBracketed} }"
 
     override def toText: ConvertableText = MultiElement(
-      TextElement("case "),
-      e.toText,
-      TextElement(" of { left("),
-      l.toText,
-      TextElement(") ⇒ "),
-      lExpr.toText,
-      TextElement("; right("),
-      r.toText,
-      TextElement(") ⇒ "),
-      rExpr.toText,
-      TextElement(" }")
+      TextElement("case"),
+      SurroundSpaces(e.toText),
+      TextElement("of { left"),
+      BracketedElement(l.toText),
+      SurroundSpaces(DoubleRightArrow()),
+      lExpr.toTextBracketed,
+      TextElement("; right"),
+      BracketedElement(r.toText),
+      SurroundSpaces(DoubleRightArrow()),
+      SpaceAfter(rExpr.toTextBracketed),
+      TextElement("}")
     )
 
     override def getChildrenBase(env: ValueEnv): List[(Term, ValueEnv)] = {
@@ -285,7 +284,8 @@ class LData extends LRec {
 
     override def prettyPrint: String = s"${l.prettyPrintBracketed} × ${r.prettyPrintBracketed}"
 
-    override def toText: ConvertableText = MultiElement(l.toText, TextElement(" "), TimesSymbol(), TextElement(" "), r.toText)
+    override def toText: ConvertableText =
+      MultiElement(l.toTextBracketed, SurroundSpaces(TimesSymbol()), r.toTextBracketed)
   }
 
   addTypeBuilder(
@@ -302,7 +302,8 @@ class LData extends LRec {
 
     override def prettyPrint: String = s"${l.prettyPrintBracketed} + ${r.prettyPrintBracketed}"
 
-    override def toText: ConvertableText = MultiElement(l.toText, TextElement(" + "), r.toText)
+    override def toText: ConvertableText =
+      MultiElement(l.toTextBracketed, SurroundSpaces(MathElement("+")), r.toTextBracketed)
   }
 
   addTypeBuilder(
@@ -347,7 +348,9 @@ class LData extends LRec {
 
     override val needsBrackets: Boolean = false
 
-    override def toText: ConvertableText = MultiElement(TextElement("("), v1.toText, TextElement(", "), v2.toText, TextElement(")"))
+    override def toText: ConvertableText = BracketedElement(
+      MultiElement(v1.toTextBracketed, SpaceAfter(MathElement.comma), v2.toTextBracketed)
+    )
   }
 
   addValueBuilder(
@@ -383,7 +386,7 @@ class LData extends LRec {
 
     override val needsBrackets: Boolean = false
 
-    override def toText: ConvertableText = MultiElement(TextElement("left("), v.toText, TextElement(")"))
+    override def toText: ConvertableText = MultiElement(TextElement("left"), BracketedElement(v.toText))
   }
 
   addValueBuilder(
@@ -401,7 +404,7 @@ class LData extends LRec {
 
     override val needsBrackets: Boolean = false
 
-    override def toText: ConvertableText = MultiElement(TextElement("right("), v.toText, TextElement(")"))
+    override def toText: ConvertableText = MultiElement(TextElement("right"), BracketedElement(v.toText))
   }
 
   addValueBuilder(

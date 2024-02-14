@@ -1,6 +1,6 @@
 package languages
 
-import convertors.{ConvertableText, LambdaSymbol, MultiElement, TextElement}
+import convertors.*
 import scalatags.Text
 import scalatags.Text.all.*
 
@@ -27,7 +27,7 @@ class LLam extends LLet {
 
     override def prettyPrint: String = s"${e1.prettyPrintBracketed} ${e2.prettyPrintBracketed}"
 
-    override def toText: ConvertableText = MultiElement(e1.toText, TextElement(" "), e2.toText)
+    override def toText: ConvertableText = MultiElement(SpaceAfter(e1.toTextBracketed), e2.toTextBracketed)
   }
 
   addExprBuilder(
@@ -61,8 +61,14 @@ class LLam extends LLet {
 
     override def prettyPrint: String = s"λ$v: ${typ.prettyPrintBracketed}. ${e.prettyPrint}"
 
-    override def toText: ConvertableText =
-      MultiElement(LambdaSymbol(), v.toText, TextElement(": "), typ.toText, TextElement(". "), e.toText)
+    override def toText: ConvertableText = MultiElement(
+      LambdaSymbol(),
+      v.toText,
+      SpaceAfter(MathElement.colon),
+      typ.toTextBracketed,
+      SpaceAfter(MathElement.period),
+      e.toText
+    )
   }
 
   object Lambda {
@@ -94,7 +100,8 @@ class LLam extends LLet {
 
     override def prettyPrint: String = s"${in.prettyPrintBracketed} → ${out.prettyPrintBracketed}"
 
-    override def toText: ConvertableText = MultiElement(in.toText, TextElement(" → "), out.toText)
+    override def toText: ConvertableText =
+      MultiElement(in.toTextBracketed, SurroundSpaces(SingleRightArrow()), out.toTextBracketed)
   }
 
   addTypeBuilder(
@@ -142,9 +149,9 @@ class LLam extends LLet {
     override def toText: ConvertableText = MultiElement(
       LambdaSymbol(),
       TextElement(v),
-      TextElement(": "),
+      SpaceAfter(MathElement.colon),
       properInputType.toText,
-      TextElement(". "),
+      SpaceAfter(MathElement.period),
       e.toText
     )
   }

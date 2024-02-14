@@ -1,6 +1,6 @@
 package languages
 
-import convertors.{ConvertableText, MultiElement, TextElement, TimesSymbol}
+import convertors.*
 
 class LArith extends ClickDeduceLanguage {
   // expressions
@@ -67,7 +67,8 @@ class LArith extends ClickDeduceLanguage {
 
     override def prettyPrint: String = s"${e1.prettyPrintBracketed} + ${e2.prettyPrintBracketed}"
 
-    override def toText: ConvertableText = MultiElement(e1.toText, TextElement(" + "), e2.toText)
+    override def toText: ConvertableText =
+      MultiElement(e1.toTextBracketed, SurroundSpaces(MathElement.plus), e2.toTextBracketed)
   }
 
   addExprBuilder(
@@ -104,7 +105,7 @@ class LArith extends ClickDeduceLanguage {
     override def prettyPrint: String = s"${e1.prettyPrintBracketed} × ${e2.prettyPrintBracketed}"
 
     override def toText: ConvertableText =
-      MultiElement(e1.toText, TextElement(" "), TimesSymbol(), TextElement(" "), e2.toText)
+      MultiElement(e1.toTextBracketed, SurroundSpaces(TimesSymbol()), e2.toTextBracketed)
   }
 
   addExprBuilder(

@@ -24,7 +24,7 @@ class LPoly extends LData {
       List((e, env + (v.toString -> TypeValueContainer(TypeVar(v)))))
 
     override def toText: ConvertableText =
-      MultiElement(LambdaSymbol(capital = true), v.toText, TextElement(". "), e.toText)
+      MultiElement(LambdaSymbol(capital = true), v.toText, SpaceAfter(TextElement(".")), e.toTextBracketed)
   }
 
   object Poly {
@@ -61,7 +61,8 @@ class LPoly extends LData {
 
     override def prettyPrint: String = s"${e.prettyPrintBracketed}[${typ.prettyPrint}]"
 
-    override def toText: ConvertableText = MultiElement(e.toText, TextElement("["), typ.toText, TextElement("]"))
+    override def toText: ConvertableText =
+      MultiElement(e.toTextBracketed, TextElement("["), typ.toText, TextElement("]"))
   }
 
   addExprBuilder(
@@ -106,7 +107,12 @@ class LPoly extends LData {
     override def prettyPrint: String = s"∀${typeVar.prettyPrintBracketed}. ${incompleteType.prettyPrintBracketed}"
 
     override def toText: ConvertableText =
-      MultiElement(ForAllSymbol(), typeVar.toText, TextElement(". "), incompleteType.toText)
+      MultiElement(
+        ForAllSymbol(),
+        typeVar.toTextBracketed,
+        SpaceAfter(MathElement.period),
+        incompleteType.toTextBracketed
+      )
   }
 
   addTypeBuilder(
@@ -129,8 +135,12 @@ class LPoly extends LData {
 
     override def prettyPrint: String = s"Λ${typeVar.prettyPrintBracketed}. ${e.prettyPrintBracketed}"
 
-    override def toText: ConvertableText =
-      MultiElement(LambdaSymbol(capital = true), typeVar.toText, TextElement(". "), e.toText)
+    override def toText: ConvertableText = MultiElement(
+      LambdaSymbol(capital = true),
+      typeVar.toTextBracketed,
+      SpaceAfter(MathElement.period),
+      e.toTextBracketed
+    )
   }
 
   addValueBuilder(

@@ -8,8 +8,12 @@ class LaTeXConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) 
   private type TypeNode = lang.TypeNodeParent
 
   override def convert[T <: AbstractNodeLanguage#OuterNode](node: T): Output = {
-    outerNodeToLaTeX(node.asInstanceOf[lang.OuterNode])
+    asProofTree(removeBlankLines(outerNodeToLaTeX(node.asInstanceOf[lang.OuterNode])))
   }
+
+  private def removeBlankLines(s: String): String = s.split("\n").filter(_.nonEmpty).mkString("\n")
+
+  private def asProofTree(s: String): String = s"\\begin{prooftree}\n$s\n\\end{prooftree}"
 
   def outerNodeToLaTeX(node: lang.OuterNode): LaTeX = node match {
     case node: ExprNode => exprNodeToLaTeX(node)
@@ -24,23 +28,45 @@ class LaTeXConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) 
     createTree(fullTypeBottomDiv(node), node.getTypeName, node.getVisibleChildren(mode).map(outerNodeToLaTeX))
   }
 
+//  private def createTree(below: LaTeX, ruleLabel: LaTeX, children: List[LaTeX]): LaTeX = {
+//    s"""\\prftree[r]{\\scriptsize $ruleLabel}
+//       |{${children.mkString("\n")}}
+//       |{$below}""".stripMargin
+//  }
+
   private def createTree(below: LaTeX, ruleLabel: LaTeX, children: List[LaTeX]): LaTeX = {
-    s"""\\prftree[r]{\\scriptsize $ruleLabel}
-       |{${children.mkString("\n")}}
-       |{$below}""".stripMargin
+    val ruleKind = children.size match {
+      case 0 => "AxiomC{}\n\\UnaryInfC"
+      case 1 => "UnaryInfC"
+      case 2 => "BinaryInfC"
+      case 3 => "TrinaryInfC"
+      case 4 => "QuaternaryInfC"
+      case 5 => "QuinaryInfC"
+      case n => throw new IllegalArgumentException(s"Too many children ($n) for LaTeX tree")
+    }
+    val dollar = "$"
+    s"""${children.mkString("\n")}\n\\$ruleKind{$dollar$below$dollar}""".stripMargin
   }
 
   def fullExprBottomDiv(node: ExprNode): LaTeX =
     s"${envDiv(node.getEnv(mode))} ${exprDiv(node)} ${resultDiv(node)}".strip()
 
   def envDiv(env: lang.ValueEnv | lang.TypeEnv): LaTeX = {
-    val variablesHtml: Option[LaTeX] =
-      if (env.isEmpty) None else Some(env.map((k, v) => MultiElement(TextElement(k), TextElement(" \\rightarrow "), v.toText)).mkString("[", ", ", "]"))
+    val variables: Option[LaTeX] =
+      if (env.isEmpty) None
+      else
+        Some(
+          env
+            .map((k, v) =>
+              MultiElement(ItalicsElement(TextElement(k)), SurroundSpaces(SingleRightArrow()), v.toText).asLaTeX
+            )
+            .mkString("[", ", ", "]")
+        )
     val delimiter =
       if (mode == DisplayMode.TypeCheck) Some(typeCheckTurnstileSpan) else if (env.nonEmpty) Some(",") else None
 
     var result: String = ""
-    if (variablesHtml.isDefined) result += variablesHtml.get
+    if (variables.isDefined) result += variables.get
     if (delimiter.isDefined) result += delimiter.get
     result
   }
@@ -62,9 +88,9 @@ class LaTeXConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) 
 
   def fullTypeBottomDiv(node: TypeNode): LaTeX = s"${envDiv(node.getEnv(mode))} ${typeDiv(node)} ${typeResultDiv(node)}"
 
-  def typeDiv(node: TypeNode): LaTeX = node.toText(mode).asLaTeX
+  def typeDiv(node: TypeNode): LaTeX = node.getType.toText.asLaTeX
 
-  def typeResultDiv(node: TypeNode): LaTeX = s"$typeCheckColon, ${node.getTypeCheckResult(mode).toText.asLaTeX}"
+  def typeResultDiv(node: TypeNode): LaTeX = s"$typeCheckColon ${node.getTypeCheckResult(mode).toText.asLaTeX}"
 
   private val typeCheckTurnstileSpan: LaTeX = "\\vdash"
 
