@@ -102,11 +102,11 @@ class LData extends LRec {
       s"let pair ($x, $y) = ${assign.prettyPrintBracketed} in ${bound.prettyPrintBracketed}"
 
     override def toText: ConvertableText = MultiElement(
-      SpaceAfter(TextElement("let pair")),
+      TextElement("let pair "),
       BracketedElement(MultiElement(x.toText, SpaceAfter(MathElement.comma), y.toText)),
       SurroundSpaces(MathElement.equals),
       assign.toTextBracketed,
-      SurroundSpaces(TextElement("in")),
+      TextElement(" in "),
       bound.toTextBracketed
     )
 
@@ -227,17 +227,17 @@ class LData extends LRec {
         s"{ left($l) ⇒ ${lExpr.prettyPrintBracketed}; right($r) ⇒ ${rExpr.prettyPrintBracketed} }"
 
     override def toText: ConvertableText = MultiElement(
-      TextElement("case"),
-      SurroundSpaces(e.toText),
-      TextElement("of { left"),
+      TextElement("case "),
+      e.toText,
+      TextElement(" of { left"),
       BracketedElement(l.toText),
       SurroundSpaces(DoubleRightArrow()),
       lExpr.toTextBracketed,
       TextElement("; right"),
       BracketedElement(r.toText),
       SurroundSpaces(DoubleRightArrow()),
-      SpaceAfter(rExpr.toTextBracketed),
-      TextElement("}")
+      rExpr.toTextBracketed,
+      TextElement(" }")
     )
 
     override def getChildrenBase(env: ValueEnv): List[(Term, ValueEnv)] = {

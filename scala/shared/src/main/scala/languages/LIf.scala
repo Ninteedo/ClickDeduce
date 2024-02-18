@@ -124,11 +124,11 @@ class LIf extends LArith {
       s"if ${cond.prettyPrintBracketed} then ${then_expr.prettyPrintBracketed} else ${else_expr.prettyPrintBracketed}"
 
     override def toText: ConvertableText = MultiElement(
-      TextElement("if"),
-      SurroundSpaces(cond.toTextBracketed),
-      TextElement("then"),
-      SurroundSpaces(then_expr.toTextBracketed),
-      SpaceAfter(TextElement("else")),
+      TextElement("if "),
+      cond.toTextBracketed,
+      TextElement(" then "),
+      then_expr.toTextBracketed,
+      TextElement(" else "),
       else_expr.toTextBracketed
     )
   }

@@ -74,11 +74,11 @@ class LLet extends LIf {
 
     override def toText: ConvertableText =
       MultiElement(
-        TextElement("let"),
-        SurroundSpaces(v.toText),
-        MathElement.equals,
-        SurroundSpaces(assign.toTextBracketed),
-        SpaceAfter(TextElement("in")),
+        TextElement(" let "),
+        v.toText,
+        SurroundSpaces(MathElement.equals),
+        assign.toTextBracketed,
+        TextElement(" in "),
         bound.toTextBracketed
       )
   }

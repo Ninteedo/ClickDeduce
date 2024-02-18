@@ -24,7 +24,7 @@ class LPoly extends LData {
       List((e, env + (v.toString -> TypeValueContainer(TypeVar(v)))))
 
     override def toText: ConvertableText =
-      MultiElement(LambdaSymbol(capital = true), v.toText, SpaceAfter(TextElement(".")), e.toTextBracketed)
+      MultiElement(LambdaSymbol(capital = true), v.toText, MathElement.period, e.toTextBracketed)
   }
 
   object Poly {

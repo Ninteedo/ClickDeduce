@@ -27,7 +27,7 @@ class LLam extends LLet {
 
     override def prettyPrint: String = s"${e1.prettyPrintBracketed} ${e2.prettyPrintBracketed}"
 
-    override def toText: ConvertableText = MultiElement(SpaceAfter(e1.toTextBracketed), e2.toTextBracketed)
+    override def toText: ConvertableText = MultiElement(e1.toTextBracketed, TextElement(" "), e2.toTextBracketed)
   }
 
   addExprBuilder(
