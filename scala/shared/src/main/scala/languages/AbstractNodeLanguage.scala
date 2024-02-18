@@ -139,10 +139,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     def isParentInitialised: Boolean = parentInitialised
 
-    def toHtmlLine(mode: DisplayMode): TypedTag[String]
-
-    def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String]
-
     lazy val treePath: List[Int] = getParent match {
       case Some(value) => value.treePath :+ value.args.indexWhere(_ eq this)
       case None        => Nil
@@ -502,12 +498,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     private val htmlLineCache = collection.mutable.Map[DisplayMode, TypedTag[String]]()
     private val htmlLineReadOnlyCache = collection.mutable.Map[DisplayMode, TypedTag[String]]()
 
-    override def toHtmlLine(mode: DisplayMode): TypedTag[String] =
-      cacheQuery(htmlLineCache, mode, div(raw(getExprHtmlLine(mode))))
-
-    override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] =
-      cacheQuery(htmlLineReadOnlyCache, mode, div(raw(getExprHtmlLineReadOnly(mode))))
-
     override def toText(mode: DisplayMode): ConvertableText =
       HtmlElement(div(raw(getExprHtmlLine(mode))), getExpr.toText)
 
@@ -577,11 +567,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     override val children: List[OuterNode] = Nil
 
-    override def toHtmlLine(mode: DisplayMode): TypedTag[String] =
-      BlankExprDropDown().toHtml(data("tree-path") := treePathString)
-
-    override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] = toHtmlLine(mode)(readonly, disabled)
-
     override def toText(mode: DisplayMode): ConvertableText =
       HtmlElement(BlankExprDropDown().toText.asHtml(data("tree-path") := treePathString), BlankExprDropDown().toText)
 
@@ -611,10 +596,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       case Some(n)           => throw new NodeParentWrongTypeException("ExprNode", n.name)
     }
 
-    override def toHtmlLine(mode: DisplayMode): TypedTag[String] = node.toHtmlLineReadOnly(mode)
-
-    override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] = toHtmlLine(mode)
-
     override def toText(mode: DisplayMode): ConvertableText = node.toText(mode)
 
     override def toTextReadOnly(mode: DisplayMode): ConvertableText = node.toTextReadOnly(mode)
@@ -631,10 +612,10 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     private val htmlLineShared: TypedTag[String] =
       input(`type` := "text", cls := ClassDict.LITERAL, value := literalText)
 
-    override def toHtmlLine(mode: DisplayMode): TypedTag[String] =
+    def toHtmlLine(mode: DisplayMode): TypedTag[String] =
       htmlLineShared(width := s"${Math.max(2, literalText.length)}ch", data("tree-path") := treePathString)
 
-    override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] =
+    def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] =
       htmlLineShared(width := s"${Math.max(1, literalText.length)}ch", readonly, disabled)
 
     override def toText(mode: DisplayMode): ConvertableText = HtmlElement(toHtmlLine(mode), getLiteral.toText)
@@ -687,12 +668,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       }
       buildType(typeName, arguments).get
     }
-
-    override def toHtmlLine(mode: DisplayMode): TypedTag[String] =
-      div(raw(getExprHtmlLine(mode)))(data("tree-path") := treePathString)
-
-    override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] =
-      div(raw(getExprHtmlLineReadOnly(mode)))(readonly, disabled)
 
     override def toText(mode: DisplayMode): ConvertableText =
       HtmlElement(div(raw(getExprHtmlLine(mode))), getType.toText)
@@ -761,11 +736,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     override val args: List[InnerNode] = Nil
 
-    override def toHtmlLine(mode: DisplayMode): TypedTag[String] =
-      BlankTypeDropDown().toHtml(data("tree-path") := treePathString)
-
-    override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] = toHtmlLine(mode)(readonly, disabled)
-
     override def toText(mode: DisplayMode): ConvertableText =
       HtmlElement(BlankTypeDropDown().toText.asHtml(data("tree-path") := treePathString), BlankTypeDropDown().toText)
 
@@ -778,10 +748,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     override val name: String = "SubTypeNode"
 
     override val children: List[OuterNode] = List(node)
-
-    override def toHtmlLine(mode: DisplayMode): TypedTag[String] = node.toHtmlLineReadOnly(mode)
-
-    override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] = toHtmlLine(mode)(readonly, disabled)
 
     override def toText(mode: DisplayMode): ConvertableText = node.toText(mode)
 

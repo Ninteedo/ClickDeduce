@@ -62,9 +62,9 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
   }
 
   def exprDiv(node: ExprNode): HTML = div(if (node.isPhantom) {
-    node.toHtmlLineReadOnly(mode)
+    node.toTextReadOnly(mode).asHtml
   } else {
-    node.toHtmlLine(mode)
+    node.toText(mode).asHtml
   })(cls := ClassDict.EXPR)
 
   def resultDiv(node: ExprNode): Seq[HTML] = mode match {
@@ -105,7 +105,7 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
   def fullTypeBottomDiv(node: TypeNode): HTML =
     div(cls := ClassDict.NODE, envDiv(node.getEnv(mode)), typeDiv(node), typeResultDiv(node))
 
-  def typeDiv(node: TypeNode): HTML = node.toHtmlLine(mode)(cls := ClassDict.TYPE)
+  def typeDiv(node: TypeNode): HTML = node.toText(mode).asHtml(cls := ClassDict.TYPE)
 
   def typeResultDiv(node: TypeNode): HTML =
     div(cls := ClassDict.TYPE_CHECK_RESULT, typeCheckTurnstileSpan, node.getTypeCheckResult(mode).toHtml)
