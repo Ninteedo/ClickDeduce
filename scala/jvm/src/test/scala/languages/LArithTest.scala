@@ -1,5 +1,6 @@
 package languages
 
+import convertors.{DisplayMode, HTMLConvertor}
 import languages.LArith.*
 import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.prop.TableFor3
@@ -259,5 +260,20 @@ class LArithTest extends TestTemplate[Expr, Value, Type] {
 
   property("IntType should pretty print correctly") {
     IntType().prettyPrint shouldBe "Int"
+  }
+
+  property("Num literal input is disabled in parent expressions") {
+    val convertor = HTMLConvertor(LArith, DisplayMode.Edit)
+    val l = convertor.lang
+    val tree = l.VariableNode(
+      "Plus",
+      List(l.SubExprNode(l.VariableNode("Num", List(l.LiteralNode("")))), l.SubExprNode(l.ExprChoiceNode()))
+    )
+    val html = convertor.convert(tree)
+    val regex = """<input [\w\s-=":;]+/>""".r
+    val matches = regex.findAllIn(html).toList
+    println(matches.mkString("\n"))
+    matches.length shouldBe 2
+    matches.count(_.contains("readonly")) shouldBe 1
   }
 }

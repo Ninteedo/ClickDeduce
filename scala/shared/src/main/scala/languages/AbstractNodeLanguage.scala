@@ -151,6 +151,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     lazy val treePathString: String = treePath.mkString("-")
 
     def toText(mode: DisplayMode): ConvertableText
+
+    def toTextReadOnly(mode: DisplayMode): ConvertableText
   }
 
   object Node {
@@ -509,6 +511,9 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     override def toText(mode: DisplayMode): ConvertableText =
       HtmlElement(div(raw(getExprHtmlLine(mode))), getExpr.toText)
 
+    override def toTextReadOnly(mode: DisplayMode): ConvertableText =
+      HtmlElement(div(raw(getExprHtmlLineReadOnly(mode))), getExpr.toText)
+
     private def getExprHtmlLine(mode: DisplayMode): String = {
       val arguments = args.map {
         case n: SubExprNode => n.getPlaceholder(mode)
@@ -580,6 +585,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     override def toText(mode: DisplayMode): ConvertableText =
       HtmlElement(BlankExprDropDown().toText.asHtml(data("tree-path") := treePathString), BlankExprDropDown().toText)
 
+    override def toTextReadOnly(mode: DisplayMode): ConvertableText = toText(mode).toReadOnly
+
     override val exprName: String = "ExprChoice"
 
     override def getExpr: Expr = BlankExprDropDown()
@@ -610,8 +617,10 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     override def toText(mode: DisplayMode): ConvertableText = node.toText(mode)
 
+    override def toTextReadOnly(mode: DisplayMode): ConvertableText = node.toTextReadOnly(mode)
+
     override def getPlaceholder(mode: DisplayMode, readOnly: Boolean = true): ExprPlaceholder =
-      ExprPlaceholder(node.toHtmlLineReadOnly(mode).toString, node.getExpr.needsBrackets)
+      ExprPlaceholder(node.toTextReadOnly(mode), node.getExpr.needsBrackets)
 
     override val children: List[ExprNode] = List(node)
   }
@@ -628,7 +637,10 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] =
       htmlLineShared(width := s"${Math.max(1, literalText.length)}ch", readonly, disabled)
 
-    override def toText(mode: DisplayMode): ConvertableText = HtmlElement(htmlLineShared, getLiteral.toText)
+    override def toText(mode: DisplayMode): ConvertableText = HtmlElement(toHtmlLine(mode), getLiteral.toText)
+
+    override def toTextReadOnly(mode: DisplayMode): ConvertableText =
+      HtmlElement(toHtmlLineReadOnly(mode), getLiteral.toText)
 
     override def getPlaceholder(mode: DisplayMode, readOnly: Boolean = true): LiteralAny = if (readOnly) {
       LiteralAny(toHtmlLineReadOnly(mode).toString)
@@ -684,6 +696,9 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     override def toText(mode: DisplayMode): ConvertableText =
       HtmlElement(div(raw(getExprHtmlLine(mode))), getType.toText)
+
+    override def toTextReadOnly(mode: DisplayMode): ConvertableText =
+      HtmlElement(div(raw(getExprHtmlLineReadOnly(mode))), getType.toText)
 
     override val children: List[OuterNode] = args.filter(_.isInstanceOf[SubTypeNode]).flatMap(_.children)
 
@@ -751,9 +766,10 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] = toHtmlLine(mode)(readonly, disabled)
 
-    override def toText(mode: DisplayMode): ConvertableText = HtmlElement(
-      BlankTypeDropDown().toText.asHtml(data("tree-path") := treePathString), BlankTypeDropDown().toText
-    )
+    override def toText(mode: DisplayMode): ConvertableText =
+      HtmlElement(BlankTypeDropDown().toText.asHtml(data("tree-path") := treePathString), BlankTypeDropDown().toText)
+
+    override def toTextReadOnly(mode: DisplayMode): ConvertableText = toText(mode).toReadOnly
 
     override lazy val getType: Type = UnknownType()
   }
@@ -769,8 +785,10 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     override def toText(mode: DisplayMode): ConvertableText = node.toText(mode)
 
+    override def toTextReadOnly(mode: DisplayMode): ConvertableText = node.toTextReadOnly(mode)
+
     override def getPlaceholder(mode: DisplayMode, readOnly: Boolean = true): TypePlaceholder =
-      TypePlaceholder(node.toText(mode), node.getType.needsBrackets)
+      TypePlaceholder(node.toTextReadOnly(mode), node.getType.needsBrackets)
   }
 
   private val depthLimit: Int = 100

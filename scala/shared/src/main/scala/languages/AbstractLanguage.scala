@@ -158,14 +158,14 @@ trait AbstractLanguage {
     override def toText: ConvertableText = TextElement("Missing")
   }
 
-  case class ExprPlaceholder(content: String, override val needsBrackets: Boolean = false) extends Expr {
-    override def prettyPrint: String = content
+  case class ExprPlaceholder(content: ConvertableText, override val needsBrackets: Boolean = false) extends Expr {
+    override def prettyPrint: String = content.asPlainText
 
-    override def toText: ConvertableText = TextElement(content)
+    override def toText: ConvertableText = content
   }
 
   object ExprPlaceholder {
-    def apply(expr: Expr): ExprPlaceholder = ExprPlaceholder(expr.toHtml.toString, expr.needsBrackets)
+    def apply(expr: Expr): ExprPlaceholder = ExprPlaceholder(expr.toText, expr.needsBrackets)
   }
 
   /** A value resulting from an expression being evaluated.
@@ -492,8 +492,8 @@ trait AbstractLanguage {
   addExprBuilder(
     "ExprPlaceholder",
     {
-      case List(s: String) => Some(ExprPlaceholder(s))
-      case Nil             => Some(ExprPlaceholder(""))
+      case List(s: String) => Some(ExprPlaceholder(TextElement(s)))
+      case Nil             => Some(ExprPlaceholder(TextElement("")))
       case _               => None
     },
     hidden = true

@@ -1,13 +1,15 @@
 package convertors
 
 import scalatags.Text.TypedTag
-import scalatags.Text.all.{div, i, raw, span}
+import scalatags.Text.all.*
 
 trait ConvertableText {
   def asPlainText: String
   def asHtml: TypedTag[String]
   def asHtmlReadOnly: TypedTag[String]
   def asLaTeX: String
+
+  def toReadOnly: ConvertableText = this
 
   override def toString: String = asPlainText
 }
@@ -80,8 +82,10 @@ case class ForAllSymbol() extends ConvertableText {
 case class HtmlElement(html: TypedTag[String], nonHtml: ConvertableText) extends ConvertableText {
   override def asPlainText: String = html.toString
   override def asHtml: TypedTag[String] = html
-  override def asHtmlReadOnly: TypedTag[String] = html
+  override def asHtmlReadOnly: TypedTag[String] = html(readonly, disabled)
   override def asLaTeX: String = nonHtml.asLaTeX
+
+  override def toReadOnly: ConvertableText = HtmlElement(asHtmlReadOnly, nonHtml)
 }
 
 case class DoubleRightArrow() extends ConvertableText {

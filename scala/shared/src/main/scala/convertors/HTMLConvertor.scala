@@ -49,7 +49,7 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
 
   def envDiv(env: lang.ValueEnv | lang.TypeEnv): HTML = {
     val variablesHtml: Option[HTML] =
-      if (env.isEmpty) None else Some(div(raw(env.map((k, v) => s"$k &rarr; ${v.toHtml}").mkString("[", ", ", "]"))))
+      if (env.isEmpty) None else Some(div(raw(env.map((k, v) => s"$k &rarr; ${v.toText.asHtml}").mkString("[", ", ", "]"))))
     val delimiter =
       if (mode == DisplayMode.TypeCheck) Some(raw(" &#x22a2;")) else if (env.nonEmpty) Some(raw(",")) else None
 
