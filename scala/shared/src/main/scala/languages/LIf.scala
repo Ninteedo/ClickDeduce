@@ -15,8 +15,6 @@ class LIf extends LArith {
       case _              => UnexpectedArgType(s"Bool can only accept LiteralBool, not $b")
     }
 
-    override def prettyPrint: String = b.toString
-
     override val needsBrackets: Boolean = false
 
     override def toText: ConvertableText = TextElement(b.toString)
@@ -56,8 +54,6 @@ class LIf extends LArith {
       }
     }
 
-    override def prettyPrint: String = s"${e1.prettyPrintBracketed} == ${e2.prettyPrintBracketed}"
-
     override def toText: ConvertableText =
       MultiElement(e1.toTextBracketed, SurroundSpaces(MathElement.equals), e2.toTextBracketed)
   }
@@ -81,8 +77,6 @@ class LIf extends LArith {
       case (t1: OrdinalType, t2: OrdinalType) => BoolType()
       case (t1, t2)                           => ComparisonWithNonOrdinalType(t1, t2)
     }
-
-    override def prettyPrint: String = s"${e1.prettyPrintBracketed} < ${e2.prettyPrintBracketed}"
 
     override def toText: ConvertableText =
       MultiElement(e1.toTextBracketed, SurroundSpaces(MathElement.lessThan), e2.toTextBracketed)
@@ -120,9 +114,6 @@ class LIf extends LArith {
       case _            => List((cond, env), (then_expr, env), (else_expr, env))
     }
 
-    override def prettyPrint: String =
-      s"if ${cond.prettyPrintBracketed} then ${then_expr.prettyPrintBracketed} else ${else_expr.prettyPrintBracketed}"
-
     override def toText: ConvertableText = MultiElement(
       TextElement("if "),
       cond.toTextBracketed,
@@ -146,8 +137,6 @@ class LIf extends LArith {
   case class BoolV(b: Boolean) extends Value {
     override val typ: Type = BoolType()
 
-    override def prettyPrint: String = b.toString
-
     override val needsBrackets: Boolean = false
 
     override def toText: ConvertableText = TextElement(b.toString)
@@ -163,7 +152,7 @@ class LIf extends LArith {
 
   // types
   case class BoolType() extends Type {
-    override def prettyPrint: String = "Bool"
+
 
     override val needsBrackets: Boolean = false
 
@@ -183,7 +172,7 @@ class LIf extends LArith {
   case class TypeMismatchType(type1: Type, type2: Type) extends TypeError {
     override val message: String = s"$type1 not compatible with $type2"
 
-    override def prettyPrint: String = s"TypeMismatch($type1, $type2)"
+
   }
 
   case class TypeMismatchError(exprName: String, type1: Type, type2: Type) extends EvalError {

@@ -10,8 +10,6 @@ class LData extends LRec {
 
     override def typeCheckInner(tEnv: TypeEnv): Type = PairType(e1.typeCheck(tEnv), e2.typeCheck(tEnv))
 
-    override def prettyPrint: String = s"(${e1.prettyPrintBracketed}, ${e2.prettyPrintBracketed})"
-
     override def toText: ConvertableText =
       BracketedElement(MultiElement(e1.toText, SpaceAfter(MathElement.comma), e2.toText))
 
@@ -38,8 +36,6 @@ class LData extends LRec {
       case other          => TupleOperationOnNonTupleType(other)
     }
 
-    override def prettyPrint: String = s"fst(${e.prettyPrint})"
-
     override def toText: ConvertableText = MultiElement(TextElement("fst"), BracketedElement(e.toText))
 
     override val needsBrackets: Boolean = false
@@ -64,8 +60,6 @@ class LData extends LRec {
       case PairType(_, r) => r
       case other          => TupleOperationOnNonTupleType(other)
     }
-
-    override def prettyPrint: String = s"snd(${e.prettyPrint})"
 
     override def toText: ConvertableText = MultiElement(TextElement("snd"), BracketedElement(e.toText))
 
@@ -97,10 +91,7 @@ class LData extends LRec {
         case other            => TupleOperationOnNonTupleType(other)
       }
     }
-
-    override def prettyPrint: String =
-      s"let pair ($x, $y) = ${assign.prettyPrintBracketed} in ${bound.prettyPrintBracketed}"
-
+    
     override def toText: ConvertableText = MultiElement(
       TextElement("let pair "),
       BracketedElement(MultiElement(x.toText, SpaceAfter(MathElement.comma), y.toText)),
@@ -145,8 +136,6 @@ class LData extends LRec {
 
     override def typeCheckInner(tEnv: TypeEnv): Type = EmptyType()
 
-    override def prettyPrint: String = "()"
-
     override def toText: ConvertableText = TextElement("()")
 
     override val needsBrackets: Boolean = false
@@ -164,8 +153,6 @@ class LData extends LRec {
     override def evalInner(env: ValueEnv): Value = LeftV(e.eval(env), rightType)
 
     override def typeCheckInner(tEnv: TypeEnv): Type = UnionType(e.typeCheck(tEnv), rightType)
-
-    override def prettyPrint: String = s"left(${e.prettyPrint})"
 
     override def toText: ConvertableText = MultiElement(TextElement("left"), BracketedElement(e.toText))
 
@@ -185,8 +172,6 @@ class LData extends LRec {
     override def evalInner(env: ValueEnv): Value = RightV(leftType, e.eval(env))
 
     override def typeCheckInner(tEnv: TypeEnv): Type = UnionType(leftType, e.typeCheck(tEnv))
-
-    override def prettyPrint: String = s"right(${e.prettyPrint})"
 
     override def toText: ConvertableText = MultiElement(TextElement("right"), BracketedElement(e.toText))
 
@@ -221,10 +206,6 @@ class LData extends LRec {
         case other => CaseSwitchOnNonUnionType(other)
       }
     }
-
-    override def prettyPrint: String =
-      s"case ${e.prettyPrintBracketed} of " +
-        s"{ left($l) ⇒ ${lExpr.prettyPrintBracketed}; right($r) ⇒ ${rExpr.prettyPrintBracketed} }"
 
     override def toText: ConvertableText = MultiElement(
       TextElement("case "),
@@ -282,8 +263,6 @@ class LData extends LRec {
   case class PairType(l: Type, r: Type) extends Type {
     override def typeCheck(tEnv: TypeEnv): Type = PairType(l.typeCheck(tEnv), r.typeCheck(tEnv))
 
-    override def prettyPrint: String = s"${l.prettyPrintBracketed} × ${r.prettyPrintBracketed}"
-
     override def toText: ConvertableText =
       MultiElement(l.toTextBracketed, SurroundSpaces(TimesSymbol()), r.toTextBracketed)
   }
@@ -300,8 +279,6 @@ class LData extends LRec {
   case class UnionType(l: Type, r: Type) extends Type {
     override def typeCheck(tEnv: TypeEnv): Type = UnionType(l.typeCheck(tEnv), r.typeCheck(tEnv))
 
-    override def prettyPrint: String = s"${l.prettyPrintBracketed} + ${r.prettyPrintBracketed}"
-
     override def toText: ConvertableText =
       MultiElement(l.toTextBracketed, SurroundSpaces(MathElement("+")), r.toTextBracketed)
   }
@@ -316,7 +293,7 @@ class LData extends LRec {
   )
 
   case class EmptyType() extends Type {
-    override def prettyPrint: String = "()"
+
 
     override val needsBrackets: Boolean = false
 
@@ -332,7 +309,7 @@ class LData extends LRec {
   )
 
   case class AnyType() extends Type {
-    override def prettyPrint: String = "Any"
+
 
     override val needsBrackets: Boolean = false
 
@@ -343,8 +320,6 @@ class LData extends LRec {
 
   case class PairV(v1: Value, v2: Value) extends Value {
     override val typ: Type = PairType(v1.typ, v2.typ)
-
-    override def prettyPrint: String = s"(${v1.prettyPrintBracketed}, ${v2.prettyPrintBracketed})"
 
     override val needsBrackets: Boolean = false
 
@@ -364,8 +339,6 @@ class LData extends LRec {
   case class UnitV() extends Value {
     override val typ: Type = EmptyType()
 
-    override def prettyPrint: String = "()"
-
     override val needsBrackets: Boolean = false
 
     override def toText: ConvertableText = TextElement("()")
@@ -382,8 +355,6 @@ class LData extends LRec {
   case class LeftV(v: Value, rightType: Type) extends Value {
     override val typ: Type = UnionType(v.typ, rightType)
 
-    override def prettyPrint: String = s"left(${v.prettyPrint})"
-
     override val needsBrackets: Boolean = false
 
     override def toText: ConvertableText = MultiElement(TextElement("left"), BracketedElement(v.toText))
@@ -399,8 +370,6 @@ class LData extends LRec {
 
   case class RightV(leftType: Type, v: Value) extends Value {
     override val typ: Type = UnionType(leftType, v.typ)
-
-    override def prettyPrint: String = s"right(${v.prettyPrint})"
 
     override val needsBrackets: Boolean = false
 

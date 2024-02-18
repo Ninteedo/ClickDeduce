@@ -12,8 +12,6 @@ class LPoly extends LData {
     override def typeCheckInner(tEnv: TypeEnv): Type =
       PolyType(TypeVar(v), e.typeCheck(tEnv + (v.toString -> TypeContainer(TypeVar(v)))))
 
-    override def prettyPrint: String = s"Λ$v. ${e.prettyPrintBracketed}"
-
     override def getChildrenBase(env: ValueEnv): List[(Term, ValueEnv)] =
       List((v, env), (e, env + (v.toString -> TypeValueContainer(TypeVar(v)))))
 
@@ -59,8 +57,6 @@ class LPoly extends LData {
       case other => CannotApplyTypeUnlessPolyType(other)
     }
 
-    override def prettyPrint: String = s"${e.prettyPrintBracketed}[${typ.prettyPrint}]"
-
     override def toText: ConvertableText =
       MultiElement(e.toTextBracketed, TextElement("["), typ.toText, TextElement("]"))
   }
@@ -77,7 +73,7 @@ class LPoly extends LData {
   // types
 
   case class TypeVar(v: Literal) extends Type {
-    override def prettyPrint: String = v.toString
+
 
     override def typeCheck(tEnv: TypeEnv): Type = tEnv.get(v.toString) match {
       case None             => UnknownTypeVar(v)
@@ -104,7 +100,7 @@ class LPoly extends LData {
   )
 
   case class PolyType(typeVar: Type, incompleteType: Type) extends Type {
-    override def prettyPrint: String = s"∀${typeVar.prettyPrintBracketed}. ${incompleteType.prettyPrintBracketed}"
+
 
     override def toText: ConvertableText =
       MultiElement(
@@ -132,8 +128,6 @@ class LPoly extends LData {
       case TypeVar(v) => PolyType(typeVar, e.typeCheck(envToTypeEnv(env) + (v.toString -> TypeContainer(typeVar))))
       case other      => PolyVRequiresTypeVarType(other)
     }
-
-    override def prettyPrint: String = s"Λ${typeVar.prettyPrintBracketed}. ${e.prettyPrintBracketed}"
 
     override def toText: ConvertableText = MultiElement(
       LambdaSymbol(capital = true),
@@ -176,7 +170,7 @@ class LPoly extends LData {
   case class UnknownTypeVar(v: Literal) extends TypeError {
     override val message: String = s"Unknown type variable $v"
 
-    override def prettyPrint: String = v.toString
+
   }
 }
 

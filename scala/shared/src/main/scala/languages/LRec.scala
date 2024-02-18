@@ -46,22 +46,13 @@ class LRec extends LLam {
 
     override def getChildrenEval(env: ValueEnv): List[(Term, ValueEnv)] = Nil
 
-    override def prettyPrint: String = prettyPrintRec(f, v, inType, outType, e)
-
     override def toText: ConvertableText = MultiElement(
       TextElement("rec "),
       f.toText,
-      TextElement("("),
-      BracketedElement(
-        MultiElement(
-          v.toText,
-          TextElement(": "),
-          inType.toTextBracketed,
-        )
-      ),
-      MathElement.colon,
+      BracketedElement(MultiElement(v.toText, TextElement(": "), inType.toTextBracketed)),
+      SpaceAfter(MathElement.colon),
       outType.toTextBracketed,
-      MathElement.period,
+      SpaceAfter(MathElement.period),
       e.toTextBracketed
     )
   }
@@ -88,8 +79,6 @@ class LRec extends LLam {
       (e, env ++ Env(f.toString -> this, v.toString -> applyValue))
 
     override def evalApply(value: Value): Value = e.eval(env ++ Env(f.toString -> this, v.toString -> value))
-
-    override def prettyPrint: String = prettyPrintRec(f, v, in_typ, out_typ, e)
 
     override def toText: ConvertableText = MultiElement(
       SpaceAfter(TextElement("rec")),

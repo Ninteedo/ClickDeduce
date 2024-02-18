@@ -21,8 +21,6 @@ class LArith extends ClickDeduceLanguage {
       case _             => UnexpectedArgType(s"Num can only accept LiteralInt, not $x")
     }
 
-    override def prettyPrint: String = x.toString
-
     override def toText: ConvertableText = MathElement(x.toString)
 
     override val needsBrackets: Boolean = false
@@ -65,8 +63,6 @@ class LArith extends ClickDeduceLanguage {
       case (t1, t2)               => UnexpectedArgType(s"Plus cannot accept ($t1, $t2)")
     }
 
-    override def prettyPrint: String = s"${e1.prettyPrintBracketed} + ${e2.prettyPrintBracketed}"
-
     override def toText: ConvertableText =
       MultiElement(e1.toTextBracketed, SurroundSpaces(MathElement.plus), e2.toTextBracketed)
   }
@@ -102,8 +98,6 @@ class LArith extends ClickDeduceLanguage {
       case (t1, t2)               => UnexpectedArgType(s"Times cannot accept ($t1, $t2)")
     }
 
-    override def prettyPrint: String = s"${e1.prettyPrintBracketed} × ${e2.prettyPrintBracketed}"
-
     override def toText: ConvertableText =
       MultiElement(e1.toTextBracketed, SurroundSpaces(TimesSymbol()), e2.toTextBracketed)
   }
@@ -130,8 +124,6 @@ class LArith extends ClickDeduceLanguage {
     */
   case class NumV(x: BigInt) extends Value, OrdinalValue {
     override val typ: Type = IntType()
-
-    override def prettyPrint: String = x.toString
 
     override val needsBrackets: Boolean = false
 
@@ -167,7 +159,7 @@ class LArith extends ClickDeduceLanguage {
   /** Type for integers.
     */
   case class IntType() extends Type, OrdinalType {
-    override def prettyPrint: String = "Int"
+
 
     override val needsBrackets: Boolean = false
 

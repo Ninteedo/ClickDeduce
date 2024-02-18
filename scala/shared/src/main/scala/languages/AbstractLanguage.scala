@@ -11,15 +11,15 @@ trait AbstractLanguage {
   lang =>
 
   /** A variable name.
-    *
-    * Case sensitive.
-    */
+   *
+   * Case sensitive.
+   */
   type Variable = String
 
   /** The evaluation environment at a particular point.
-    *
-    * Contains variables with bound values.
-    */
+   *
+   * Contains variables with bound values.
+   */
   case class Env[T](env: Map[Variable, T] = Map()) {
     def get(key: Variable): Option[T] = env.get(key)
 
@@ -49,15 +49,15 @@ trait AbstractLanguage {
   }
 
   /** The evaluation environment at a particular point.
-    *
-    * Contains variables with bound values.
-    */
+   *
+   * Contains variables with bound values.
+   */
   type ValueEnv = Env[Value]
 
   /** The type environment at a particular point.
-    *
-    * Contains variables with bound types.
-    */
+   *
+   * Contains variables with bound types.
+   */
   type TypeEnv = Env[Type]
 
   object ValueEnv {
@@ -71,8 +71,6 @@ trait AbstractLanguage {
   trait Term {
     val name: String = toString.takeWhile(_ != '(')
 
-    lazy val toHtml: TypedTag[String] = span(raw(prettyPrint))
-
     def getChildrenBase(env: ValueEnv = ValueEnv.empty): List[(Term, ValueEnv)] = Nil
 
     def getChildrenEval(env: ValueEnv = ValueEnv.empty): List[(Term, ValueEnv)] = Nil
@@ -81,19 +79,21 @@ trait AbstractLanguage {
 
     def isPlaceholder: Boolean = false
 
-    def prettyPrint: String = toHtml.toString
-
-    final def prettyPrintBracketed: String = if (needsBrackets) s"($prettyPrint)" else prettyPrint
-
     val needsBrackets: Boolean = true
 
     def toText: ConvertableText
+
+    lazy val toHtml: TypedTag[String] = toText.asHtml
+
+    final def prettyPrint: String = toText.asPlainText
+
+    final def prettyPrintBracketed: String = if (needsBrackets) s"($prettyPrint)" else prettyPrint
 
     final def toTextBracketed: ConvertableText = if (needsBrackets) BracketedElement(toText) else toText
   }
 
   /** An unevaluated expression.
-    */
+   */
   abstract class Expr extends Term {
     private def getExprFields(e: Expr): List[Expr] = {
       e match {
@@ -118,12 +118,12 @@ trait AbstractLanguage {
     final def eval(): Value = eval(ValueEnv.empty)
 
     /** Function which evaluates this `Expr` to a `Value`, given an environment.
-      *
-      * @param env
-      *   The environment to evaluate in.
-      * @return
-      *   The `Value` resulting from evaluating this.
-      */
+     *
+     * @param env
+     *   The environment to evaluate in.
+     * @return
+     *   The `Value` resulting from evaluating this.
+     */
     final def eval(env: ValueEnv): Value = {
       try {
         evalInner(env)
@@ -137,12 +137,12 @@ trait AbstractLanguage {
     final def typeCheck(): Type = typeCheck(TypeEnv.empty)
 
     /** Function to perform type checking on this `Expr` in the given type environment.
-      *
-      * @param tEnv
-      *   The type environment in which type checking is done.
-      * @return
-      *   The `Type` of this expression after type checking.
-      */
+     *
+     * @param tEnv
+     *   The type environment in which type checking is done.
+     * @return
+     *   The `Type` of this expression after type checking.
+     */
     final def typeCheck(tEnv: TypeEnv): Type = {
       try {
         typeCheckInner(tEnv)
@@ -159,8 +159,6 @@ trait AbstractLanguage {
   }
 
   case class ExprPlaceholder(content: ConvertableText, override val needsBrackets: Boolean = false) extends Expr {
-    override def prettyPrint: String = content.asPlainText
-
     override def toText: ConvertableText = content
   }
 
@@ -169,7 +167,7 @@ trait AbstractLanguage {
   }
 
   /** A value resulting from an expression being evaluated.
-    */
+   */
   abstract class Value extends Term {
     override lazy val toHtml: TypedTag[String] =
       span(cls := ClassDict.TOOLTIP, valueText, div(cls := ClassDict.TOOLTIP_TEXT, tooltipText))
@@ -207,13 +205,9 @@ trait AbstractLanguage {
     val isError: Boolean = false
 
     def valueTextShowType: Boolean = true
-
-    override def prettyPrint: String = toHtml.toString
   }
 
   case class ValuePlaceholder(content: ConvertableText, override val needsBrackets: Boolean = false) extends Value {
-    override def prettyPrint: String = content.asPlainText
-
     override val typ: Type = TypePlaceholder(content, needsBrackets)
 
     override def toText: ConvertableText = content
@@ -224,7 +218,7 @@ trait AbstractLanguage {
   }
 
   /** The type of a value.
-    */
+   */
   abstract class Type extends Term {
     override lazy val toHtml: TypedTag[String] =
       span(cls := ClassDict.TOOLTIP, valueText, div(cls := ClassDict.TOOLTIP_TEXT, tooltipText))
@@ -260,14 +254,10 @@ trait AbstractLanguage {
   }
 
   case class UnknownType() extends Type {
-    override def prettyPrint: String = "Unknown"
-
     override def toText: ConvertableText = TextElement("Unknown")
   }
 
   case class TypePlaceholder(content: ConvertableText, override val needsBrackets: Boolean = true) extends Type {
-    override def prettyPrint: String = content.asPlainText
-
     override def toText: ConvertableText = content
   }
 
@@ -276,16 +266,12 @@ trait AbstractLanguage {
   }
 
   case class TypeContainer(typ: Type) extends Type {
-    override def prettyPrint: String = typ.prettyPrint
-
     override def typeCheck(tEnv: TypeEnv): Type = typ
 
     override def toText: ConvertableText = typ.toText
   }
 
   case class TypeValueContainer(typ: Type) extends Value {
-    override def prettyPrint: String = typ.prettyPrint
-
     override def valueTextShowType: Boolean = false
 
     override def toText: ConvertableText = typ.toText
@@ -296,7 +282,7 @@ trait AbstractLanguage {
   }
 
   /** An error resulting from an expression being evaluated.
-    */
+   */
   abstract class EvalError extends Value, TermError {
     override lazy val toHtml: TypedTag[String] =
       span(
@@ -311,16 +297,14 @@ trait AbstractLanguage {
 
     override val isError: Boolean = true
 
-    override def prettyPrint: String = message
-
     override def toText: ConvertableText = TextElement("error!")
   }
 
   /** An error that occurs due to attempting to process an unknown `Expr`.
-    *
-    * @param message
-    *   The error message.
-    */
+   *
+   * @param message
+   *   The error message.
+   */
   case class UnexpectedExpr(override val message: String) extends EvalError {
     override val typ: Type = UnexpectedExprType(message)
   }
@@ -333,7 +317,7 @@ trait AbstractLanguage {
   private val stackOverflowTypeError: TypeError = TypeException("Stack overflow")
 
   /** An error resulting from an expression being type checked.
-    */
+   */
   abstract class TypeError extends Type, TermError {
     override lazy val toHtml: TypedTag[String] = span(
       cls := ClassDict.TOOLTIP,
@@ -347,16 +331,14 @@ trait AbstractLanguage {
 
     override val isError: Boolean = true
 
-    override def prettyPrint: String = message
-
     override def toText: ConvertableText = TextElement("error!")
   }
 
   /** An error that occurs due to attempting to process an unknown `Expr`.
-    *
-    * @param message
-    *   The error message.
-    */
+   *
+   * @param message
+   *   The error message.
+   */
   case class UnexpectedExprType(override val message: String) extends TypeError
 
   case class TypeException(override val message: String) extends TypeError
@@ -367,8 +349,6 @@ trait AbstractLanguage {
     override lazy val toHtml: TypedTag[String] = p(value.toString)
 
     override lazy val toString: String = value.toString
-
-    override def prettyPrint: String = toString
   }
 
   object Literal {
@@ -477,17 +457,17 @@ trait AbstractLanguage {
   case class UnknownExprBuilder(name: String) extends ClickDeduceException(s"Unknown expression builder: $name")
 
   case class InvalidExprBuilderArgs(name: String, args: List[Any])
-      extends ClickDeduceException(s"Invalid arguments for expression builder: $name, $args")
+    extends ClickDeduceException(s"Invalid arguments for expression builder: $name, $args")
 
   case class UnknownTypeBuilder(name: String) extends ClickDeduceException(s"Unknown type builder: $name")
 
   case class InvalidTypeBuilderArgs(name: String, args: List[Any])
-      extends ClickDeduceException(s"Invalid arguments for type builder: $name, $args")
+    extends ClickDeduceException(s"Invalid arguments for type builder: $name, $args")
 
   case class UnknownValueBuilder(name: String) extends ClickDeduceException(s"Unknown value builder: $name")
 
   case class InvalidValueBuilderArgs(name: String, args: List[Any])
-      extends ClickDeduceException(s"Invalid arguments for value builder: $name, $args")
+    extends ClickDeduceException(s"Invalid arguments for value builder: $name, $args")
 
   addExprBuilder(
     "ExprPlaceholder",

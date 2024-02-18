@@ -26,8 +26,6 @@ class LLet extends LIf {
       case _ => InvalidIdentifierTypeError(v)
     }
 
-    override def prettyPrint: String = v.toString
-
     override val needsBrackets: Boolean = false
 
     override def toText: ConvertableText = v.toText
@@ -70,11 +68,9 @@ class LLet extends LIf {
     override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] =
       List((assign, tEnv), (bound, tEnv + (v.toString -> assign.typeCheck(tEnv))))
 
-    override def prettyPrint: String = s"let $v = ${assign.prettyPrintBracketed} in ${bound.prettyPrintBracketed}"
-
     override def toText: ConvertableText =
       MultiElement(
-        TextElement(" let "),
+        TextElement("let "),
         v.toText,
         SurroundSpaces(MathElement.equals),
         assign.toTextBracketed,

@@ -25,8 +25,6 @@ class LLam extends LLet {
         case _                       => List((e1, env), (e2, env))
       }
 
-    override def prettyPrint: String = s"${e1.prettyPrintBracketed} ${e2.prettyPrintBracketed}"
-
     override def toText: ConvertableText = MultiElement(e1.toTextBracketed, TextElement(" "), e2.toTextBracketed)
   }
 
@@ -58,8 +56,6 @@ class LLam extends LLet {
     override def getChildrenEval(env: ValueEnv): List[(Term, ValueEnv)] = Nil
 
     override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] = List((e, tEnv + (v.toString -> typ)))
-
-    override def prettyPrint: String = s"λ$v: ${typ.prettyPrintBracketed}. ${e.prettyPrint}"
 
     override def toText: ConvertableText = MultiElement(
       LambdaSymbol(),
@@ -98,8 +94,6 @@ class LLam extends LLet {
 
     override def typeCheck(tEnv: TypeEnv): Type = Func(in.typeCheck(tEnv), out.typeCheck(tEnv))
 
-    override def prettyPrint: String = s"${in.prettyPrintBracketed} → ${out.prettyPrintBracketed}"
-
     override def toText: ConvertableText =
       MultiElement(in.toTextBracketed, SurroundSpaces(SingleRightArrow()), out.toTextBracketed)
   }
@@ -116,13 +110,11 @@ class LLam extends LLet {
   case class ApplyToNonFunctionErrorType(wrongType: Type) extends TypeError {
     override val message: String = s"Cannot apply with left expression being ${wrongType.prettyPrint}"
 
-    override def prettyPrint: String = s"CannotApplyError(${wrongType.prettyPrint})"
   }
 
   case class IncompatibleTypeErrorType(typ1: Type, typ2: Type) extends TypeError {
     override val message: String = s"mismatched types for applying function (expected $typ1 but got $typ2)"
 
-    override def prettyPrint: String = s"IncompatibleTypes(${typ1.prettyPrint}, ${typ2.prettyPrint})"
   }
 
   // values
@@ -141,16 +133,11 @@ class LLam extends LLet {
 
     override def evalApply(value: Value): Value = e.eval(env + (v -> value))
 
-    override def prettyPrint: String = {
-      val eString: String = if (e == BlankExprDropDown()) "?" else e.prettyPrint
-      s"λ$v: ${properInputType.prettyPrintBracketed}. $eString"
-    }
-
     override def toText: ConvertableText = MultiElement(
       LambdaSymbol(),
       TextElement(v),
       SpaceAfter(MathElement.colon),
-      properInputType.toText,
+      properInputType.toTextBracketed,
       SpaceAfter(MathElement.period),
       e.toText
     )
@@ -172,8 +159,6 @@ class LLam extends LLet {
 
   case class HiddenValue(override val typ: Type) extends Value {
     override def isPlaceholder: Boolean = true
-
-    override def prettyPrint: String = "?"
 
     override val needsBrackets: Boolean = false
 
