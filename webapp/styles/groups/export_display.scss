@@ -17,8 +17,18 @@
     display: flex;
   }
 
-  #export-title {
+  #export-output-title {
+    font-size: 30px;
+  }
 
+  #export-output-desc {
+    color: $comment;
+    &.visible {
+      display: block;
+    }
+    &:not(.visible) {
+      display: none;
+    }
   }
 
   #export-output {

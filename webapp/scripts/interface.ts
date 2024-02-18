@@ -193,15 +193,22 @@ export function exportLaTeX(): void {
     const modeName = getSelectedMode();
     const nodeString = lastNodeString;
     const output: string = convertToLaTeX(langName, modeName, nodeString);
-    showExportOutput("LaTeX Output", output);
+    showExportOutput("LaTeX Output", output, "Copy this LaTeX code and use the bussproofs package");
 }
 
-function showExportOutput(title: string, output: string): void {
+function showExportOutput(title: string, output: string, description: string | null): void {
     const outputDiv = document.getElementById('export-output-container') as HTMLDivElement;
     const outputTextArea = document.getElementById('export-output') as HTMLTextAreaElement;
     outputTextArea.value = output;
     const outputTitle = document.getElementById('export-output-title');
     outputTitle.textContent = title;
+    const outputDescription = document.getElementById('export-output-desc');
+    if (description) {
+        outputDescription.textContent = description;
+        outputDescription.classList.add('visible');
+    } else {
+        outputDescription.classList.remove('visible');
+    }
     outputDiv.classList.add('visible');
     getBlocker().classList.add('visible');
 }
