@@ -177,7 +177,7 @@ class LLam extends LLet {
 
     override val needsBrackets: Boolean = false
 
-    override def toText: ConvertableText = TextElement("?")
+    override def toText: ConvertableText = MathElement("?")
   }
 
   addValueBuilder(

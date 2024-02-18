@@ -313,7 +313,7 @@ trait AbstractLanguage {
 
     override def prettyPrint: String = message
 
-    override def toText: ConvertableText = TextElement(message)
+    override def toText: ConvertableText = TextElement("error!")
   }
 
   /** An error that occurs due to attempting to process an unknown `Expr`.
@@ -349,7 +349,7 @@ trait AbstractLanguage {
 
     override def prettyPrint: String = message
 
-    override def toText: ConvertableText = TextElement(message)
+    override def toText: ConvertableText = TextElement("error!")
   }
 
   /** An error that occurs due to attempting to process an unknown `Expr`.
@@ -386,11 +386,11 @@ trait AbstractLanguage {
   }
 
   case class LiteralInt(value: BigInt) extends Literal {
-    override def toText: ConvertableText = TextElement(value.toString)
+    override def toText: ConvertableText = MathElement(value.toString)
   }
 
   case class LiteralBool(value: Boolean) extends Literal {
-    override def toText: ConvertableText = TextElement(value.toString)
+    override def toText: ConvertableText = MathElement(value.toString)
   }
 
   case class LiteralString(value: String) extends Literal {

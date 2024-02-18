@@ -23,7 +23,7 @@ class LArith extends ClickDeduceLanguage {
 
     override def prettyPrint: String = x.toString
 
-    override def toText: ConvertableText = TextElement(x.toString)
+    override def toText: ConvertableText = MathElement(x.toString)
 
     override val needsBrackets: Boolean = false
   }

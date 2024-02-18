@@ -1,7 +1,7 @@
 package languages
 
 import app.{ClickDeduceException, UtilityFunctions}
-import convertors.{ClassDict, ConvertableText, DisplayMode, HtmlElement}
+import convertors.*
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
@@ -21,7 +21,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     override val needsBrackets: Boolean = false
 
-    override def toText: ConvertableText = HtmlElement(exprClassListDropdownHtml)
+    override def toText: ConvertableText = HtmlElement(exprClassListDropdownHtml, TextElement("Unselected Expression"))
   }
 
   val defaultExpr: Expr = BlankExprDropDown()
@@ -31,7 +31,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     override val needsBrackets: Boolean = false
 
-    override def toText: ConvertableText = HtmlElement(typeClassListDropdownHtml)
+    override def toText: ConvertableText = HtmlElement(typeClassListDropdownHtml, TextElement("Unselected Type"))
   }
 
   val defaultType: Type = BlankTypeDropDown()
@@ -506,7 +506,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] =
       cacheQuery(htmlLineReadOnlyCache, mode, div(raw(getExprHtmlLineReadOnly(mode))))
 
-    override def toText(mode: DisplayMode): ConvertableText = HtmlElement(div(raw(getExprHtmlLine(mode))))
+    override def toText(mode: DisplayMode): ConvertableText =
+      HtmlElement(div(raw(getExprHtmlLine(mode))), getExpr.toText)
 
     private def getExprHtmlLine(mode: DisplayMode): String = {
       val arguments = args.map {
@@ -576,9 +577,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] = toHtmlLine(mode)(readonly, disabled)
 
-    override def toText(mode: DisplayMode): ConvertableText = HtmlElement(
-      BlankExprDropDown().toText.asHtml(data("tree-path") := treePathString)
-    )
+    override def toText(mode: DisplayMode): ConvertableText =
+      HtmlElement(BlankExprDropDown().toText.asHtml(data("tree-path") := treePathString), BlankExprDropDown().toText)
 
     override val exprName: String = "ExprChoice"
 
@@ -628,7 +628,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] =
       htmlLineShared(width := s"${Math.max(1, literalText.length)}ch", readonly, disabled)
 
-    override def toText(mode: DisplayMode): ConvertableText = HtmlElement(htmlLineShared)
+    override def toText(mode: DisplayMode): ConvertableText = HtmlElement(htmlLineShared, getLiteral.toText)
 
     override def getPlaceholder(mode: DisplayMode, readOnly: Boolean = true): LiteralAny = if (readOnly) {
       LiteralAny(toHtmlLineReadOnly(mode).toString)
@@ -682,7 +682,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] =
       div(raw(getExprHtmlLineReadOnly(mode)))(readonly, disabled)
 
-    override def toText(mode: DisplayMode): ConvertableText = HtmlElement(div(raw(getExprHtmlLine(mode))))
+    override def toText(mode: DisplayMode): ConvertableText =
+      HtmlElement(div(raw(getExprHtmlLine(mode))), getType.toText)
 
     override val children: List[OuterNode] = args.filter(_.isInstanceOf[SubTypeNode]).flatMap(_.children)
 
@@ -751,7 +752,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     override def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] = toHtmlLine(mode)(readonly, disabled)
 
     override def toText(mode: DisplayMode): ConvertableText = HtmlElement(
-      BlankTypeDropDown().toText.asHtml(data("tree-path") := treePathString)
+      BlankTypeDropDown().toText.asHtml(data("tree-path") := treePathString), BlankTypeDropDown().toText
     )
 
     override lazy val getType: Type = UnknownType()
