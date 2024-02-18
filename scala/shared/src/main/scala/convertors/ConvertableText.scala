@@ -16,14 +16,14 @@ case class TextElement(text: String) extends ConvertableText {
   override def asPlainText: String = text
   override def asHtml: TypedTag[String] = span(raw(text))
   override def asHtmlReadOnly: TypedTag[String] = asHtml
-  override def asLaTeX: String = s"\\textrm{$text}"
+  override def asLaTeX: String = s"\\textrm{${escapeLaTeX(text)}}"
 }
 
 case class MathElement(text: String) extends ConvertableText {
   override def asPlainText: String = text
   override def asHtml: TypedTag[String] = span(raw(text))
   override def asHtmlReadOnly: TypedTag[String] = asHtml
-  override def asLaTeX: String = text
+  override def asLaTeX: String = escapeLaTeX(text)
 }
 
 object MathElement {
@@ -77,11 +77,11 @@ case class ForAllSymbol() extends ConvertableText {
   override def asLaTeX: String = "\\forall"
 }
 
-case class HtmlElement(html: TypedTag[String]) extends ConvertableText {
+case class HtmlElement(html: TypedTag[String], nonHtml: ConvertableText) extends ConvertableText {
   override def asPlainText: String = html.toString
   override def asHtml: TypedTag[String] = html
   override def asHtmlReadOnly: TypedTag[String] = html
-  override def asLaTeX: String = html.toString
+  override def asLaTeX: String = nonHtml.asLaTeX
 }
 
 case class DoubleRightArrow() extends ConvertableText {
@@ -111,3 +111,18 @@ case class SpaceAfter(elem: ConvertableText) extends ConvertableText {
   override def asHtmlReadOnly: TypedTag[String] = span(elem.asHtmlReadOnly, raw(" "))
   override def asLaTeX: String = elem.asLaTeX
 }
+
+def escapeLaTeX(text: String): String = text
+  .replace("\\", "\\textbackslash{}")
+  .replace("{", "\\{")
+  .replace("}", "\\}")
+  .replace("_", "\\_")
+  .replace("^", "\\^{}")
+  .replace("~", "\\textasciitilde{}")
+  .replace("#", "\\#")
+  .replace("$", "\\$")
+  .replace("%", "\\%")
+  .replace("&", "\\&")
+  .replace("<", "\\textless{}")
+  .replace(">", "\\textgreater{}")
+  .replace("|", "\\textbar{}")
