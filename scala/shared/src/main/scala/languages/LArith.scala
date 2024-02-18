@@ -140,7 +140,7 @@ class LArith extends ClickDeduceLanguage {
       case other   => throw new IllegalArgumentException(s"Cannot compare NumV with non-NumV ($other)")
     }
 
-    override def toText: ConvertableText = TextElement(x.toString)
+    override def toText: ConvertableText = MathElement(x.toString)
   }
 
   addValueBuilder(
