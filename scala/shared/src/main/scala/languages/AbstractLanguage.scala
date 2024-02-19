@@ -195,7 +195,7 @@ trait AbstractLanguage {
         case None => throw UnknownValueBuilder(name)
       }
       div(
-        div(raw(valueInstance.prettyPrint), cls := ClassDict.VALUE),
+        div(valueInstance.toText.asHtml, cls := ClassDict.VALUE),
         if (valueTextShowType) List(span(": "), div(typ.valueText, cls := ClassDict.VALUE_TYPE)) else div()
       )
     }
@@ -245,7 +245,7 @@ trait AbstractLanguage {
           }
         case None => throw UnknownTypeBuilder(name)
       }
-      div(raw(valueInstance.prettyPrint), cls := ClassDict.VALUE_TYPE)
+      div(valueInstance.toText.asHtml, cls := ClassDict.VALUE_TYPE)
     }
 
     val isError: Boolean = false
