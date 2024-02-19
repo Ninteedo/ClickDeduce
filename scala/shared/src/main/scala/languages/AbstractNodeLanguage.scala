@@ -669,31 +669,25 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       buildType(typeName, arguments).get
     }
 
-    override def toText(mode: DisplayMode): ConvertableText =
-      HtmlElement(div(raw(getExprHtmlLine(mode))), getType.toText)
-
-    override def toTextReadOnly(mode: DisplayMode): ConvertableText =
-      HtmlElement(div(raw(getExprHtmlLineReadOnly(mode))), getType.toText)
-
-    override val children: List[OuterNode] = args.filter(_.isInstanceOf[SubTypeNode]).flatMap(_.children)
-
-    override def toString: String = s"TypeNode(${UtilityFunctions.quote(typeName)}, $args)"
-
-    private def getExprHtmlLine(mode: DisplayMode): String = {
+    override def toText(mode: DisplayMode): ConvertableText = {
       val arguments = args.map {
         case n: LiteralNode => n.getPlaceholder(mode, false)
         case other          => other.getPlaceholder(mode)
       }
-      buildType(typeName, arguments).get.prettyPrint
+      buildType(typeName, arguments).get.toText
     }
 
-    private def getExprHtmlLineReadOnly(mode: DisplayMode): String = {
+    override def toTextReadOnly(mode: DisplayMode): ConvertableText = {
       val arguments = args.map {
         case n: LiteralNode => LiteralAny(n.toHtmlLineReadOnly(mode).toString)
-        case n: SubTypeNode => TypePlaceholder(n.node.toText(mode), n.node.getType.needsBrackets)
+        case n: SubTypeNode => TypePlaceholder(n.node.toTextReadOnly(mode), n.node.getType.needsBrackets)
       }
-      buildType(typeName, arguments).get.prettyPrint
+      buildType(typeName, arguments).get.toText
     }
+
+    override val children: List[OuterNode] = args.filter(_.isInstanceOf[SubTypeNode]).flatMap(_.children)
+
+    override def toString: String = s"TypeNode(${UtilityFunctions.quote(typeName)}, $args)"
 
     children.foreach(_.setParent(Some(this)))
     args.foreach(_.setParent(Some(this)))
