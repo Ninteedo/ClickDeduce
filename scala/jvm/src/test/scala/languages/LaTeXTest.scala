@@ -6,8 +6,12 @@ import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor2}
 import org.scalatest.propspec.AnyPropSpec
 
 class LaTeXTest extends AnyPropSpec with TableDrivenPropertyChecks {
-  property("LaTeX output test") {
-    val convertor: LaTeXConvertor = new LaTeXConvertor(LPoly(), DisplayMode.Evaluation)
+  private val docStart: String =
+    "\\documentclass{article}\n\\usepackage{bussproofs}\n\\usepackage[margin=1cm]{geometry}\n\\begin{document}\n"
+  private val docEnd: String = "\n\\end{document}"
+
+  private def latexOutputTest(displayMode: DisplayMode): Unit = {
+    val convertor: LaTeXConvertor = new LaTeXConvertor(LPoly(), displayMode)
     val l: LPoly = convertor.lang.asInstanceOf[LPoly]
     val nodes: TableFor2[String, l.OuterNode] = Table(
       ("name", "node"),
@@ -76,9 +80,19 @@ class LaTeXTest extends AnyPropSpec with TableDrivenPropertyChecks {
         s"$name:\n${convertor.convert(node)}"
       }
       .mkString("\n")
-    val docStart: String = "\\documentclass{article}\n\\usepackage{bussproofs}\n\\begin{document}\n"
-    val docEnd: String = "\n\\end{document}"
     val latex: String = docStart + treesLatex + docEnd
     println(latex)
+  }
+
+  property("edit mode output test") {
+    latexOutputTest(DisplayMode.Edit)
+  }
+
+  property("evaluation output test") {
+    latexOutputTest(DisplayMode.Evaluation)
+  }
+
+  property("type-checking output test") {
+    latexOutputTest(DisplayMode.TypeCheck)
   }
 }
