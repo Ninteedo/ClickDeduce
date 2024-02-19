@@ -1,5 +1,7 @@
 package languages
 
+import convertors.*
+
 class LIf extends LArith {
   // expressions
   case class Bool(b: Literal) extends Expr {
@@ -13,9 +15,9 @@ class LIf extends LArith {
       case _              => UnexpectedArgType(s"Bool can only accept LiteralBool, not $b")
     }
 
-    override def prettyPrint: String = b.toString
-
     override val needsBrackets: Boolean = false
+
+    override def toText: ConvertableText = TextElement(b.toString)
   }
 
   object Bool {
@@ -26,8 +28,8 @@ class LIf extends LArith {
     "Bool",
     {
       case List(b: Literal) => Some(Bool(b))
-      case Nil => Some(Bool(defaultLiteral))
-      case _ => None
+      case Nil              => Some(Bool(defaultLiteral))
+      case _                => None
     }
   )
 
@@ -52,18 +54,18 @@ class LIf extends LArith {
       }
     }
 
-    override def prettyPrint: String = s"${e1.prettyPrintBracketed} == ${e2.prettyPrintBracketed}"
+    override def toText: ConvertableText =
+      MultiElement(e1.toTextBracketed, SurroundSpaces(MathElement.equals), e2.toTextBracketed)
   }
 
   addExprBuilder(
     "Equal",
     {
       case List(e1: Expr, e2: Expr) => Some(Equal(e1, e2))
-      case Nil => Some(Equal(defaultExpr, defaultExpr))
-      case _ => None
+      case Nil                      => Some(Equal(defaultExpr, defaultExpr))
+      case _                        => None
     }
   )
-
 
   case class LessThan(e1: Expr, e2: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = (e1.eval(env), e2.eval(env)) match {
@@ -76,15 +78,16 @@ class LIf extends LArith {
       case (t1, t2)                           => ComparisonWithNonOrdinalType(t1, t2)
     }
 
-    override def prettyPrint: String = s"${e1.prettyPrintBracketed} < ${e2.prettyPrintBracketed}"
+    override def toText: ConvertableText =
+      MultiElement(e1.toTextBracketed, SurroundSpaces(MathElement.lessThan), e2.toTextBracketed)
   }
 
   addExprBuilder(
     "LessThan",
     {
       case List(e1: Expr, e2: Expr) => Some(LessThan(e1, e2))
-      case Nil => Some(LessThan(defaultExpr, defaultExpr))
-      case _ => None
+      case Nil                      => Some(LessThan(defaultExpr, defaultExpr))
+      case _                        => None
     }
   )
 
@@ -111,49 +114,56 @@ class LIf extends LArith {
       case _            => List((cond, env), (then_expr, env), (else_expr, env))
     }
 
-    override def prettyPrint: String =
-      s"if ${cond.prettyPrintBracketed} then ${then_expr.prettyPrintBracketed} else ${else_expr.prettyPrintBracketed}"
+    override def toText: ConvertableText = MultiElement(
+      TextElement("if "),
+      cond.toTextBracketed,
+      TextElement(" then "),
+      then_expr.toTextBracketed,
+      TextElement(" else "),
+      else_expr.toTextBracketed
+    )
   }
 
   addExprBuilder(
     "IfThenElse",
     {
       case List(cond: Expr, then_expr: Expr, else_expr: Expr) => Some(IfThenElse(cond, then_expr, else_expr))
-      case Nil => Some(IfThenElse(defaultExpr, defaultExpr, defaultExpr))
-      case _ => None
+      case Nil                                                => Some(IfThenElse(defaultExpr, defaultExpr, defaultExpr))
+      case _                                                  => None
     }
   )
-
 
   // values
   case class BoolV(b: Boolean) extends Value {
     override val typ: Type = BoolType()
 
-    override def prettyPrint: String = b.toString
-
     override val needsBrackets: Boolean = false
+
+    override def toText: ConvertableText = TextElement(b.toString)
   }
 
   addValueBuilder(
     "BoolV",
     {
       case List(b: Boolean) => Some(BoolV(b))
-      case _ => None
+      case _                => None
     }
   )
 
   // types
   case class BoolType() extends Type {
-    override def prettyPrint: String = "Bool"
+
 
     override val needsBrackets: Boolean = false
+
+    override def toText: ConvertableText = TextElement("Bool")
   }
 
   addTypeBuilder(
     "BoolType",
     {
       case Nil => Some(BoolType())
-      case _ => None
+      case _   => None
     }
   )
 
@@ -162,7 +172,7 @@ class LIf extends LArith {
   case class TypeMismatchType(type1: Type, type2: Type) extends TypeError {
     override val message: String = s"$type1 not compatible with $type2"
 
-    override def prettyPrint: String = s"TypeMismatch($type1, $type2)"
+
   }
 
   case class TypeMismatchError(exprName: String, type1: Type, type2: Type) extends EvalError {

@@ -1,6 +1,6 @@
 package app
 
-import convertors.{DisplayMode, HTMLConvertor}
+import convertors.{DisplayMode, HTMLConvertor, LaTeXConvertor}
 import languages.*
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
@@ -79,10 +79,30 @@ object ScalaJsEntry {
     extraArgs: js.Array[String]
   ): js.Tuple2[String, String] = {
     val originalLang = getLanguage(langName)
-    val displayMode: DisplayMode = DisplayMode.fromString(modeName)
+    val displayMode = DisplayMode.fromString(modeName)
     val convertor = HTMLConvertor(originalLang, displayMode)
     val action = convertor.lang.createAction(actionName, nodeString, treePath, extraArgs.toList, modeName)
     val updatedTree = action.newTree
     (updatedTree.toString, convertor.convert(updatedTree))
+  }
+
+  /**
+   * Convert a node string to LaTeX.
+   * @param langName The name of the language to use
+   * @param modeName The name of the display mode to use
+   * @param nodeString The string representation of the root node
+   * @return The LaTeX representation of the node
+   * @throws ClickDeduceException If the node string cannot be parsed
+   * @see LaTeXConvertor
+   */
+  @JSExportTopLevel("convertToLaTeX")
+  def convertToLaTeX(langName: String, modeName: String, nodeString: String): String = {
+    val originalLang = getLanguage(langName)
+    val displayMode = DisplayMode.fromString(modeName)
+    val convertor = LaTeXConvertor(originalLang, displayMode)
+    convertor.lang.Node.read(nodeString) match {
+      case Some(tree: convertor.lang.OuterNode) => convertor.convert(tree)
+      case _ => throw new ClickDeduceException(s"Failed to parse node string: $nodeString")
+    }
   }
 }

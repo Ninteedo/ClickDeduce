@@ -48,8 +48,12 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
     div(cls := ClassDict.NODE, envDiv(node.getEnv(mode)), exprDiv(node), resultDiv(node))
 
   def envDiv(env: lang.ValueEnv | lang.TypeEnv): HTML = {
+    val parsedEnv = env.map((k, v) => v match {
+      case value: lang.Value => k -> value.toHtml
+      case typ: lang.Type => k -> typ.toHtml
+    })
     val variablesHtml: Option[HTML] =
-      if (env.isEmpty) None else Some(div(raw(env.map((k, v) => s"$k &rarr; ${v.toHtml}").mkString("[", ", ", "]"))))
+      if (env.isEmpty) None else Some(div(raw(parsedEnv.map((k, v) => s"$k &rarr; $v").mkString("[", ", ", "]"))))
     val delimiter =
       if (mode == DisplayMode.TypeCheck) Some(raw(" &#x22a2;")) else if (env.nonEmpty) Some(raw(",")) else None
 
@@ -62,9 +66,9 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
   }
 
   def exprDiv(node: ExprNode): HTML = div(if (node.isPhantom) {
-    node.toHtmlLineReadOnly(mode)
+    node.toTextReadOnly(mode).asHtml
   } else {
-    node.toHtmlLine(mode)
+    node.toText(mode).asHtml
   })(cls := ClassDict.EXPR)
 
   def resultDiv(node: ExprNode): Seq[HTML] = mode match {
@@ -105,7 +109,7 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
   def fullTypeBottomDiv(node: TypeNode): HTML =
     div(cls := ClassDict.NODE, envDiv(node.getEnv(mode)), typeDiv(node), typeResultDiv(node))
 
-  def typeDiv(node: TypeNode): HTML = node.toHtmlLine(mode)(cls := ClassDict.TYPE)
+  def typeDiv(node: TypeNode): HTML = node.toText(mode).asHtml(cls := ClassDict.TYPE)
 
   def typeResultDiv(node: TypeNode): HTML =
     div(cls := ClassDict.TYPE_CHECK_RESULT, typeCheckTurnstileSpan, node.getTypeCheckResult(mode).toHtml)

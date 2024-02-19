@@ -260,15 +260,15 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
   }
 
   property("Eq pretty prints correctly") {
-    Equal(Num(1), Num(2)).prettyPrint shouldEqual "1 == 2"
-    Equal(Bool(true), Bool(false)).prettyPrint shouldEqual "true == false"
-    Equal(Equal(Num(1), Num(2)), Equal(Num(3), Num(4))).prettyPrint shouldEqual "(1 == 2) == (3 == 4)"
-    Equal(Plus(Num(1), Num(2)), Num(3)).prettyPrint shouldEqual "(1 + 2) == 3"
+    Equal(Num(1), Num(2)).prettyPrint shouldEqual "1 = 2"
+    Equal(Bool(true), Bool(false)).prettyPrint shouldEqual "true = false"
+    Equal(Equal(Num(1), Num(2)), Equal(Num(3), Num(4))).prettyPrint shouldEqual "(1 = 2) = (3 = 4)"
+    Equal(Plus(Num(1), Num(2)), Num(3)).prettyPrint shouldEqual "(1 + 2) = 3"
   }
 
   property("IfThenElse pretty prints correctly") {
     IfThenElse(Bool(true), Num(1), Num(2)).prettyPrint shouldEqual "if true then 1 else 2"
-    IfThenElse(Equal(Num(1), Num(2)), Num(1), Num(2)).prettyPrint shouldEqual "if (1 == 2) then 1 else 2"
+    IfThenElse(Equal(Num(1), Num(2)), Num(1), Num(2)).prettyPrint shouldEqual "if (1 = 2) then 1 else 2"
     IfThenElse(Bool(true), IfThenElse(Bool(false), Num(1), Num(2)), Num(3)).prettyPrint shouldEqual
       "if true then (if false then 1 else 2) else 3"
   }

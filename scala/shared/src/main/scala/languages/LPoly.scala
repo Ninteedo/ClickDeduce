@@ -1,5 +1,6 @@
 package languages
 
+import convertors.*
 import scalatags.Text.all.*
 
 class LPoly extends LData {
@@ -11,8 +12,6 @@ class LPoly extends LData {
     override def typeCheckInner(tEnv: TypeEnv): Type =
       PolyType(TypeVar(v), e.typeCheck(tEnv + (v.toString -> TypeContainer(TypeVar(v)))))
 
-    override def prettyPrint: String = s"Λ$v. ${e.prettyPrintBracketed}"
-
     override def getChildrenBase(env: ValueEnv): List[(Term, ValueEnv)] =
       List((v, env), (e, env + (v.toString -> TypeValueContainer(TypeVar(v)))))
 
@@ -21,6 +20,9 @@ class LPoly extends LData {
 
     override def getChildrenEval(env: ValueEnv): List[(Term, ValueEnv)] =
       List((e, env + (v.toString -> TypeValueContainer(TypeVar(v)))))
+
+    override def toText: ConvertableText =
+      MultiElement(LambdaSymbol(capital = true), v.toText, MathElement.period, e.toTextBracketed)
   }
 
   object Poly {
@@ -31,8 +33,8 @@ class LPoly extends LData {
     "Poly",
     {
       case List(v: Literal, e: Expr) => Some(Poly(v, e))
-      case Nil => Some(Poly(defaultLiteral, defaultExpr))
-      case _ => None
+      case Nil                       => Some(Poly(defaultLiteral, defaultExpr))
+      case _                         => None
     }
   )
 
@@ -55,22 +57,23 @@ class LPoly extends LData {
       case other => CannotApplyTypeUnlessPolyType(other)
     }
 
-    override def prettyPrint: String = s"${e.prettyPrintBracketed}[${typ.prettyPrint}]"
+    override def toText: ConvertableText =
+      MultiElement(e.toTextBracketed, TextElement("["), typ.toText, TextElement("]"))
   }
 
   addExprBuilder(
     "ApplyType",
     {
       case List(e: Expr, t: Type) => Some(ApplyType(e, t))
-      case Nil => Some(ApplyType(defaultExpr, defaultType))
-      case _ => None
+      case Nil                    => Some(ApplyType(defaultExpr, defaultType))
+      case _                      => None
     }
   )
 
   // types
 
   case class TypeVar(v: Literal) extends Type {
-    override def prettyPrint: String = v.toString
+
 
     override def typeCheck(tEnv: TypeEnv): Type = tEnv.get(v.toString) match {
       case None             => UnknownTypeVar(v)
@@ -79,6 +82,8 @@ class LPoly extends LData {
     }
 
     override val needsBrackets: Boolean = false
+
+    override def toText: ConvertableText = v.toText
   }
 
   object TypeVar {
@@ -89,21 +94,29 @@ class LPoly extends LData {
     "TypeVar",
     {
       case List(v: Literal) => Some(TypeVar(v))
-      case Nil => Some(TypeVar(defaultLiteral))
-      case _ => None
+      case Nil              => Some(TypeVar(defaultLiteral))
+      case _                => None
     }
   )
 
   case class PolyType(typeVar: Type, incompleteType: Type) extends Type {
-    override def prettyPrint: String = s"∀${typeVar.prettyPrintBracketed}. ${incompleteType.prettyPrintBracketed}"
+
+
+    override def toText: ConvertableText =
+      MultiElement(
+        ForAllSymbol(),
+        typeVar.toTextBracketed,
+        SpaceAfter(MathElement.period),
+        incompleteType.toTextBracketed
+      )
   }
 
   addTypeBuilder(
     "PolyType",
     {
       case List(tv: Type, t: Type) => Some(PolyType(tv, t))
-      case Nil => Some(PolyType(defaultType, defaultType))
-      case _ => None
+      case Nil                     => Some(PolyType(defaultType, defaultType))
+      case _                       => None
     },
     hidden = true
   )
@@ -116,14 +129,19 @@ class LPoly extends LData {
       case other      => PolyVRequiresTypeVarType(other)
     }
 
-    override def prettyPrint: String = s"Λ${typeVar.prettyPrintBracketed}. ${e.prettyPrintBracketed}"
+    override def toText: ConvertableText = MultiElement(
+      LambdaSymbol(capital = true),
+      typeVar.toTextBracketed,
+      SpaceAfter(MathElement.period),
+      e.toTextBracketed
+    )
   }
 
   addValueBuilder(
     "PolyV",
     {
       case List(tv: Type, e: Expr, env: ValueEnv) => Some(PolyV(tv, e, env))
-      case _ => None
+      case _                                      => None
     }
   )
 
@@ -152,7 +170,7 @@ class LPoly extends LData {
   case class UnknownTypeVar(v: Literal) extends TypeError {
     override val message: String = s"Unknown type variable $v"
 
-    override def prettyPrint: String = v.toString
+
   }
 }
 

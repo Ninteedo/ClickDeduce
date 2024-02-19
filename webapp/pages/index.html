@@ -47,6 +47,9 @@
       <button onclick="saveTree()" id="saveButton">Save</button>
       <button onclick="loadTree()" id="loadButton">Load</button>
     </div>
+    <div>
+      <button onclick="exportLaTeX()" id="exportLatexButton">Export LaTeX</button>
+    </div>
   </div>
 
   <div>
@@ -77,6 +80,18 @@
 </div>
 
 <div id="error-message" class="error-message fade-out"></div>
+
+<div id="export-output-container">
+  <label id="export-output-title" for="export-output"></label>
+  <label id="export-output-desc" for="export-output"></label>
+  <textarea id="export-output" readonly></textarea>
+  <div id="export-output-controls">
+    <button id="export-copy-button" onclick="copyExportOutput()">Copy to Clipboard</button>
+    <button id="export-close-button" onclick="closeExportOutput()">Close</button>
+  </div>
+</div>
+
+<div id="blocker"></div>
 
 </body>
 </html>

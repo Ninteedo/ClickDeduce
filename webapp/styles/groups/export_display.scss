@@ -1,0 +1,52 @@
+#export-output-container {
+  flex-direction: column;
+  width: 80%;
+  height: 80%;
+  left: 10%;
+  z-index: 1000;
+  position: fixed;
+  background-color: $semi-background;
+  padding: 10px;
+  border-radius: 10px;
+
+  &:not(.visible) {
+    display: none;
+  }
+
+  &.visible {
+    display: flex;
+  }
+
+  #export-output-title {
+    font-size: 30px;
+  }
+
+  #export-output-desc {
+    color: $comment;
+    &.visible {
+      display: block;
+    }
+    &:not(.visible) {
+      display: none;
+    }
+  }
+
+  #export-output {
+    resize: none;
+    height: 100%;
+    background-color: $tree-background;
+    color: $foreground;
+  }
+
+  #export-output-controls {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    margin-top: 10px;
+
+    button {
+      margin-left: 10px;
+      padding: 5px;
+    }
+  }
+}

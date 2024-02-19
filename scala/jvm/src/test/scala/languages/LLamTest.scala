@@ -6,8 +6,6 @@ import org.scalatest.matchers.should.Matchers.{an, shouldBe, shouldEqual}
 import org.scalatest.prop.TableFor1
 import org.scalatest.propspec.AnyPropSpec
 
-import scala.collection.immutable.Map
-
 class LLamTest extends TestTemplate[Expr, Value, Type] {
   val incrementFunction: Lambda = Lambda("x", IntType(), Plus(Var("x"), Num(1)))
   val twiceFunction: Lambda =
@@ -373,5 +371,16 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
     Func(BoolType(), IntType()).prettyPrint shouldEqual "Bool → Int"
     Func(BoolType(), Func(IntType(), IntType())).prettyPrint shouldEqual "Bool → (Int → Int)"
     Func(Func(IntType(), IntType()), IntType()).prettyPrint shouldEqual "(Int → Int) → Int"
+  }
+
+  property("Lambda node type selects are not both editable") {
+    val convertor = HTMLConvertor(LLam, DisplayMode.Edit)
+    val l = convertor.lang
+    val tree = l.VariableNode.createFromExprName("Lambda").get
+    val res: String = convertor.convert(tree)
+    val regex = """<select class="type-dropdown[\s\w"-=]+>""".r
+    val typeSelects = regex.findAllIn(res).toList
+    println(typeSelects.mkString("\n"))
+    typeSelects.count(_.contains("disabled")) shouldEqual 1
   }
 }

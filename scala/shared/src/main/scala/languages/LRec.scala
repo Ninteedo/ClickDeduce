@@ -1,5 +1,6 @@
 package languages
 
+import convertors.*
 import scalatags.Text
 import scalatags.Text.all.*
 
@@ -45,7 +46,15 @@ class LRec extends LLam {
 
     override def getChildrenEval(env: ValueEnv): List[(Term, ValueEnv)] = Nil
 
-    override def prettyPrint: String = prettyPrintRec(f, v, inType, outType, e)
+    override def toText: ConvertableText = MultiElement(
+      TextElement("rec "),
+      f.toText,
+      BracketedElement(MultiElement(v.toText, TextElement(": "), inType.toTextBracketed)),
+      SpaceAfter(MathElement.colon),
+      outType.toTextBracketed,
+      SpaceAfter(MathElement.period),
+      e.toTextBracketed
+    )
   }
 
   object Rec {
@@ -58,10 +67,9 @@ class LRec extends LLam {
     {
       case List(f: Literal, v: Literal, inType: Type, outType: Type, e: Expr) => Some(Rec(f, v, inType, outType, e))
       case Nil => Some(Rec(defaultLiteral, defaultLiteral, defaultType, defaultType, defaultExpr))
-      case _ => None
+      case _   => None
     }
   )
-
 
   // values
   case class RecV(f: Literal, v: Literal, in_typ: Type, out_typ: Type, e: Expr, env: ValueEnv) extends FunctionValue {
@@ -72,7 +80,15 @@ class LRec extends LLam {
 
     override def evalApply(value: Value): Value = e.eval(env ++ Env(f.toString -> this, v.toString -> value))
 
-    override def prettyPrint: String = prettyPrintRec(f, v, in_typ, out_typ, e)
+    override def toText: ConvertableText = MultiElement(
+      TextElement("rec "),
+      f.toText,
+      BracketedElement(MultiElement(v.toText, SpaceAfter(MathElement.colon), in_typ.toTextBracketed)),
+      SpaceAfter(MathElement.colon),
+      out_typ.toTextBracketed,
+      SpaceAfter(MathElement.period),
+      e.toTextBracketed
+    )
   }
 
   addValueBuilder(

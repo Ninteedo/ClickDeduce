@@ -1,5 +1,7 @@
 package languages
 
+import convertors.*
+
 class LLet extends LIf {
   // expressions
 
@@ -24,9 +26,9 @@ class LLet extends LIf {
       case _ => InvalidIdentifierTypeError(v)
     }
 
-    override def prettyPrint: String = v.toString
-
     override val needsBrackets: Boolean = false
+
+    override def toText: ConvertableText = v.toText
   }
 
   object Var {
@@ -37,8 +39,8 @@ class LLet extends LIf {
     "Var",
     {
       case List(v: Literal) => Some(Var(v))
-      case Nil => Some(Var(defaultLiteral))
-      case _ => None
+      case Nil              => Some(Var(defaultLiteral))
+      case _                => None
     }
   )
 
@@ -66,7 +68,15 @@ class LLet extends LIf {
     override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] =
       List((assign, tEnv), (bound, tEnv + (v.toString -> assign.typeCheck(tEnv))))
 
-    override def prettyPrint: String = s"let $v = ${assign.prettyPrintBracketed} in ${bound.prettyPrintBracketed}"
+    override def toText: ConvertableText =
+      MultiElement(
+        TextElement("let "),
+        v.toText,
+        SurroundSpaces(MathElement.equals),
+        assign.toTextBracketed,
+        TextElement(" in "),
+        bound.toTextBracketed
+      )
   }
 
   object Let {
@@ -77,8 +87,8 @@ class LLet extends LIf {
     "Let",
     {
       case List(v: Literal, assign: Expr, bound: Expr) => Some(Let(v, assign, bound))
-      case Nil => Some(Let(defaultLiteral, defaultExpr, defaultExpr))
-      case _ => None
+      case Nil                                         => Some(Let(defaultLiteral, defaultExpr, defaultExpr))
+      case _                                           => None
     }
   )
 

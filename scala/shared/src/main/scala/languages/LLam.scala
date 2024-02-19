@@ -1,5 +1,6 @@
 package languages
 
+import convertors.*
 import scalatags.Text
 import scalatags.Text.all.*
 
@@ -24,15 +25,15 @@ class LLam extends LLet {
         case _                       => List((e1, env), (e2, env))
       }
 
-    override def prettyPrint: String = s"${e1.prettyPrintBracketed} ${e2.prettyPrintBracketed}"
+    override def toText: ConvertableText = MultiElement(e1.toTextBracketed, TextElement(" "), e2.toTextBracketed)
   }
 
   addExprBuilder(
     "Apply",
     {
       case List(e1: Expr, e2: Expr) => Some(Apply(e1, e2))
-      case Nil => Some(Apply(defaultExpr, defaultExpr))
-      case _ => None
+      case Nil                      => Some(Apply(defaultExpr, defaultExpr))
+      case _                        => None
     }
   )
 
@@ -56,7 +57,14 @@ class LLam extends LLet {
 
     override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] = List((e, tEnv + (v.toString -> typ)))
 
-    override def prettyPrint: String = s"λ$v: ${typ.prettyPrintBracketed}. ${e.prettyPrint}"
+    override def toText: ConvertableText = MultiElement(
+      LambdaSymbol(),
+      v.toText,
+      SpaceAfter(MathElement.colon),
+      typ.toTextBracketed,
+      SpaceAfter(MathElement.period),
+      e.toText
+    )
   }
 
   object Lambda {
@@ -67,8 +75,8 @@ class LLam extends LLet {
     "Lambda",
     {
       case List(v: Literal, typ: Type, e: Expr) => Some(Lambda(v, typ, e))
-      case Nil => Some(Lambda(defaultLiteral, defaultType, defaultExpr))
-      case _ => None
+      case Nil                                  => Some(Lambda(defaultLiteral, defaultType, defaultExpr))
+      case _                                    => None
     }
   )
 
@@ -86,28 +94,27 @@ class LLam extends LLet {
 
     override def typeCheck(tEnv: TypeEnv): Type = Func(in.typeCheck(tEnv), out.typeCheck(tEnv))
 
-    override def prettyPrint: String = s"${in.prettyPrintBracketed} → ${out.prettyPrintBracketed}"
+    override def toText: ConvertableText =
+      MultiElement(in.toTextBracketed, SurroundSpaces(SingleRightArrow()), out.toTextBracketed)
   }
 
   addTypeBuilder(
     "Func",
     {
       case List(in: Type, out: Type) => Some(Func(in, out))
-      case Nil => Some(Func(defaultType, defaultType))
-      case _ => None
+      case Nil                       => Some(Func(defaultType, defaultType))
+      case _                         => None
     }
   )
 
   case class ApplyToNonFunctionErrorType(wrongType: Type) extends TypeError {
     override val message: String = s"Cannot apply with left expression being ${wrongType.prettyPrint}"
 
-    override def prettyPrint: String = s"CannotApplyError(${wrongType.prettyPrint})"
   }
 
   case class IncompatibleTypeErrorType(typ1: Type, typ2: Type) extends TypeError {
     override val message: String = s"mismatched types for applying function (expected $typ1 but got $typ2)"
 
-    override def prettyPrint: String = s"IncompatibleTypes(${typ1.prettyPrint}, ${typ2.prettyPrint})"
   }
 
   // values
@@ -126,17 +133,21 @@ class LLam extends LLet {
 
     override def evalApply(value: Value): Value = e.eval(env + (v -> value))
 
-    override def prettyPrint: String = {
-      val eString: String = if (e == BlankExprDropDown()) "?" else e.prettyPrint
-      s"λ$v: ${properInputType.prettyPrintBracketed}. $eString"
-    }
+    override def toText: ConvertableText = MultiElement(
+      LambdaSymbol(),
+      ItalicsElement(TextElement(v)),
+      SpaceAfter(MathElement.colon),
+      properInputType.toTextBracketed,
+      SpaceAfter(MathElement.period),
+      e.toText
+    )
   }
 
   addValueBuilder(
     "LambdaV",
     {
       case List(v: Variable, inputType: Type, e: Expr, env: ValueEnv) => Some(LambdaV(v, inputType, e, env))
-      case _ => None
+      case _                                                          => None
     }
   )
 
@@ -149,16 +160,16 @@ class LLam extends LLet {
   case class HiddenValue(override val typ: Type) extends Value {
     override def isPlaceholder: Boolean = true
 
-    override def prettyPrint: String = "?"
-
     override val needsBrackets: Boolean = false
+
+    override def toText: ConvertableText = MathElement("?")
   }
 
   addValueBuilder(
     "HiddenValue",
     {
       case List(typ: Type) => Some(HiddenValue(typ))
-      case _ => None
+      case _               => None
     }
   )
 }

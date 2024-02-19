@@ -9,7 +9,14 @@ import {
     startNodeBlank
 } from "./actions";
 import {loadTree, redo, resetTreeManipulation, saveTree, undo} from "./treeManipulation";
-import {handleTabPressed, resetInterfaceGlobals, zoomToFit} from "./interface";
+import {
+    closeExportOutput,
+    copyExportOutput,
+    exportLaTeX,
+    handleTabPressed,
+    resetInterfaceGlobals,
+    zoomToFit
+} from "./interface";
 import panzoom, {PanZoom} from "panzoom";
 import {loadImages} from "./imageLoading";
 
@@ -56,3 +63,6 @@ export function initialise(skipImages: boolean = false): void {
 (window as any).handleLiteralChanged = handleLiteralChanged;
 (window as any).saveTree = saveTree;
 (window as any).loadTree = loadTree;
+(window as any).exportLaTeX = exportLaTeX;
+(window as any).copyExportOutput = copyExportOutput;
+(window as any).closeExportOutput = closeExportOutput;
