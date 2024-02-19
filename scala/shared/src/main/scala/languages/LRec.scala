@@ -81,7 +81,7 @@ class LRec extends LLam {
     override def evalApply(value: Value): Value = e.eval(env ++ Env(f.toString -> this, v.toString -> value))
 
     override def toText: ConvertableText = MultiElement(
-      SpaceAfter(TextElement("rec")),
+      TextElement("rec "),
       f.toText,
       BracketedElement(MultiElement(v.toText, SpaceAfter(MathElement.colon), in_typ.toTextBracketed)),
       SpaceAfter(MathElement.colon),
