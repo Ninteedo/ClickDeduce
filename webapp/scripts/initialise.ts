@@ -8,7 +8,7 @@ import {
     resetCopyCache,
     startNodeBlank
 } from "./actions";
-import {loadTree, redo, resetTreeManipulation, saveTree, undo} from "./treeManipulation";
+import {loadTree, redo, resetTreeManipulation, saveTree, setupExampleSelector, undo} from "./treeManipulation";
 import {
     closeExportOutput,
     copyExportOutput,
@@ -66,3 +66,4 @@ export function initialise(skipImages: boolean = false): void {
 (window as any).exportLaTeX = exportLaTeX;
 (window as any).copyExportOutput = copyExportOutput;
 (window as any).closeExportOutput = closeExportOutput;
+(window as any).setupExampleSelector = setupExampleSelector;

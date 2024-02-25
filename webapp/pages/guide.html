@@ -3,6 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <title>ClickDeduce Guide</title>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var exampleSelector = document.getElementById('example-selector');
+      setupExampleSelector(exampleSelector);
+    });
+  </script>
 </head>
 <body>
 <h1>ClickDeduce Guide</h1>
@@ -30,5 +36,41 @@
     Examples: <code>IntType</code>.
   </li>
 </ul>
+<h2>Interface Elements</h2>
+<p>
+  The interface is divided into two main parts: the <i>tree view</i> and the <i>controls</i>.
+</p>
+<h3>Controls</h3>
+<p>
+
+</p>
+<h3>Tree View</h3>
+<p>
+  This shows the current state of the expression tree.
+  Each node in the tree represents a single <i>expression</i>.
+</p>
+<p>
+  You can <b>pan and zoom</b> the tree by <b>dragging and scrolling</b>.
+</p>
+<p>
+  To <b>select an expression</b>, click on the "<code>Enter Expression...</code>" text box and type in the name of the expression
+  you want to select, then press <code>Enter</code>.
+</p>
+<div id="example-selector-outer">
+  <div class="expr-selector-container" id="example-selector">
+    <input type="text" class="expr-selector-input" placeholder="Enter Expression..." data-tree-path="" />
+    <button class="expr-selector-button">&#9660;</button>
+    <div class="expr-selector-dropdown">
+      <ul>
+        <li data-value="Num">Num</li>
+        <li data-value="Plus">Plus</li>
+        <li data-value="Times">Times</li>
+      </ul>
+    </div>
+    <br>
+  </div>
+  <div class="spacer"></div>
+  <p>Selected: <span id="expr-selector-output">?</span></p>
+</div>
 </body>
 </html>

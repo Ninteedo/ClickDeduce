@@ -300,39 +300,96 @@ function replaceSelectInputs(): void {
             </div>`;
 
         const newSelector = tree.querySelector(`.expr-selector-container[data-tree-path="${treePath}"]`) as HTMLDivElement;
-        const input = getSelectorInput(newSelector);
-        const button = getSelectorButton(newSelector);
-        const dropdown = getSelectorDropdown(newSelector);
+        setupTermSelector(newSelector);
+    });
+}
 
+export function setupTermSelector(termSelectorContainer: HTMLDivElement): void {
+    const input = getSelectorInput(termSelectorContainer);
+    const button = getSelectorButton(termSelectorContainer);
+    const dropdown = getSelectorDropdown(termSelectorContainer);
+
+    dropdown.style.display = 'none';
+
+    input.addEventListener('input', () => updateExprSelectorDropdown(termSelectorContainer));
+    input.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            // selectorEnterPressed(newSelector);
+        } else if (event.key === 'ArrowDown') {
+            moveSelectorOptionHighlight(termSelectorContainer, 1);
+        } else if (event.key === 'ArrowUp') {
+            moveSelectorOptionHighlight(termSelectorContainer, -1);
+        }
+    });
+    input.addEventListener('focus', () => showExprSelectorDropdown(termSelectorContainer));
+    input.addEventListener('blur', () => hideExprSelectorDropdown(termSelectorContainer));
+
+    button.addEventListener('click', () => input.focus());
+
+    const selectorOptions = Array.from(dropdown.querySelectorAll('ul > li'));
+    selectorOptions.forEach(option => {
+        if (!(option instanceof HTMLLIElement)) {
+            throw new Error('Selector option was not an HTMLLIElement');
+        }
+
+        option.addEventListener('mousedown', event => {
+            event.preventDefault();
+            selectorSelectOption(termSelectorContainer, option)
+        });
+        option.classList.add('expr-selector-option');
+    });
+}
+
+export function setupExampleSelector(termSelectorContainer: HTMLDivElement): void {
+    const input = getSelectorInput(termSelectorContainer);
+    const button = getSelectorButton(termSelectorContainer);
+    const dropdown = getSelectorDropdown(termSelectorContainer);
+    const output = document.getElementById("expr-selector-output");
+
+    dropdown.style.display = 'none';
+
+    function selectOption(option: HTMLLIElement): void {
+        input.value = option.innerText;
         dropdown.style.display = 'none';
+        button.innerHTML = '&#9660;';
+        output.textContent = option.textContent
+    }
 
-        input.addEventListener('input', () => updateExprSelectorDropdown(newSelector));
-        input.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') {
-                // selectorEnterPressed(newSelector);
-            } else if (event.key === 'ArrowDown') {
-                moveSelectorOptionHighlight(newSelector, 1);
-            } else if (event.key === 'ArrowUp') {
-                moveSelectorOptionHighlight(newSelector, -1);
-            }
-        });
-        input.addEventListener('focus', () => showExprSelectorDropdown(newSelector));
-        input.addEventListener('blur', () => hideExprSelectorDropdown(newSelector));
-
-        button.addEventListener('click', () => input.focus());
-
-        const selectorOptions = Array.from(dropdown.querySelectorAll('ul > li'));
-        selectorOptions.forEach(option => {
-            if (!(option instanceof HTMLLIElement)) {
-                throw new Error('Selector option was not an HTMLLIElement');
+    input.addEventListener('input', () => updateExprSelectorDropdown(termSelectorContainer));
+    input.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            if (getSelectorDropdown(termSelectorContainer).style.display === 'none') {
+                toggleExprSelectorDropdownDisplay(termSelectorContainer);
+                return;
             }
 
-            option.addEventListener('mousedown', event => {
-                event.preventDefault();
-                selectorSelectOption(newSelector, option)
-            });
-            option.classList.add('expr-selector-option');
+            const selectedIndex = getExprSelectorOptionHighlight(termSelectorContainer, false);
+            const selectedOption = getSelectorOptions(termSelectorContainer)[selectedIndex];
+            if (selectedOption) {
+                selectOption(selectedOption);
+            }
+        } else if (event.key === 'ArrowDown') {
+            moveSelectorOptionHighlight(termSelectorContainer, 1);
+        } else if (event.key === 'ArrowUp') {
+            moveSelectorOptionHighlight(termSelectorContainer, -1);
+        }
+    });
+    input.addEventListener('focus', () => showExprSelectorDropdown(termSelectorContainer));
+    input.addEventListener('blur', () => hideExprSelectorDropdown(termSelectorContainer));
+
+    button.addEventListener('click', () => input.focus());
+
+    const selectorOptions = Array.from(dropdown.querySelectorAll('ul > li'));
+    selectorOptions.forEach(option => {
+        if (!(option instanceof HTMLLIElement)) {
+            throw new Error('Selector option was not an HTMLLIElement');
+        }
+
+        option.addEventListener('mousedown', event => {
+            event.preventDefault();
+            selectOption(option);
         });
+        option.classList.add('expr-selector-option');
     });
 }
 
