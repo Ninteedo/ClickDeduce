@@ -1,8 +1,6 @@
-#example-selector-outer {
+.example-outer {
   border: 1px solid $foreground;
   border-radius: 2px;
   padding: 5px;
   margin-bottom: 10px;
-
-  min-height: 130px;
 }

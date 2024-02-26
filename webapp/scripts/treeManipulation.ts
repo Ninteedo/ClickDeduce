@@ -531,7 +531,7 @@ export function redo(): void {
  *
  * @param textInput the text input to update
  */
-function updateTextInputWidth(textInput: HTMLInputElement): void {
+export function updateTextInputWidth(textInput: HTMLInputElement): void {
     const minWidth: number = 2;
     textInput.style.width = Math.max(minWidth, textInput.value.length) + "ch";
 }
