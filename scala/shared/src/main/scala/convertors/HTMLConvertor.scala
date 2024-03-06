@@ -12,6 +12,12 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
 
   def convert[T <: AbstractNodeLanguage#OuterNode](node: T): Output = {
     val fixedNode = node.asInstanceOf[OuterNode]
+    if (mode == DisplayMode.Evaluation) {
+      fixedNode match {
+        case n: ExprNode => n.checkDepthLimitWillBeExceeded()
+        case _           =>
+      }
+    }
     outerNodeToHTML(fixedNode).toString
   }
 
@@ -24,10 +30,6 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
 
   def exprNode(node: ExprNode): HTML = {
     val isAxiom = node.getVisibleChildren(mode).isEmpty
-
-    if (!isAxiom && mode == DisplayMode.Evaluation && node.getParent.isEmpty) {
-      node.checkDepthLimitWillBeExceeded()
-    }
 
     div(
       cls := f"${ClassDict.SUBTREE} ${if (isAxiom) ClassDict.AXIOM else ""} ${phantomClassName(node)}".strip,
@@ -48,10 +50,12 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
     div(cls := ClassDict.NODE, envDiv(node.getEnv(mode)), exprDiv(node), resultDiv(node))
 
   def envDiv(env: lang.ValueEnv | lang.TypeEnv): HTML = {
-    val parsedEnv = env.map((k, v) => v match {
-      case value: lang.Value => k -> value.toHtml
-      case typ: lang.Type => k -> typ.toHtml
-    })
+    val parsedEnv = env.map((k, v) =>
+      v match {
+        case value: lang.Value => k -> value.toHtml
+        case typ: lang.Type    => k -> typ.toHtml
+      }
+    )
     val variablesHtml: Option[HTML] =
       if (env.isEmpty) None else Some(div(raw(parsedEnv.map((k, v) => s"$k &rarr; $v").mkString("[", ", ", "]"))))
     val delimiter =
@@ -76,7 +80,7 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
       val typeCheckResult = node.getType
       if (typeCheckResult.isError) List(typeCheckTurnstileSpan, typeCheckResultDiv(node))
       else {
-        val evalResult = node.getEditValueResult
+        val evalResult: lang.Value = node.getEditValueResult
         if (!evalResult.isError && !evalResult.isPlaceholder) List(evalArrowSpan, editEvalResultDiv(node))
         else List(typeCheckTurnstileSpan, typeCheckResultDiv(node))
       }

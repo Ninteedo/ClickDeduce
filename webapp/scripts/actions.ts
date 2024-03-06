@@ -133,6 +133,7 @@ export function runAction(actionName: string, treePath: string, extraArgs: any[]
         const cdError = new ClickDeduceResponseError(e)
         displayError(cdError);
         useTreeFromHistory(treeHistoryIndex);
+        enableInputs();
         throw cdError;
     }
     enableInputs();

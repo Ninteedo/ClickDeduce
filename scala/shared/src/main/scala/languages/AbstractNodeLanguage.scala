@@ -48,6 +48,16 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     typeBuilderNames.map(name => option(value := name, name))
   )
 
+  case class StackOverflowErrorValue() extends EvalError {
+    override val message: String = "Stack overflow error"
+
+    override val typ: Type = StackOverflowErrorType()
+  }
+
+  case class StackOverflowErrorType() extends TypeError {
+    override val message: String = "Stack overflow error"
+  }
+
   /** Create an `Term` given its string representation.
     *
     * @return
@@ -379,25 +389,39 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       }
     }
 
-    def depth: Int = getParent match {
-      case Some(value) => value.depth + 1
-      case None        => 0
-    }
+    def depth: Int = getPhantomDepth
 
     def checkDepthLimitWillBeExceeded(currDepth: Int = 0): Unit = {
-      if (currDepth + 1 >= depthLimit) throw new DepthLimitExceededException()
+      if (currDepth + 1 >= depthLimit) {
+        println(s"Depth limit exceeded at $this")
+        throw new DepthLimitExceededException()
+      }
 
-      getVisibleChildren(DisplayMode.Evaluation).foreach({
+      getVisibleChildren(DisplayMode.Evaluation).reverse.foreach({
         case n: ExprNode => n.checkDepthLimitWillBeExceeded(currDepth + 1)
         case _           =>
       })
+    }
+
+    def willDepthLimitBeExceeded(currDepth: Int = 0): Boolean = {
+      if (currDepth + 1 >= depthLimit) {
+        true
+      } else {
+        getVisibleChildren(DisplayMode.Evaluation).reverse.exists({
+          case n: ExprNode => n.willDepthLimitBeExceeded(currDepth + 1)
+          case _           => false
+        })
+      }
     }
 
     val exprName: String
 
     def getExpr: Expr
 
-    lazy val getEditValueResult: Value = getExpr.eval(getEditEnv)
+    lazy val getEditValueResult: Value = {
+      if (willDepthLimitBeExceeded()) StackOverflowErrorValue()
+      else getExpr.eval(getEditEnv)
+    }
 
     lazy val getValue: Value = getExpr.eval(getEvalEnv)
 
@@ -456,7 +480,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
           case None =>
             val newNode = VariableNode.fromExpr(expr)
             newNode.setParent(Some(this))
-            newNode.markPhantom()
+            newNode.markPhantom(getPhantomDepth + 1)
             Some(newNode)
         }
       })
@@ -464,9 +488,16 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     private var isPhantomStore = false
 
-    private def markPhantom(): Unit = {
+    private def markPhantom(depth: Int): Unit = {
       isPhantomStore = true
+      phantomDepth = Some(depth)
+
+      if (depth >= depthLimit) throw new DepthLimitExceededException()
     }
+
+    private var phantomDepth: Option[Int] = None
+
+    private def getPhantomDepth: Int = phantomDepth.getOrElse(0)
 
     override def isPhantom: Boolean = isPhantomStore
   }

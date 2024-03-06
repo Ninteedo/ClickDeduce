@@ -487,6 +487,10 @@ function setSelectedMode(mode: string): void {
 
 let reEnableInputsId: number = 0;
 
+function incrementReEnableInputsId(): void {
+    reEnableInputsId = (reEnableInputsId + 1) % 1000;
+}
+
 export function disableInputs(): void {
     activeInputs.forEach(input => {
         input.setAttribute('readonly', "true");
@@ -497,7 +501,7 @@ export function disableInputs(): void {
     tree.querySelectorAll('.expr-selector-button').forEach(button => button.setAttribute('disabled', "true"));
 
     // re-enable inputs after 5 seconds
-    reEnableInputsId = (reEnableInputsId + 1) % 1000;
+    incrementReEnableInputsId();
     const currentId = reEnableInputsId;
     setTimeout(() => {
         if (currentId === reEnableInputsId) {
@@ -507,6 +511,7 @@ export function disableInputs(): void {
 }
 
 export function enableInputs(): void {
+    incrementReEnableInputsId();
     activeInputs.forEach(input => {
         input.removeAttribute('readonly');
         input.removeAttribute('disabled');

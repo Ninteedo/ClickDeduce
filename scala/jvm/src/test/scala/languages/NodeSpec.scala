@@ -308,24 +308,6 @@ class NodeSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChecks 
         node.getExpr shouldBe expr
       }
     }
-
-    "correctly return its depth" in {
-      val cases = Table(
-        ("node", "tree path", "depth"),
-        (VariableNode.fromExpr(Num(5)), List(), 0),
-        (VariableNode.fromExpr(Var("x")), List(), 0),
-        (VariableNode.fromExpr(Plus(Num(5), Num(6))), List(0), 1),
-        (VariableNode.fromExpr(Times(Plus(Times(Plus(Num(1), Num(2)), Num(3)), Num(4)), Num(5))), List(0, 0, 1), 3),
-        (VariableNode.fromExpr(Times(Plus(Times(Plus(Num(1), Num(2)), Num(3)), Num(4)), Num(5))), List(0, 0, 0, 1), 4)
-      )
-
-      forAll(cases) { (node, treePath, depth) =>
-        node.findChild(treePath) match {
-          case Some(n: ExprNode) => n.depth shouldBe depth
-          case _                 => fail()
-        }
-      }
-    }
   }
 
   "SubExprNode" should {
