@@ -4,20 +4,31 @@
   <meta charset="UTF-8">
   <title>ClickDeduce Guide</title>
   <script>
+    let prevLiteralValue = '';
+
     document.addEventListener('DOMContentLoaded', function () {
-      var exampleSelector = document.getElementById('example-selector');
+      const exampleSelector = document.getElementById('example-selector');
       setupExampleSelector(exampleSelector);
 
-      document.getElementById('example-literal').addEventListener('keydown', event => {
+      const exampleLiteral = document.getElementById('example-literal');
+
+      exampleLiteral.addEventListener('keydown', event => {
         if (event.key === 'Enter' || event.key === 'Tab') {
           event.preventDefault();
           exampleLiteralChanged(event.target);
         }
       });
+      exampleLiteral.addEventListener('blur', event => {
+        if (event.target.value !== prevLiteralValue) {
+          prevLiteralValue = event.target.value;
+          exampleLiteralChanged(event.target);
+          exampleLiteral.blur();
+        }
+      });
     });
   </script>
 </head>
-<body>
+<body id="guide">
 <h1>ClickDeduce Guide</h1>
 <p>
   ClickDeduce is a tool for learning about and creating evaluation and type-checking rules for simple programming
