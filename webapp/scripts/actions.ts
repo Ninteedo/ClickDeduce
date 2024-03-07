@@ -60,7 +60,7 @@ export function handleLiteralChanged(textInput: HTMLInputElement): void {
         focusedTreePath = nextFocusElement.getAttribute("data-tree-path");
     }
 
-    runAction("EditLiteralAction", treePath, [literalValue])
+    runAction("EditLiteralAction", treePath, [literalValue]);
 
     if (focusedTreePath == null) {
         return;
@@ -72,6 +72,42 @@ export function handleLiteralChanged(textInput: HTMLInputElement): void {
             focusedElement.select();
         }
     }
+}
+
+export function exampleLiteralChanged(textInput: HTMLInputElement): void {
+    const literalValue: string = textInput.value;
+    const treePath: string = textInput.getAttribute("data-tree-path");
+
+    if (initialValues.find(([path, value]) => path === treePath && value === literalValue)) {
+        return;
+    }
+
+    const outputDiv = document.getElementById('example-literal-outer').querySelector('.eval-result') as HTMLDivElement;
+
+    if (literalValue.match(/^\d+$/)) {
+        outputDiv.innerHTML = `
+        <span class="tooltip">
+          <div>
+            <div class="value"><span>${literalValue}</span></div>
+            <span>: </span>
+            <div class="value-type"><span>Int</span></div>
+          </div>
+          <div class="tooltip-text">
+            NumV(${literalValue}): IntType()
+          </div>
+        </span>
+        `;
+    } else {
+        outputDiv.innerHTML = `
+        <span class="tooltip">
+          <div class="error-origin">!</div>
+          <div class="tooltip-text">Num can only accept LiteralInt, not ${literalValue}</div>
+        </span>
+        `;
+    }
+
+    textInput.focus();
+    textInput.select();
 }
 
 export function handleExprSelectorChoice(selector: HTMLDivElement, value: string): void {

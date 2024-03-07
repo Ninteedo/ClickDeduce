@@ -20,13 +20,16 @@
     <div id="mode-selector-div">
       <h4>View Mode</h4>
       <form>
-        <input type="radio" id="edit-mode-radio" name="mode" value="edit" checked="checked">
+        <input type="radio" id="edit-mode-radio" name="mode" value="edit" checked="checked"
+               title="Mix of evaluation and type-checking rules to make editing easier">
         <label for="edit-mode-radio">Edit</label>
         <br>
-        <input type="radio" id="type-check-mode-radio" name="mode" value="type-check">
+        <input type="radio" id="type-check-mode-radio" name="mode" value="type-check"
+               title="Examine the tree using type-checking rules">
         <label for="type-check-mode-radio">Type-Check</label>
         <br>
-        <input type="radio" id="eval-mode-radio" name="mode" value="eval">
+        <input type="radio" id="eval-mode-radio" name="mode" value="eval"
+               title="Examine the tree using evaluation rules">
         <label for="eval-mode-radio">Evaluate</label>
       </form>
     </div>
@@ -59,6 +62,11 @@
     <br>
     <input type="checkbox" id="auto-zoom-toggle"/>
     <label for="auto-zoom-toggle">Auto Zoom</label>
+  </div>
+
+  <div>
+    <h3>Help</h3>
+    <a href="guide.html">Guide</a>
   </div>
 </div>
 

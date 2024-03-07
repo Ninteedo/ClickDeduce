@@ -1,0 +1,18 @@
+.example-outer {
+  border: 1px solid $foreground;
+  border-radius: 2px;
+  padding: 5px;
+  margin-bottom: 10px;
+
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+  //transform-origin: left;
+  //transform: scale(1.5);
+}
+
+#guide {
+  h1, h2, h3, h4, h5, h6, p {
+    margin-bottom: 0;
+  }
+}

@@ -65,6 +65,10 @@ module.exports = {
             filename: 'index.html',  // Output filename (optional)
             // inject: false
         }),
+        new HtmlWebpackPlugin({
+            template: './webapp/pages/guide.html',
+            filename: 'guide.html'
+        })
     ],
 
     // Optional: Configuration for source maps (useful for debugging)
