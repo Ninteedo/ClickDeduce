@@ -2,6 +2,11 @@ div.expr-selector-container {
   display: inline-flex;
   position: relative;
 
+  &.focused {
+    box-shadow: -1px 0 2px 1px $foreground, 0 -1px 2px 1px $foreground, 1px 0 2px 1px $foreground, 0 1px 2px 1px $foreground;
+    border-radius: 3px;
+  }
+
   &.guide-highlight * {
     background-color: $highlighted-input;
     color: $highlighted-input-text;
@@ -10,6 +15,7 @@ div.expr-selector-container {
   .expr-selector-input {
     margin: 0;
     border-radius: 3px 0 0 3px;
+    outline: none;
   }
 
   .expr-selector-button {
@@ -26,6 +32,7 @@ div.expr-selector-container {
     color: $foreground;
     border: $input-outline solid 1px;
     z-index: 1;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.16), 0 2px 4px rgba(0, 0, 0, 0.23);
 
     &.show {
       display: block;

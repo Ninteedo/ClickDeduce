@@ -2,6 +2,7 @@ import {tree} from "./initialise";
 import {hasClassOrParentHasClass} from "./utils";
 import {handleExprSelectorChoice} from "./actions";
 
+const SELECTOR_FOCUS_CLASS = 'focused';
 const DROPDOWN_VISIBLE_CLASS = 'show';
 const OPTION_HIDDEN_CLASS = 'hidden';
 const OPTION_HIGHLIGHT_CLASS = 'highlight';
@@ -215,6 +216,7 @@ function showExprSelectorDropdown(selectorDiv: HTMLDivElement) {
     getSelectorButton(selectorDiv).innerHTML = UP_ARROW;
     getSelectorButton(selectorDiv).disabled = true;
     updateExprSelectorDropdown(selectorDiv, true);
+    selectorDiv.classList.add(SELECTOR_FOCUS_CLASS);
 }
 
 function hideExprSelectorDropdown(selectorDiv: HTMLDivElement): void {
@@ -226,6 +228,7 @@ function hideExprSelectorDropdown(selectorDiv: HTMLDivElement): void {
         option.classList.remove(OPTION_HIGHLIGHT_CLASS);
         hideSelectorOption(option);
     });
+    selectorDiv.classList.remove(SELECTOR_FOCUS_CLASS);
 }
 
 function isExprSelectorDropdownVisible(selectorDiv: HTMLDivElement): boolean {
