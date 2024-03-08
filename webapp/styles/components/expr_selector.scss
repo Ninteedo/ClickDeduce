@@ -5,6 +5,7 @@ div.expr-selector-container {
   &.guide-highlight * {
     background-color: $highlighted-tree;
     color: $highlighted-input-text;
+
   }
 
   .expr-selector-input {
@@ -40,6 +41,9 @@ div.expr-selector-container {
 
         &.highlight {
           background-color: $highlighted-tree;
+          border: $input-outline solid 1px;
+          // make text bold
+          font-weight: bold;
         }
       }
     }
