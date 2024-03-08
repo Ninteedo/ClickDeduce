@@ -1,8 +1,9 @@
 import {handleLiteralChanged} from "./actions";
-import {getActiveInputs, lastNodeString, selectorEnterPressed} from "./treeManipulation";
+import {getActiveInputs, lastNodeString} from "./treeManipulation";
 import {getSelectedLanguage, getSelectedMode, hasClassOrParentHasClass} from "./utils";
 import {panzoomInstance} from "./initialise";
 import {convertToLaTeX} from "./clickdeduce-opt";
+import {selectorEnterPressed} from "./customExprSelector";
 
 let errorDiv: HTMLDivElement;
 export let nextFocusElement: HTMLElement = null;

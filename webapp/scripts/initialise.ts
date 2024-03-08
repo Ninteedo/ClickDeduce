@@ -9,15 +9,7 @@ import {
     resetCopyCache,
     startNodeBlank
 } from "./actions";
-import {
-    loadTree,
-    redo,
-    resetTreeManipulation,
-    saveTree,
-    setupExampleSelector,
-    undo,
-    updateTextInputWidth
-} from "./treeManipulation";
+import {loadTree, redo, resetTreeManipulation, saveTree, undo, updateTextInputWidth} from "./treeManipulation";
 import {
     closeExportOutput,
     copyExportOutput,
@@ -28,6 +20,7 @@ import {
 } from "./interface";
 import panzoom, {PanZoom} from "panzoom";
 import {loadImages} from "./imageLoading";
+import {setupExampleSelector} from "./customExprSelector";
 
 export let tree: HTMLDivElement;
 export let panzoomInstance: PanZoom;
