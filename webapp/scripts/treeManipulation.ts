@@ -225,9 +225,9 @@ function updateActiveInputsList(): void {
     activeInputs.forEach(input => {
         input.addEventListener('keydown', handleKeyDown);
         if (input instanceof HTMLInputElement && input.classList.contains('literal')) {
+            input.addEventListener('blur', () => handleLiteralChanged(input));
             input.addEventListener('change', () => handleLiteralChanged(input));
             input.addEventListener('input', () => updateTextInputWidth(input));
-            input.addEventListener('blur', () => handleLiteralChanged(input));
         }
     })
 }

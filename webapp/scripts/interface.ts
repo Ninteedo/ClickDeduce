@@ -73,7 +73,7 @@ export function handleTabPressed(e: KeyboardEvent): void {
         if (nextFocusElement instanceof HTMLInputElement) {
             nextFocusElement.select();
         }
-        // nextFocusElement = null;
+        nextFocusElement = null;
     }
 }
 
