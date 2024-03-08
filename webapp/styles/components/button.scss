@@ -5,6 +5,7 @@ button {
   border-radius: 3px;
   padding: 2px;
   font-family: 'Roboto', sans-serif;
+  user-select: none;
 
   &:disabled {
     background-color: $disabled-input;
