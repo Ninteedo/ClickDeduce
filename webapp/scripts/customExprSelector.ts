@@ -33,15 +33,34 @@ export function replaceSelectInputs(): void {
         const newSelector = tree.querySelector(`.expr-selector-container[data-tree-path="${treePath}"]`) as HTMLDivElement;
         setupTermSelector(newSelector);
     });
+
+    replaceDisabledSelectInputs();
+}
+
+function replaceDisabledSelectInputs(): void {
+    const selectInputs: NodeListOf<HTMLSelectElement> = tree.querySelectorAll(
+        'select.expr-dropdown:disabled, select.type-dropdown:disabled'
+    );
+
+    function createDisabledSelectHTML(select: HTMLSelectElement, treePath: string): string {
+        const kind = select.classList.contains('expr-dropdown') ? 'Expression' : 'Type';
+        return `<div class="expr-selector-placeholder" data-tree-path="${treePath}">Unspecified ${kind}</div>`;
+    }
+
+    selectInputs.forEach(select => {
+        const treePath = select.getAttribute('data-tree-path');
+        select.outerHTML = createDisabledSelectHTML(select, treePath);
+    });
 }
 
 function createExprSelectorHTML(treePath: string, kind: string, placeholderText: string, options: HTMLOptionElement[]): string {
+    const optionsList: string[] = options.map(option => `<li data-value="${option.value}">${option.innerHTML}</li>`);
     return `<div class="expr-selector-container" data-tree-path="${treePath}" data-kind="${kind}">
               <input type="text" class="expr-selector-input" placeholder="${placeholderText}" data-tree-path="${treePath}" />
               <button class="expr-selector-button">${UP_ARROW}</button>
               <div class="expr-selector-dropdown">
                 <ul>
-                ${options.map(option => `<li data-value="${option.value}">${option.innerHTML}</li>`).join('')}
+                ${optionsList.join('')}
                 </ul>
               </div>
             </div>`;

@@ -3,9 +3,8 @@ div.expr-selector-container {
   position: relative;
 
   &.guide-highlight * {
-    background-color: $highlighted-tree;
+    background-color: $highlighted-input;
     color: $highlighted-input-text;
-
   }
 
   .expr-selector-input {
@@ -60,4 +59,13 @@ div.expr-selector-container {
       }
     }
   }
+}
+
+div.expr-selector-placeholder {
+  border: $input-outline solid 1px;
+  border-radius: 3px;
+  padding: 0 2px;
+  background-color: $disabled-input;
+  color: $disabled-input-text;
+  cursor: not-allowed;
 }
