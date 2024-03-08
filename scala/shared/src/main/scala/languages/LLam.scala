@@ -61,7 +61,7 @@ class LLam extends LLet {
       LambdaSymbol(),
       v.toText,
       SpaceAfter(MathElement.colon),
-      typ.toTextBracketed,
+      TypeElement(typ.toTextBracketed),
       SpaceAfter(MathElement.period),
       e.toText
     )
@@ -137,7 +137,7 @@ class LLam extends LLet {
       LambdaSymbol(),
       ItalicsElement(TextElement(v)),
       SpaceAfter(MathElement.colon),
-      properInputType.toTextBracketed,
+      TypeElement(properInputType.toTextBracketed),
       SpaceAfter(MathElement.period),
       e.toText
     )

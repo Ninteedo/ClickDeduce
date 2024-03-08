@@ -51,7 +51,7 @@ class LRec extends LLam {
       f.toText,
       BracketedElement(MultiElement(v.toText, TextElement(": "), inType.toTextBracketed)),
       SpaceAfter(MathElement.colon),
-      outType.toTextBracketed,
+      TypeElement(outType.toTextBracketed),
       SpaceAfter(MathElement.period),
       e.toTextBracketed
     )
@@ -85,7 +85,7 @@ class LRec extends LLam {
       f.toText,
       BracketedElement(MultiElement(v.toText, SpaceAfter(MathElement.colon), in_typ.toTextBracketed)),
       SpaceAfter(MathElement.colon),
-      out_typ.toTextBracketed,
+      TypeElement(out_typ.toTextBracketed),
       SpaceAfter(MathElement.period),
       e.toTextBracketed
     )

@@ -297,7 +297,7 @@ trait AbstractLanguage {
 
     override val isError: Boolean = true
 
-    override def toText: ConvertableText = TextElement("error!")
+    override def toText: ConvertableText = HtmlElement(span(cls := "error-origin", raw("error!")), TextElement("error!"))
   }
 
   /** An error that occurs due to attempting to process an unknown `Expr`.
@@ -331,7 +331,7 @@ trait AbstractLanguage {
 
     override val isError: Boolean = true
 
-    override def toText: ConvertableText = TextElement("error!")
+    override def toText: ConvertableText = HtmlElement(span(cls := "error-origin", raw("error!")), TextElement("error!"))
   }
 
   /** An error that occurs due to attempting to process an unknown `Expr`.

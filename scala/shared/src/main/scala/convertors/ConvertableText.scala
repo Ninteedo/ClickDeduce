@@ -88,6 +88,20 @@ case class HtmlElement(html: TypedTag[String], nonHtml: ConvertableText) extends
   override def toReadOnly: ConvertableText = HtmlElement(asHtmlReadOnly, nonHtml)
 }
 
+case class ValueElement(elem: ConvertableText) extends ConvertableText {
+  override def asPlainText: String = elem.asPlainText
+  override def asHtml: TypedTag[String] = elem.asHtml(cls := "value")
+  override def asHtmlReadOnly: TypedTag[String] = elem.asHtmlReadOnly(cls := "value")
+  override def asLaTeX: String = elem.asLaTeX
+}
+
+case class TypeElement(elem: ConvertableText) extends ConvertableText {
+  override def asPlainText: String = elem.asPlainText
+  override def asHtml: TypedTag[String] = elem.asHtml(cls := "value-type")
+  override def asHtmlReadOnly: TypedTag[String] = elem.asHtmlReadOnly(cls := "type")
+  override def asLaTeX: String = elem.asLaTeX
+}
+
 case class DoubleRightArrow() extends ConvertableText {
   override def asPlainText: String = "⇒"
   override def asHtml: TypedTag[String] = span(raw("&rArr;"))
