@@ -185,8 +185,7 @@ export function isAutoZoomEnabled(): boolean {
 export function exportLaTeX(): void {
     const langName = getSelectedLanguage();
     const modeName = getSelectedMode();
-    const nodeString = lastNodeString;
-    const output: string = convertToLaTeX(langName, modeName, nodeString);
+    const output: string = convertToLaTeX(langName, modeName, lastNodeString);
     showExportOutput("LaTeX Output", output, "Copy this LaTeX code and use the bussproofs package");
 }
 

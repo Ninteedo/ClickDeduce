@@ -437,9 +437,29 @@ function loadTreeFromString(nodeString: string): void {
     runAction("IdentityAction", "", [])
 }
 
+/**
+ * Finds the substring of the node string at the given path.
+ * @param path the tree path to the node, integers separated by dashes
+ */
 export function getNodeStringFromPath(path: string): string {
+    /**
+     * Parses the node string and returns the arguments of the given node.
+     * <p>
+     * The node string is the name followed by a comma-separated list of arguments in parentheses.
+     * The arguments can themselves be nodes, so a recursive approach is used.
+     * </p>
+     * <p>
+     * There can also be string literals in the arguments
+     * which can contain commas, and parentheses, and escape characters.
+     * </p>
+     * <p>
+     * For example, the node string <code>'Plus(Num("1"), Times(Num(""), Num("mess(\")\\")))'</code>
+     * would return <code>['Num("1")', 'Times(Num(""), Num("mess(\")\\"))']</code>.
+     * </p>
+     *
+     * @param node
+     */
     function nodeArgs(node: string): string[] {
-        let stack: string[] = [];
         let current: string = '';
         let nodes: string[] = [];
         let depth: number = 0;
