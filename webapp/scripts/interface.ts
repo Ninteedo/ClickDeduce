@@ -132,19 +132,12 @@ function closeContextMenu(e: MouseEvent): void {
  */
 export async function zoomToFit(): Promise<void> {
     const container: HTMLElement = document.getElementById('tree-container');
-    const firstSubtree: Element = document.querySelector('.subtree[data-tree-path=""]');
+    const firstSubtree: HTMLDivElement = document.querySelector('.subtree[data-tree-path=""]') as HTMLDivElement;
 
     const scaleWidth = container.clientWidth / firstSubtree.clientWidth;
 
     panzoomInstance.moveTo(0, 0);
     panzoomInstance.zoomAbs(0, 0, scaleWidth);
-
-    // tiny delay to allow the panzoomInstance to update
-    await new Promise(resolve => setTimeout(resolve, 1));
-
-    const left = container.getBoundingClientRect().left - firstSubtree.getBoundingClientRect().left;
-
-    panzoomInstance.moveBy(left, 0, false);
 }
 
 /**
