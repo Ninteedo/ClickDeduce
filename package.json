@@ -31,10 +31,10 @@
     "build:webpack": "webpack --mode=production",
     "build:webpack:dev": "webpack --mode=development",
     "build:scala:compile": "sbt compile",
-    "build:scala": "npm run build:scala:compile && sbt fullOptJS",
-    "build:scala:fast": "npm run build:scala:compile && sbt fastOptJS",
+    "build:scala": "sbt compile fullOptJS",
+    "build:scala:fast": "sbt compile fastOptJS",
     "build": "npm run build:scala && npm run build:webpack",
-    "build:dev": "npm run build:scala && npm run build:webpack:dev"
+    "build:dev": "npm run build:scala:fast && npm run build:webpack:dev"
   },
   "dependencies": {
     "@panzoom/panzoom": "~4.5.1",
