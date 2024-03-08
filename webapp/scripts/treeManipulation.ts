@@ -437,10 +437,11 @@ function getExprSelectorOptionHighlight(selectorDiv: HTMLDivElement, ignoreHidde
     return options.findIndex(option => option.classList.contains('highlight'));
 }
 
-function moveSelectorOptionHighlight(selectorDiv: HTMLDivElement, offset: number) {
+function moveSelectorOptionHighlight(selectorDiv: HTMLDivElement, offset: number): void {
     const filtered = getSelectorOptions(selectorDiv).filter(option => option.style.display !== 'none');
     const currentHighlightIndex = getExprSelectorOptionHighlight(selectorDiv, true);
-    const newHighlightIndex = (currentHighlightIndex + offset) % filtered.length;
+    let newHighlightIndex = (currentHighlightIndex + offset) % filtered.length;
+    if (newHighlightIndex < 0) newHighlightIndex += filtered.length;  // wrap around from -1 to the end
     setExprSelectorOptionHighlight(selectorDiv, newHighlightIndex);
 }
 
