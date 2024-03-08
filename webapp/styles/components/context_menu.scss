@@ -1,8 +1,8 @@
 .custom-menu {
   display: none;
   position: absolute;
-  box-shadow: 1px 1px 2px #888;
-  border: solid 1px #ccc;
+  box-shadow: 1px 1px 2px $context-menu-box-shadow;
+  border: solid 1px $context-menu-border;
   background-color: $context-menu-background;
   padding: 2px;
   z-index: 1000;
@@ -15,11 +15,22 @@
 
   li {
     padding: 10px;
-    cursor: pointer;
     text-align: left;
 
-    &:hover {
-      background-color: $highlighted-tree;
+    &:not([disabled]) {
+      cursor: pointer;
+      &:hover {
+        background-color: $highlighted-tree;
+      }
+    }
+
+    &[disabled] {
+      background-color: $disabled-input;
+      cursor: not-allowed;
+    }
+
+    &:not(:first-child) {
+      border-top: 1px solid $context-menu-border;
     }
   }
 }

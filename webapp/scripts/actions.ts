@@ -209,3 +209,7 @@ export function pasteTreeNode(): void {
         runAction("PasteAction", treePath, [copyCache]);
     }
 }
+
+export function hasCopyCache(): boolean {
+    return copyCache !== null;
+}

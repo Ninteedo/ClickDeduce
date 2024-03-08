@@ -1,4 +1,4 @@
-import {handleLiteralChanged} from "./actions";
+import {handleLiteralChanged, hasCopyCache} from "./actions";
 import {getActiveInputs, lastNodeString} from "./treeManipulation";
 import {getSelectedLanguage, getSelectedMode, hasClassOrParentHasClass} from "./utils";
 import {panzoomInstance} from "./initialise";
@@ -111,6 +111,13 @@ function openContextMenu(e: MouseEvent): void {
         menu.style.display = 'block';
         menu.style.left = e.pageX + 'px';
         menu.style.top = e.pageY + 'px';
+
+        const pasteButton = document.getElementById('paste-button');
+        if (hasCopyCache()) {
+            pasteButton.removeAttribute('disabled');
+        } else {
+            pasteButton.setAttribute('disabled', 'true');
+        }
     } else {
         closeContextMenu(e);
     }
