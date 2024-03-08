@@ -2,6 +2,12 @@ import {tree} from "./initialise";
 import {hasClassOrParentHasClass} from "./utils";
 import {handleExprSelectorChoice} from "./actions";
 
+const DROPDOWN_VISIBLE_CLASS = 'show';
+const OPTION_HIDDEN_CLASS = 'hidden';
+const OPTION_HIGHLIGHT_CLASS = 'highlight';
+const UP_ARROW = '&#9650;';
+const DOWN_ARROW = '&#9660;';
+
 export function replaceSelectInputs(): void {
     const selectInputs: NodeListOf<HTMLSelectElement> = tree.querySelectorAll(
         'select.expr-dropdown[data-tree-path]:not([disabled]), select.type-dropdown[data-tree-path]:not([disabled])'
@@ -22,20 +28,23 @@ export function replaceSelectInputs(): void {
             placeholderText = 'Enter Type...';
             kind = 'type';
         }
-        select.outerHTML =
-            `<div class="expr-selector-container" data-tree-path="${treePath}" data-kind="${kind}">
+        select.outerHTML = createExprSelectorHTML(treePath, kind, placeholderText, options);
+
+        const newSelector = tree.querySelector(`.expr-selector-container[data-tree-path="${treePath}"]`) as HTMLDivElement;
+        setupTermSelector(newSelector);
+    });
+}
+
+function createExprSelectorHTML(treePath: string, kind: string, placeholderText: string, options: HTMLOptionElement[]): string {
+    return `<div class="expr-selector-container" data-tree-path="${treePath}" data-kind="${kind}">
               <input type="text" class="expr-selector-input" placeholder="${placeholderText}" data-tree-path="${treePath}" />
-              <button class="expr-selector-button">&#9660;</button>
+              <button class="expr-selector-button">${UP_ARROW}</button>
               <div class="expr-selector-dropdown">
                 <ul>
                 ${options.map(option => `<li data-value="${option.value}">${option.innerHTML}</li>`).join('')}
                 </ul>
               </div>
             </div>`;
-
-        const newSelector = tree.querySelector(`.expr-selector-container[data-tree-path="${treePath}"]`) as HTMLDivElement;
-        setupTermSelector(newSelector);
-    });
 }
 
 export function setupTermSelector(termSelectorContainer: HTMLDivElement): void {
@@ -148,10 +157,10 @@ function updateExprSelectorDropdown(selectorDiv: HTMLDivElement, keepOpenWhenEmp
 
 function setExprSelectorOptionHighlight(selectorDiv: HTMLDivElement, highlightIndex: number) {
     const options = getSelectorOptions(selectorDiv);
-    options.forEach(option => option.classList.remove('highlight'));
+    options.forEach(option => option.classList.remove(OPTION_HIGHLIGHT_CLASS));
     const filtered = visibleSelectorOptions(selectorDiv);
     if (highlightIndex >= 0 && highlightIndex < filtered.length) {
-        filtered[highlightIndex].classList.add('highlight');
+        filtered[highlightIndex].classList.add(OPTION_HIGHLIGHT_CLASS);
     }
 }
 
@@ -162,7 +171,7 @@ function getExprSelectorOptionHighlight(selectorDiv: HTMLDivElement, ignoreHidde
     } else {
         options = getSelectorOptions(selectorDiv);
     }
-    return options.findIndex(option => option.classList.contains('highlight'));
+    return options.findIndex(option => option.classList.contains(OPTION_HIGHLIGHT_CLASS));
 }
 
 function moveSelectorOptionHighlight(selectorDiv: HTMLDivElement, offset: number): void {
@@ -183,37 +192,37 @@ function toggleExprSelectorDropdownDisplay(selectorDiv: HTMLDivElement) {
 
 function showExprSelectorDropdown(selectorDiv: HTMLDivElement) {
     if (isExprSelectorDropdownVisible(selectorDiv)) return;
-    getSelectorDropdown(selectorDiv).classList.add('show');
-    getSelectorButton(selectorDiv).innerHTML = '&#9650;';
+    getSelectorDropdown(selectorDiv).classList.add(DROPDOWN_VISIBLE_CLASS);
+    getSelectorButton(selectorDiv).innerHTML = UP_ARROW;
     getSelectorButton(selectorDiv).disabled = true;
     updateExprSelectorDropdown(selectorDiv, true);
 }
 
 function hideExprSelectorDropdown(selectorDiv: HTMLDivElement): void {
     if (!isExprSelectorDropdownVisible(selectorDiv)) return;
-    getSelectorDropdown(selectorDiv).classList.remove('show');
-    getSelectorButton(selectorDiv).innerHTML = '&#9660;';
+    getSelectorDropdown(selectorDiv).classList.remove(DROPDOWN_VISIBLE_CLASS);
+    getSelectorButton(selectorDiv).innerHTML = DOWN_ARROW;
     getSelectorButton(selectorDiv).disabled = false;
     getSelectorOptions(selectorDiv).forEach(option => {
-        option.classList.remove('highlight');
-        option.removeAttribute('style');
+        option.classList.remove(OPTION_HIGHLIGHT_CLASS);
+        hideSelectorOption(option);
     });
 }
 
 function isExprSelectorDropdownVisible(selectorDiv: HTMLDivElement): boolean {
-    return getSelectorDropdown(selectorDiv).classList.contains('show');
+    return getSelectorDropdown(selectorDiv).classList.contains(DROPDOWN_VISIBLE_CLASS);
 }
 
 function showSelectorOption(option: HTMLLIElement): void {
-    option.classList.remove('hidden');
+    option.classList.remove(OPTION_HIDDEN_CLASS);
 }
 
 function hideSelectorOption(option: HTMLLIElement): void {
-    option.classList.add('hidden');
+    option.classList.add(OPTION_HIDDEN_CLASS);
 }
 
 function isSelectorOptionHidden(option: HTMLLIElement): boolean {
-    return option.classList.contains('hidden');
+    return option.classList.contains(OPTION_HIDDEN_CLASS);
 }
 
 function visibleSelectorOptions(selectorDiv: HTMLDivElement): HTMLLIElement[] {
