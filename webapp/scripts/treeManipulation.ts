@@ -309,8 +309,6 @@ export function setupTermSelector(termSelectorContainer: HTMLDivElement): void {
     const button = getSelectorButton(termSelectorContainer);
     const dropdown = getSelectorDropdown(termSelectorContainer);
 
-    dropdown.style.display = 'none';
-
     input.addEventListener('input', () => updateExprSelectorDropdown(termSelectorContainer));
     input.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') {
@@ -346,19 +344,16 @@ export function setupExampleSelector(termSelectorContainer: HTMLDivElement): voi
     const dropdown = getSelectorDropdown(termSelectorContainer);
     const output = document.getElementById("expr-selector-output");
 
-    dropdown.style.display = 'none';
-
     function selectOption(option: HTMLLIElement): void {
         input.value = option.innerText;
-        dropdown.style.display = 'none';
-        button.innerHTML = '&#9660;';
-        output.textContent = option.textContent
+        output.textContent = option.textContent;
+        hideExprSelectorDropdown(termSelectorContainer);
     }
 
     input.addEventListener('input', () => updateExprSelectorDropdown(termSelectorContainer));
     input.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') {
-            if (getSelectorDropdown(termSelectorContainer).style.display === 'none') {
+            if (isExprSelectorDropdownVisible(termSelectorContainer)) {
                 toggleExprSelectorDropdownDisplay(termSelectorContainer);
                 return;
             }
@@ -395,22 +390,23 @@ export function setupExampleSelector(termSelectorContainer: HTMLDivElement): voi
 
 function updateExprSelectorDropdown(selectorDiv: HTMLDivElement, keepOpenWhenEmpty: boolean = true) {
     const input = getSelectorInput(selectorDiv);
-    const dropdown = getSelectorDropdown(selectorDiv);
 
     if (input.value === '' && !keepOpenWhenEmpty) {
-        if (dropdown.style.display !== 'none') {
+        if (isExprSelectorDropdownVisible(selectorDiv)) {
             toggleExprSelectorDropdownDisplay(selectorDiv);
         }
         return;
     }
 
-    if (dropdown.style.display === 'none' || dropdown.style.display === '') {
-        toggleExprSelectorDropdownDisplay(selectorDiv);
-    }
+    showExprSelectorDropdown(selectorDiv);
 
     const filterText = input.value.toLowerCase();
     getSelectorOptions(selectorDiv).forEach(option => {
-        option.style.display = option.innerHTML.toLowerCase().includes(filterText) ? 'block' : 'none'
+        if (option.innerHTML.toLowerCase().includes(filterText)) {
+            showSelectorOption(option);
+        } else {
+            hideSelectorOption(option);
+        }
     });
 
     setExprSelectorOptionHighlight(selectorDiv, 0);
@@ -419,22 +415,24 @@ function updateExprSelectorDropdown(selectorDiv: HTMLDivElement, keepOpenWhenEmp
 function setExprSelectorOptionHighlight(selectorDiv: HTMLDivElement, highlightIndex: number) {
     const options = getSelectorOptions(selectorDiv);
     options.forEach(option => option.classList.remove('highlight'));
-    const filtered = options.filter(option => option.style.display !== 'none');
+    const filtered = visibleSelectorOptions(selectorDiv);
     if (highlightIndex >= 0 && highlightIndex < filtered.length) {
         filtered[highlightIndex].classList.add('highlight');
     }
 }
 
 function getExprSelectorOptionHighlight(selectorDiv: HTMLDivElement, ignoreHidden: boolean): number {
-    let options = getSelectorOptions(selectorDiv);
+    let options: HTMLLIElement[];
     if (ignoreHidden) {
-        options = options.filter(option => option.style.display !== 'none');
+        options = visibleSelectorOptions(selectorDiv);
+    } else {
+        options = getSelectorOptions(selectorDiv);
     }
     return options.findIndex(option => option.classList.contains('highlight'));
 }
 
 function moveSelectorOptionHighlight(selectorDiv: HTMLDivElement, offset: number): void {
-    const filtered = getSelectorOptions(selectorDiv).filter(option => option.style.display !== 'none');
+    const filtered = visibleSelectorOptions(selectorDiv);
     const currentHighlightIndex = getExprSelectorOptionHighlight(selectorDiv, true);
     let newHighlightIndex = (currentHighlightIndex + offset) % filtered.length;
     if (newHighlightIndex < 0) newHighlightIndex += filtered.length;  // wrap around from -1 to the end
@@ -442,22 +440,24 @@ function moveSelectorOptionHighlight(selectorDiv: HTMLDivElement, offset: number
 }
 
 function toggleExprSelectorDropdownDisplay(selectorDiv: HTMLDivElement) {
-    if (getSelectorDropdown(selectorDiv).style.display === 'none') {
-        showExprSelectorDropdown(selectorDiv);
-    } else {
+    if (isExprSelectorDropdownVisible(selectorDiv)) {
         hideExprSelectorDropdown(selectorDiv);
+    } else {
+        showExprSelectorDropdown(selectorDiv);
     }
 }
 
 function showExprSelectorDropdown(selectorDiv: HTMLDivElement) {
-    getSelectorDropdown(selectorDiv).style.display = 'block';
+    if (isExprSelectorDropdownVisible(selectorDiv)) return;
+    getSelectorDropdown(selectorDiv).classList.add('show');
     getSelectorButton(selectorDiv).innerHTML = '&#9650;';
     getSelectorButton(selectorDiv).disabled = true;
     updateExprSelectorDropdown(selectorDiv, true);
 }
 
 function hideExprSelectorDropdown(selectorDiv: HTMLDivElement): void {
-    getSelectorDropdown(selectorDiv).style.display = 'none';
+    if (!isExprSelectorDropdownVisible(selectorDiv)) return;
+    getSelectorDropdown(selectorDiv).classList.remove('show');
     getSelectorButton(selectorDiv).innerHTML = '&#9660;';
     getSelectorButton(selectorDiv).disabled = false;
     getSelectorOptions(selectorDiv).forEach(option => {
@@ -466,15 +466,34 @@ function hideExprSelectorDropdown(selectorDiv: HTMLDivElement): void {
     });
 }
 
+function isExprSelectorDropdownVisible(selectorDiv: HTMLDivElement): boolean {
+    return getSelectorDropdown(selectorDiv).classList.contains('show');
+}
+
+function showSelectorOption(option: HTMLLIElement): void {
+    option.classList.remove('hidden');
+}
+
+function hideSelectorOption(option: HTMLLIElement): void {
+    option.classList.add('hidden');
+}
+
+function isSelectorOptionHidden(option: HTMLLIElement): boolean {
+    return option.classList.contains('hidden');
+}
+
+function visibleSelectorOptions(selectorDiv: HTMLDivElement): HTMLLIElement[] {
+    return getSelectorOptions(selectorDiv).filter(option => !isSelectorOptionHidden(option));
+}
+
 function selectorSelectOption(selectorDiv: HTMLDivElement, option: HTMLLIElement): void {
     getSelectorInput(selectorDiv).value = option.innerText;
-    getSelectorDropdown(selectorDiv).style.display = 'none';
-    getSelectorButton(selectorDiv).innerHTML = '&#9660;';
     handleExprSelectorChoice(selectorDiv, option.getAttribute('data-value'));
+    hideExprSelectorDropdown(selectorDiv);
 }
 
 export function selectorEnterPressed(selectorDiv: HTMLDivElement): void {
-    if (getSelectorDropdown(selectorDiv).style.display === 'none') {
+    if (!isExprSelectorDropdownVisible(selectorDiv)) {
         toggleExprSelectorDropdownDisplay(selectorDiv);
         return;
     }

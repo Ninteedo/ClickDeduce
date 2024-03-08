@@ -28,6 +28,14 @@ div.expr-selector-container {
     border: $input-outline solid 1px;
     z-index: 1;
 
+    &.show {
+      display: block;
+    }
+
+    &:not(.show) {
+      display: none;
+    }
+
     > ul {
       list-style: none;
       padding: 0;
@@ -44,6 +52,10 @@ div.expr-selector-container {
           border: $input-outline solid 1px;
           // make text bold
           font-weight: bold;
+        }
+
+        &.hidden {
+          display: none;
         }
       }
     }
