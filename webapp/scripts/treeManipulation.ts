@@ -393,7 +393,7 @@ export function setupExampleSelector(termSelectorContainer: HTMLDivElement): voi
     });
 }
 
-function updateExprSelectorDropdown(selectorDiv: HTMLDivElement, keepOpenWhenEmpty: boolean = false) {
+function updateExprSelectorDropdown(selectorDiv: HTMLDivElement, keepOpenWhenEmpty: boolean = true) {
     const input = getSelectorInput(selectorDiv);
     const dropdown = getSelectorDropdown(selectorDiv);
 
@@ -410,11 +410,7 @@ function updateExprSelectorDropdown(selectorDiv: HTMLDivElement, keepOpenWhenEmp
 
     const filterText = input.value.toLowerCase();
     getSelectorOptions(selectorDiv).forEach(option => {
-        if (option.innerHTML.toLowerCase().includes(filterText)) {
-            option.style.display = 'block';
-        } else {
-            option.style.display = 'none';
-        }
+        option.style.display = option.innerHTML.toLowerCase().includes(filterText) ? 'block' : 'none'
     });
 
     setExprSelectorOptionHighlight(selectorDiv, 0);
