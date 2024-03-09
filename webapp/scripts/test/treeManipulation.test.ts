@@ -198,7 +198,8 @@ describe("hovering over a node behaves correctly", () => {
 });
 
 describe("phantom inputs are made read-only and disabled", () => {
-    const selector = `.phantom input.literal, .phantom select[class="expr-dropdown"]`;
+    const literalSelector = `.phantom input.literal`;
+    const placeholderSelector = `.phantom div.expr-selector-placeholder`;
 
     beforeEach(() => {
         doStartNodeBlank();
@@ -219,12 +220,15 @@ describe("phantom inputs are made read-only and disabled", () => {
     });
 
     test("phantom inputs are made read-only and disabled", () => {
-        const inputs = document.querySelectorAll(selector);
-        expect(inputs).toHaveLength(4);
-        inputs.forEach(input => {
+        const literalInputs = document.querySelectorAll(literalSelector);
+        expect(literalInputs).toHaveLength(2);
+        literalInputs.forEach(input => {
             expect(input.getAttributeNames()).toContain('readonly');
             expect(input.getAttributeNames()).toContain('disabled');
         });
+
+        const placeholderDivs = document.querySelectorAll(placeholderSelector);
+        expect(placeholderDivs).toHaveLength(2);
     });
 });
 

@@ -40,7 +40,7 @@ export function replaceSelectInputs(): void {
 
 function replaceDisabledSelectInputs(): void {
     const selectInputs: NodeListOf<HTMLSelectElement> = tree.querySelectorAll(
-        'select.expr-dropdown:disabled, select.type-dropdown:disabled'
+        'select.expr-dropdown:disabled, select.type-dropdown:disabled, .phantom select.expr-dropdown, .phantom select.type-dropdown'
     );
 
     function createDisabledSelectHTML(select: HTMLSelectElement, treePath: string): string {

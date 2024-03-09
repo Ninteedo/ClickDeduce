@@ -68,6 +68,7 @@ export function handleTabPressed(e: KeyboardEvent): void {
         } else if (activeElemIndex >= getActiveInputs().length) {
             activeElemIndex = 0;
         }
+        e.target.dispatchEvent(new Event('blur'));
         nextFocusElement = getActiveInputs()[activeElemIndex];
         nextFocusElement.focus();
         if (nextFocusElement instanceof HTMLInputElement) {

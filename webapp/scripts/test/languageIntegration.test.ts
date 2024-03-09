@@ -433,7 +433,6 @@ describe("input focus is preserved when tabbing as the tree is updated", () => {
         const input = getTree().querySelector('input[data-tree-path="0-0-0"]') as HTMLInputElement;
         input.value = '77';
         input.dispatchEvent(new KeyboardEvent('keydown', {key: 'Tab'}));
-        input.dispatchEvent(new Event('blur'));
 
         slightDelay();
 
@@ -476,7 +475,6 @@ describe("user can perform a sequence of actions", () => {
 
         getTree().querySelector('input[data-tree-path="0-0-0"]').setAttribute('value', '1');
         getTree().querySelector('input[data-tree-path="0-0-0"]').dispatchEvent(new KeyboardEvent('keydown', {key: 'Tab'}));
-        getTree().querySelector('input[data-tree-path="0-0-0"]').dispatchEvent(new Event('blur'));
         slightDelay();
 
         expect(getTree().querySelector('input[data-tree-path="0-0-0"]').getAttribute('value')).toBe('1');
