@@ -601,11 +601,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     override def toText(mode: DisplayMode): ConvertableText =
       HtmlElement(BlankExprDropDown().toText.asHtml(data("tree-path") := treePathString), BlankExprDropDown().toText)
 
-    override def toTextReadOnly(mode: DisplayMode): ConvertableText =
-      HtmlElement(
-        BlankExprDropDown().toText.asHtml(data("origin") := treePathString),
-        BlankExprDropDown().toText
-      ).toReadOnly
+    override def toTextReadOnly(mode: DisplayMode): ConvertableText = toText(mode).toReadOnly
 
     override val exprName: String = "ExprChoice"
 
