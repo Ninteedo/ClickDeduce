@@ -31,8 +31,8 @@
     "build:webpack": "webpack --mode=production",
     "build:webpack:dev": "webpack --mode=development",
     "build:scala:compile": "sbt compile",
-    "build:scala": "sbt compile fullOptJS",
-    "build:scala:fast": "sbt compile fastOptJS",
+    "build:scala": "sbt fullOptJS",
+    "build:scala:fast": "sbt fastOptJS",
     "build": "npm run build:scala && npm run build:webpack",
     "build:dev": "npm run build:scala:fast && npm run build:webpack:dev"
   },
