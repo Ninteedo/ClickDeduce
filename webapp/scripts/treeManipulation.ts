@@ -227,7 +227,10 @@ function updateActiveInputsList(): void {
         if (input instanceof HTMLInputElement && input.classList.contains('literal')) {
             input.addEventListener('blur', () => handleLiteralChanged(input));
             input.addEventListener('change', () => handleLiteralChanged(input));
-            input.addEventListener('input', () => updateTextInputWidth(input));
+            input.addEventListener('input', () => {
+                updateTextInputWidth(input);
+                updateLinkedInputPlaceholders(input);
+            });
         }
     })
 }
@@ -276,6 +279,15 @@ export function redo(): void {
 export function updateTextInputWidth(textInput: HTMLInputElement): void {
     const minWidth: number = 2;
     textInput.style.width = Math.max(minWidth, textInput.value.length) + "ch";
+}
+
+function updateLinkedInputPlaceholders(input: HTMLInputElement): void {
+    const treePath: string = input.getAttribute('data-tree-path');
+    const selector = `input[data-origin="${treePath}"]`;
+    tree.querySelectorAll(selector).forEach((el: HTMLInputElement) => {
+        el.value = input.value;
+        updateTextInputWidth(el);
+    });
 }
 
 function setSelectedMode(mode: string): void {

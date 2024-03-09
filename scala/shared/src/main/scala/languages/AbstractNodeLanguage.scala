@@ -601,7 +601,11 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     override def toText(mode: DisplayMode): ConvertableText =
       HtmlElement(BlankExprDropDown().toText.asHtml(data("tree-path") := treePathString), BlankExprDropDown().toText)
 
-    override def toTextReadOnly(mode: DisplayMode): ConvertableText = toText(mode).toReadOnly
+    override def toTextReadOnly(mode: DisplayMode): ConvertableText =
+      HtmlElement(
+        BlankExprDropDown().toText.asHtml(data("origin") := treePathString),
+        BlankExprDropDown().toText
+      ).toReadOnly
 
     override val exprName: String = "ExprChoice"
 
@@ -646,19 +650,25 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     def toHtmlLine(mode: DisplayMode): TypedTag[String] =
       htmlLineShared(width := s"${Math.max(2, literalText.length)}ch", data("tree-path") := treePathString)
 
-    def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] =
-      htmlLineShared(width := s"${Math.max(1, literalText.length)}ch", readonly, disabled)
+    def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] = {
+      println(s"toHtmlLineReadOnly: $literalText")
+      println(s"origin: $treePathString")
+      htmlLineShared(
+        width := s"${Math.max(1, literalText.length)}ch",
+        data("origin") := treePathString,
+        readonly,
+        disabled
+      )
+    }
 
     override def toText(mode: DisplayMode): ConvertableText = HtmlElement(toHtmlLine(mode), getLiteral.toText)
 
     override def toTextReadOnly(mode: DisplayMode): ConvertableText =
       HtmlElement(toHtmlLineReadOnly(mode), getLiteral.toText)
 
-    override def getPlaceholder(mode: DisplayMode, readOnly: Boolean = true): LiteralAny = if (readOnly) {
-      LiteralAny(toHtmlLineReadOnly(mode).toString)
-    } else {
-      LiteralAny(toHtmlLine(mode).toString)
-    }
+    override def getPlaceholder(mode: DisplayMode, readOnly: Boolean = true): LiteralAny =
+      if (readOnly) LiteralAny(toHtmlLineReadOnly(mode).toString)
+      else LiteralAny(toHtmlLine(mode).toString)
 
     override val children: List[OuterNode] = Nil
 
