@@ -650,16 +650,12 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     def toHtmlLine(mode: DisplayMode): TypedTag[String] =
       htmlLineShared(width := s"${Math.max(2, literalText.length)}ch", data("tree-path") := treePathString)
 
-    def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] = {
-      println(s"toHtmlLineReadOnly: $literalText")
-      println(s"origin: $treePathString")
-      htmlLineShared(
-        width := s"${Math.max(1, literalText.length)}ch",
-        data("origin") := treePathString,
-        readonly,
-        disabled
-      )
-    }
+    def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] = htmlLineShared(
+      width := s"${Math.max(1, literalText.length)}ch",
+      data("origin") := treePathString,
+      readonly,
+      disabled
+    )
 
     override def toText(mode: DisplayMode): ConvertableText = HtmlElement(toHtmlLine(mode), getLiteral.toText)
 
