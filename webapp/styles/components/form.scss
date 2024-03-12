@@ -15,6 +15,11 @@ input {
     color: $disabled-input-text;
     cursor: not-allowed;
   }
+
+  &.guide-highlight {
+    background-color: $highlighted-input;
+    color: $highlighted-input-text;
+  }
 }
 
 select {

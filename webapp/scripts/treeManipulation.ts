@@ -206,6 +206,20 @@ function makeDisabledInputsFocusOriginal(): void {
             origin.parentElement.classList.remove('guide-highlight');
         });
     });
+
+    document.querySelectorAll('input.literal[disabled]').forEach(input => {
+        const origin = input.getAttribute('data-origin');
+        if (origin === null) return;
+
+        const originInput = tree.querySelector(`input:not([disabled])[data-tree-path="${origin}"]`) as HTMLInputElement;
+        if (originInput === null) return;
+        input.addEventListener('mouseover', () => {
+            originInput.classList.add('guide-highlight');
+        });
+        input.addEventListener('mouseout', () => {
+            originInput.classList.remove('guide-highlight');
+        });
+    });
 }
 
 /**
