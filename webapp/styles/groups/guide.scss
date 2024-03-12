@@ -1,3 +1,5 @@
+@import '../abstracts/colours';
+
 .example-outer {
   border: 1px solid $foreground;
   border-radius: 2px;
@@ -7,8 +9,6 @@
   position: relative;
   width: fit-content;
   max-width: 100%;
-  //transform-origin: left;
-  //transform: scale(1.5);
 }
 
 #guide {
