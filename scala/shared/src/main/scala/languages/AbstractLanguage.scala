@@ -132,7 +132,7 @@ trait AbstractLanguage {
       }
     }
 
-    protected def evalInner(env: ValueEnv): Value = UnexpectedExpr(toString)
+    protected def evalInner(env: ValueEnv): Value
 
     final def typeCheck(): Type = typeCheck(TypeEnv.empty)
 
@@ -151,14 +151,20 @@ trait AbstractLanguage {
       }
     }
 
-    protected def typeCheckInner(tEnv: TypeEnv): Type = UnexpectedExprType(toString)
+    protected def typeCheckInner(tEnv: TypeEnv): Type
   }
 
-  case class MissingExpr() extends Expr {
+  abstract class NotImplementedExpr extends Expr {
+    override def evalInner(env: ValueEnv): Value = UnexpectedExpr(toString)
+
+    override def typeCheckInner(tEnv: TypeEnv): Type = UnexpectedExprType(toString)
+  }
+
+  case class MissingExpr() extends NotImplementedExpr {
     override def toText: ConvertableText = TextElement("Missing")
   }
 
-  case class ExprPlaceholder(content: ConvertableText, override val needsBrackets: Boolean = false) extends Expr {
+  case class ExprPlaceholder(content: ConvertableText, override val needsBrackets: Boolean = false) extends NotImplementedExpr {
     override def toText: ConvertableText = content
   }
 
@@ -176,15 +182,7 @@ trait AbstractLanguage {
 
     lazy val valueText: TypedTag[String] = {
       val arguments = this match {
-        case v0: Product =>
-          v0.productIterator.toList.collect({
-            case v: Value   => ValuePlaceholder(v.toText, v.needsBrackets)
-            case t: Type    => TypePlaceholder(t.toText, t.needsBrackets)
-            case e: Expr    => ExprPlaceholder(e)
-            case s: String  => s
-            case l: Literal => l
-            case other      => other
-          })
+        case p: Product => getProductParameters(p)
       }
       val valueInstance = getValueBuilder(name) match {
         case Some(builder) =>
@@ -227,15 +225,7 @@ trait AbstractLanguage {
 
     lazy val valueText: TypedTag[String] = {
       val arguments = this match {
-        case v0: Product =>
-          v0.productIterator.toList.collect({
-            case v: Value   => ValuePlaceholder(v.toText, v.needsBrackets)
-            case t: Type    => TypePlaceholder(t.toText, t.needsBrackets)
-            case e: Expr    => ExprPlaceholder(e)
-            case s: String  => s
-            case l: Literal => l
-            case other      => other
-          })
+        case p: Product => getProductParameters(p)
       }
       val valueInstance = getTypeBuilder(name) match {
         case Some(builder) =>
@@ -527,4 +517,13 @@ trait AbstractLanguage {
   )
 
   val defaultLiteral: Literal = Literal.fromString("")
+
+  private def getProductParameters(p: Product) = p.productIterator.toList.collect({
+    case v: Value => ValuePlaceholder(v.toText, v.needsBrackets)
+    case t: Type => TypePlaceholder(t.toText, t.needsBrackets)
+    case e: Expr => ExprPlaceholder(e)
+    case s: String => s
+    case l: Literal => l
+    case other => other
+  })
 }

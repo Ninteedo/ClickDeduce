@@ -16,7 +16,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     }
   }
 
-  case class BlankExprDropDown() extends Expr, BlankSpace {
+  case class BlankExprDropDown() extends NotImplementedExpr, BlankSpace {
     override lazy val toHtml: TypedTag[String] = exprClassListDropdownHtml
 
     override val needsBrackets: Boolean = false
