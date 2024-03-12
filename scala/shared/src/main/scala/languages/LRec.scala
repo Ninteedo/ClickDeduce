@@ -49,7 +49,7 @@ class LRec extends LLam {
     override def toText: ConvertableText = MultiElement(
       TextElement("rec "),
       f.toText,
-      BracketedElement(MultiElement(v.toText, TextElement(": "), inType.toTextBracketed)),
+      BracketedElement(MultiElement(v.toText, TextElement(": "), TypeElement(inType.toTextBracketed))),
       SpaceAfter(MathElement.colon),
       TypeElement(outType.toTextBracketed),
       SpaceAfter(MathElement.period),

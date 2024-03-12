@@ -1,5 +1,6 @@
 package languages
 
+import convertors.DisplayMode
 import languages.LLet.*
 import org.scalatest.matchers.should.Matchers.{a, an, shouldBe, shouldEqual}
 import org.scalatest.prop.TableFor1
@@ -46,16 +47,17 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
   }
 
   property("Var correctly evaluates with big environment") {
-    forAll(assortedValues) { value => {
-      var env: ValueEnv = Env()
-      for (i <- 0 until Math.min(assortedValues.length, variableNames.length)) {
-        val v = randomElement(variableNames)
-        val value = randomElement(assortedValues.toList)
-        env += v -> value
+    forAll(assortedValues) { value =>
+      {
+        var env: ValueEnv = Env()
+        for (i <- 0 until Math.min(assortedValues.length, variableNames.length)) {
+          val v = randomElement(variableNames)
+          val value = randomElement(assortedValues.toList)
+          env += v -> value
+        }
+        val v: Variable = randomElement(env.keys.toList)
+        Var(v).eval(env) shouldEqual env.get(v).get
       }
-      val v: Variable = randomElement(env.keys.toList)
-      Var(v).eval(env) shouldEqual env.get(v).get
-    }
     }
   }
 
@@ -225,5 +227,23 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
     )
     let.getChildrenEval() shouldEqual List((Num(1), Env()), (Var("x"), Env("x" -> NumV(1))))
     let.getChildrenTypeCheck() shouldEqual List((Num(1), Env()), (Var("x"), Env("x" -> IntType())))
+  }
+
+  property("Let with unselected expression has correct children") {
+    val letNode = VariableNode(
+      "Let",
+      List(LiteralNode("x"), SubExprNode(VariableNode("Num", List(LiteralNode("1")))), SubExprNode(ExprChoiceNode()))
+    )
+
+    DisplayMode.values.foreach(mode => {
+      letNode.getVisibleChildren(mode) shouldEqual List(VariableNode("Num", List(LiteralNode("1"))), ExprChoiceNode())
+      letNode.getVisibleChildren(mode).last match {
+        case n: ExprChoiceNode =>
+          n.getEnv(mode) shouldEqual (mode match {
+            case DisplayMode.TypeCheck => Env("x" -> IntType())
+            case _                     => Env("x" -> NumV(1))
+          })
+      }
+    })
   }
 }

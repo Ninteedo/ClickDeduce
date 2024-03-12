@@ -172,8 +172,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
         def outerNode: Parser[Option[OuterNode | Expr | Type]] =
           outerNodeName ~ "(" ~ repsep(outerNodeArg, "\\s*,\\s*".r) ~ ")" ^^ {
             case name ~ "(" ~ args ~ ")" =>
-              val node = makeNode(name, args)
-              node match {
+              makeNode(name, args) match {
                 case Some(n: OuterNode) =>
                   n.children.foreach(_.setParent(Some(n)))
                   Some(n)
@@ -199,15 +198,12 @@ trait AbstractNodeLanguage extends AbstractLanguage {
         def outerNodeArg: Parser[Any] =
           outerListParse | innerNode | stringLiteral ^^ (s => Literal.fromString(UtilityFunctions.unquote(s)))
 
-        def innerNodeArg: Parser[Any] = outerNode | stringLiteral ^^ (s => {
-          val temp = s
-          Literal.fromString(UtilityFunctions.unquote(s))
-        })
+        def innerNodeArg: Parser[Any] =
+          outerNode | stringLiteral ^^ (s => Literal.fromString(UtilityFunctions.unquote(s)))
 
         def innerNode: Parser[InnerNode] = innerNodeName ~ "(" ~ repsep(innerNodeArg, "\\s*,\\s*".r) ~ ")" ^^ {
           case name ~ "(" ~ args ~ ")" =>
-            val node = makeNode(name, args)
-            node match {
+            makeNode(name, args) match {
               case Some(n: InnerNode) => n
               case _                  => throw new NodeStringParseException(s"$name(${args.mkString(", ")})")
             }
@@ -373,8 +369,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   abstract class ExprNode extends OuterNode {
     override def setParent(parentNode: Option[OuterNode]): Unit = parentNode match {
       case Some(n: ExprNode) =>
-        val parentDepth = n.depth
-        if (parentDepth >= depthLimit) throw new DepthLimitExceededException()
+        if (n.depth >= depthLimit) throw new DepthLimitExceededException()
         super.setParent(Some(n))
       case None    => super.setParent(None)
       case Some(n) => throw new NodeParentWrongTypeException("ExprNode", n.name)
@@ -392,10 +387,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     def depth: Int = getPhantomDepth
 
     def checkDepthLimitWillBeExceeded(currDepth: Int = 0): Unit = {
-      if (currDepth + 1 >= depthLimit) {
-        println(s"Depth limit exceeded at $this")
-        throw new DepthLimitExceededException()
-      }
+      if (currDepth + 1 >= depthLimit) throw new DepthLimitExceededException()
 
       getVisibleChildren(DisplayMode.Evaluation).reverse.foreach({
         case n: ExprNode => n.checkDepthLimitWillBeExceeded(currDepth + 1)
@@ -404,14 +396,13 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     }
 
     def willDepthLimitBeExceeded(currDepth: Int = 0): Boolean = {
-      if (currDepth + 1 >= depthLimit) {
+      if (currDepth + 1 >= depthLimit)
         true
-      } else {
+      else
         getVisibleChildren(DisplayMode.Evaluation).reverse.exists({
           case n: ExprNode => n.willDepthLimitBeExceeded(currDepth + 1)
           case _           => false
         })
-      }
     }
 
     val exprName: String
@@ -605,7 +596,9 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     override val exprName: String = "ExprChoice"
 
-    override def getExpr: Expr = BlankExprDropDown()
+    private val expr = BlankExprDropDown()
+
+    override def getExpr: Expr = expr
   }
 
   abstract class InnerNode extends Node {
