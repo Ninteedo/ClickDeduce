@@ -20,24 +20,43 @@
   white-space: nowrap;
 }
 
-
-#tree, .subtree {
+.subtree {
   display: flex;
   flex-direction: column-reverse;
   align-items: center;
   align-self: flex-end;
   position: relative;
   border-radius: 3px;
+
+  .args {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  &:not(:last-child) {
+    margin-right: 20px;
+  }
+
+  &::before {
+    content: '';
+    height: 2px;
+    background: $foreground;
+    width: 100%;
+    position: absolute;
+    bottom: 1.4em;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  &.axiom {
+    display: flex;
+    flex-direction: column-reverse;
+  }
 }
 
 .highlight {
   background-color: $highlighted-tree;
-}
-
-.args {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
 }
 
 .node {
@@ -49,82 +68,67 @@
   div:not(.expr-selector-container) {
     display: inline;
   }
+
+  div.scoped-variables {
+    display: inline-flex;
+  }
 }
 
-div.scoped-variables {
-  display: inline-flex;
-}
-
-.annotation-axiom {
-  align-self: end;
+.annotation-axiom, .annotation-new {
   font-size: 12px;
   color: $comment;
+
+  &.annotation-axiom {
+    align-self: end;
+  }
+
+  &.annotation-new {
+    align-self: flex-end;
+  }
 }
 
-.annotation-new {
-  font-size: 12px;
-  color: $comment;
-  align-self: flex-end;
+.tooltip {
+  .tooltip-text {
+    visibility: hidden;
+    background-color: $context-menu-background;
+    color: $foreground;
+    border: $input-outline solid 1px;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 3px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -60px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  &:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  div {
+    display: inline;
+  }
+
+  &:not(.tooltip .tooltip) {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dashed $foreground;
+  }
 }
 
-.axiom {
-  display: flex;
-  flex-direction: column-reverse;
-}
+.value-highlighting-enabled {
+  .value {
+    color: $value-colour;
+  }
 
-.subtree:not(:last-child) {
-  margin-right: 20px;
-}
-
-.subtree::before {
-  content: '';
-  height: 2px;
-  background: $foreground;
-  width: 100%;
-  position: absolute;
-  bottom: 1.4em;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
-.tooltip:not(.tooltip .tooltip) {
-  position: relative;
-  display: inline-block;
-  border-bottom: 1px dotted $foreground;
-}
-
-.tooltip .tooltip-text {
-  visibility: hidden;
-  background-color: $context-menu-background;
-  color: $foreground;
-  border: $input-outline solid 1px;
-  text-align: center;
-  border-radius: 6px;
-  padding: 5px 3px;
-  position: absolute;
-  z-index: 1;
-  bottom: 125%;
-  left: 50%;
-  margin-left: -60px;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.tooltip:hover .tooltip-text {
-  visibility: visible;
-  opacity: 1;
-}
-
-.tooltip div {
-  display: inline;
-}
-
-.value-highlighting-enabled .value {
-  color: $value-colour;
-}
-
-.value-highlighting-enabled .value-type {
-  color: $value-type-colour;
+  .value-type {
+    color: $value-type-colour;
+  }
 }
 
 .error-origin {
