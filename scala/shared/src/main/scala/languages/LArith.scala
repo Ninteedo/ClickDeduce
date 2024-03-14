@@ -159,8 +159,6 @@ class LArith extends ClickDeduceLanguage {
   /** Type for integers.
     */
   case class IntType() extends Type, OrdinalType {
-
-
     override val needsBrackets: Boolean = false
 
     override def toText: ConvertableText = TextElement("Int")

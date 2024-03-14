@@ -293,8 +293,6 @@ class LData extends LRec {
   )
 
   case class EmptyType() extends Type {
-
-
     override val needsBrackets: Boolean = false
 
     override def toText: ConvertableText = TextElement("()")
@@ -309,8 +307,6 @@ class LData extends LRec {
   )
 
   case class AnyType() extends Type {
-
-
     override val needsBrackets: Boolean = false
 
     override def toText: ConvertableText = TextElement("Any")

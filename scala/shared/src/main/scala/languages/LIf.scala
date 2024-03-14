@@ -152,8 +152,6 @@ class LIf extends LArith {
 
   // types
   case class BoolType() extends Type {
-
-
     override val needsBrackets: Boolean = false
 
     override def toText: ConvertableText = TextElement("Bool")

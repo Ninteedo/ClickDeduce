@@ -73,8 +73,6 @@ class LPoly extends LData {
   // types
 
   case class TypeVar(v: Literal) extends Type {
-
-
     override def typeCheck(tEnv: TypeEnv): Type = tEnv.get(v.toString) match {
       case None             => UnknownTypeVar(v)
       case Some(TypeVar(t)) => TypeVar(t)
@@ -100,8 +98,6 @@ class LPoly extends LData {
   )
 
   case class PolyType(typeVar: Type, incompleteType: Type) extends Type {
-
-
     override def toText: ConvertableText =
       MultiElement(
         ForAllSymbol(),
