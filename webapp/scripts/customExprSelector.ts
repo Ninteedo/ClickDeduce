@@ -113,14 +113,16 @@ export function setupExampleSelector(termSelectorContainer: HTMLDivElement): voi
         hideExprSelectorDropdown(termSelectorContainer);
     }
 
-    input.addEventListener('input', () => updateExprSelectorDropdown(termSelectorContainer));
+    function clearOutput(): void {
+        output.textContent = "?";
+    }
+
+    input.addEventListener('input', () => {
+        updateExprSelectorDropdown(termSelectorContainer)
+        clearOutput();
+    });
     input.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') {
-            if (isExprSelectorDropdownVisible(termSelectorContainer)) {
-                toggleExprSelectorDropdownDisplay(termSelectorContainer);
-                return;
-            }
-
             const selectedIndex = getExprSelectorOptionHighlight(termSelectorContainer, false);
             const selectedOption = getSelectorOptions(termSelectorContainer)[selectedIndex];
             if (selectedOption) {
