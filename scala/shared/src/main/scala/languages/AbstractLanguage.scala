@@ -10,6 +10,8 @@ import scala.collection.immutable.List
 trait AbstractLanguage {
   lang =>
 
+  // <editor-fold desc="Environments">
+
   /** A variable name.
     *
     * Case sensitive.
@@ -68,6 +70,17 @@ trait AbstractLanguage {
     val empty = new TypeEnv(Map())
   }
 
+  def envToTypeEnv(env: ValueEnv): TypeEnv = env.mapToEnv((k: String, v: Value) => (k, v.typ))
+
+  def typeVariableEnv(env: ValueEnv | TypeEnv): TypeEnv = {
+    Env(env.env.collect({
+      case (k, TypeValueContainer(t)) => (k, t)
+      case (k, TypeContainer(t))      => (k, t)
+    }))
+  }
+
+  // </editor-fold>
+
   trait Term {
     val name: String = toString.takeWhile(_ != '(')
 
@@ -92,6 +105,8 @@ trait AbstractLanguage {
     final def toTextBracketed: ConvertableText = if (needsBrackets) BracketedElement(toText) else toText
   }
 
+  // <editor-fold desc="Expressions">
+
   /** An unevaluated expression.
     */
   abstract class Expr extends Term {
@@ -104,14 +119,14 @@ trait AbstractLanguage {
       }
     }
 
-    override def getChildrenBase(env: ValueEnv = ValueEnv.empty): List[(Term, ValueEnv)] =
+    private def defaultChildren[EnvContents](env: Env[EnvContents]): List[(Term, Env[EnvContents])] =
       getExprFields(this).zip(LazyList.continually(env))
 
-    override def getChildrenEval(env: ValueEnv = ValueEnv.empty): List[(Term, ValueEnv)] =
-      getExprFields(this).zip(LazyList.continually(env))
+    override def getChildrenBase(env: ValueEnv = ValueEnv.empty): List[(Term, ValueEnv)] = defaultChildren(env)
 
-    override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] =
-      getExprFields(this).zip(LazyList.continually(tEnv))
+    override def getChildrenEval(env: ValueEnv = ValueEnv.empty): List[(Term, ValueEnv)] = defaultChildren(env)
+
+    override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] = defaultChildren(tEnv)
 
     /** Perform evaluation using an empty environment. */
     final def eval(): Value = eval(ValueEnv.empty)
@@ -189,6 +204,10 @@ trait AbstractLanguage {
     def apply(expr: Expr): ExprPlaceholder = ExprPlaceholder(expr.toText, expr.needsBrackets)
   }
 
+  // </editor-fold>
+
+  // <editor-fold desc="Values">
+
   /** A value resulting from an expression being evaluated. */
   abstract class Value extends Term {
     override lazy val toHtml: TypedTag[String] =
@@ -220,6 +239,10 @@ trait AbstractLanguage {
     def apply(value: Value): ValuePlaceholder = ValuePlaceholder(value.toText, value.needsBrackets)
   }
 
+  // </editor-fold>
+
+  // <editor-fold desc="Types">
+
   /** The type of a value. Can also appear in expressions.
     */
   abstract class Type extends Term {
@@ -237,6 +260,8 @@ trait AbstractLanguage {
 
   case class UnknownType() extends Type {
     override def toText: ConvertableText = TextElement("Unknown")
+
+    override val needsBrackets: Boolean = false
   }
 
   case class TypePlaceholder(content: ConvertableText, override val needsBrackets: Boolean = true) extends Type {
@@ -258,6 +283,10 @@ trait AbstractLanguage {
 
     override def toText: ConvertableText = typ.toText
   }
+
+  // </editor-fold>
+
+  //<editor-fold desc="Term Errors">
 
   trait TermError extends Term {
     val message: String = "Error"
@@ -318,6 +347,10 @@ trait AbstractLanguage {
 
   case class TypeException(override val message: String) extends TypeError
 
+  //</editor-fold>
+
+  // <editor-fold desc="Literals">
+
   /** A literal term. Entered as a string. */
   abstract class Literal extends Term {
     val value: Any
@@ -367,18 +400,11 @@ trait AbstractLanguage {
     override def toText: ConvertableText = TextElement(toString)
   }
 
-  def envToTypeEnv(env: ValueEnv): TypeEnv = env.mapToEnv((k: String, v: Value) => (k, v.typ))
+  // </editor-fold>
 
-  def typeVariableEnv(env: ValueEnv | TypeEnv): TypeEnv = {
-    Env(env.env.collect({
-      case (k, TypeValueContainer(t)) => (k, t)
-      case (k, TypeContainer(t))      => (k, t)
-    }))
-  }
+  // <editor-fold desc="Builders">
 
-  // new class lists
-
-  type ExprBuilder = List[Any] => Option[Expr]
+  private type ExprBuilder = List[Any] => Option[Expr]
 
   private var exprBuilders: Map[String, ExprBuilder] = Map()
 
@@ -393,7 +419,7 @@ trait AbstractLanguage {
 
   def exprBuilderNames: List[String] = exprBuilderNamesList
 
-  type TypeBuilder = List[Any] => Option[Type]
+  private type TypeBuilder = List[Any] => Option[Type]
 
   private var typeBuilders: Map[String, TypeBuilder] = Map()
 
@@ -408,7 +434,7 @@ trait AbstractLanguage {
 
   def typeBuilderNames: List[String] = typeBuilderNamesList
 
-  type ValueBuilder = List[Any] => Option[Value]
+  private type ValueBuilder = List[Any] => Option[Value]
 
   private var valueBuilders: Map[String, ValueBuilder] = Map()
 
@@ -499,6 +525,8 @@ trait AbstractLanguage {
     },
     hidden = true
   )
+
+  // </editor-fold>
 
   val defaultLiteral: Literal = Literal.fromString("")
 }
