@@ -9,9 +9,11 @@ div.expr-selector-container {
     border-radius: 3px;
   }
 
-  &.guide-highlight * {
-    background-color: $highlighted-input;
-    color: $highlighted-input-text;
+  &.guide-highlight {
+    .expr-selector-input, .expr-selector-button {
+      background-color: $highlighted-input;
+      color: $highlighted-input-text;
+    }
   }
 
   .expr-selector-input {
