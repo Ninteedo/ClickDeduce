@@ -100,7 +100,7 @@ export function exampleLiteralChanged(textInput: HTMLInputElement): void {
     } else {
         outputDiv.innerHTML = `
         <span class="tooltip">
-          <div class="error-origin">!</div>
+          <div class="error-origin">error!</div>
           <div class="tooltip-text">Num can only accept LiteralInt, not ${literalValue}</div>
         </span>
         `;
