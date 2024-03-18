@@ -11,15 +11,15 @@ trait AbstractLanguage {
   lang =>
 
   /** A variable name.
-   *
-   * Case sensitive.
-   */
+    *
+    * Case sensitive.
+    */
   type Variable = String
 
   /** The evaluation environment at a particular point.
-   *
-   * Contains variables with bound values.
-   */
+    *
+    * Contains variables with bound values.
+    */
   case class Env[T](env: Map[Variable, T] = Map()) {
     def get(key: Variable): Option[T] = env.get(key)
 
@@ -49,15 +49,15 @@ trait AbstractLanguage {
   }
 
   /** The evaluation environment at a particular point.
-   *
-   * Contains variables with bound values.
-   */
+    *
+    * Contains variables with bound values.
+    */
   type ValueEnv = Env[Value]
 
   /** The type environment at a particular point.
-   *
-   * Contains variables with bound types.
-   */
+    *
+    * Contains variables with bound types.
+    */
   type TypeEnv = Env[Type]
 
   object ValueEnv {
@@ -93,7 +93,7 @@ trait AbstractLanguage {
   }
 
   /** An unevaluated expression.
-   */
+    */
   abstract class Expr extends Term {
     private def getExprFields(e: Expr): List[Expr] = {
       e match {
@@ -113,17 +113,16 @@ trait AbstractLanguage {
     override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] =
       getExprFields(this).zip(LazyList.continually(tEnv))
 
-    lazy val childVersion: Expr = this
-
+    /** Perform evaluation using an empty environment. */
     final def eval(): Value = eval(ValueEnv.empty)
 
     /** Function which evaluates this `Expr` to a `Value`, given an environment.
-     *
-     * @param env
-     *   The environment to evaluate in.
-     * @return
-     *   The `Value` resulting from evaluating this.
-     */
+      *
+      * @param env
+      *   The environment to evaluate in.
+      * @return
+      *   The `Value` resulting from evaluating this.
+      */
     final def eval(env: ValueEnv): Value = {
       try {
         evalInner(env)
@@ -132,17 +131,26 @@ trait AbstractLanguage {
       }
     }
 
+    /** Function to perform evaluation on this `Expr` in the given environment.
+      *
+      * This function must be implemented by subclasses.
+      * @param env
+      *   The environment to evaluate in.
+      * @return
+      *   The `Value` resulting from evaluating this.
+      */
     protected def evalInner(env: ValueEnv): Value
 
+    /** Perform type-checking using an empty environment. */
     final def typeCheck(): Type = typeCheck(TypeEnv.empty)
 
     /** Function to perform type checking on this `Expr` in the given type environment.
-     *
-     * @param tEnv
-     *   The type environment in which type checking is done.
-     * @return
-     *   The `Type` of this expression after type checking.
-     */
+      *
+      * @param tEnv
+      *   The type environment in which type checking is done.
+      * @return
+      *   The `Type` of this expression after type checking.
+      */
     final def typeCheck(tEnv: TypeEnv): Type = {
       try {
         typeCheckInner(tEnv)
@@ -151,6 +159,14 @@ trait AbstractLanguage {
       }
     }
 
+    /** Function to perform type checking on this `Expr` in the given type environment.
+      *
+      * This function must be implemented by subclasses.
+      * @param tEnv
+      *   The type environment in which type checking is done.
+      * @return
+      *   The `Type` of this expression after type checking.
+      */
     protected def typeCheckInner(tEnv: TypeEnv): Type
   }
 
@@ -164,7 +180,8 @@ trait AbstractLanguage {
     override def toText: ConvertableText = TextElement("Missing")
   }
 
-  case class ExprPlaceholder(content: ConvertableText, override val needsBrackets: Boolean = false) extends NotImplementedExpr {
+  case class ExprPlaceholder(content: ConvertableText, override val needsBrackets: Boolean = false)
+      extends NotImplementedExpr {
     override def toText: ConvertableText = content
   }
 
@@ -172,34 +189,22 @@ trait AbstractLanguage {
     def apply(expr: Expr): ExprPlaceholder = ExprPlaceholder(expr.toText, expr.needsBrackets)
   }
 
-  /** A value resulting from an expression being evaluated.
-   */
+  /** A value resulting from an expression being evaluated. */
   abstract class Value extends Term {
     override lazy val toHtml: TypedTag[String] =
       span(cls := ClassDict.TOOLTIP, valueText, div(cls := ClassDict.TOOLTIP_TEXT, tooltipText))
 
     lazy val tooltipText: String = toString + ": " + typ.toString
 
-    lazy val valueText: TypedTag[String] = {
-      val arguments = this match {
-        case p: Product => getProductParameters(p)
-      }
-      val valueInstance = getValueBuilder(name) match {
-        case Some(builder) =>
-          builder.apply(arguments) match {
-            case Some(v) => v
-            case None    => throw InvalidValueBuilderArgs(name, arguments)
-          }
-        case None => throw UnknownValueBuilder(name)
-      }
-      div(
-        div(valueInstance.toText.asHtml, cls := ClassDict.VALUE),
-        if (valueTextShowType) List(span(": "), div(typ.valueText, cls := ClassDict.VALUE_TYPE)) else div()
-      )
-    }
+    lazy val valueText: TypedTag[String] = div(
+      div(toText.asHtml, cls := ClassDict.VALUE),
+      if (valueTextShowType) List(span(": "), div(typ.valueText, cls := ClassDict.VALUE_TYPE)) else div()
+    )
 
+    /** The type of this value. */
     val typ: Type
 
+    /** Whether this value represents an evaluation error. */
     val isError: Boolean = false
 
     def valueTextShowType: Boolean = true
@@ -215,28 +220,15 @@ trait AbstractLanguage {
     def apply(value: Value): ValuePlaceholder = ValuePlaceholder(value.toText, value.needsBrackets)
   }
 
-  /** The type of a value.
-   */
+  /** The type of a value. Can also appear in expressions.
+    */
   abstract class Type extends Term {
     override lazy val toHtml: TypedTag[String] =
       span(cls := ClassDict.TOOLTIP, valueText, div(cls := ClassDict.TOOLTIP_TEXT, tooltipText))
 
     lazy val tooltipText: String = toString
 
-    lazy val valueText: TypedTag[String] = {
-      val arguments = this match {
-        case p: Product => getProductParameters(p)
-      }
-      val valueInstance = getTypeBuilder(name) match {
-        case Some(builder) =>
-          builder.apply(arguments) match {
-            case Some(t) => t
-            case None    => throw InvalidTypeBuilderArgs(name, arguments)
-          }
-        case None => throw UnknownTypeBuilder(name)
-      }
-      div(valueInstance.toText.asHtml, cls := ClassDict.VALUE_TYPE)
-    }
+    lazy val valueText: TypedTag[String] = div(toText.asHtml, cls := ClassDict.VALUE_TYPE)
 
     val isError: Boolean = false
 
@@ -272,29 +264,25 @@ trait AbstractLanguage {
   }
 
   /** An error resulting from an expression being evaluated.
-   */
+    */
   abstract class EvalError extends Value, TermError {
-    override lazy val toHtml: TypedTag[String] =
-      span(
-        cls := ClassDict.TOOLTIP,
-        valueText,
-        div(cls := ClassDict.TOOLTIP_TEXT, tooltipText),
-      )
-
     override lazy val tooltipText: String = message
 
     override lazy val valueText: TypedTag[String] = div("!", cls := ClassDict.ERROR_ORIGIN)
 
     override val isError: Boolean = true
 
-    override def toText: ConvertableText = HtmlElement(span(cls := "error-origin", raw("error!")), TextElement("error!"))
+    override def toText: ConvertableText =
+      HtmlElement(span(cls := "error-origin", raw("error!")), TextElement("error!"))
+
+    override val needsBrackets: Boolean = false
   }
 
   /** An error that occurs due to attempting to process an unknown `Expr`.
-   *
-   * @param message
-   *   The error message.
-   */
+    *
+    * @param message
+    *   The error message.
+    */
   case class UnexpectedExpr(override val message: String) extends EvalError {
     override val typ: Type = UnexpectedExprType(message)
   }
@@ -307,32 +295,30 @@ trait AbstractLanguage {
   private val stackOverflowTypeError: TypeError = TypeException("Stack overflow")
 
   /** An error resulting from an expression being type checked.
-   */
+    */
   abstract class TypeError extends Type, TermError {
-    override lazy val toHtml: TypedTag[String] = span(
-      cls := ClassDict.TOOLTIP,
-      valueText,
-      div(cls := ClassDict.TOOLTIP_TEXT, tooltipText),
-    )
-
     override lazy val tooltipText: String = message
 
     override lazy val valueText: TypedTag[String] = div("!", cls := ClassDict.ERROR_ORIGIN)
 
     override val isError: Boolean = true
 
-    override def toText: ConvertableText = HtmlElement(span(cls := "error-origin", raw("error!")), TextElement("error!"))
+    override def toText: ConvertableText =
+      HtmlElement(span(cls := "error-origin", raw("error!")), TextElement("error!"))
+
+    override val needsBrackets: Boolean = false
   }
 
   /** An error that occurs due to attempting to process an unknown `Expr`.
-   *
-   * @param message
-   *   The error message.
-   */
+    *
+    * @param message
+    *   The error message.
+    */
   case class UnexpectedExprType(override val message: String) extends TypeError
 
   case class TypeException(override val message: String) extends TypeError
 
+  /** A literal term. Entered as a string. */
   abstract class Literal extends Term {
     val value: Any
 
@@ -364,8 +350,6 @@ trait AbstractLanguage {
   }
 
   case class LiteralString(value: String) extends Literal {
-    //    override lazy val toHtml: TypedTag[String] = p(s""""$value"""")
-
     override lazy val toString: String = s""""$value""""
 
     override def toText: ConvertableText = TextElement(toString)
@@ -447,17 +431,17 @@ trait AbstractLanguage {
   case class UnknownExprBuilder(name: String) extends ClickDeduceException(s"Unknown expression builder: $name")
 
   case class InvalidExprBuilderArgs(name: String, args: List[Any])
-    extends ClickDeduceException(s"Invalid arguments for expression builder: $name, $args")
+      extends ClickDeduceException(s"Invalid arguments for expression builder: $name, $args")
 
   case class UnknownTypeBuilder(name: String) extends ClickDeduceException(s"Unknown type builder: $name")
 
   case class InvalidTypeBuilderArgs(name: String, args: List[Any])
-    extends ClickDeduceException(s"Invalid arguments for type builder: $name, $args")
+      extends ClickDeduceException(s"Invalid arguments for type builder: $name, $args")
 
   case class UnknownValueBuilder(name: String) extends ClickDeduceException(s"Unknown value builder: $name")
 
   case class InvalidValueBuilderArgs(name: String, args: List[Any])
-    extends ClickDeduceException(s"Invalid arguments for value builder: $name, $args")
+      extends ClickDeduceException(s"Invalid arguments for value builder: $name, $args")
 
   addExprBuilder(
     "ExprPlaceholder",
@@ -494,7 +478,7 @@ trait AbstractLanguage {
       case List(t: Type) => Some(TypeValueContainer(t))
       case Nil           => Some(TypeValueContainer(TypePlaceholder(TextElement(""))))
       case _             => None
-    },
+    }
   )
 
   addTypeBuilder(
@@ -517,13 +501,4 @@ trait AbstractLanguage {
   )
 
   val defaultLiteral: Literal = Literal.fromString("")
-
-  private def getProductParameters(p: Product) = p.productIterator.toList.collect({
-    case v: Value => ValuePlaceholder(v.toText, v.needsBrackets)
-    case t: Type => TypePlaceholder(t.toText, t.needsBrackets)
-    case e: Expr => ExprPlaceholder(e)
-    case s: String => s
-    case l: Literal => l
-    case other => other
-  })
 }
