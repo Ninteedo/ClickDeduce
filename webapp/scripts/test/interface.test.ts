@@ -267,7 +267,7 @@ describe("responses to server errors are appropriate", () => {
             triggerError();
         } catch (e) {
         }
-        expect(getErrorDiv().textContent).toContain("Error");
+        expect(getErrorDiv().textContent).toContain("NullPointerException");
         expect(getErrorDiv().textContent.length).toBeGreaterThan(5);
     });
 
