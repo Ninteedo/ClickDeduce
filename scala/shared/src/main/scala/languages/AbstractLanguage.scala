@@ -286,7 +286,7 @@ trait AbstractLanguage {
 
   // </editor-fold>
 
-  //<editor-fold desc="Term Errors">
+  // <editor-fold desc="Term Errors">
 
   trait TermError extends Term {
     val message: String = "Error"
@@ -347,7 +347,7 @@ trait AbstractLanguage {
 
   case class TypeException(override val message: String) extends TypeError
 
-  //</editor-fold>
+  // </editor-fold>
 
   // <editor-fold desc="Literals">
 
@@ -444,15 +444,24 @@ trait AbstractLanguage {
 
   def getExprBuilder(name: String): Option[ExprBuilder] = exprBuilders.get(name)
 
-  def buildExpr(name: String, args: List[Any]): Option[Expr] = getExprBuilder(name).flatMap(_.apply(args))
+  def buildExpr(name: String, args: List[Any]): Option[Expr] = getExprBuilder(name) match {
+    case Some(builder) => builder.apply(args)
+    case None          => throw UnknownExprBuilder(name)
+  }
 
   def getTypeBuilder(name: String): Option[TypeBuilder] = typeBuilders.get(name)
 
-  def buildType(name: String, args: List[Any]): Option[Type] = getTypeBuilder(name).flatMap(_.apply(args))
+  def buildType(name: String, args: List[Any]): Option[Type] = getTypeBuilder(name) match {
+    case Some(builder) => builder.apply(args)
+    case None          => throw UnknownTypeBuilder(name)
+  }
 
   def getValueBuilder(name: String): Option[ValueBuilder] = valueBuilders.get(name)
 
-  def buildValue(name: String, args: List[Any]): Option[Value] = getValueBuilder(name).flatMap(_.apply(args))
+  def buildValue(name: String, args: List[Any]): Option[Value] = getValueBuilder(name) match {
+    case Some(builder) => builder.apply(args)
+    case None          => throw UnknownValueBuilder(name)
+  }
 
   case class UnknownExprBuilder(name: String) extends ClickDeduceException(s"Unknown expression builder: $name")
 
