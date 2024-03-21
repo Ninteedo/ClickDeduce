@@ -20,7 +20,7 @@ export function getStartNodeButton() {
 }
 
 export function pressStartNodeButton() {
-    doStartNodeBlank(new Event(""))
+    doStartNodeBlank(new Event(""));
 }
 
 export function getLangSelector() {

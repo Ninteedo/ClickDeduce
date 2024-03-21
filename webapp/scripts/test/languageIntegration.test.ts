@@ -6,7 +6,6 @@ import {
     getExprDropdownOptions,
     getLangSelector,
     getLeftmostExprDropdown,
-    getStartNodeButton,
     getTree,
     loadHtmlTemplate,
     pressStartNodeButton,
@@ -73,12 +72,8 @@ describe('lang selector is correctly initialised on load', () => {
     });
 });
 
-describe('start node button has correct effect', () => {
-    test('start node button is present', () => {
-        expect(getStartNodeButton()).toBeTruthy();
-    });
-
-    test('clicking start node button results in a single node being added to the empty tree', () => {
+describe('start node function has correct effect', () => {
+    test('start node results in a single node being added to the empty tree', () => {
         const tree = document.getElementById('tree');
         pressStartNodeButton();
 

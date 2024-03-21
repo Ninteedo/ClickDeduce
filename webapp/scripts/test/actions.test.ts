@@ -7,6 +7,7 @@ import {
     getLeftmostExprDropdown,
     getLiteralInputAt,
     loadHtmlTemplate,
+    pressStartNodeButton,
     selectExprOption
 } from "./helper";
 import {doStartNodeBlank} from "../actions";
@@ -55,35 +56,21 @@ function checkStartNodeBlankExecuted(langName: string): void {
 
 describe("start new node button behaves correctly", () => {
     test("clicking the button makes a request to the server", () => {
-        const startNodeButton = document.getElementById('start-node-button') as HTMLButtonElement;
-        startNodeButton.click();
+        pressStartNodeButton();
         checkStartNodeBlankExecuted(langSelectorLanguages[0]);
     });
-
-    // test("the contents of the tree div are replaced with the new tree HTML", () => {
-    //     const startNodeButton = document.getElementById('start-node-button') as HTMLButtonElement;
-    //     startNodeButton.click();
-    //
-    //
-    //
-    //     const tree = document.getElementById('tree');
-    //     expect(removeWhitespace(tree.innerHTML)).toEqual(removeWhitespace(startNodeBlankArithHTML));
-    // });
 
     test("the request made respects the selected language", () => {
         const langSelector = document.getElementById('lang-selector') as HTMLSelectElement;
         langSelector.selectedIndex = 1;
         langSelector.dispatchEvent(new Event('change'));
-        const startNodeButton = document.getElementById('start-node-button') as HTMLButtonElement;
-        startNodeButton.click();
+        pressStartNodeButton();
 
         checkStartNodeBlankExecuted(langSelectorLanguages[1]);
     });
 
     test("changing the selected language causes an identity action", () => {
-        const startNodeButton = document.getElementById('start-node-button') as HTMLButtonElement;
-        startNodeButton.click();
-
+        pressStartNodeButton();
 
         const langSelector = document.getElementById('lang-selector') as HTMLSelectElement;
         console.log(langSelector.selectedIndex);
