@@ -12,7 +12,6 @@ import {
 } from "./treeManipulation";
 import {contextMenuSelectedElement, displayError, nextFocusElement} from "./interface";
 import {postProcessActionNew, postStartNodeBlankNew} from "./serverRequest";
-import {ClickDeduceResponseError} from "./ClickDeduceResponseError";
 
 let copyCache: string = null;
 
@@ -166,11 +165,8 @@ export function runAction(actionName: string, treePath: string, extraArgs: any[]
         const [newNodeString, newHtml] = postProcessActionNew(langName, modeName, actionName, lastNodeString, treePath, extraArgs);
         updateTree(newHtml, newNodeString, modeName, langName, true);
     } catch (e) {
-        const cdError = new ClickDeduceResponseError(e)
-        displayError(cdError);
+        displayError(e);
         useTreeFromHistory(treeHistoryIndex);
-        enableInputs();
-        throw cdError;
     }
     enableInputs();
 }
