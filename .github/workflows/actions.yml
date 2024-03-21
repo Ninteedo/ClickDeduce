@@ -63,14 +63,16 @@ jobs:
           java-version: '18'
           distribution: 'adopt'
           cache: 'sbt'
-      - name: Update sbt
-        run: sbt update
       - name: NPM install
         run: npm install
-      - name: Scala.JS Build
-        run: npm run build:scala
+      - name: ScalaJS build
+        run: sbt fullOptJS
       - name: NPM Build
         run: npm run build:webpack
+      - name: Generate ScalaDocs
+        run: sbt doc
+      - name: Copy ScalaDocs to build/api
+        run: cp -r scala/jvm/target/scala-3.3.1/api build/api
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
         with:
