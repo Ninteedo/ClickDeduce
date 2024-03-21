@@ -148,6 +148,12 @@ export async function zoomToFit(): Promise<void> {
     panzoomInstance.zoomAbs(0, 0, scaleWidth);
 }
 
+let errorTimeoutId: number = 0;
+
+function incrementErrorTimeout(): void {
+    errorTimeoutId = (errorTimeoutId + 1) % 1000;
+}
+
 /**
  * Displays the given error message to the user.
  *
@@ -160,7 +166,11 @@ export function displayError(error: any): void {
     errorDiv.textContent = error.message;
     errorDiv.classList.add('fade-in');
     errorDiv.classList.remove('fade-out');
+
+    incrementErrorTimeout();
+    let myTimeoutId = errorTimeoutId;
     setTimeout(() => {
+        if (myTimeoutId !== errorTimeoutId) return;
         errorDiv.classList.add('fade-out');
         errorDiv.classList.remove('fade-in');
     }, 5000);
