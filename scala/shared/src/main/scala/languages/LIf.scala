@@ -169,8 +169,6 @@ class LIf extends LArith {
 
   case class TypeMismatchType(type1: Type, type2: Type) extends TypeError {
     override val message: String = s"$type1 not compatible with $type2"
-
-
   }
 
   case class TypeMismatchError(exprName: String, type1: Type, type2: Type) extends EvalError {

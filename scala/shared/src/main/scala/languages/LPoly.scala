@@ -165,8 +165,6 @@ class LPoly extends LData {
 
   case class UnknownTypeVar(v: Literal) extends TypeError {
     override val message: String = s"Unknown type variable $v"
-
-
   }
 }
 
