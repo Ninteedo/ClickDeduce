@@ -73,6 +73,8 @@ jobs:
         run: sbt doc
       - name: Copy ScalaDocs to build/api
         run: cp -r scala/jvm/target/scala-3.3.1/api build/api
+      - name: Copy sitemap to build
+        run: cp webapp/sitemap.txt build/sitemap.txt
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
         with:
