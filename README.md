@@ -1,10 +1,17 @@
+# Usage
+
+ClickDeduce is available at [clickdeduce.rgh.dev](https://clickdeduce.rgh.dev/).
+The guide page can be found at [clickdeduce.rgh.dev/guide](https://clickdeduce.rgh.dev/guide).
+
+To view the API docs, visit [clickdeduce.rgh.dev/api](https://clickdeduce.rgh.dev/api).
+
 ## Development
 
 ### Requirements
 
 - JDK 18+
 - [sbt 1.5+](https://www.scala-sbt.org/1.x/docs/Setup.html)
-- [Node.js 14+](https://nodejs.org/en/learn/getting-started/how-to-install-nodejs)
+- [Node.js 16+](https://nodejs.org/en/learn/getting-started/how-to-install-nodejs)
 
 ### Setup
 
@@ -17,7 +24,7 @@ npm install
 
 ### Project Layout
 
-Project source files are present in [src/main/scala](src/main/scala) for the Scala code
+Project source files are present in [the shared Scala code directory](scala/shared/src/main/scala) for the Scala code
 and [webapp/scripts](webapp/scripts) for the TypeScript code.
 
 There are functions missing from the TypeScript code which require the ScalaJS code to be built first.
