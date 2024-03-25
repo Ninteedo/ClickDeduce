@@ -276,4 +276,9 @@ class LArithTest extends TestTemplate[Expr, Value, Type] {
     matches.length shouldBe 2
     matches.count(_.contains("readonly")) shouldBe 1
   }
+
+  property("Expression and type builder names match expected") {
+    LArith.exprBuilderNames shouldBe List("Num", "Plus", "Times")
+    LArith.typeBuilderNames shouldBe List("IntType")
+  }
 }

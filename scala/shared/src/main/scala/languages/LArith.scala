@@ -2,7 +2,14 @@ package languages
 
 import convertors.*
 
+import scala.annotation.targetName
+
 class LArith extends ClickDeduceLanguage {
+  Num.register()
+  Plus.register()
+  Times.register()
+  IntType.register()
+
   // expressions
 
   /** A numeric expression. Can be any integer.
@@ -26,20 +33,17 @@ class LArith extends ClickDeduceLanguage {
     override val needsBrackets: Boolean = false
   }
 
-  object Num {
+  object Num extends ExprCompanion {
     def apply(x: BigInt): Num = new Num(LiteralInt(x))
 
     def apply(x: Int): Num = new Num(LiteralInt(BigInt(x)))
-  }
 
-  addExprBuilder(
-    "Num",
-    {
+    override def createExpr(args: List[Any]): Option[Expr] = args match {
       case List(l: Literal) => Some(Num(l))
-      case Nil              => Some(Num(defaultLiteral))
+      case defaultArgs      => Some(Num(defaultLiteral))
       case _                => None
     }
-  )
+  }
 
   /** A plus expression. Both subexpressions must evaluate to `NumV`.
     *
@@ -50,10 +54,10 @@ class LArith extends ClickDeduceLanguage {
     */
   case class Plus(e1: Expr, e2: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = (e1.eval(env), e2.eval(env)) match {
-      case (NumV(x), NumV(y))    => NumV(x + y)
-      case (v1, _) if v1.isError => v1
-      case (_, v2) if v2.isError => v2
-      case (v1, v2)              => UnexpectedArgValue(s"Plus cannot accept ($v1, $v2)")
+      case (x: NumericValue, y: NumericValue) => x + y
+      case (v1, _) if v1.isError              => v1
+      case (_, v2) if v2.isError              => v2
+      case (v1, v2)                           => UnexpectedArgValue(s"Plus cannot accept ($v1, $v2)")
     }
 
     override def typeCheckInner(tEnv: TypeEnv): Type = (e1.typeCheck(tEnv), e2.typeCheck(tEnv)) match {
@@ -67,14 +71,13 @@ class LArith extends ClickDeduceLanguage {
       MultiElement(e1.toTextBracketed, SurroundSpaces(MathElement.plus), e2.toTextBracketed)
   }
 
-  addExprBuilder(
-    "Plus",
-    {
+  object Plus extends ExprCompanion {
+    override def createExpr(args: List[Any]): Option[Expr] = args match {
       case List(e1: Expr, e2: Expr) => Some(Plus(e1, e2))
-      case Nil                      => Some(Plus(defaultExpr, defaultExpr))
+      case defaultArgs              => Some(Plus(defaultExpr, defaultExpr))
       case _                        => None
     }
-  )
+  }
 
   /** A times expression. Both subexpressions must evaluate to `NumV`.
     *
@@ -85,10 +88,10 @@ class LArith extends ClickDeduceLanguage {
     */
   case class Times(e1: Expr, e2: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = (e1.eval(env), e2.eval(env)) match {
-      case (NumV(x), NumV(y))    => NumV(x * y)
-      case (v1, _) if v1.isError => v1
-      case (_, v2) if v2.isError => v2
-      case (v1, v2)              => UnexpectedArgValue(s"Times cannot accept ($v1, $v2)")
+      case (x: NumericValue, y: NumericValue) => x * y
+      case (v1, _) if v1.isError              => v1
+      case (_, v2) if v2.isError              => v2
+      case (v1, v2)                           => UnexpectedArgValue(s"Times cannot accept ($v1, $v2)")
     }
 
     override def typeCheckInner(tEnv: TypeEnv): Type = (e1.typeCheck(tEnv), e2.typeCheck(tEnv)) match {
@@ -102,14 +105,13 @@ class LArith extends ClickDeduceLanguage {
       MultiElement(e1.toTextBracketed, SurroundSpaces(TimesSymbol()), e2.toTextBracketed)
   }
 
-  addExprBuilder(
-    "Times",
-    {
+  object Times extends ExprCompanion {
+    override def createExpr(args: List[Any]): Option[Expr] = args match {
       case List(e1: Expr, e2: Expr) => Some(Times(e1, e2))
-      case Nil                      => Some(Times(defaultExpr, defaultExpr))
+      case defaultArgs              => Some(Times(defaultExpr, defaultExpr))
       case _                        => None
     }
-  )
+  }
 
   // values
 
@@ -117,12 +119,19 @@ class LArith extends ClickDeduceLanguage {
     def compare(that: OrdinalValue): Int
   }
 
+  trait NumericValue extends OrdinalValue {
+    @targetName("plus")
+    def +(that: NumericValue): NumericValue
+    @targetName("times")
+    def *(that: NumericValue): NumericValue
+  }
+
   /** A numeric value. Can be any integer.
     *
     * @param x
     *   The integer value of the number.
     */
-  case class NumV(x: BigInt) extends Value, OrdinalValue {
+  case class NumV(x: BigInt) extends NumericValue {
     override val typ: Type = IntType()
 
     override val needsBrackets: Boolean = false
@@ -130,6 +139,18 @@ class LArith extends ClickDeduceLanguage {
     override def compare(that: OrdinalValue): Int = that match {
       case NumV(y) => x.compare(y)
       case other   => throw new IllegalArgumentException(s"Cannot compare NumV with non-NumV ($other)")
+    }
+
+    @targetName("plus")
+    override def +(that: NumericValue): NumericValue = that match {
+      case NumV(y) => NumV(x + y)
+      case other   => throw new IllegalArgumentException(s"Cannot add NumV to non-NumV ($other)")
+    }
+
+    @targetName("times")
+    override def *(that: NumericValue): NumericValue = that match {
+      case NumV(y) => NumV(x * y)
+      case other   => throw new IllegalArgumentException(s"Cannot multiply NumV by non-NumV ($other)")
     }
 
     override def toText: ConvertableText = MathElement(x.toString)
@@ -158,19 +179,18 @@ class LArith extends ClickDeduceLanguage {
 
   /** Type for integers.
     */
-  case class IntType() extends Type, OrdinalType {
+  case class IntType() extends OrdinalType {
     override val needsBrackets: Boolean = false
 
     override def toText: ConvertableText = TextElement("Int")
   }
 
-  addTypeBuilder(
-    "IntType",
-    {
-      case Nil => Some(IntType())
-      case _   => None
+  object IntType extends TypeCompanion {
+    override def createType(args: List[Any]): Option[Type] = args match {
+      case defaultArgs => Some(IntType())
+      case _           => None
     }
-  )
+  }
 
   /** An error that occurs due to an incorrect argument type.
     *

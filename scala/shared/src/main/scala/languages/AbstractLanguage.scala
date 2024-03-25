@@ -404,6 +404,28 @@ trait AbstractLanguage {
 
   // <editor-fold desc="Builders">
 
+  trait TermCompanion {
+    protected val isHidden: Boolean = false
+
+    protected val name: String = toString.dropWhile(_ != '$').drop(1).takeWhile(_ != '$')
+
+    protected final val defaultArgs: List[Any] = Nil
+
+    def register(): Unit
+  }
+
+  trait ExprCompanion extends TermCompanion {
+    protected def createExpr(args: List[Any]): Option[Expr]
+
+    final def register(): Unit = addExprBuilder(name, createExpr, hidden = isHidden)
+  }
+
+  trait TypeCompanion extends TermCompanion {
+    protected def createType(args: List[Any]): Option[Type]
+
+    final def register(): Unit = addTypeBuilder(name, createType, hidden = isHidden)
+  }
+
   private type ExprBuilder = List[Any] => Option[Expr]
 
   private var exprBuilders: Map[String, ExprBuilder] = Map()
@@ -412,6 +434,7 @@ trait AbstractLanguage {
 
   protected def addExprBuilder(name: String, builder: ExprBuilder, hidden: Boolean = false): Unit = {
     exprBuilders += (name -> builder)
+    println(s"Added expr builder: $name")
     if (!hidden) {
       exprBuilderNamesList = exprBuilderNamesList :+ name
     }
