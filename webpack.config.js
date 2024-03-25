@@ -68,6 +68,11 @@ module.exports = {
         new HtmlWebpackPlugin({
             template: './webapp/pages/guide.html',
             filename: 'guide.html'
+        }),
+        new CopyPlugin({
+            patterns: [
+                { from: 'webapp/sitemap.txt', to: 'sitemap.txt' },
+            ]
         })
     ],
 
