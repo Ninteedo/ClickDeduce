@@ -10,10 +10,10 @@ import {
     updateTree,
     useTreeFromHistory
 } from "./treeManipulation";
-import {contextMenuSelectedElement, displayError, nextFocusElement} from "./interface";
+import {contextMenuSelectedElement, displayError, getTreePathOfElement, nextFocusElement} from "./interface";
 import {postProcessActionNew, postStartNodeBlankNew} from "./serverRequest";
 
-let copyCache: string = null;
+let copyCache: string | null = null;
 
 /**
  * Resets the global variables used by the action code.
@@ -48,24 +48,22 @@ export function doStartNodeBlank(event?: Event): void {
  */
 export function handleLiteralChanged(textInput: HTMLInputElement): void {
     const literalValue: string = textInput.value;
-    const treePath: string = textInput.getAttribute("data-tree-path");
+    const treePath: string = getTreePathOfElement(textInput);
 
     if (initialValues.find(([path, value]) => path === treePath && value === literalValue)) {
         return;
     }
 
-    let focusedTreePath: string = null;
+    let focusedTreePath: string | null = null;
     if (nextFocusElement != null) {
-        focusedTreePath = nextFocusElement.getAttribute("data-tree-path");
+        focusedTreePath = getTreePathOfElement(nextFocusElement);
     }
 
     runAction("EditLiteralAction", treePath, [literalValue]);
 
-    if (focusedTreePath == null) {
-        return;
-    }
-    let focusedElement: HTMLElement = document.querySelector(`input[data-tree-path="${focusedTreePath}"]`);
-    if (focusedElement != null && focusedElement instanceof HTMLElement) {
+    if (focusedTreePath == null) return;
+    let focusedElement: HTMLElement | null = document.querySelector(`input[data-tree-path="${focusedTreePath}"]`);
+    if (focusedElement && focusedElement instanceof HTMLElement) {
         focusedElement.focus();
         if (focusedElement instanceof HTMLInputElement) {
             focusedElement.select();
@@ -75,13 +73,15 @@ export function handleLiteralChanged(textInput: HTMLInputElement): void {
 
 export function exampleLiteralChanged(textInput: HTMLInputElement): void {
     const literalValue: string = textInput.value;
-    const treePath: string = textInput.getAttribute("data-tree-path");
+    const treePath: string = getTreePathOfElement(textInput);
 
     if (initialValues.find(([path, value]) => path === treePath && value === literalValue)) {
         return;
     }
 
-    const outputDiv = document.getElementById('example-literal-outer').querySelector('.eval-result') as HTMLDivElement;
+    const exampleLiteralOuter = document.getElementById('example-literal-outer');
+    if (!exampleLiteralOuter) throw new Error('Could not find example-literal-outer');
+    const outputDiv = exampleLiteralOuter.querySelector('.eval-result') as HTMLDivElement;
 
     if (literalValue.match(/^\d+$/)) {
         outputDiv.innerHTML = `
@@ -109,13 +109,15 @@ export function exampleLiteralChanged(textInput: HTMLInputElement): void {
     textInput.select();
 }
 
-export function handleExprSelectorChoice(selector: HTMLDivElement, value: string): void {
+export function handleExprSelectorChoice(selector: HTMLDivElement, value: string | null): void {
     const input = selector.querySelector('.expr-selector-input') as HTMLInputElement;
-    const dropdown = selector.querySelector('.expr-selector-dropdown') as HTMLDivElement;
-    const button = selector.querySelector('.expr-selector-button') as HTMLButtonElement;
+    // const dropdown = selector.querySelector('.expr-selector-dropdown') as HTMLDivElement;
+    // const button = selector.querySelector('.expr-selector-button') as HTMLButtonElement;
 
-    let focusedTreePath: string = null;
-    if (nextFocusElement != null) {
+    if (value === null) throw new Error("Selected value is null");
+
+    let focusedTreePath: string | null = null;
+    if (nextFocusElement) {
         focusedTreePath = nextFocusElement.getAttribute("data-tree-path");
     }
 
@@ -130,16 +132,12 @@ export function handleExprSelectorChoice(selector: HTMLDivElement, value: string
     }
 
     input.value = value;
-    const dataTreePath: string = selector.getAttribute("data-tree-path");
-    runAction(actionName, dataTreePath, [value])
+    runAction(actionName, getTreePathOfElement(selector), [value])
 
-    if (focusedTreePath == null) {
-        return;
-    }
+    if (!focusedTreePath) return;
+    const focusedElement = getActiveInputs().find(input => compareTreePaths(focusedTreePath!, getTreePathOfElement(input)) <= 0);
 
-    const focusedElement = getActiveInputs().find(input => compareTreePaths(focusedTreePath, input.getAttribute("data-tree-path")) <= 0);
-
-    if (focusedElement != null && focusedElement instanceof HTMLElement) {
+    if (focusedElement && focusedElement instanceof HTMLElement) {
         focusedElement.focus();
         if (focusedElement instanceof HTMLInputElement) {
             focusedElement.select();
@@ -181,8 +179,7 @@ export function runAction(actionName: string, treePath: string, extraArgs: any[]
 export function clearTreeNode(event: Event): void {
     event.preventDefault();
     if (contextMenuSelectedElement) {
-        const treePath: string = contextMenuSelectedElement.getAttribute("data-tree-path")
-        runAction("DeleteAction", treePath, [])
+        runAction("DeleteAction", getSelectedTreePath(), []);
     }
 }
 
@@ -191,7 +188,7 @@ export function clearTreeNode(event: Event): void {
  */
 export function copyTreeNode(): void {
     // copyCache = contextMenuSelectedElement.getAttribute("data-node-string");
-    copyCache = getNodeStringFromPath(contextMenuSelectedElement.getAttribute("data-tree-path"));
+    copyCache = getNodeStringFromPath(getSelectedTreePath());
 }
 
 /**
@@ -201,11 +198,14 @@ export function copyTreeNode(): void {
  */
 export function pasteTreeNode(): void {
     if (copyCache) {
-        const treePath = contextMenuSelectedElement.getAttribute("data-tree-path");
-        runAction("PasteAction", treePath, [copyCache]);
+        runAction("PasteAction", getSelectedTreePath(), [copyCache]);
     }
 }
 
 export function hasCopyCache(): boolean {
     return copyCache !== null;
+}
+
+function getSelectedTreePath(): string {
+    return getTreePathOfElement(contextMenuSelectedElement);
 }

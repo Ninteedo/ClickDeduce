@@ -41,7 +41,7 @@ export function initialise(skipImages: boolean = false): void {
 
     panzoomInstance = panzoom(tree, {
         bounds: false, boundsPadding: 0, zoomDoubleClickSpeed: 1,
-        onTouch: (e) => {
+        onTouch: () => {
             // TODO: cannot use on mobile currently
             return false;  // tells the library to not preventDefault.
         },

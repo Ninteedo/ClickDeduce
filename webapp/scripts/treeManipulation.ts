@@ -5,6 +5,7 @@ import {
     clearHighlight,
     contextMenuSelectedElement,
     displayError,
+    getTreePathOfElement,
     handleKeyDown,
     isAutoZoomEnabled,
     zoomToFit
@@ -23,7 +24,7 @@ let langSelector: HTMLSelectElement;
 export let activeInputs: HTMLElement[] = [];
 export let initialValues: [string, string][] = [];
 
-export let lastNodeString: string = null;
+export let lastNodeString: string | null = null;
 
 const fileInput: HTMLInputElement = document.createElement('input');
 
@@ -62,7 +63,8 @@ function loadLangSelector(): void {
     const langSelectorContainer: HTMLDivElement = document.getElementById('lang-selector-div') as HTMLDivElement;
 
     langSelectorContainer.innerHTML = getLangSelectorNew();
-    const langSelector: HTMLElement = document.getElementById('lang-selector');
+    const langSelector: HTMLElement | null = document.getElementById('lang-selector');
+    if (!langSelector) throw new Error('Language selector not found');
     langSelector.addEventListener('change', () => {
         runAction("IdentityAction", "", []);
     })
@@ -149,7 +151,7 @@ function addHoverListeners(): void {
         div.addEventListener('mouseover', (event) => {
             // Stop the event from bubbling up to parent subtree elements
             event.stopPropagation();
-            const target: EventTarget = event.currentTarget;
+            const target: EventTarget | null = event.currentTarget;
 
             // Remove the highlight from any other subtree elements
             if (contextMenuSelectedElement === null) {
@@ -200,10 +202,10 @@ function makeDisabledInputsFocusOriginal(): void {
 
         const origin = tree.querySelector(`input:not([disabled])[data-tree-path="${treePath}"]`) as HTMLInputElement;
         input.addEventListener('mouseover', () => {
-            origin.parentElement.classList.add('guide-highlight');
+            origin.parentElement?.classList.add('guide-highlight');
         });
         input.addEventListener('mouseout', () => {
-            origin.parentElement.classList.remove('guide-highlight');
+            origin.parentElement?.classList.remove('guide-highlight');
         });
     });
 
@@ -232,8 +234,8 @@ function updateActiveInputsList(): void {
         'input.literal[data-tree-path]:not([disabled]), input.expr-selector-input:not([disabled])'
     ));
     activeInputs.sort((a, b) => {
-        const aPath = a.getAttribute("data-tree-path");
-        const bPath = b.getAttribute("data-tree-path");
+        const aPath = getTreePathOfElement(a);
+        const bPath = getTreePathOfElement(b);
         return aPath.localeCompare(bPath, undefined, {numeric: true, sensitivity: 'base'});
     });
     activeInputs.forEach(input => {
@@ -260,7 +262,7 @@ function setLiteralInitialValues() {
     initialValues = [];
     document.querySelectorAll('input[data-tree-path]').forEach(input => {
         if (input instanceof HTMLInputElement) {
-            initialValues.push([input.getAttribute('data-tree-path'), input.value]);
+            initialValues.push([getTreePathOfElement(input), input.value]);
         }
     });
 }
@@ -296,9 +298,10 @@ export function updateTextInputWidth(textInput: HTMLInputElement): void {
 }
 
 function updateLinkedInputPlaceholders(input: HTMLInputElement): void {
-    const treePath: string = input.getAttribute('data-tree-path');
+    const treePath: string = getTreePathOfElement(input);
     const selector = `input[data-origin="${treePath}"]`;
-    tree.querySelectorAll(selector).forEach((el: HTMLInputElement) => {
+    tree.querySelectorAll(selector).forEach((el: Element) => {
+        if (!(el instanceof HTMLInputElement)) return;
         el.value = input.value;
         updateTextInputWidth(el);
     });
@@ -352,7 +355,7 @@ export function saveTree(): void {
     const contents = JSON.stringify({
         nodeString: lastNodeString,
         lang: langSelector.value,
-        mode: modeRadios.find(radio => radio.checked).value,
+        mode: getSelectedMode(),
     })
     const blob = new Blob([contents], {type: 'text/plain'});
     const url = window.URL.createObjectURL(blob);
@@ -371,7 +374,9 @@ function setupFileInput(): void {
     fileInput.type = 'file';
     fileInput.accept = '.cdtree';
     fileInput.onchange = (event) => {
-        const file = (event.target as HTMLInputElement).files[0];
+        const files = (event.target as HTMLInputElement).files;
+        if (!files || files.length === 0) throw new Error('No file selected');
+        const file = files[0];
         const reader = new FileReader();
         reader.onload = () => {
             loadFromFile(reader);
@@ -402,7 +407,7 @@ function setupFileDragAndDrop(): void {
         event.preventDefault();
         removeHighlight();
 
-        const file: File = event.dataTransfer?.files[0];
+        const file: File | undefined = event.dataTransfer?.files[0];
         if (!file) {
             displayError('No file dropped');
             return;
@@ -519,5 +524,14 @@ export function getNodeStringFromPath(path: string): string {
         return recurse(nextNodeString, remaining);
     }
 
+    if (!lastNodeString) {
+        throw new Error('No node string to get path from');
+    }
     return recurse(lastNodeString, path.split('-').map(s => parseInt(s)).filter(n => !isNaN(n)));
+}
+
+function getSelectedMode(): string {
+    const selectedRadio = modeRadios.find(radio => radio.checked);
+    if (!selectedRadio) throw new Error("No mode selected");
+    return selectedRadio.value;
 }

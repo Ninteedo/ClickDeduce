@@ -1,6 +1,7 @@
 import {tree} from "./initialise";
 import {hasClassOrParentHasClass} from "./utils";
 import {handleExprSelectorChoice} from "./actions";
+import {getTreePathOfElement} from "./interface";
 
 const SELECTOR_FOCUS_CLASS = 'focused';
 const DROPDOWN_VISIBLE_CLASS = 'show';
@@ -19,7 +20,7 @@ export function replaceSelectInputs(): void {
         }
 
         const options = Array.from(select.options).slice(1);
-        const treePath = select.getAttribute('data-tree-path');
+        const treePath = getTreePathOfElement(select);
         let placeholderText: string;
         let kind: string;
         if (select.classList.contains('expr-dropdown')) {
@@ -49,7 +50,7 @@ function replaceDisabledSelectInputs(): void {
     }
 
     selectInputs.forEach(select => {
-        const treePath = select.getAttribute('data-tree-path');
+        const treePath = getTreePathOfElement(select);
         select.outerHTML = createDisabledSelectHTML(select, treePath);
     });
 }
@@ -107,14 +108,16 @@ export function setupExampleSelector(termSelectorContainer: HTMLDivElement): voi
     const dropdown = getSelectorDropdown(termSelectorContainer);
     const output = document.getElementById("expr-selector-output");
 
+    if (!output) throw new Error("Could not find output element");
+
     function selectOption(option: HTMLLIElement): void {
         input.value = option.innerText;
-        output.textContent = option.textContent;
+        output!.textContent = option.textContent;
         hideExprSelectorDropdown(termSelectorContainer);
     }
 
     function clearOutput(): void {
-        output.textContent = "?";
+        output!.textContent = "?";
     }
 
     input.addEventListener('input', () => {

@@ -25,7 +25,7 @@ export function getSelectedLanguage(): string {
  */
 export function hasClassOrParentHasClass(element: HTMLElement, className: string): boolean {
     return element.classList.contains(className) ||
-        (element.parentElement && hasClassOrParentHasClass(element.parentElement, className));
+        (!!element.parentElement && hasClassOrParentHasClass(element.parentElement, className));
 }
 
 export function parseTreePath(treePath: string): number[] {

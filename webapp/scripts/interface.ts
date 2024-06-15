@@ -3,11 +3,12 @@ import {getActiveInputs, lastNodeString} from "./treeManipulation";
 import {getSelectedLanguage, getSelectedMode, hasClassOrParentHasClass} from "./utils";
 import {panzoomInstance} from "./initialise";
 import {selectorEnterPressed} from "./customExprSelector";
+// @ts-ignore
 import {convertToLaTeX} from "scalajs:main.js";
 
 let errorDiv: HTMLDivElement;
-export let nextFocusElement: HTMLElement = null;
-export let contextMenuSelectedElement: HTMLElement = null;
+export let nextFocusElement: HTMLElement | null = null;
+export let contextMenuSelectedElement: HTMLElement | null = null;
 
 /**
  * Resets the global variables used by the interface code.
@@ -20,7 +21,8 @@ export function resetInterfaceGlobals(): void {
 
     document.addEventListener('contextmenu', openContextMenu);
     document.addEventListener('click', closeContextMenu);
-    document.getElementById('custom-context-menu').style.display = 'none';
+
+    getContextMenu().style.display = 'none';
 }
 
 /**
@@ -55,8 +57,8 @@ export function handleKeyDown(e: KeyboardEvent): void {
 export function handleTabPressed(e: KeyboardEvent): void {
     if (e.key === 'Tab' && (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement)) {
         e.preventDefault();
-        const activeInputPaths: string[] = getActiveInputs().map(input => input.getAttribute('data-tree-path'));
-        const targetOuterPath: string = e.target.getAttribute('data-tree-path');
+        const activeInputPaths: string[] = getActiveInputs().map(getTreePathOfElement);
+        const targetOuterPath: string = getTreePathOfElement(e.target);
         let activeElemIndex = activeInputPaths.indexOf(targetOuterPath);
         if (e.shiftKey) {
             activeElemIndex -= 1;
@@ -93,7 +95,7 @@ export function clearHighlight(): void {
  * @param e the mouse event
  */
 function openContextMenu(e: MouseEvent): void {
-    let target: EventTarget = e.target;
+    let target: EventTarget | null = e.target;
     if (contextMenuSelectedElement !== null) {
         // closes the context menu if it is already open
         target = null;
@@ -108,28 +110,27 @@ function openContextMenu(e: MouseEvent): void {
 
         contextMenuSelectedElement = target;
 
-        const menu = document.getElementById('custom-context-menu');
+        const menu = getContextMenu();
         menu.style.display = 'block';
         menu.style.left = e.pageX + 'px';
         menu.style.top = e.pageY + 'px';
 
-        const pasteButton = document.getElementById('paste-button');
+        const pasteButton = getPasteButton();
         if (hasCopyCache()) {
             pasteButton.removeAttribute('disabled');
         } else {
             pasteButton.setAttribute('disabled', 'true');
         }
     } else {
-        closeContextMenu(e);
+        closeContextMenu();
     }
 }
 
 /**
  * Closes the context menu.
- * @param e the mouse event
  */
-function closeContextMenu(e: MouseEvent): void {
-    document.getElementById('custom-context-menu').style.display = 'none';
+function closeContextMenu(): void {
+    getContextMenu().style.display = 'none';
     if (contextMenuSelectedElement !== null) {
         clearHighlight();
     }
@@ -139,7 +140,7 @@ function closeContextMenu(e: MouseEvent): void {
  * Zooms the tree to fit the container.
  */
 export async function zoomToFit(): Promise<void> {
-    const container: HTMLElement = document.getElementById('tree-container');
+    const container: HTMLElement = getTreeContainer();
     const firstSubtree: HTMLDivElement = document.querySelector('.subtree[data-tree-path=""]') as HTMLDivElement;
 
     const scaleWidth = container.clientWidth / firstSubtree.clientWidth;
@@ -188,6 +189,7 @@ function setupValueTypeColourHighlightingCheckbox(): void {
 function toggleValueTypeColourHighlighting(newState: boolean): void {
     const body = document.querySelector('body');
     const className = 'value-highlighting-enabled';
+    if (!body) throw new Error('Body element not found');
     if (newState) {
         body.classList.add(className);
     } else {
@@ -212,13 +214,15 @@ function showExportOutput(title: string, output: string, description: string | n
     const outputTextArea = document.getElementById('export-output') as HTMLTextAreaElement;
     outputTextArea.value = output;
     const outputTitle = document.getElementById('export-output-title');
-    outputTitle.textContent = title;
+    if (outputTitle) outputTitle.textContent = title;
     const outputDescription = document.getElementById('export-output-desc');
-    if (description) {
-        outputDescription.textContent = description;
-        outputDescription.classList.add('visible');
-    } else {
-        outputDescription.classList.remove('visible');
+    if (outputDescription) {
+        if (description) {
+            outputDescription.textContent = description;
+            outputDescription.classList.add('visible');
+        } else {
+            outputDescription.classList.remove('visible');
+        }
     }
     outputDiv.classList.add('visible');
     getBlocker().classList.add('visible');
@@ -237,5 +241,32 @@ export function closeExportOutput() {
 }
 
 function getBlocker(): HTMLElement {
-    return document.getElementById('blocker');
+    const blocker = document.getElementById('blocker');
+    if (!blocker) throw new Error('Blocker not found');
+    return blocker;
+}
+
+function getContextMenu(): HTMLElement {
+    const menu = document.getElementById('custom-context-menu');
+    if (!menu) throw new Error('Context menu not found');
+    return menu;
+}
+
+function getTreeContainer(): HTMLElement {
+    const container = document.getElementById('tree-container');
+    if (!container) throw new Error('Tree container not found');
+    return container;
+}
+
+function getPasteButton(): HTMLButtonElement {
+    const pasteButton = document.getElementById('paste-button') as HTMLButtonElement;
+    if (!pasteButton) throw new Error('Paste button not found');
+    return pasteButton;
+}
+
+export function getTreePathOfElement(element: HTMLElement | null): string {
+    if (element === null) throw new Error("Cannot get tree path of null");
+    const treePath = element.getAttribute("data-tree-path");
+    if (treePath === null) throw new Error("Element does not have a tree path");
+    return treePath;
 }

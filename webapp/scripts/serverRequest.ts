@@ -1,3 +1,4 @@
+// @ts-ignore
 import {getLangSelector, processAction, startNodeBlank} from "scalajs:main.js";
 
 let actionHistory: {
