@@ -10,29 +10,28 @@
 
 <div id="controls">
   <div>
-    <h3>Modes</h3>
     <div>
-      <span style="margin-right: 0.5ch">Language:</span>
+      <h4>Language</h4>
       <div id="lang-selector-div" style="display: inline;">
       </div>
     </div>
+  </div>
 
-    <div id="mode-selector-div">
-      <h4>View Mode</h4>
-      <form>
-        <input type="radio" id="edit-mode-radio" name="mode" value="edit" checked="checked"
-               title="Mix of evaluation and type-checking rules to make editing easier">
-        <label for="edit-mode-radio">Edit</label>
-        <br>
-        <input type="radio" id="type-check-mode-radio" name="mode" value="type-check"
-               title="Examine the tree using type-checking rules">
-        <label for="type-check-mode-radio">Type-Check</label>
-        <br>
-        <input type="radio" id="eval-mode-radio" name="mode" value="eval"
-               title="Examine the tree using evaluation rules">
-        <label for="eval-mode-radio">Evaluate</label>
-      </form>
-    </div>
+  <div id="mode-selector-div">
+    <h4>View Mode</h4>
+    <form>
+      <input type="radio" id="edit-mode-radio" name="mode" value="edit" checked="checked"
+             title="Mix of evaluation and type-checking rules to make editing easier">
+      <label for="edit-mode-radio">Edit</label>
+      <br>
+      <input type="radio" id="type-check-mode-radio" name="mode" value="type-check"
+             title="Examine the tree using type-checking rules">
+      <label for="type-check-mode-radio">Type-Check</label>
+      <br>
+      <input type="radio" id="eval-mode-radio" name="mode" value="eval"
+             title="Examine the tree using evaluation rules">
+      <label for="eval-mode-radio">Evaluate</label>
+    </form>
   </div>
 
   <div>
