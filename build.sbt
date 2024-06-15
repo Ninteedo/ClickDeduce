@@ -25,9 +25,7 @@ lazy val clickDeduce = crossProject(JSPlatform, JVMPlatform)
     )
   )
   .jsSettings(
-    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule).withModuleSplitStyle(ModuleSplitStyle.SmallModulesFor(List("clickdeduce"))) },
-    Compile / fastOptJS / artifactPath := baseDirectory.value / ".." / ".." / "webapp" / "dist" / "clickdeduce-opt.js",
-    Compile / fullOptJS / artifactPath := baseDirectory.value / ".." / ".." / "webapp" / "dist" / "clickdeduce-opt.js",
+    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule).withModuleSplitStyle(ModuleSplitStyle.SmallModulesFor(List("main.js"))) },
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "2.4.0"
     )

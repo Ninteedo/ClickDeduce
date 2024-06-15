@@ -1,4 +1,4 @@
-import {getLangSelector, processAction, startNodeBlank} from "./clickdeduce-opt";
+import {getLangSelector, processAction, startNodeBlank} from "scalajs:main.js";
 
 let actionHistory: {
     langName: string;
@@ -56,7 +56,6 @@ export async function postStartNodeBlank(selectedLanguage: string): Promise<Resp
 
 export function postStartNodeBlankNew(selectedLanguage: string): [string, string] {
     startNodeBlankHistory.push({langName: selectedLanguage});
-    // @ts-ignore
     return startNodeBlank(selectedLanguage);
 }
 
@@ -90,6 +89,5 @@ export function postProcessActionNew(
 ): [string, string] {
     const extraArgsStrings: string[] = extraArgs.map(arg => arg.toString());
     actionHistory.push({langName, modeName, actionName, nodeString, treePath, extraArgsStrings});
-    // @ts-ignore
     return processAction(langName, modeName, actionName, nodeString, treePath, extraArgsStrings);
 }
