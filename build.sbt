@@ -1,3 +1,5 @@
+import org.scalajs.linker.interface.ModuleSplitStyle
+
 ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / scalaVersion := "3.3.1"
 
@@ -23,7 +25,10 @@ lazy val clickDeduce = crossProject(JSPlatform, JVMPlatform)
     )
   )
   .jsSettings(
-    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
+    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule).withModuleSplitStyle(ModuleSplitStyle.SmallModulesFor(List("clickdeduce"))) },
     Compile / fastOptJS / artifactPath := baseDirectory.value / ".." / ".." / "webapp" / "dist" / "clickdeduce-opt.js",
-    Compile / fullOptJS / artifactPath := baseDirectory.value / ".." / ".." / "webapp" / "dist" / "clickdeduce-opt.js"
+    Compile / fullOptJS / artifactPath := baseDirectory.value / ".." / ".." / "webapp" / "dist" / "clickdeduce-opt.js",
+    libraryDependencies ++= Seq(
+      "org.scala-js" %%% "scalajs-dom" % "2.4.0"
+    )
   )

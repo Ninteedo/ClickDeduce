@@ -1,54 +1,30 @@
-# Usage
+# React + TypeScript + Vite
 
-ClickDeduce is available at [clickdeduce.rgh.dev](https://clickdeduce.rgh.dev/).
-The guide page can be found at [clickdeduce.rgh.dev/guide](https://clickdeduce.rgh.dev/guide).
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-To view the API docs, visit [clickdeduce.rgh.dev/api](https://clickdeduce.rgh.dev/api).
+Currently, two official plugins are available:
 
-## Development
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-### Requirements
+## Expanding the ESLint configuration
 
-- JDK 18+
-- [sbt 1.5+](https://www.scala-sbt.org/1.x/docs/Setup.html)
-- [Node.js 16+](https://nodejs.org/en/learn/getting-started/how-to-install-nodejs)
+If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
 
-### Setup
+- Configure the top-level `parserOptions` property like this:
 
-To install the required dependencies, run the following commands:
-
-```bash
-sbt update
-npm install
+```js
+export default {
+  // other rules...
+  parserOptions: {
+    ecmaVersion: 'latest',
+    sourceType: 'module',
+    project: ['./tsconfig.json', './tsconfig.node.json'],
+    tsconfigRootDir: __dirname,
+  },
+}
 ```
 
-### Project Layout
-
-Project source files are present in [the shared Scala code directory](scala/shared/src/main/scala) for the Scala code
-and [webapp/scripts](webapp/scripts) for the TypeScript code.
-
-There are functions missing from the TypeScript code which require the ScalaJS code to be built first.
-To build the ScalaJS code, run the following command:
-
-```bash
-sbt fastOptJS
-```
-
-This will generate `clickdeduce-opt.js` in `webapp/scripts`.
-
-### Building Website
-
-To build the website, run the following command:
-
-```bash
-npm run build
-```
-
-Or, to skip the ScalaJS build, run:
-
-```bash
-npm run build:webpack
-```
-
-This will generate the website in the [build](build) directory,
-including [index.html](build/index.html) and [bundle.js](build/bundle.js).
+- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
+- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
+- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
