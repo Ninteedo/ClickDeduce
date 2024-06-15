@@ -1,4 +1,4 @@
-import {beforeEach, describe, expect, test} from "@jest/globals";
+import {beforeEach, describe, expect, test} from "vitest";
 import {initialise} from "../initialise";
 import {
     contextMenuSelect,
@@ -6,7 +6,8 @@ import {
     getDropdownAt,
     getLeftmostExprDropdown,
     getLiteralInputAt,
-    loadHtmlTemplate,
+    getUndoButton,
+    loadIndexHtmlTemplate,
     pressStartNodeButton,
     selectExprOption
 } from "./helper";
@@ -18,14 +19,15 @@ import {
     getActionHistory,
     getStartNodeBlankHistory
 } from "../serverRequest";
+import {getCopyButton, getDeleteButton, getPasteButton} from "../interface";
 
-const indexHtml = loadHtmlTemplate('../pages/index');
+const indexHtml = loadIndexHtmlTemplate();
 
 beforeEach(() => {
-    document.body.innerHTML = indexHtml;
-    initialise(true);
     clearActionHistory();
     clearStartNodeBlankHistory();
+    document.body.innerHTML = indexHtml;
+    initialise(true);
 });
 
 const langSelectorLanguages = ["LArith", "LIf", "LLet"];
@@ -269,8 +271,7 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
         contextMenuSelect(element);
 
-        const deleteButton = document.getElementById('delete-button');
-        deleteButton.click();
+        getDeleteButton().click();
 
         checkActionExecuted(langSelectorLanguages[0], "edit", "DeleteAction",
             NS.TIMES_LEFT_FILLED_NUM_RIGHT_EMPTY, "0", []);
@@ -283,39 +284,25 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         contextMenuSelect(element);
 
         const initialRequestsReceived = getActionHistory().length;
-
-        const copyButton = document.getElementById('copy-button');
-        copyButton.click();
-
+        getCopyButton().click();
         expect(getActionHistory().length).toEqual(initialRequestsReceived);
     });
 
     test("clicking paste has no effect before copying something", () => {
         expect.assertions(1);
-
         const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
         contextMenuSelect(element);
-
         const initialRequestsReceived = getActionHistory().length;
-
-        const pasteButton = document.getElementById('paste-button');
-        pasteButton.click();
-
+        getPasteButton().click();
         expect(getActionHistory().length).toEqual(initialRequestsReceived);
     });
 
     test("clicking paste on same element after copying it makes the correct request to the server", () => {
         const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
         contextMenuSelect(element);
-
-        const copyButton = document.getElementById('copy-button');
-        copyButton.click();
-
+        getCopyButton().click();
         contextMenuSelect(element);
-
-        const pasteButton = document.getElementById('paste-button');
-        pasteButton.click();
-
+        getPasteButton().click();
         checkActionExecuted(langSelectorLanguages[0], "edit", "PasteAction",
             NS.TIMES_LEFT_FILLED_NUM_RIGHT_EMPTY, "0", ["VariableNode(\"Num\", List(LiteralNode(\"4\")))"]);
     });
@@ -324,14 +311,12 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         const element1 = document.querySelector('.subtree[data-tree-path="0"]') as HTMLElement;
         contextMenuSelect(element1);
 
-        const copyButton = document.getElementById('copy-button');
-        copyButton.click();
+        getCopyButton().click();
 
         const element2 = document.querySelector('.subtree[data-tree-path="1"]') as HTMLElement;
         contextMenuSelect(element2);
 
-        const pasteButton = document.getElementById('paste-button');
-        pasteButton.click();
+        getPasteButton().click();
 
         checkActionExecuted(langSelectorLanguages[0], "edit", "PasteAction",
             NS.TIMES_LEFT_FILLED_NUM_RIGHT_EMPTY, "1", ["VariableNode(\"Num\", List(LiteralNode(\"4\")))"]);
@@ -339,12 +324,12 @@ describe("delete, copy, and paste buttons behave correctly", () => {
 
     test("clicking paste after changing tree state makes the correct request to the server", () => {
         contextMenuSelect(document.querySelector('[data-tree-path="0"]'));
-        document.getElementById('copy-button').click();
+        getCopyButton().click();
 
-        document.getElementById('undoButton').click();
+        getUndoButton().click();
 
         contextMenuSelect(document.querySelector('[data-tree-path=""]'));
-        document.getElementById('paste-button').click();
+        getPasteButton().click();
 
         checkActionExecuted(langSelectorLanguages[0], "edit", "PasteAction",
             NS.TIMES_LEFT_NUM_RIGHT_EMPTY, "", ["VariableNode(\"Num\", List(LiteralNode(\"4\")))"]);
@@ -357,34 +342,34 @@ describe("mode radio buttons behave correctly", () => {
     });
 
     test("the initial mode is edit", () => {
-        expect(document.getElementById('edit-mode-radio').getAttributeNames()).toContain('checked');
+        expect(document.getElementById('edit-mode-radio')?.getAttributeNames()).toContain('checked');
     });
 
     test("clicking the type-check mode button makes the correct request to the server", () => {
-        document.getElementById('type-check-mode-radio').click();
+        document.getElementById('type-check-mode-radio')?.click();
 
         checkActionExecuted(langSelectorLanguages[0], "type-check", "IdentityAction",
             "ExprChoiceNode()", "", []);
     });
 
     test("clicking the eval mode button makes the correct request to the server", () => {
-        document.getElementById('eval-mode-radio').click();
+        document.getElementById('eval-mode-radio')?.click();
 
         checkActionExecuted(langSelectorLanguages[0], "eval", "IdentityAction",
             "ExprChoiceNode()", "", []);
     });
 
     test("clicking the edit mode button makes the correct request to the server", () => {
-        document.getElementById('type-check-mode-radio').click();
+        document.getElementById('type-check-mode-radio')?.click();
 
-        document.getElementById('edit-mode-radio').click();
+        document.getElementById('edit-mode-radio')?.click();
 
         checkActionExecuted(langSelectorLanguages[0], "edit", "IdentityAction",
             "ExprChoiceNode()", "", []);
     });
 
     test("after selecting a mode, future requests are made with that mode", () => {
-        document.getElementById('type-check-mode-radio').click();
+        document.getElementById('type-check-mode-radio')?.click();
 
         selectExprOption(getLeftmostExprDropdown(), "Num");
 

@@ -1,4 +1,4 @@
-import {beforeEach, describe, expect, test} from "@jest/globals";
+import {beforeEach, describe, expect, test} from "vitest";
 import {initialise} from "../initialise";
 import {
     changeLanguage,
@@ -7,13 +7,15 @@ import {
     getLangSelector,
     getLeftmostExprDropdown,
     getTree,
-    loadHtmlTemplate,
+    getUndoButton,
+    loadIndexHtmlTemplate,
     pressStartNodeButton,
     selectExprOption,
     slightDelay
 } from "./helper";
+import {getCopyButton, getPasteButton} from "../interface";
 
-const indexHtml = loadHtmlTemplate('../pages/index');
+const indexHtml = loadIndexHtmlTemplate();
 
 beforeEach(() => {
     document.body.innerHTML = indexHtml;
@@ -21,8 +23,10 @@ beforeEach(() => {
 });
 
 describe('lang selector is correctly initialised on load', () => {
-    function getLangSelectorDiv() {
-        return document.getElementById('lang-selector-div');
+    function getLangSelectorDiv(): HTMLElement {
+        const langSelectorDiv = document.getElementById('lang-selector-div');
+        if (!langSelectorDiv) throw new Error('lang-selector-div not found');``
+        return langSelectorDiv;
     }
 
     function getLangSelectorOptions() {
@@ -52,9 +56,9 @@ describe('lang selector is correctly initialised on load', () => {
     test('each lang selector option has a value attribute and a text content', () => {
         getLangSelectorOptions().forEach(option => {
             expect(option.getAttributeNames()).toContain('value');
-            expect(option.getAttribute('value').length).toBeGreaterThan(0);
+            expect(option.getAttribute('value')?.length).toBeGreaterThan(0);
             expect(option.textContent).toBeTruthy();
-            expect(option.textContent.length).toBeGreaterThan(0);
+            expect(option.textContent?.length).toBeGreaterThan(0);
         });
     });
 
@@ -63,8 +67,8 @@ describe('lang selector is correctly initialised on load', () => {
         let texts: Set<string> = new Set();
 
         getLangSelectorOptions().forEach(option => {
-            values.add(option.getAttribute('value'));
-            texts.add(option.textContent);
+            values.add(option.getAttribute('value')!);
+            texts.add(option.textContent!);
         });
 
         expect(values.size).toBe(getLangSelectorOptions().length);
@@ -74,7 +78,7 @@ describe('lang selector is correctly initialised on load', () => {
 
 describe('start node function has correct effect', () => {
     test('start node results in a single node being added to the empty tree', () => {
-        const tree = document.getElementById('tree');
+        const tree = getTree();
         pressStartNodeButton();
 
         expect(tree.children).toHaveLength(1);
@@ -96,7 +100,7 @@ describe('selecting an option from the expression choice dropdown has the correc
     });
 
     test('selecting the "Num" option has correct effect', () => {
-        selectExprOption(getLeftmostExprDropdown(), "Num", true);
+        selectExprOption(getLeftmostExprDropdown(), "Num");
 
         expect(document.querySelectorAll('.subtree')).toHaveLength(1);
         expect(document.querySelectorAll('.subtree.axiom')).toHaveLength(1);
@@ -114,7 +118,7 @@ describe('selecting an option from the expression choice dropdown has the correc
     });
 
     test('selecting the "Plus" option has correct effect', () => {
-        selectExprOption(getLeftmostExprDropdown(), "Plus", true);
+        selectExprOption(getLeftmostExprDropdown(), "Plus");
 
         expect(document.querySelectorAll('.subtree')).toHaveLength(3);
         expect(document.querySelectorAll('.subtree.axiom')).toHaveLength(2);
@@ -123,29 +127,29 @@ describe('selecting an option from the expression choice dropdown has the correc
     });
 
     test('selecting the "Times" option then the "Plus" and "Num" options has correct effect', () => {
-        selectExprOption(getLeftmostExprDropdown(), "Times", true);
+        selectExprOption(getLeftmostExprDropdown(), "Times");
 
         expect(document.querySelectorAll('.subtree')).toHaveLength(3);
         expect(document.querySelectorAll('.subtree.axiom')).toHaveLength(2);
         expect(document.querySelectorAll('input.expr-selector-input:not([disabled])')).toHaveLength(2);
         expect(document.querySelectorAll('.expr')).toHaveLength(3);
 
-        selectExprOption(getLeftmostExprDropdown(), "Plus", true);
+        selectExprOption(getLeftmostExprDropdown(), "Plus");
         expect(document.querySelectorAll('.subtree')).toHaveLength(5);
         expect(document.querySelectorAll('.subtree.axiom')).toHaveLength(3);
         expect(document.querySelectorAll('input.expr-selector-input:not([disabled])')).toHaveLength(3);
         expect(document.querySelectorAll('.expr')).toHaveLength(5);
 
-        selectExprOption(getLeftmostExprDropdown(), "Num", true);
+        selectExprOption(getLeftmostExprDropdown(), "Num");
         expect(document.querySelectorAll('input.expr-selector-input:not([disabled])')).toHaveLength(2);
 
-        selectExprOption(getLeftmostExprDropdown(), "Num", true);
+        selectExprOption(getLeftmostExprDropdown(), "Num");
         expect(document.querySelectorAll('input.expr-selector-input:not([disabled])')).toHaveLength(1);
 
-        selectExprOption(getLeftmostExprDropdown(), "Num", true);
+        selectExprOption(getLeftmostExprDropdown(), "Num");
         expect(document.querySelectorAll('input.expr-selector-input:not([disabled])')).toHaveLength(0);
 
-        const tree = document.getElementById('tree');
+        const tree = getTree();
 
         expect(tree.querySelectorAll('.subtree')).toHaveLength(5);
         expect(tree.querySelectorAll('.subtree.axiom')).toHaveLength(3);
@@ -202,12 +206,12 @@ describe('behaviour of changing the selected language is correct', () => {
         selectExprOption(getLeftmostExprDropdown(), "IfThenElse");
         selectExprOption(getLeftmostExprDropdown(), "Bool");
 
-        const nodeString = document.querySelector('.subtree.axiom').getAttribute('data-node-string');
+        const nodeString = document.querySelector('.subtree.axiom')?.getAttribute('data-node-string');
 
         changeLanguage(1);
 
         expect(getExprDropdownOptions(getLeftmostExprDropdown()).length).toBe(languageSizes[1]);
-        expect(document.querySelector('.subtree.axiom').getAttribute('data-node-string')).toBe(nodeString);
+        expect(document.querySelector('.subtree.axiom')?.getAttribute('data-node-string')).toBe(nodeString);
     });
 
     // test('cannot change to a parent language if the current tree uses expressions not present in the parent language', () => {
@@ -304,7 +308,8 @@ describe('behaviour of manipulating trees with type selections is correct', () =
 });
 
 describe("delete, copy, and paste buttons behave correctly", () => {
-    function contextMenuSelect(element: HTMLElement): void {
+    function contextMenuSelect(element: HTMLElement | null): void {
+        if (!element) throw new Error('Element is null');
         element.dispatchEvent(new MouseEvent('mouseover', {
             bubbles: true,
             cancelable: true,
@@ -338,7 +343,7 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         contextMenuSelect(element);
 
         const deleteButton = document.getElementById('delete-button');
-        deleteButton.click();
+        deleteButton?.click();
 
         new Promise(resolve => setTimeout(resolve, 50));
 
@@ -350,15 +355,13 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
         contextMenuSelect(element);
 
-        const copyButton = document.getElementById('copy-button');
-        copyButton.click();
+        getCopyButton().click();
 
         const initialTreeState = getTree().innerHTML;
 
         contextMenuSelect(element);
 
-        const pasteButton = document.getElementById('paste-button');
-        pasteButton.click();
+        getPasteButton().click();
 
         new Promise(resolve => setTimeout(resolve, 50));
 
@@ -369,14 +372,12 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         const element1 = document.querySelector('.subtree[data-tree-path="0"]') as HTMLElement;
         contextMenuSelect(element1);
 
-        const copyButton = document.getElementById('copy-button');
-        copyButton.click();
+        getCopyButton().click();
 
         const element2 = document.querySelector('.subtree[data-tree-path="1"]') as HTMLElement;
         contextMenuSelect(element2);
 
-        const pasteButton = document.getElementById('paste-button');
-        pasteButton.click();
+        getPasteButton().click();
 
         new Promise(resolve => setTimeout(resolve, 50));
 
@@ -385,14 +386,14 @@ describe("delete, copy, and paste buttons behave correctly", () => {
 
     test("clicking paste after changing tree state makes the correct request to the server", () => {
         contextMenuSelect(document.querySelector('[data-tree-path="0"]'));
-        document.getElementById('copy-button').click();
+        getCopyButton().click();
         new Promise(resolve => setTimeout(resolve, 50));
 
-        document.getElementById('undoButton').click();
+        getUndoButton().click();
         new Promise(resolve => setTimeout(resolve, 50));
 
         contextMenuSelect(document.querySelector('[data-tree-path=""]'));
-        document.getElementById('paste-button').click();
+        getPasteButton().click();
 
         new Promise(resolve => setTimeout(resolve, 50));
 
@@ -421,7 +422,7 @@ describe("input focus is preserved when tabbing as the tree is updated", () => {
 
         slightDelay();
 
-        expect(getTree().querySelector('input[data-tree-path="0-0-0"]').getAttribute('value')).toBe('77');
+        expect(getTree().querySelector('input[data-tree-path="0-0-0"]')?.getAttribute('value')).toBe('77');
     });
 
     test("editing a literal and then tabbing to another literal sets the focus to the next input element", () => {
@@ -468,26 +469,26 @@ describe("user can perform a sequence of actions", () => {
         selectExprOption(getLeftmostExprDropdown(), "Num");  // Num
         selectExprOption(getLeftmostExprDropdown(), "Num");  // Num
 
-        getTree().querySelector('input[data-tree-path="0-0-0"]').setAttribute('value', '1');
-        getTree().querySelector('input[data-tree-path="0-0-0"]').dispatchEvent(new KeyboardEvent('keydown', {key: 'Tab'}));
+        getTree().querySelector('input[data-tree-path="0-0-0"]')?.setAttribute('value', '1');
+        getTree().querySelector('input[data-tree-path="0-0-0"]')?.dispatchEvent(new KeyboardEvent('keydown', {key: 'Tab'}));
         slightDelay();
 
-        expect(getTree().querySelector('input[data-tree-path="0-0-0"]').getAttribute('value')).toBe('1');
-        expect(document.activeElement).toBe(getTree().querySelector('input[data-tree-path="0-1-0"]'))
+        expect(getTree().querySelector('input[data-tree-path="0-0-0"]')?.getAttribute('value')).toBe('1');
+        expect(document.activeElement).toBe(getTree()?.querySelector('input[data-tree-path="0-1-0"]'))
 
-        document.activeElement.setAttribute('value', '2');
-        document.activeElement.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter'}));
+        document.activeElement?.setAttribute('value', '2');
+        document.activeElement?.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter'}));
 
         slightDelay();
 
-        expect(getTree().querySelector('input[data-tree-path="0-0-0"]').getAttribute('value')).toBe('1');
-        expect(getTree().querySelector('input[data-tree-path="0-1-0"]').getAttribute('value')).toBe('2');
+        expect(getTree().querySelector('input[data-tree-path="0-0-0"]')?.getAttribute('value')).toBe('1');
+        expect(getTree().querySelector('input[data-tree-path="0-1-0"]')?.getAttribute('value')).toBe('2');
 
         selectExprOption(getLeftmostExprDropdown(), "Num");  // Num
         doLiteralEdit(getTree().querySelector('input[data-tree-path="1-0"]') as HTMLInputElement, '3');
 
-        expect(getTree().querySelector('input[data-tree-path="0-0-0"]').getAttribute('value')).toBe('1');
-        expect(getTree().querySelector('input[data-tree-path="0-1-0"]').getAttribute('value')).toBe('2');
-        expect(getTree().querySelector('input[data-tree-path="1-0"]').getAttribute('value')).toBe('3');
+        expect(getTree().querySelector('input[data-tree-path="0-0-0"]')?.getAttribute('value')).toBe('1');
+        expect(getTree().querySelector('input[data-tree-path="0-1-0"]')?.getAttribute('value')).toBe('2');
+        expect(getTree().querySelector('input[data-tree-path="1-0"]')?.getAttribute('value')).toBe('3');
     });
 });

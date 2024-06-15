@@ -1,4 +1,4 @@
-import {beforeEach, describe, expect, jest, test} from "@jest/globals";
+import {beforeEach, describe, expect, test, vitest} from "vitest";
 import {
     contextMenuSelect,
     doLiteralEdit,
@@ -7,7 +7,7 @@ import {
     getLiteralInputAt,
     getTabbableElements,
     leftClickOn,
-    loadHtmlTemplate,
+    loadIndexHtmlTemplate,
     selectExprOption,
     slightDelay
 } from "./helper";
@@ -15,7 +15,7 @@ import {initialise} from "../initialise";
 import {doStartNodeBlank, handleLiteralChanged, startNodeBlank} from "../actions";
 import {ClickDeduceResponseError} from "../ClickDeduceResponseError";
 
-const indexHtml = loadHtmlTemplate('../pages/index');
+const indexHtml = loadIndexHtmlTemplate();
 
 beforeEach(() => {
     document.body.innerHTML = indexHtml;
@@ -31,13 +31,13 @@ describe("context menu behaves correctly", () => {
     });
 
     test("context menu is initially hidden", () => {
-        expect(document.getElementById('custom-context-menu').style.display).toEqual('none');
+        expect(document.getElementById('custom-context-menu')?.style.display).toEqual('none');
     });
 
     test("right-clicking an element causes the context menu to appear", () => {
         const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
         contextMenuSelect(element);
-        expect(document.getElementById('custom-context-menu').style.display).toEqual('block');
+        expect(document.getElementById('custom-context-menu')?.style.display).toEqual('block');
     });
 
     test("the selected element remains highlighted after the context menu appears", () => {
@@ -50,7 +50,7 @@ describe("context menu behaves correctly", () => {
         const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
         contextMenuSelect(element);
         leftClickOn(document.querySelector('[data-tree-path=""]'))
-        expect(document.getElementById('custom-context-menu').style.display).toEqual('none');
+        expect(document.getElementById('custom-context-menu')?.style.display).toEqual('none');
     });
 
     test("right-clicking another element when the context menu is out causes the context menu to disappear", () => {
@@ -60,21 +60,21 @@ describe("context menu behaves correctly", () => {
         const element2 = document.querySelector('[data-tree-path="1"]') as HTMLElement;
         contextMenuSelect(element2);
 
-        expect(document.getElementById('custom-context-menu').style.display).toEqual('none');
+        expect(document.getElementById('custom-context-menu')?.style.display).toEqual('none');
     });
 
     test("right-clicking the context menu causes the context menu to disappear", () => {
         const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
         contextMenuSelect(element);
         contextMenuSelect(document.getElementById('custom-context-menu'));
-        expect(document.getElementById('custom-context-menu').style.display).toEqual('none');
+        expect(document.getElementById('custom-context-menu')?.style.display).toEqual('none');
     });
 
     test("right-clicking on the selected element again causes the context menu to disappear", () => {
         const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
         contextMenuSelect(element);
         contextMenuSelect(element);
-        expect(document.getElementById('custom-context-menu').style.display).toEqual('none');
+        expect(document.getElementById('custom-context-menu')?.style.display).toEqual('none');
     });
 });
 
@@ -245,7 +245,6 @@ describe("responses to server errors are appropriate", () => {
     });
 
     test("an error is thrown in the console", () => {
-        const message = "test";
         try {
             triggerError()
         } catch (e) {
@@ -268,22 +267,22 @@ describe("responses to server errors are appropriate", () => {
         } catch (e) {
         }
         expect(getErrorDiv().textContent).toContain("NullPointerException");
-        expect(getErrorDiv().textContent.length).toBeGreaterThan(5);
+        expect(getErrorDiv().textContent?.length).toBeGreaterThan(5);
     });
 
     test("error div becomes invisible after a timeout", () => {
-        jest.useFakeTimers();
+        vitest.useFakeTimers();
 
         try {
             triggerError();
         } catch (e) {
         }
 
-        jest.advanceTimersByTime(10000);
+        vitest.advanceTimersByTime(10000);
 
         expect(getErrorDiv().classList).not.toContain('fade-in');
         expect(getErrorDiv().classList).toContain('fade-out');
 
-        jest.useRealTimers();
+        vitest.useRealTimers();
     });
 });

@@ -258,10 +258,65 @@ function getTreeContainer(): HTMLElement {
     return container;
 }
 
-function getPasteButton(): HTMLButtonElement {
+export function getPasteButton(): HTMLButtonElement {
     const pasteButton = document.getElementById('paste-button') as HTMLButtonElement;
     if (!pasteButton) throw new Error('Paste button not found');
     return pasteButton;
+}
+
+export function getCopyButton(): HTMLButtonElement {
+    const copyButton = document.getElementById('copy-button') as HTMLButtonElement;
+    if (!copyButton) throw new Error('Copy button not found');
+    return copyButton;
+}
+
+export function getDeleteButton(): HTMLButtonElement {
+    const deleteButton = document.getElementById('delete-button') as HTMLButtonElement;
+    if (!deleteButton) throw new Error('Delete button not found');
+    return deleteButton;
+}
+
+export function getZoomToFitButton(): HTMLButtonElement {
+    const zoomToFitButton = document.getElementById('zoom-to-fit') as HTMLButtonElement;
+    if (!zoomToFitButton) throw new Error('Zoom to fit button not found');
+    return zoomToFitButton;
+}
+
+export function getContextMenuZoomToFitButton(): HTMLButtonElement {
+    const zoomToFitButton = document.getElementById('zoom-button') as HTMLButtonElement;
+    if (!zoomToFitButton) throw new Error('Context menu zoom to fit button not found');
+    return zoomToFitButton;
+
+}
+
+export function getSaveButton(): HTMLButtonElement {
+    const saveButton = document.getElementById('saveButton') as HTMLButtonElement;
+    if (!saveButton) throw new Error('Save button not found');
+    return saveButton;
+}
+
+export function getLoadButton(): HTMLButtonElement {
+    const loadButton = document.getElementById('loadButton') as HTMLButtonElement;
+    if (!loadButton) throw new Error('Load button not found');
+    return loadButton;
+}
+
+export function getExportLatexButton(): HTMLButtonElement {
+    const exportLatexButton = document.getElementById('exportLatexButton') as HTMLButtonElement;
+    if (!exportLatexButton) throw new Error('Export LaTeX button not found');
+    return exportLatexButton;
+}
+
+export function getExportCopyButton(): HTMLButtonElement {
+    const exportCopyButton = document.getElementById('export-copy-button') as HTMLButtonElement;
+    if (!exportCopyButton) throw new Error('Export copy button not found');
+    return exportCopyButton;
+}
+
+export function getExportCloseButton(): HTMLButtonElement {
+    const exportCloseButton = document.getElementById('export-close-button') as HTMLButtonElement;
+    if (!exportCloseButton) throw new Error('Export close button not found');
+    return exportCloseButton;
 }
 
 export function getTreePathOfElement(element: HTMLElement | null): string {

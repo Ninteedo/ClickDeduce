@@ -1,4 +1,4 @@
-import {beforeEach, describe, expect, test} from "@jest/globals";
+import {beforeEach, describe, expect, test} from "vitest";
 import {initialise} from "../initialise";
 import {doStartNodeBlank} from "../actions";
 import {
@@ -9,6 +9,7 @@ import {
     getLeftmostExprDropdown,
     getLiteralInputAt,
     getRedoButton,
+    getTree,
     getUndoButton,
     loadHtmlTemplate,
     selectExprOption,
@@ -75,49 +76,49 @@ describe("undo and redo buttons behave correctly", () => {
 
     test("pressing undo reverts the tree to the previous state", () => {
         expect.assertions(1);
-        const prevHtml = document.getElementById('tree').innerHTML;
+        const prevHtml = getTree().innerHTML;
         doEdit1();
         getUndoButton().click();
-        expect(document.getElementById('tree').innerHTML).toEqual(prevHtml);
+        expect(getTree().innerHTML).toEqual(prevHtml);
     });
 
     test("pressing undo twice reverts the tree to the state before the previous state", () => {
         expect.assertions(2);
-        const state1Html = document.getElementById('tree').innerHTML;
+        const state1Html = getTree().innerHTML;
         doEdit1();
-        const state2Html = document.getElementById('tree').innerHTML;
+        const state2Html = getTree().innerHTML;
         doEdit2();
 
         getUndoButton().click();
-        expect(document.getElementById('tree').innerHTML).toEqual(state2Html);
+        expect(getTree().innerHTML).toEqual(state2Html);
 
         getUndoButton().click();
-        expect(document.getElementById('tree').innerHTML).toEqual(state1Html);
+        expect(getTree().innerHTML).toEqual(state1Html);
     });
 
     test("pressing undo and then redo reverts the tree to the most recent state", () => {
         expect.assertions(1);
         doEdit1();
-        const state2Html = document.getElementById('tree').innerHTML;
+        const state2Html = getTree().innerHTML;
         getUndoButton().click();
         getRedoButton().click();
-        expect(document.getElementById('tree').innerHTML).toEqual(state2Html);
+        expect(getTree().innerHTML).toEqual(state2Html);
     });
 
     test("pressing undo and then redo twice reverts the tree to the state before the most recent state", () => {
         expect.assertions(2);
         doEdit1();
-        const state2Html = document.getElementById('tree').innerHTML;
+        const state2Html = getTree().innerHTML;
         doEdit2();
-        const state3Html = document.getElementById('tree').innerHTML;
+        const state3Html = getTree().innerHTML;
 
         getUndoButton().click();
         getUndoButton().click();
         getRedoButton().click();
-        expect(document.getElementById('tree').innerHTML).toEqual(state2Html);
+        expect(getTree().innerHTML).toEqual(state2Html);
 
         getRedoButton().click();
-        expect(document.getElementById('tree').innerHTML).toEqual(state3Html);
+        expect(getTree().innerHTML).toEqual(state3Html);
     });
 
     test("pressing undo then performing an action disables redo", () => {
@@ -142,10 +143,10 @@ describe("undo and redo buttons behave correctly", () => {
         doEdit1();
         getUndoButton().click();
         doEdit3();
-        const state2Html = document.getElementById('tree').innerHTML;
+        const state2Html = getTree().innerHTML;
         getUndoButton().click();
         getRedoButton().click();
-        expect(document.getElementById('tree').innerHTML).toEqual(state2Html);
+        expect(getTree().innerHTML).toEqual(state2Html);
     });
 });
 
@@ -215,7 +216,7 @@ describe("phantom inputs are made read-only and disabled", () => {
         selectExprOption(getDropdownAt("1"), "Num");
         doLiteralEdit(getLiteralInputAt("1-0"), "hi");
 
-        document.getElementById("eval-mode-radio").click();
+        document.getElementById("eval-mode-radio")?.click();
         slightDelay();
     });
 

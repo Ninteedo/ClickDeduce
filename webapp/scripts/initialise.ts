@@ -14,6 +14,16 @@ import {
     closeExportOutput,
     copyExportOutput,
     exportLaTeX,
+    getContextMenuZoomToFitButton,
+    getCopyButton,
+    getDeleteButton,
+    getExportCloseButton,
+    getExportCopyButton,
+    getExportLatexButton,
+    getLoadButton,
+    getPasteButton,
+    getSaveButton,
+    getZoomToFitButton,
     handleTabPressed,
     resetInterfaceGlobals,
     zoomToFit
@@ -21,6 +31,7 @@ import {
 import panzoom, {PanZoom} from "panzoom";
 import {loadImages} from "./imageLoading";
 import {setupExampleSelector} from "./customExprSelector";
+import {getRedoButton, getUndoButton} from "./test/helper";
 
 export let tree: HTMLDivElement;
 export let panzoomInstance: PanZoom;
@@ -50,10 +61,27 @@ export function initialise(skipImages: boolean = false): void {
         }
     });
 
+    setupButtons();
     startNodeBlank();
 }
 
+function setupButtons() {
+    getUndoButton().addEventListener('click', undo);
+    getRedoButton().addEventListener('click', redo);
+    getPasteButton().addEventListener('click', pasteTreeNode);
+    getCopyButton().addEventListener('click', copyTreeNode);
+    getDeleteButton().addEventListener('click', (e) => clearTreeNode(e));
+    getZoomToFitButton().addEventListener('click', zoomToFit);
+    getContextMenuZoomToFitButton().addEventListener('click', zoomToFit);
+    getSaveButton().addEventListener('click', saveTree);
+    getLoadButton().addEventListener('click', loadTree);
+    getExportLatexButton().addEventListener('click', exportLaTeX);
+    getExportCopyButton().addEventListener('click', copyExportOutput);
+    getExportCloseButton().addEventListener('click', closeExportOutput);
+}
+
 (window as any).initialise = initialise;
+
 (window as any).startNodeBlank = doStartNodeBlank;
 (window as any).undo = undo;
 (window as any).redo = redo;

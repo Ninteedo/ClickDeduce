@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "test": "jest --runInBand --detectOpenHandles",
+    "test": "vitest",
     "build": "vite build",
     "dev": "vite",
     "preview": "vite preview"
@@ -11,7 +11,6 @@
   "devDependencies": {
     "@babel/core": "~7.23.7",
     "@babel/preset-env": "~7.23.8",
-    "@jest/globals": "~29.7.0",
     "@panzoom/panzoom": "~4.5.1",
     "@scala-js/vite-plugin-scalajs": "^1.0.0",
     "@stryker-mutator/core": "~8.0.0",
@@ -24,9 +23,6 @@
     "copy-webpack-plugin": "~12.0.2",
     "css-loader": "~6.9.0",
     "html-webpack-plugin": "~5.6.0",
-    "jest": "~29.7.0",
-    "jest-css-modules-transform": "~4.4.2",
-    "jest-environment-jsdom": "~29.7.0",
     "jsdom": "~23.2.0",
     "node-fetch": "~2.6.1",
     "sass": "~1.70.0",
