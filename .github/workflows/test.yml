@@ -1,0 +1,45 @@
+name: Test
+
+on:
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  scala_ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 18
+        uses: actions/setup-java@v3
+        with:
+          java-version: '18'
+          distribution: 'adopt'
+          cache: 'sbt'
+      - name: Run tests
+        run: sbt test
+
+  frontend_ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm install
+      - name: Set up JDK 18
+        uses: actions/setup-java@v3
+        with:
+          java-version: '18'
+          distribution: 'adopt'
+          cache: 'sbt'
+      - name: Update sbt
+        run: sbt update
+      - name: ScalaJS build
+        run: sbt fastOptJS
+      - name: Run frontend tests
+        run: npm test
+      - name: Run build
+        run: npm run build
