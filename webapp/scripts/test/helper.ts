@@ -8,12 +8,13 @@ export function slightDelay(delay: number = 10): Promise<void> {
 }
 
 export function loadHtmlTemplate(filename: string): string {
-    const readResult: string = fs.readFileSync(path.resolve(__dirname, '../../test_resources', `${filename}.html`), 'utf8');
+    const templatePath = path.resolve(__dirname, '..', '..', 'pages', `${filename}.html`);
+    const readResult: string = fs.readFileSync(templatePath, 'utf8');
     return readResult.replace(/\r\n/g, '\n');
 }
 
 export function loadIndexHtmlTemplate(): string {
-    return loadHtmlTemplate('../../index');
+    return loadHtmlTemplate('index');
 }
 
 export function getTree(): HTMLElement {
