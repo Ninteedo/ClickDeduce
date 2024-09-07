@@ -67,6 +67,8 @@ jobs:
         run: sbt fullOptJS
       - name: NPM Build
         run: npm run build
+      - name: Move built HTML files
+        run: mv build/webapp/pages/* build && rm -r build/webapp
       - name: Generate ScalaDocs
         run: sbt doc
       - name: Copy ScalaDocs to build/api
