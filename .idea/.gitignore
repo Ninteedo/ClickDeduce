@@ -10,3 +10,5 @@
 /google-java-format.xml
 /discord.xml
 /git_toolbox_prj.xml
+# GitHub Copilot persisted chat sessions
+/copilot/chatSessions

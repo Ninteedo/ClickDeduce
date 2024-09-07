@@ -1,10 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="JavadocGenerationManager">
+    <option name="OUTPUT_DIRECTORY" value="$PROJECT_DIR$/docs" />
+  </component>
   <component name="PWA">
     <option name="wasEnabledAtLeastOnce" value="true" />
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_18" default="true" project-jdk-name="openjdk-18" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/out" />
+  </component>
+  <component name="ScaladocSettings">
+    <option name="outputDir" value="D:\Users\RIchard\Documents\Uni\Inf\Project\ClickDeduce\docs" />
+    <option name="additionalFlags" value="" />
+    <option name="maxHeapSize" value="" />
+    <option name="docTitle" value="ClickDeduce documentation" />
+    <option name="verbose" value="false" />
+    <option name="openInBrowser" value="true" />
   </component>
   <component name="accountSettings">
     <option name="activeRegion" value="us-east-1" />
