@@ -1,5 +1,6 @@
 import {beforeEach, describe, expect, test, vitest} from "vitest";
 import {
+    changeLanguage,
     contextMenuSelect,
     doLiteralEdit,
     getErrorDiv,
@@ -12,7 +13,7 @@ import {
     slightDelay
 } from "./helper";
 import {initialise} from "../initialise";
-import {doStartNodeBlank, handleLiteralChanged, startNodeBlank} from "../actions";
+import {doStartNodeBlank, startNodeBlank} from "../actions";
 import {ClickDeduceResponseError} from "../ClickDeduceResponseError";
 
 const indexHtml = loadIndexHtmlTemplate();
@@ -233,15 +234,13 @@ describe("input focus is preserved when the tree is updated", () => {
 
 describe("responses to server errors are appropriate", () => {
     function triggerError(): void {
-        const input = document.querySelector('input[type="text"]') as HTMLInputElement;
-        input.value = input.value + " foo";
-        handleLiteralChanged(input);
+        changeLanguage(0);
     }
 
     beforeEach(() => {
         doStartNodeBlank();
-        selectExprOption(getLeftmostExprDropdown(), "Times");
-        selectExprOption(getLeftmostExprDropdown(), "Num");
+        changeLanguage(1);
+        selectExprOption(getLeftmostExprDropdown(), "Bool");
     });
 
     test("an error is thrown in the console", () => {
@@ -266,7 +265,7 @@ describe("responses to server errors are appropriate", () => {
             triggerError();
         } catch (e) {
         }
-        expect(getErrorDiv().textContent).toContain("NullPointerException");
+        expect(getErrorDiv().textContent).toContain("Bool");
         expect(getErrorDiv().textContent?.length).toBeGreaterThan(5);
     });
 
