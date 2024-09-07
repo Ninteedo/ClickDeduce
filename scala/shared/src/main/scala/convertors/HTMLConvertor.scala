@@ -21,9 +21,7 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
     outerNodeToHTML(fixedNode).toString
   }
 
-//  def fixOuterNodeType[T <: AbstractNodeLanguage#OuterNode](n: T): OuterNode = n.asInstanceOf[OuterNode]
-
-  def outerNodeToHTML(node: OuterNode): HTML = node match {
+  private def outerNodeToHTML(node: OuterNode): HTML = node match {
     case n: ExprNode => exprNode(n)
     case n: TypeNode => typeNode(n)
   }
@@ -47,25 +45,42 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
   }
 
   def fullExprBottomDiv(node: ExprNode): HTML =
-    div(cls := ClassDict.NODE, envDiv(node.getEnv(mode)), exprDiv(node), resultDiv(node))
+    div(cls := ClassDict.NODE, envDiv(node), exprDiv(node), resultDiv(node))
 
-  def envDiv(env: lang.ValueEnv | lang.TypeEnv): HTML = {
-    val parsedEnv = env.map((k, v) =>
+  def envDiv(node: OuterNode): HTML = {
+    val env = node match
+      case n: ExprNode => n.getEnv(mode)
+      case n: TypeNode => n.getEnv(mode)
+    val parentEnv = node.getParent.map {
+      case n1: ExprNode => n1.getEnv(mode)
+      case n1: TypeNode => n1.getEnv(mode)
+    }
+    val filteredEnv = env
+      .map((k, v) => {
+        val parentValue = parentEnv.flatMap(_.get(k))
+        if parentValue.contains(v) then None else Some(k -> v)
+      })
+      .filter(_.isDefined)
+      .map(_.get)
+    val parsedEnv = filteredEnv.map((k, v) =>
       v match {
         case value: lang.Value => k -> value.toHtml
         case typ: lang.Type    => k -> typ.toHtml
       }
     )
+    val emptyEnv = parsedEnv.isEmpty
     val variablesHtml: Option[HTML] =
-      if (env.isEmpty) None else Some(div(raw(parsedEnv.map((k, v) => s"$k &rarr; $v").mkString("[", ", ", "]"))))
+      if (emptyEnv) None else Some(div(raw(parsedEnv.map((k, v) => s"$k &rarr; $v").mkString("[", ", ", "]"))))
     val delimiter =
-      if (mode == DisplayMode.TypeCheck) Some(raw(" &#x22a2;")) else if (env.nonEmpty) Some(raw(",")) else None
+      if (mode == DisplayMode.TypeCheck) Some(raw(" &#x22a2;"))
+      else if (!emptyEnv) Some(raw(","))
+      else None
 
     div(
       cls := ClassDict.SCOPED_VARIABLES,
       variablesHtml,
       delimiter,
-      paddingRight := (if (env.isEmpty && mode != DisplayMode.TypeCheck) "0ch" else "0.5ch")
+      paddingRight := (if (emptyEnv && mode != DisplayMode.TypeCheck) "0ch" else "0.5ch")
     )
   }
 
@@ -111,7 +126,7 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
   }
 
   def fullTypeBottomDiv(node: TypeNode): HTML =
-    div(cls := ClassDict.NODE, envDiv(node.getEnv(mode)), typeDiv(node), typeResultDiv(node))
+    div(cls := ClassDict.NODE, envDiv(node), typeDiv(node), typeResultDiv(node))
 
   def typeDiv(node: TypeNode): HTML = node.toText(mode).asHtml(cls := ClassDict.TYPE)
 
@@ -126,5 +141,5 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
   private def editEvalResultDiv(node: ExprNode): HTML =
     div(cls := ClassDict.EVAL_RESULT, node.getEditValueResult.toHtml)
 
-  def phantomClassName(node: OuterNode): String = if (node.isPhantom) ClassDict.PHANTOM else ""
+  private def phantomClassName(node: OuterNode): String = if (node.isPhantom) ClassDict.PHANTOM else ""
 }
