@@ -66,15 +66,12 @@ jobs:
       - name: ScalaJS build
         run: sbt fullOptJS
       - name: NPM Build
-        run: npm run build:webpack
+        run: npm run build
       - name: Generate ScalaDocs
         run: sbt doc
       - name: Copy ScalaDocs to build/api
         run: cp -r scala/jvm/target/scala-3.3.1/api build/api
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: your-project-name
-          directory: build
+          folder: build
