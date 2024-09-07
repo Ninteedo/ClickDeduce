@@ -7,7 +7,13 @@ import scalaJSPlugin from "@scala-js/vite-plugin-scalajs";
 export default defineConfig({
   plugins: [scalaJSPlugin(), react()],
   build: {
-    outDir: 'build'
+    outDir: 'build',
+    rollupOptions: {
+      input: {
+        index: 'webapp/pages/index.html',
+        guide: 'webapp/pages/guide.html',
+      }
+    }
   },
   test: {
     environment: 'jsdom'
