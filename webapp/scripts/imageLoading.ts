@@ -1,5 +1,5 @@
 // @ts-ignore
-import ZoomToFitSvg from '/webapp/images/zoom_to_fit.svg';
+import ZoomToFitSvg from '../images/zoom_to_fit.svg';
 
 export function loadImages() {
     loadZoomToFit();
