@@ -111,8 +111,6 @@ export function exampleLiteralChanged(textInput: HTMLInputElement): void {
 
 export function handleExprSelectorChoice(selector: HTMLDivElement, value: string | null): void {
     const input = selector.querySelector('.expr-selector-input') as HTMLInputElement;
-    // const dropdown = selector.querySelector('.expr-selector-dropdown') as HTMLDivElement;
-    // const button = selector.querySelector('.expr-selector-button') as HTMLButtonElement;
 
     if (value === null) throw new Error("Selected value is null");
 
@@ -134,7 +132,7 @@ export function handleExprSelectorChoice(selector: HTMLDivElement, value: string
     input.value = value;
     runAction(actionName, getTreePathOfElement(selector), [value])
 
-    if (!focusedTreePath) return;
+    if (focusedTreePath === null) return;
     const focusedElement = getActiveInputs().find(input => compareTreePaths(focusedTreePath!, getTreePathOfElement(input)) <= 0);
 
     if (focusedElement && focusedElement instanceof HTMLElement) {
