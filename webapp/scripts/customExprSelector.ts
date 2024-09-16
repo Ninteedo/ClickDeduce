@@ -56,7 +56,7 @@ function replaceDisabledSelectInputs(): void {
 }
 
 function createExprSelectorHTML(treePath: string, kind: string, placeholderText: string, options: HTMLOptionElement[]): string {
-    const optionsList: string[] = options.map(option => `<li data-value="${option.value}">${option.innerHTML}</li>`);
+    const optionsList: string[] = options.map(createExprSelectorOptionHtml);
     return `<div class="expr-selector-container" data-tree-path="${treePath}" data-kind="${kind}">
               <input type="text" class="expr-selector-input" placeholder="${placeholderText}" data-tree-path="${treePath}" />
               <button class="expr-selector-button">${UP_ARROW}</button>
@@ -66,6 +66,11 @@ function createExprSelectorHTML(treePath: string, kind: string, placeholderText:
                 </ul>
               </div>
             </div>`;
+}
+
+function createExprSelectorOptionHtml(optionElement: HTMLOptionElement): string {
+    const aliases: string = optionElement.getAttribute('data-aliases') || '';
+    return `<li data-value="${optionElement.value}" data-aliases="${aliases}">${optionElement.innerHTML}</li>`;
 }
 
 export function setupTermSelector(termSelectorContainer: HTMLDivElement): void {
@@ -170,7 +175,8 @@ function updateExprSelectorDropdown(selectorDiv: HTMLDivElement, keepOpenWhenEmp
 
     const filterText = input.value.toLowerCase();
     getSelectorOptions(selectorDiv).forEach(option => {
-        if (option.innerHTML.toLowerCase().includes(filterText)) {
+        const aliases = option.getAttribute('data-aliases')?.toLowerCase().split(',');
+        if (option.innerHTML.toLowerCase().includes(filterText) || (aliases && aliases.some(alias => alias.includes(filterText)))) {
             showSelectorOption(option);
         } else {
             hideSelectorOption(option);

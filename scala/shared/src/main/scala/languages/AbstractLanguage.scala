@@ -683,7 +683,9 @@ trait AbstractLanguage {
       */
     protected def createExpr(args: List[Any]): Option[Expr]
 
-    final def register(): Unit = addExprBuilder(name, createExpr, hidden = isHidden)
+    protected val aliases: List[String] = Nil
+
+    final def register(): Unit = addExprBuilder(name, createExpr, hidden = isHidden, aliases = aliases)
   }
 
   /** Trait for type companions.
@@ -708,7 +710,9 @@ trait AbstractLanguage {
       */
     protected def createType(args: List[Any]): Option[Type]
 
-    final def register(): Unit = addTypeBuilder(name, createType, hidden = isHidden)
+    protected val aliases: List[String] = Nil
+
+    final def register(): Unit = addTypeBuilder(name, createType, hidden = isHidden, aliases = aliases)
   }
 
   /** A function that takes a list of arguments and returns a constructed expression if valid, or None if invalid.
@@ -717,7 +721,7 @@ trait AbstractLanguage {
 
   private var exprBuilders: Map[String, ExprBuilder] = Map()
 
-  private var exprBuilderNamesList: List[String] = List()
+  private var exprBuilderNamesList: List[BuilderName] = List()
 
   /** Add an expression builder to the language.
     * @param name
@@ -727,24 +731,27 @@ trait AbstractLanguage {
     * @param hidden
     *   Whether the builder should be hidden from the user (won't appear in expression list), default is false.
     */
-  protected def addExprBuilder(name: String, builder: ExprBuilder, hidden: Boolean = false): Unit = {
+  protected def addExprBuilder(name: String, builder: ExprBuilder, hidden: Boolean = false, aliases: List[String] = Nil): Unit = {
     exprBuilders += (name -> builder)
     if (!hidden) {
-      exprBuilderNamesList = exprBuilderNamesList :+ name
+      val entry = if (aliases.isEmpty) name else (name, aliases)
+      exprBuilderNamesList = exprBuilderNamesList :+ entry
     }
   }
+
+  type BuilderName = String | (String, List[String])  // either name or (name, aliases)
 
   /** Returns the names of all expression builders.
     * @return
     *   The list of expression builder names.
     */
-  def exprBuilderNames: List[String] = exprBuilderNamesList
+  def exprBuilderNames: List[BuilderName] = exprBuilderNamesList
 
   private type TypeBuilder = List[Any] => Option[Type]
 
   private var typeBuilders: Map[String, TypeBuilder] = Map()
 
-  private var typeBuilderNamesList: List[String] = List()
+  private var typeBuilderNamesList: List[BuilderName] = List()
 
   /** Add an type builder to the language.
     * @param name
@@ -753,11 +760,14 @@ trait AbstractLanguage {
     *   The type builder.
     * @param hidden
     *   Whether the builder should be hidden from the user (won't appear in type list), default is false.
+    * @param aliases
+    *   The aliases of the builder.
     */
-  protected def addTypeBuilder(name: String, builder: TypeBuilder, hidden: Boolean = false): Unit = {
+  protected def addTypeBuilder(name: String, builder: TypeBuilder, hidden: Boolean = false, aliases: List[String] = Nil): Unit = {
     typeBuilders += (name -> builder)
     if (!hidden) {
-      typeBuilderNamesList = typeBuilderNamesList :+ name
+      val entry = if (aliases.isEmpty) name else (name, aliases)
+      typeBuilderNamesList = typeBuilderNamesList :+ entry
     }
   }
 
@@ -765,7 +775,7 @@ trait AbstractLanguage {
     * @return
     *   The list of type builder names.
     */
-  def typeBuilderNames: List[String] = typeBuilderNamesList
+  def typeBuilderNames: List[BuilderName] = typeBuilderNamesList
 
   private type ValueBuilder = List[Any] => Option[Value]
 

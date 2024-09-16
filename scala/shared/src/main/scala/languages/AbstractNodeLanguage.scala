@@ -48,17 +48,31 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
   val defaultType: Type = BlankTypeDropDown()
 
-  private lazy val exprClassListDropdownHtml: TypedTag[String] = select(
-    cls := ClassDict.EXPR_DROPDOWN,
-    option(value := "", "Select Expr..."),
-    exprBuilderNames.map(name => option(value := name, name))
-  )
+  private lazy val exprClassListDropdownHtml: TypedTag[String] = {
+    def createExprOption(exprBuilderName: BuilderName) = exprBuilderName match {
+      case name: String => option(value := name, name)
+      case (name: String, aliases: List[String]) => option(value := name, name, data("aliases") := aliases.mkString(","))
+    }
 
-  private lazy val typeClassListDropdownHtml: TypedTag[String] = select(
-    cls := ClassDict.TYPE_DROPDOWN,
-    option(value := "", "Select Type..."),
-    typeBuilderNames.map(name => option(value := name, name))
-  )
+    select(
+      cls := ClassDict.EXPR_DROPDOWN,
+      option(value := "", "Select Expr..."),
+      exprBuilderNames.map(createExprOption)
+    )
+  }
+
+  private lazy val typeClassListDropdownHtml: TypedTag[String] = {
+    def createTypeOption(typeBuilderName: BuilderName) = typeBuilderName match {
+      case name: String => option(value := name, name)
+      case (name: String, aliases: List[String]) => option(value := name, name, data("aliases") := aliases.mkString(","))
+    }
+
+    select(
+      cls := ClassDict.TYPE_DROPDOWN,
+      option(value := "", "Select Type..."),
+      typeBuilderNames.map(createTypeOption)
+    )
+  }
 
   /** Evaluation error for when the depth limit is exceeded.
     */

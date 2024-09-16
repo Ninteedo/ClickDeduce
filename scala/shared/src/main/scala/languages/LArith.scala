@@ -43,6 +43,8 @@ class LArith extends ClickDeduceLanguage {
       case defaultArgs      => Some(Num(defaultLiteral))
       case _                => None
     }
+
+    override val aliases: List[String] = List("Number", "Integer")
   }
 
   /** A plus expression. Both subexpressions must evaluate to `NumV`.
@@ -77,6 +79,8 @@ class LArith extends ClickDeduceLanguage {
       case defaultArgs              => Some(Plus(defaultExpr, defaultExpr))
       case _                        => None
     }
+
+    override val aliases: List[String] = List("Addition", "+")
   }
 
   /** A times expression. Both subexpressions must evaluate to `NumV`.
@@ -111,6 +115,8 @@ class LArith extends ClickDeduceLanguage {
       case defaultArgs              => Some(Times(defaultExpr, defaultExpr))
       case _                        => None
     }
+
+    override val aliases: List[String] = List("Multiplication", "Multiply", "*")
   }
 
   // values
@@ -190,6 +196,8 @@ class LArith extends ClickDeduceLanguage {
       case defaultArgs => Some(IntType())
       case _           => None
     }
+
+    override val aliases: List[Variable] = List("Number", "Integer")
   }
 
   /** An error that occurs due to an incorrect argument type.
