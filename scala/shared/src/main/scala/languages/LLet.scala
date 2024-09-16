@@ -3,6 +3,9 @@ package languages
 import convertors.*
 
 class LLet extends LIf {
+  Var.register()
+  Let.register()
+
   // expressions
 
   case class Var(v: Literal) extends Expr {
@@ -31,18 +34,17 @@ class LLet extends LIf {
     override def toText: ConvertableText = v.toText
   }
 
-  object Var {
+  object Var extends ExprCompanion {
     def apply(v: Variable): Var = new Var(Literal.fromString(v))
-  }
 
-  addExprBuilder(
-    "Var",
-    {
+    override def createExpr(args: List[Any]): Option[Expr] = args match {
       case List(v: Literal) => Some(Var(v))
       case Nil              => Some(Var(defaultLiteral))
       case _                => None
     }
-  )
+
+    override val aliases: List[String] = List("Variable", "X")
+  }
 
   case class Let(v: Literal, assign: Expr, bound: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = v match {
@@ -79,18 +81,17 @@ class LLet extends LIf {
       )
   }
 
-  object Let {
+  object Let extends ExprCompanion {
     def apply(v: Variable, assign: Expr, bound: Expr): Let = new Let(Literal.fromString(v), assign, bound)
-  }
 
-  addExprBuilder(
-    "Let",
-    {
+    override def createExpr(args: List[Any]): Option[Expr] = args match {
       case List(v: Literal, assign: Expr, bound: Expr) => Some(Let(v, assign, bound))
       case Nil                                         => Some(Let(defaultLiteral, defaultExpr, defaultExpr))
       case _                                           => None
     }
-  )
+
+    override val aliases: List[String] = List("=")
+  }
 
   // errors
 

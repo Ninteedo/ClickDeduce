@@ -3,6 +3,18 @@ package languages
 import convertors.*
 
 class LData extends LRec {
+  Pair.register()
+  Fst.register()
+  Snd.register()
+  LetPair.register()
+  UnitExpr.register()
+  Left.register()
+  Right.register()
+  CaseSwitch.register()
+  PairType.register()
+  UnionType.register()
+  EmptyType.register()
+
   // expressions
 
   case class Pair(e1: Expr, e2: Expr) extends Expr {
@@ -16,14 +28,15 @@ class LData extends LRec {
     override val needsBrackets: Boolean = false
   }
 
-  addExprBuilder(
-    "Pair",
-    {
+  object Pair extends ExprCompanion {
+    override def createExpr(args: List[Any]): Option[Expr] = args match {
       case List(e1: Expr, e2: Expr) => Some(Pair(e1, e2))
       case Nil                      => Some(Pair(defaultExpr, defaultExpr))
       case _                        => None
     }
-  )
+
+    override val aliases: List[String] = List("Tuple")
+  }
 
   case class Fst(e: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = e.eval(env) match {
@@ -41,14 +54,15 @@ class LData extends LRec {
     override val needsBrackets: Boolean = false
   }
 
-  addExprBuilder(
-    "Fst",
-    {
+  object Fst extends ExprCompanion {
+    override def createExpr(args: List[Any]): Option[Expr] = args match {
       case List(e: Expr) => Some(Fst(e))
       case Nil           => Some(Fst(defaultExpr))
       case _             => None
     }
-  )
+
+    override val aliases: List[String] = List("First", "1st")
+  }
 
   case class Snd(e: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = e.eval(env) match {
@@ -66,14 +80,15 @@ class LData extends LRec {
     override val needsBrackets: Boolean = false
   }
 
-  addExprBuilder(
-    "Snd",
-    {
+  object Snd extends ExprCompanion {
+    override def createExpr(args: List[Any]): Option[Expr] = args match {
       case List(e: Expr) => Some(Snd(e))
       case Nil           => Some(Snd(defaultExpr))
       case _             => None
     }
-  )
+
+    override val aliases: List[String] = List("Second", "2nd")
+  }
 
   case class LetPair(x: Literal, y: Literal, assign: Expr, bound: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = verifyLiteralIdentifierEval(x, y) {
@@ -91,7 +106,7 @@ class LData extends LRec {
         case other            => TupleOperationOnNonTupleType(other)
       }
     }
-    
+
     override def toText: ConvertableText = MultiElement(
       TextElement("let pair "),
       BracketedElement(MultiElement(x.toText, SpaceAfter(MathElement.comma), y.toText)),
@@ -117,19 +132,18 @@ class LData extends LRec {
     )
   }
 
-  object LetPair {
+  object LetPair extends ExprCompanion {
     def apply(x: Variable, y: Variable, assign: Expr, bound: Expr): LetPair =
       LetPair(Literal.fromString(x), Literal.fromString(y), assign, bound)
-  }
 
-  addExprBuilder(
-    "LetPair",
-    {
+    override def createExpr(args: List[Any]): Option[Expr] = args match {
       case List(x: Literal, y: Literal, assign: Expr, bound: Expr) => Some(LetPair(x, y, assign, bound))
       case Nil => Some(LetPair(defaultLiteral, defaultLiteral, defaultExpr, defaultExpr))
       case _   => None
     }
-  )
+
+    override val aliases: List[String] = List("LetTuple")
+  }
 
   case class UnitExpr() extends Expr {
     override def evalInner(env: ValueEnv): Value = UnitV()
@@ -141,13 +155,12 @@ class LData extends LRec {
     override val needsBrackets: Boolean = false
   }
 
-  addExprBuilder(
-    "UnitExpr",
-    {
+  object UnitExpr extends ExprCompanion {
+    override def createExpr(args: List[Any]): Option[Expr] = args match {
       case Nil => Some(UnitExpr())
       case _   => None
     }
-  )
+  }
 
   case class Left(e: Expr, rightType: Type) extends Expr {
     override def evalInner(env: ValueEnv): Value = LeftV(e.eval(env), rightType)
@@ -159,14 +172,13 @@ class LData extends LRec {
     override val needsBrackets: Boolean = false
   }
 
-  addExprBuilder(
-    "Left",
-    {
+  object Left extends ExprCompanion {
+    override def createExpr(args: List[Any]): Option[Expr] = args match {
       case List(e: Expr, rightType: Type) => Some(Left(e, rightType))
       case Nil                            => Some(Left(defaultExpr, defaultType))
       case _                              => None
     }
-  )
+  }
 
   case class Right(leftType: Type, e: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = RightV(leftType, e.eval(env))
@@ -178,14 +190,13 @@ class LData extends LRec {
     override val needsBrackets: Boolean = false
   }
 
-  addExprBuilder(
-    "Right",
-    {
+  object Right extends ExprCompanion {
+    override def createExpr(args: List[Any]): Option[Expr] = args match {
       case List(leftType: Type, e: Expr) => Some(Right(leftType, e))
       case Nil                           => Some(Right(defaultType, defaultExpr))
       case _                             => None
     }
-  )
+  }
 
   case class CaseSwitch(e: Expr, l: Literal, r: Literal, lExpr: Expr, rExpr: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = verifyLiteralIdentifierEval(l, r) {
@@ -244,19 +255,16 @@ class LData extends LRec {
     }
   }
 
-  object CaseSwitch {
+  object CaseSwitch extends ExprCompanion {
     def apply(e: Expr, l: Variable, r: Variable, lExpr: Expr, rExpr: Expr): CaseSwitch =
       CaseSwitch(e, Literal.fromString(l), Literal.fromString(r), lExpr, rExpr)
-  }
 
-  addExprBuilder(
-    "CaseSwitch",
-    {
+    override def createExpr(args: List[Any]): Option[Expr] = args match {
       case List(e: Expr, l: Literal, r: Literal, lExpr: Expr, rExpr: Expr) => Some(CaseSwitch(e, l, r, lExpr, rExpr))
       case Nil => Some(CaseSwitch(defaultExpr, defaultLiteral, defaultLiteral, defaultExpr, defaultExpr))
       case _   => None
     }
-  )
+  }
 
   // types
 
@@ -267,14 +275,15 @@ class LData extends LRec {
       MultiElement(l.toTextBracketed, SurroundSpaces(TimesSymbol()), r.toTextBracketed)
   }
 
-  addTypeBuilder(
-    "PairType",
-    {
+  object PairType extends TypeCompanion {
+    override def createType(args: List[Any]): Option[Type] = args match {
       case List(l: Type, r: Type) => Some(PairType(l, r))
       case Nil                    => Some(PairType(defaultType, defaultType))
       case _                      => None
     }
-  )
+
+    override val aliases: List[String] = List("TupleType")
+  }
 
   case class UnionType(l: Type, r: Type) extends Type {
     override def typeCheck(tEnv: TypeEnv): Type = UnionType(l.typeCheck(tEnv), r.typeCheck(tEnv))
@@ -283,14 +292,13 @@ class LData extends LRec {
       MultiElement(l.toTextBracketed, SurroundSpaces(MathElement("+")), r.toTextBracketed)
   }
 
-  addTypeBuilder(
-    "UnionType",
-    {
+  object UnionType extends TypeCompanion {
+    override def createType(args: List[Any]): Option[Type] = args match {
       case List(l: Type, r: Type) => Some(UnionType(l, r))
       case Nil                    => Some(UnionType(defaultType, defaultType))
       case _                      => None
     }
-  )
+  }
 
   case class EmptyType() extends Type {
     override val needsBrackets: Boolean = false
@@ -298,13 +306,12 @@ class LData extends LRec {
     override def toText: ConvertableText = TextElement("()")
   }
 
-  addTypeBuilder(
-    "EmptyType",
-    {
+  object EmptyType extends TypeCompanion {
+    override def createType(args: List[Any]): Option[Type] = args match {
       case Nil => Some(EmptyType())
       case _   => None
     }
-  )
+  }
 
   case class AnyType() extends Type {
     override val needsBrackets: Boolean = false

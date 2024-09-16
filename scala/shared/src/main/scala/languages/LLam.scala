@@ -7,6 +7,10 @@ import scalatags.Text.all.*
 import scala.collection.immutable.List
 
 class LLam extends LLet {
+  Apply.register()
+  Lambda.register()
+  Func.register()
+
   // expressions
   case class Apply(e1: Expr, e2: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = e1.eval(env) match {
@@ -28,14 +32,13 @@ class LLam extends LLet {
     override def toText: ConvertableText = MultiElement(e1.toTextBracketed, TextElement(" "), e2.toTextBracketed)
   }
 
-  addExprBuilder(
-    "Apply",
-    {
+  object Apply extends ExprCompanion {
+    override def createExpr(args: List[Any]): Option[Expr] = args match {
       case List(e1: Expr, e2: Expr) => Some(Apply(e1, e2))
       case Nil                      => Some(Apply(defaultExpr, defaultExpr))
       case _                        => None
     }
-  )
+  }
 
   case class Lambda(v: Literal, typ: Type, e: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = v match {
@@ -67,18 +70,15 @@ class LLam extends LLet {
     )
   }
 
-  object Lambda {
+  object Lambda extends ExprCompanion {
     def apply(v: Variable, typ: Type, e: Expr): Lambda = new Lambda(Literal.fromString(v), typ, e)
-  }
 
-  addExprBuilder(
-    "Lambda",
-    {
+    override def createExpr(args: List[Any]): Option[Expr] = args match {
       case List(v: Literal, typ: Type, e: Expr) => Some(Lambda(v, typ, e))
       case Nil                                  => Some(Lambda(defaultLiteral, defaultType, defaultExpr))
       case _                                    => None
     }
-  )
+  }
 
   // types
   trait FunctionType extends Type {
@@ -98,23 +98,22 @@ class LLam extends LLet {
       MultiElement(in.toTextBracketed, SurroundSpaces(SingleRightArrow()), out.toTextBracketed)
   }
 
-  addTypeBuilder(
-    "Func",
-    {
+  object Func extends TypeCompanion {
+    override def createType(args: List[Any]): Option[Type] = args match {
       case List(in: Type, out: Type) => Some(Func(in, out))
       case Nil                       => Some(Func(defaultType, defaultType))
       case _                         => None
     }
-  )
+
+    override val aliases: List[String] = List("Function")
+  }
 
   case class ApplyToNonFunctionErrorType(wrongType: Type) extends TypeError {
     override val message: String = s"Cannot apply with left expression being ${wrongType.prettyPrint}"
-
   }
 
   case class IncompatibleTypeErrorType(typ1: Type, typ2: Type) extends TypeError {
     override val message: String = s"mismatched types for applying function (expected $typ1 but got $typ2)"
-
   }
 
   // values

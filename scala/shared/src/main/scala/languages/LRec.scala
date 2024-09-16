@@ -5,6 +5,8 @@ import scalatags.Text
 import scalatags.Text.all.*
 
 class LRec extends LLam {
+  Rec.register()
+
   // expressions
   case class Rec(f: Literal, v: Literal, inType: Type, outType: Type, e: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = f match {
@@ -57,19 +59,18 @@ class LRec extends LLam {
     )
   }
 
-  object Rec {
+  object Rec extends ExprCompanion {
     def apply(f: String, v: String, in_typ: Type, out_typ: Type, e: Expr): Rec =
       Rec(Literal.fromString(f), Literal.fromString(v), in_typ, out_typ, e)
-  }
 
-  addExprBuilder(
-    "Rec",
-    {
+    override def createExpr(args: List[Any]): Option[Expr] = args match {
       case List(f: Literal, v: Literal, inType: Type, outType: Type, e: Expr) => Some(Rec(f, v, inType, outType, e))
       case Nil => Some(Rec(defaultLiteral, defaultLiteral, defaultType, defaultType, defaultExpr))
       case _   => None
     }
-  )
+
+    override val aliases: List[String] = List("RecursiveFunction")
+  }
 
   // values
   case class RecV(f: Literal, v: Literal, in_typ: Type, out_typ: Type, e: Expr, env: ValueEnv) extends FunctionValue {

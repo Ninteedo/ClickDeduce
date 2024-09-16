@@ -4,6 +4,11 @@ import convertors.*
 import scalatags.Text.all.*
 
 class LPoly extends LData {
+  Poly.register()
+  ApplyType.register()
+  TypeVar.register()
+  PolyType.register()
+
   // expressions
 
   case class Poly(v: Literal, e: Expr) extends Expr {
@@ -25,18 +30,17 @@ class LPoly extends LData {
       MultiElement(LambdaSymbol(capital = true), v.toText, MathElement.period, e.toTextBracketed)
   }
 
-  object Poly {
+  object Poly extends ExprCompanion {
     def apply(v: Variable, e: Expr): Poly = Poly(Literal.fromString(v), e)
-  }
 
-  addExprBuilder(
-    "Poly",
-    {
+    override def createExpr(args: List[Any]): Option[Expr] = args match {
       case List(v: Literal, e: Expr) => Some(Poly(v, e))
       case Nil                       => Some(Poly(defaultLiteral, defaultExpr))
       case _                         => None
     }
-  )
+
+    override val aliases: List[String] = List("Polymorphic", "PolyType")
+  }
 
   case class ApplyType(e: Expr, typ: Type) extends Expr {
     override def evalInner(env: ValueEnv): Value = e.eval(env) match {
@@ -61,14 +65,13 @@ class LPoly extends LData {
       MultiElement(e.toTextBracketed, TextElement("["), typ.toText, TextElement("]"))
   }
 
-  addExprBuilder(
-    "ApplyType",
-    {
+  object ApplyType extends ExprCompanion {
+    override def createExpr(args: List[Any]): Option[Expr] = args match {
       case List(e: Expr, t: Type) => Some(ApplyType(e, t))
       case Nil                    => Some(ApplyType(defaultExpr, defaultType))
       case _                      => None
     }
-  )
+  }
 
   // types
 
@@ -84,18 +87,15 @@ class LPoly extends LData {
     override def toText: ConvertableText = v.toText
   }
 
-  object TypeVar {
+  object TypeVar extends TypeCompanion {
     def apply(v: Variable): TypeVar = TypeVar(Literal.fromString(v))
-  }
 
-  addTypeBuilder(
-    "TypeVar",
-    {
+    override def createType(args: List[Any]): Option[Type] = args match {
       case List(v: Literal) => Some(TypeVar(v))
       case Nil              => Some(TypeVar(defaultLiteral))
       case _                => None
     }
-  )
+  }
 
   case class PolyType(typeVar: Type, incompleteType: Type) extends Type {
     override def toText: ConvertableText =
@@ -107,15 +107,15 @@ class LPoly extends LData {
       )
   }
 
-  addTypeBuilder(
-    "PolyType",
-    {
+  object PolyType extends TypeCompanion {
+    override def createType(args: List[Any]): Option[Type] = args match {
       case List(tv: Type, t: Type) => Some(PolyType(tv, t))
       case Nil                     => Some(PolyType(defaultType, defaultType))
       case _                       => None
-    },
-    hidden = true
-  )
+    }
+
+    override protected val isHidden: Boolean = true
+  }
 
   // values
 

@@ -3,6 +3,12 @@ package languages
 import convertors.*
 
 class LIf extends LArith {
+  Bool.register()
+  Equal.register()
+  LessThan.register()
+  IfThenElse.register()
+  BoolType.register()
+
   // expressions
   case class Bool(b: Literal) extends Expr {
     override def evalInner(env: ValueEnv): Value = b match {
@@ -20,18 +26,17 @@ class LIf extends LArith {
     override def toText: ConvertableText = TextElement(b.toString)
   }
 
-  object Bool {
+  object Bool extends ExprCompanion {
     def apply(b: Boolean): Bool = new Bool(LiteralBool(b))
-  }
 
-  addExprBuilder(
-    "Bool",
-    {
+    override def createExpr(args: List[Any]): Option[Expr] = args match {
       case List(b: Literal) => Some(Bool(b))
       case Nil              => Some(Bool(defaultLiteral))
       case _                => None
     }
-  )
+
+    override val aliases: List[String] = List("Boolean")
+  }
 
   case class Equal(e1: Expr, e2: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = {
@@ -58,14 +63,15 @@ class LIf extends LArith {
       MultiElement(e1.toTextBracketed, SurroundSpaces(MathElement.equals), e2.toTextBracketed)
   }
 
-  addExprBuilder(
-    "Equal",
-    {
+  object Equal extends ExprCompanion {
+    override def createExpr(args: List[Any]): Option[Expr] = args match {
       case List(e1: Expr, e2: Expr) => Some(Equal(e1, e2))
       case Nil                      => Some(Equal(defaultExpr, defaultExpr))
       case _                        => None
     }
-  )
+
+    override val aliases: List[String] = List("==")
+  }
 
   case class LessThan(e1: Expr, e2: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = (e1.eval(env), e2.eval(env)) match {
@@ -82,14 +88,15 @@ class LIf extends LArith {
       MultiElement(e1.toTextBracketed, SurroundSpaces(MathElement.lessThan), e2.toTextBracketed)
   }
 
-  addExprBuilder(
-    "LessThan",
-    {
+  object LessThan extends ExprCompanion {
+    override val aliases: List[String] = List("<", "LT")
+
+    override def createExpr(args: List[Any]): Option[Expr] = args match {
       case List(e1: Expr, e2: Expr) => Some(LessThan(e1, e2))
       case Nil                      => Some(LessThan(defaultExpr, defaultExpr))
       case _                        => None
     }
-  )
+  }
 
   case class IfThenElse(cond: Expr, then_expr: Expr, else_expr: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = cond.eval(env) match {
@@ -124,14 +131,13 @@ class LIf extends LArith {
     )
   }
 
-  addExprBuilder(
-    "IfThenElse",
-    {
+  object IfThenElse extends ExprCompanion {
+    override def createExpr(args: List[Any]): Option[Expr] = args match {
       case List(cond: Expr, then_expr: Expr, else_expr: Expr) => Some(IfThenElse(cond, then_expr, else_expr))
       case Nil                                                => Some(IfThenElse(defaultExpr, defaultExpr, defaultExpr))
       case _                                                  => None
     }
-  )
+  }
 
   // values
   case class BoolV(b: Boolean) extends Value {
@@ -157,13 +163,14 @@ class LIf extends LArith {
     override def toText: ConvertableText = TextElement("Bool")
   }
 
-  addTypeBuilder(
-    "BoolType",
-    {
+  object BoolType extends TypeCompanion {
+    override def createType(args: List[Any]): Option[Type] = args match {
       case Nil => Some(BoolType())
       case _   => None
     }
-  )
+
+    override val aliases: List[String] = List("Boolean")
+  }
 
   // errors
 
