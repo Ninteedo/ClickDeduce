@@ -205,8 +205,8 @@ trait AbstractLanguage {
     * [[addExprBuilder]].
     */
   abstract class Expr extends Term {
-    private def getExprFields(e: Expr): List[Expr] = {
-      e match {
+    def getExprFields: List[Expr] = {
+      this match {
         case e0: Product =>
           val values = e0.productIterator.toList
           values.collect({ case e: Expr => e })
@@ -215,7 +215,7 @@ trait AbstractLanguage {
     }
 
     private def defaultChildren[EnvContents](env: Env[EnvContents]): List[(Term, Env[EnvContents])] =
-      getExprFields(this).zip(LazyList.continually(env))
+      getExprFields.zip(LazyList.continually(env))
 
     /** Children of this expression in [[DisplayMode.Edit]] mode.
       * @param env

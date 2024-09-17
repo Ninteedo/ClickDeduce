@@ -193,6 +193,63 @@ class LIf extends LArith {
   case class ComparisonWithNonOrdinalType(type1: Type, type2: Type) extends TypeError {
     override val message: String = s"$type1 or $type2 is not an ordinal type"
   }
+
+  // tasks
+
+  clearTasks()
+  SimpleBoolTask.register()
+  IfStatementTask.register()
+  IfAndComparisonTask.register()
+
+  private object SimpleBoolTask extends Task {
+    override val name: String = "Enter a Boolean"
+    override val description: String = "Boolean values must be typed in as either \"True\" or \"False\", case insensitive."
+    override val difficulty: Int = 1
+
+    override def checkFulfilled(expr: Expr): Boolean = expr match {
+      case Bool(LiteralBool(_)) => true
+      case e => e.getExprFields.exists(checkFulfilled)
+    }
+  }
+
+  private object IfStatementTask extends Task {
+    override val name: String = "Create an If Statement"
+    override val description: String = "Create an if statement, filling out its condition and both possible subexpressions. " +
+      "During evaluation, only the matching one is evaluated. " +
+      "The condition must be a boolean expression, and the subexpressions must have the same type."
+    override val difficulty: Int = 2
+
+    override def checkFulfilled(expr: Expr): Boolean = {
+      def checkIfStatementComplete(e: IfThenElse) = e.cond.eval() match {
+        case BoolV(_) => e.then_expr.typeCheck() == e.else_expr.typeCheck() && !e.then_expr.typeCheck().isError
+        case _ => false
+      }
+
+      def checkForValidIfStatement(e: Expr): Boolean = e match {
+        case e: IfThenElse => checkIfStatementComplete(e) || e.getExprFields.exists(checkForValidIfStatement)
+        case _ => e.getExprFields.exists(checkForValidIfStatement)
+      }
+
+      checkForValidIfStatement(expr)
+    }
+  }
+
+  private object IfAndComparisonTask extends Task {
+    override val name: String = "Use an If and a comparison inside a condition"
+    override val description: String = "Create an if statement with a comparison and another if statement inside the condition. " +
+      "The expression must successfully type check."
+    override val difficulty: Int = 3
+
+    override def checkFulfilled(expr: Expr): Boolean = {
+      def checkForValidIfStatement(e: Expr): Boolean = e match {
+        case e: IfThenElse => (checkHasOp(e.cond, classOf[LessThan]) || checkHasOp(e.cond, classOf[Equal])) &&
+          e.getExprFields.exists(checkHasOp(_, classOf[IfThenElse]))
+        case _ => e.getExprFields.exists(checkForValidIfStatement)
+      }
+
+      checkForValidIfStatement(expr) && !expr.typeCheck().isError
+    }
+  }
 }
 
 object LIf extends LIf {}

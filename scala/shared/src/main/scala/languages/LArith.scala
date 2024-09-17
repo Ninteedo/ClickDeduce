@@ -231,15 +231,13 @@ class LArith extends ClickDeduceLanguage {
     override val difficulty: Int = 1
 
     override def checkFulfilled(expr: Expr): Boolean = {
-      def checkNum(expr: Expr): Boolean = expr match {
-        case Num(l: Literal) => l match {
-          case LiteralInt(_) => true
-          case _ => false
+      def checkNum(expr: Expr): Boolean = checkCondition(
+        expr,
+        {
+          case Num(LiteralInt(_)) => true
+          case _                  => false
         }
-        case Plus(e1, e2) => checkNum(e1) || checkNum(e2)
-        case Times(e1, e2) => checkNum(e1) || checkNum(e2)
-        case _ => false
-      }
+      )
 
       checkNum(expr)
     }
@@ -252,23 +250,17 @@ class LArith extends ClickDeduceLanguage {
     override val difficulty: Int = 2
 
     override def checkFulfilled(expr: Expr): Boolean = {
-      def checkHasOp(expr: Expr, op: Class[_ <: Expr]): Boolean = expr match {
-        case e if op.isInstance(e) => true
-        case Plus(e1, e2) => checkHasOp(e1, op) || checkHasOp(e2, op)
-        case Times(e1, e2) => checkHasOp(e1, op) || checkHasOp(e2, op)
-        case _ => false
-      }
-
-      def checkNoZeroes(expr: Expr): Boolean = expr match {
-        case Num(LiteralInt(0)) => false
-        case Plus(e1, e2) => checkNoZeroes(e1) && checkNoZeroes(e2)
-        case Times(e1, e2) => checkNoZeroes(e1) && checkNoZeroes(e2)
-        case _ => true
-      }
+      def checkNoZeroes(expr: Expr): Boolean = !checkCondition(
+        expr,
+        {
+          case Num(LiteralInt(0)) => true
+          case _                  => false
+        }
+      )
 
       expr.eval() match {
         case NumV(42) => checkNoZeroes(expr) && checkHasOp(expr, classOf[Plus]) && checkHasOp(expr, classOf[Times])
-        case _ => false
+        case _        => false
       }
     }
   }
