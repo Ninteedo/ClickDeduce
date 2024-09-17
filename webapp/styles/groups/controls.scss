@@ -2,18 +2,11 @@
 
 #controls {
   display: flex;
-  margin-bottom: 10px;
+  justify-content: flex-start;
+  align-items: flex-start;
 
-  > div {
-    margin: 0 auto;
-    background-color: $semi-background;
-    border: 2px solid $input-outline;
-    border-radius: 2px;
-    box-shadow: 0 0 0.3rem $input-outline;
-    padding: 2px 5px;
-    height: fit-content;
-    max-height: 10rem;
-  }
+  margin-bottom: 10px;
+  width: 100%;
 
   h3 {
     margin-top: 0;
@@ -28,4 +21,17 @@
   a {
     color: $link-text;
   }
+}
+
+div.control-group {
+  margin: 0 0.2rem;
+  background-color: $semi-background;
+  border: 2px solid $input-outline;
+  border-radius: 2px;
+  box-shadow: 0 0 0.3rem $input-outline;
+  padding: 2px 5px;
+  height: fit-content;
+  width: max-content;
+  flex-shrink: 0;
+  max-height: 10rem;
 }

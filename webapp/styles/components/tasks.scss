@@ -1,9 +1,11 @@
 @import '../abstracts/_colours';
 
-div#tasks {
+div#tasks.control-group {
   overflow-y: scroll;
-  max-width: 20rem;
   flex-grow: 1;
+  flex-shrink: 1;
+  margin-left: auto;
+  margin-right: 0;
 
   div.task {
     border: 1px solid $input-outline;
