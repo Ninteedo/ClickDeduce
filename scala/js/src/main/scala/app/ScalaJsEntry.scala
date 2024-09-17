@@ -6,6 +6,7 @@ import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
 import scala.scalajs.js
+import scala.scalajs.js.JSConverters.*
 import scala.scalajs.js.annotation.JSExportTopLevel
 
 /** Contains the methods for Scala.js to export */
@@ -103,6 +104,34 @@ object ScalaJsEntry {
     convertor.lang.Node.read(nodeString) match {
       case Some(tree: convertor.lang.OuterNode) => convertor.convert(tree)
       case _ => throw new ClickDeduceException(s"Failed to parse node string: $nodeString")
+    }
+  }
+
+  @JSExportTopLevel("getTasks")
+  def getTasks(langName: String): js.Array[js.Tuple3[String, String, Int]] = {
+    val lang = getLanguage(langName)
+    lang.getTasks
+      .values
+      .toList
+      .map(task => js.Tuple3(task.name, task.description, task.difficulty))
+      .toJSArray
+  }
+
+  @JSExportTopLevel("checkTask")
+  def checkTask(langName: String, taskName: String, nodeString: String): Boolean = {
+    val lang = getLanguage(langName)
+    val node = lang.Node.read(nodeString) match {
+      case Some(n: lang.OuterNode) => n
+      case Some(n) => throw new lang.ActionInvocationException(s"Expected OuterNode, got $n")
+      case _ => throw new lang.NodeStringParseException(nodeString)
+    }
+    val expr = node match {
+      case n: lang.VariableNode => n.getExpr
+      case _ => lang.BlankExprDropDown()
+    }
+    lang.getTasks.get(taskName) match {
+      case Some(task) => task.checkFulfilled(expr)
+      case None => throw new IllegalArgumentException(s"Unknown task: $taskName")
     }
   }
 }

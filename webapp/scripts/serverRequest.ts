@@ -1,5 +1,5 @@
 // @ts-ignore
-import {getLangSelector, processAction, startNodeBlank} from "scalajs:main.js";
+import {checkTask, getLangSelector, getTasks, processAction, startNodeBlank} from "scalajs:main.js";
 
 let actionHistory: {
     langName: string;
@@ -91,4 +91,18 @@ export function postProcessActionNew(
     const extraArgsStrings: string[] = extraArgs.map(arg => arg.toString());
     actionHistory.push({langName, modeName, actionName, nodeString, treePath, extraArgsStrings});
     return processAction(langName, modeName, actionName, nodeString, treePath, extraArgsStrings);
+}
+
+export function getTasksList(langName: string): {name: string, description: string, difficulty: number}[] {
+    return getTasks(langName).map((details: any[]) => {
+        return {
+            name: details[0],
+            description: details[1],
+            difficulty: details[2]
+        };
+    });
+}
+
+export function checkTaskFulfilled(langName: string, taskName: string, nodeString: string): boolean {
+    return checkTask(langName, taskName, nodeString);
 }

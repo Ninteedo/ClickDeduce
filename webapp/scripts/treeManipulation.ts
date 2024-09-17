@@ -12,6 +12,7 @@ import {
 } from "./interface";
 import {getLangSelectorNew} from "./serverRequest";
 import {replaceSelectInputs} from "./customExprSelector";
+import {updateTaskList} from "./tasks";
 
 let treeHistory: { mode: string; html: string; nodeString: string; lang: string }[] = [];
 export let treeHistoryIndex: number = 0;
@@ -102,6 +103,7 @@ export function updateTree(newTreeHtml: string, newNodeString: string, modeName:
     updateActiveInputsList();
     setSelectedMode(modeName);
     langSelector.value = lang;
+    updateTaskList(lang, lastNodeString);
 
     if (isAutoZoomEnabled()) zoomToFit();
 }

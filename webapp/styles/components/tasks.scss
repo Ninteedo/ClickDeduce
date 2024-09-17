@@ -1,0 +1,30 @@
+div#tasks {
+  overflow-y: scroll;
+  max-width: 20rem;
+
+  div.task {
+    border: 1px solid #ccc;
+    border-radius: 0.2rem;
+
+    margin: 0.1rem;
+    padding: 0.2rem;
+
+    h3 {
+      font-size: 1.1rem;
+      margin: 0;
+    }
+
+    p.description {
+      margin: 0;
+      font-size: 0.9rem;
+    }
+
+    &.fulfilled {
+      background-color: #294522;
+
+      p.description {
+        display: none;
+      }
+    }
+  }
+}

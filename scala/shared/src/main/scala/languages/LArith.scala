@@ -206,6 +206,43 @@ class LArith extends ClickDeduceLanguage {
     *   The error message.
     */
   case class UnexpectedArgType(override val message: String) extends TypeError
+
+  // tasks
+  SelectAnyExprTask.register()
+  EnterANumberTask.register()
+
+  object SelectAnyExprTask extends Task {
+    override val name: String = "Select an expression"
+    override val description: String = "The tree currently only contains the root node. " +
+      "An expression can be selected by clicking on the dropdown and clicking an option, " +
+      "or by typing the expression's name into the text box and pressing Enter."
+    override val difficulty: Int = 1
+
+    override def checkFulfilled(expr: Expr): Boolean = expr match {
+      case BlankExprDropDown() => false
+      case _                   => true
+    }
+  }
+
+  object EnterANumberTask extends Task {
+    override val name: String = "Enter a number"
+    override val description: String = "Select a Num expression and enter a number into its text box."
+    override val difficulty: Int = 1
+
+    override def checkFulfilled(expr: Expr): Boolean = {
+      def checkNum(expr: Expr): Boolean = expr match {
+        case Num(l: Literal) => l match {
+          case LiteralInt(_) => true
+          case _ => false
+        }
+        case Plus(e1, e2) => checkNum(e1) || checkNum(e2)
+        case Times(e1, e2) => checkNum(e1) || checkNum(e2)
+        case _ => false
+      }
+
+      checkNum(expr)
+    }
+  }
 }
 
 object LArith extends LArith {}
