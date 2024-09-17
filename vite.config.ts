@@ -8,11 +8,11 @@ export default defineConfig({
   plugins: [scalaJSPlugin(), react()],
   root: 'webapp',
   build: {
-    outDir: 'build',
+    outDir: '../build',
     rollupOptions: {
       input: {
-        index: 'index.html',
-        guide: 'guide.html',
+        index: 'webapp/index.html',
+        guide: 'webapp/guide.html',
       }
     }
   },
