@@ -8,6 +8,7 @@ class LIf extends LArith {
   LessThan.register()
   IfThenElse.register()
   BoolType.register()
+  BoolV.register()
 
   // expressions
   case class Bool(b: Literal) extends Expr {
@@ -148,13 +149,12 @@ class LIf extends LArith {
     override def toText: ConvertableText = TextElement(b.toString)
   }
 
-  addValueBuilder(
-    "BoolV",
-    {
+  object BoolV extends ValueCompanion {
+    override protected def createValue(args: List[Any]): Option[Value] = args match {
       case List(b: Boolean) => Some(BoolV(b))
       case _                => None
     }
-  )
+  }
 
   // types
   case class BoolType() extends Type {

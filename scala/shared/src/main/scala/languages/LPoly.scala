@@ -8,6 +8,7 @@ class LPoly extends LData {
   ApplyType.register()
   TypeVar.register()
   PolyType.register()
+  PolyV.register()
 
   // expressions
 
@@ -133,13 +134,12 @@ class LPoly extends LData {
     )
   }
 
-  addValueBuilder(
-    "PolyV",
-    {
+  object PolyV extends ValueCompanion {
+    override protected def createValue(args: List[Any]): Option[Value] = args match {
       case List(tv: Type, e: Expr, env: ValueEnv) => Some(PolyV(tv, e, env))
       case _                                      => None
     }
-  )
+  }
 
   // errors
 

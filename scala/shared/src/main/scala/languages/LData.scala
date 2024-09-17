@@ -14,6 +14,10 @@ class LData extends LRec {
   PairType.register()
   UnionType.register()
   EmptyType.register()
+  PairV.register()
+  UnitV.register()
+  LeftV.register()
+  RightV.register()
 
   // expressions
 
@@ -331,13 +335,12 @@ class LData extends LRec {
     )
   }
 
-  addValueBuilder(
-    "PairV",
-    {
+  object PairV extends ValueCompanion {
+    override def createValue(args: List[Any]): Option[Value] = args match {
       case List(v1: Value, v2: Value) => Some(PairV(v1, v2))
       case _                          => None
     }
-  )
+  }
 
   case class UnitV() extends Value {
     override val typ: Type = EmptyType()
@@ -347,13 +350,12 @@ class LData extends LRec {
     override def toText: ConvertableText = TextElement("()")
   }
 
-  addValueBuilder(
-    "UnitV",
-    {
+  object UnitV extends ValueCompanion {
+    override def createValue(args: List[Any]): Option[Value] = args match {
       case Nil => Some(UnitV())
       case _   => None
     }
-  )
+  }
 
   case class LeftV(v: Value, rightType: Type) extends Value {
     override val typ: Type = UnionType(v.typ, rightType)
@@ -363,13 +365,12 @@ class LData extends LRec {
     override def toText: ConvertableText = MultiElement(TextElement("left"), BracketedElement(v.toText))
   }
 
-  addValueBuilder(
-    "LeftV",
-    {
+  object LeftV extends ValueCompanion {
+    override def createValue(args: List[Any]): Option[Value] = args match {
       case List(v: Value, rightType: Type) => Some(LeftV(v, rightType))
       case _                               => None
     }
-  )
+  }
 
   case class RightV(leftType: Type, v: Value) extends Value {
     override val typ: Type = UnionType(leftType, v.typ)
@@ -379,13 +380,12 @@ class LData extends LRec {
     override def toText: ConvertableText = MultiElement(TextElement("right"), BracketedElement(v.toText))
   }
 
-  addValueBuilder(
-    "RightV",
-    {
+  object RightV extends ValueCompanion {
+    override def createValue(args: List[Any]): Option[Value] = args match {
       case List(leftType: Type, v: Value) => Some(RightV(leftType, v))
       case _                              => None
     }
-  )
+  }
 
   // errors
 

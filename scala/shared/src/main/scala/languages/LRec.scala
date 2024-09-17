@@ -6,6 +6,7 @@ import scalatags.Text.all.*
 
 class LRec extends LLam {
   Rec.register()
+  RecV.register()
 
   // expressions
   case class Rec(f: Literal, v: Literal, inType: Type, outType: Type, e: Expr) extends Expr {
@@ -92,14 +93,13 @@ class LRec extends LLam {
     )
   }
 
-  addValueBuilder(
-    "RecV",
-    {
+  object RecV extends ValueCompanion {
+    override def createValue(args: List[Any]): Option[Value] = args match {
       case List(f: Literal, v: Literal, inType: Type, outType: Type, e: Expr, env: ValueEnv) =>
         Some(RecV(f, v, inType, outType, e, env))
       case _ => None
     }
-  )
+  }
 
   private def prettyPrintRec(f: Literal, v: Literal, in_typ: Type, out_typ: Type, e: Expr) =
     s"rec $f($v: ${in_typ.prettyPrint}): ${out_typ.prettyPrintBracketed}. ${e.prettyPrintBracketed}"

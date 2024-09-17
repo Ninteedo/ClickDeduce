@@ -653,6 +653,11 @@ trait AbstractLanguage {
       */
     protected final val defaultArgs: List[Any] = Nil
 
+    /**
+     * List of alternate names for the term.
+     */
+    protected val aliases: List[String] = Nil
+
     /** Register the term builder.
       *
       * This needs to be called from outside the companion object to register the term builder. Otherwise, the Scala.js
@@ -683,8 +688,6 @@ trait AbstractLanguage {
       */
     protected def createExpr(args: List[Any]): Option[Expr]
 
-    protected val aliases: List[String] = Nil
-
     final def register(): Unit = addExprBuilder(name, createExpr, hidden = isHidden, aliases = aliases)
   }
 
@@ -710,9 +713,28 @@ trait AbstractLanguage {
       */
     protected def createType(args: List[Any]): Option[Type]
 
-    protected val aliases: List[String] = Nil
-
     final def register(): Unit = addTypeBuilder(name, createType, hidden = isHidden, aliases = aliases)
+  }
+
+  /**
+   * Trait for value companions.
+   *
+   * Should be used by companion objects for values.
+   *
+   * [[createValue]] needs to be implemented.
+   * [[register]] needs to be called from outside the companion object to register the value builder.
+   */
+  trait ValueCompanion extends TermCompanion {
+    /** Create a value from a list of arguments.
+     *
+     * @param args
+     *   The arguments.
+     * @return
+     *   Some value, or None if the arguments are invalid.
+     */
+    protected def createValue(args: List[Any]): Option[Value]
+
+    final def register(): Unit = addValueBuilder(name, createValue)
   }
 
   /** A function that takes a list of arguments and returns a constructed expression if valid, or None if invalid.
@@ -729,9 +751,9 @@ trait AbstractLanguage {
     * @param builder
     *   The expression builder.
     * @param hidden
-    *   Whether the builder should be hidden from the user (won't appear in expression list), default is false.
+    *   Whether the builder should be hidden from the user (won't appear in the expression list), default is false.
     */
-  protected def addExprBuilder(name: String, builder: ExprBuilder, hidden: Boolean = false, aliases: List[String] = Nil): Unit = {
+  private def addExprBuilder(name: String, builder: ExprBuilder, hidden: Boolean = false, aliases: List[String] = Nil): Unit = {
     exprBuilders += (name -> builder)
     if (!hidden) {
       val entry = if (aliases.isEmpty) name else (name, aliases)
@@ -753,17 +775,17 @@ trait AbstractLanguage {
 
   private var typeBuilderNamesList: List[BuilderName] = List()
 
-  /** Add an type builder to the language.
+  /** Add a type builder to the language.
     * @param name
     *   The name of the builder.
     * @param builder
     *   The type builder.
     * @param hidden
-    *   Whether the builder should be hidden from the user (won't appear in type list), default is false.
+    *   Whether the builder should be hidden from the user (won't appear in the type list), default is false.
     * @param aliases
     *   The aliases of the builder.
     */
-  protected def addTypeBuilder(name: String, builder: TypeBuilder, hidden: Boolean = false, aliases: List[String] = Nil): Unit = {
+  private def addTypeBuilder(name: String, builder: TypeBuilder, hidden: Boolean = false, aliases: List[String] = Nil): Unit = {
     typeBuilders += (name -> builder)
     if (!hidden) {
       val entry = if (aliases.isEmpty) name else (name, aliases)
@@ -781,7 +803,7 @@ trait AbstractLanguage {
 
   private var valueBuilders: Map[String, ValueBuilder] = Map()
 
-  protected def addValueBuilder(name: String, builder: ValueBuilder): Unit = {
+  private def addValueBuilder(name: String, builder: ValueBuilder): Unit = {
     valueBuilders += (name -> builder)
   }
 

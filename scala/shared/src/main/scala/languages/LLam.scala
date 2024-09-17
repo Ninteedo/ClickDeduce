@@ -10,6 +10,8 @@ class LLam extends LLet {
   Apply.register()
   Lambda.register()
   Func.register()
+  LambdaV.register()
+  HiddenValue.register()
 
   // expressions
   case class Apply(e1: Expr, e2: Expr) extends Expr {
@@ -142,13 +144,12 @@ class LLam extends LLet {
     )
   }
 
-  addValueBuilder(
-    "LambdaV",
-    {
+  object LambdaV extends ValueCompanion {
+    override protected def createValue(args: List[Any]): Option[Value] = args match {
       case List(v: Variable, inputType: Type, e: Expr, env: ValueEnv) => Some(LambdaV(v, inputType, e, env))
       case _                                                          => None
     }
-  )
+  }
 
   case class ApplyToNonFunctionError(value: Value) extends EvalError {
     override val message: String = s"Cannot apply with left expression being ${value.prettyPrint}"
@@ -164,13 +165,12 @@ class LLam extends LLet {
     override def toText: ConvertableText = MathElement("?")
   }
 
-  addValueBuilder(
-    "HiddenValue",
-    {
+  object HiddenValue extends ValueCompanion {
+    override def createValue(args: List[Any]): Option[Value] = args match {
       case List(typ: Type) => Some(HiddenValue(typ))
       case _               => None
     }
-  )
+  }
 }
 
 object LLam extends LLam {}

@@ -9,6 +9,7 @@ class LArith extends ClickDeduceLanguage {
   Plus.register()
   Times.register()
   IntType.register()
+  NumV.register()
 
   // expressions
 
@@ -162,13 +163,12 @@ class LArith extends ClickDeduceLanguage {
     override def toText: ConvertableText = MathElement(x.toString)
   }
 
-  addValueBuilder(
-    "NumV",
-    {
+  object NumV extends ValueCompanion {
+    override def createValue(args: List[Any]): Option[Value] = args match {
       case List(x: BigInt) => Some(NumV(x))
       case _               => None
     }
-  )
+  }
 
   /** An error that occurs due to an incorrect argument type.
     *
