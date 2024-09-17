@@ -48,13 +48,24 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
     div(cls := ClassDict.NODE, envDiv(node), exprDiv(node), resultDiv(node))
 
   def envDiv(node: OuterNode): HTML = {
-    val env = node match
+    def parseEnv(
+      env: Iterable[(lang.Variable, lang.Term)],
+      valueTooltips: Boolean
+    ): Iterable[(lang.Variable, TypedTag[String])] =
+      env.map((k, v) =>
+        v match {
+          case value: lang.Value => k -> (if valueTooltips then value.toHtml else value.valueText)
+          case typ: lang.Type    => k -> typ.toHtml
+        }
+      )
+
+    def getNodeEnv(node: OuterNode): lang.ValueEnv | lang.TypeEnv = node match {
       case n: ExprNode => n.getEnv(mode)
       case n: TypeNode => n.getEnv(mode)
-    val parentEnv = node.getParent.map {
-      case n1: ExprNode => n1.getEnv(mode)
-      case n1: TypeNode => n1.getEnv(mode)
     }
+
+    val env = getNodeEnv(node)
+    val parentEnv = node.getParent.map(getNodeEnv)
     val filteredEnv = env
       .map((k, v) => {
         val parentValue = parentEnv.flatMap(_.get(k))
@@ -62,26 +73,24 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
       })
       .filter(_.isDefined)
       .map(_.get)
-    val parsedEnv = filteredEnv.map((k, v) =>
-      v match {
-        case value: lang.Value => k -> value.toHtml
-        case typ: lang.Type    => k -> typ.toHtml
-      }
-    )
-    val emptyEnv = parsedEnv.isEmpty
-    val variablesHtml: Option[HTML] =
-      if (emptyEnv) None else Some(div(raw(parsedEnv.map((k, v) => s"$k &rarr; $v").mkString("[", ", ", "]"))))
-    val delimiter =
-      if (mode == DisplayMode.TypeCheck) Some(raw(" &#x22a2;"))
-      else if (!emptyEnv) Some(raw(","))
-      else None
+    val parsedEnv = parseEnv(filteredEnv, valueTooltips = true)
+    val delimiter = if (mode == DisplayMode.TypeCheck) raw(" &#x22a2;&nbsp;") else raw(",&nbsp;")
 
-    div(
-      cls := ClassDict.SCOPED_VARIABLES,
-      variablesHtml,
-      delimiter,
-      paddingRight := (if (emptyEnv && mode != DisplayMode.TypeCheck) "0ch" else "0.5ch")
-    )
+    if (parentEnv.isDefined && parentEnv.get.nonEmpty) {
+      val parsedParentEnv = parseEnv(parentEnv.get.env, valueTooltips = false)
+      val miniParent = span(cls := ClassDict.TOOLTIP, "σ", div(cls := ClassDict.TOOLTIP_TEXT, formatEnv(parsedParentEnv)))
+
+      if (parsedEnv.nonEmpty) span(miniParent, " + ", formatEnv(parsedEnv), delimiter)
+      else span(miniParent, delimiter)
+    } else if (parsedEnv.nonEmpty) span(formatEnv(parsedEnv), delimiter)
+    else span()
+  }
+
+  private def formatEnv(env: Iterable[(lang.Variable, TypedTag[String])]): TypedTag[String] = {
+    val variablesHtml: Option[HTML] =
+      if (env.isEmpty) None
+      else Some(div(raw(env.map((k, v) => s"$k &rarr; $v").mkString("[", ", ", "]"))))
+    div(cls := ClassDict.SCOPED_VARIABLES, variablesHtml)
   }
 
   def exprDiv(node: ExprNode): HTML = div(if (node.isPhantom) {
