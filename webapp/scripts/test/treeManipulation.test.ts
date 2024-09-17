@@ -18,7 +18,7 @@ import {
 import * as NS from "../../test_resources/node_strings";
 import {getNodeStringFromPath} from "../treeManipulation";
 
-const indexHtml = loadHtmlTemplate('../pages/index');
+const indexHtml = loadHtmlTemplate('index');
 
 beforeEach(() => {
     document.body.innerHTML = indexHtml;
