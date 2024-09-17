@@ -36,7 +36,7 @@ class LIf extends LArith {
       case _                => None
     }
 
-    override val aliases: List[String] = List("Boolean")
+    override val aliases: List[String] = List("Boolean", "True", "False")
   }
 
   case class Equal(e1: Expr, e2: Expr) extends Expr {
@@ -169,7 +169,7 @@ class LIf extends LArith {
       case _   => None
     }
 
-    override val aliases: List[String] = List("Boolean")
+    override val aliases: List[String] = List("Boolean", "True", "False")
   }
 
   // errors
