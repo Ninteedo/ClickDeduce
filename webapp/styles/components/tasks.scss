@@ -1,13 +1,19 @@
+@import '../abstracts/_colours';
+
 div#tasks {
   overflow-y: scroll;
   max-width: 20rem;
+  flex-grow: 1;
 
   div.task {
-    border: 1px solid #ccc;
+    border: 1px solid $input-outline;
     border-radius: 0.2rem;
 
     margin: 0.1rem;
     padding: 0.2rem;
+
+    background-color: $tree-background;
+    box-shadow: 0 0 0.3rem $input-outline;
 
     h3 {
       font-size: 1.1rem;
@@ -20,7 +26,7 @@ div#tasks {
     }
 
     &.fulfilled {
-      background-color: #294522;
+      background-color: $success-background;
 
       p.description {
         display: none;

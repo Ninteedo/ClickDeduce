@@ -210,8 +210,9 @@ class LArith extends ClickDeduceLanguage {
   // tasks
   SelectAnyExprTask.register()
   EnterANumberTask.register()
+  BasicArithmeticTask.register()
 
-  object SelectAnyExprTask extends Task {
+  private object SelectAnyExprTask extends Task {
     override val name: String = "Select an expression"
     override val description: String = "The tree currently only contains the root node. " +
       "An expression can be selected by clicking on the dropdown and clicking an option, " +
@@ -224,7 +225,7 @@ class LArith extends ClickDeduceLanguage {
     }
   }
 
-  object EnterANumberTask extends Task {
+  private object EnterANumberTask extends Task {
     override val name: String = "Enter a number"
     override val description: String = "Select a Num expression and enter a number into its text box."
     override val difficulty: Int = 1
@@ -241,6 +242,34 @@ class LArith extends ClickDeduceLanguage {
       }
 
       checkNum(expr)
+    }
+  }
+
+  private object BasicArithmeticTask extends Task {
+    override val name: String = "Basic arithmetic"
+    override val description: String = "Create an expression that results in 42, involving both addition and " +
+      "multiplication, but no zeroes."
+    override val difficulty: Int = 2
+
+    override def checkFulfilled(expr: Expr): Boolean = {
+      def checkHasOp(expr: Expr, op: Class[_ <: Expr]): Boolean = expr match {
+        case e if op.isInstance(e) => true
+        case Plus(e1, e2) => checkHasOp(e1, op) || checkHasOp(e2, op)
+        case Times(e1, e2) => checkHasOp(e1, op) || checkHasOp(e2, op)
+        case _ => false
+      }
+
+      def checkNoZeroes(expr: Expr): Boolean = expr match {
+        case Num(LiteralInt(0)) => false
+        case Plus(e1, e2) => checkNoZeroes(e1) && checkNoZeroes(e2)
+        case Times(e1, e2) => checkNoZeroes(e1) && checkNoZeroes(e2)
+        case _ => true
+      }
+
+      expr.eval() match {
+        case NumV(42) => checkNoZeroes(expr) && checkHasOp(expr, classOf[Plus]) && checkHasOp(expr, classOf[Times])
+        case _ => false
+      }
     }
   }
 }
