@@ -124,6 +124,99 @@ class LLet extends LIf {
   case class InvalidIdentifierTypeError(v: Literal) extends TypeError {
     override val message: String = s"Invalid identifier '$v'"
   }
+
+  // tasks
+
+  clearTasks()
+  LetAndVarTask.register()
+  UseVarInAssignmentTask.register()
+  OverwriteVarTask.register()
+
+  private def checkHasVar(e: Expr, v: Literal): Boolean = checkCondition(
+    e,
+    {
+      case Var(v2) => v == v2
+      case _       => false
+    }
+  )
+
+  private object LetAndVarTask extends Task {
+    override val name: String = "Bind and use a variable"
+    override val description: String =
+      "Bind a value to a variable using \"Let\", then use that variable in an expression using \"Var\". " +
+        "The variable name needs to be identical in both expressions. " +
+        "The \"Var\" expression must be inside the right-hand side of the \"Let\" expression. " +
+        "The expression must successfully type-check."
+    override val difficulty: Int = 2
+
+    override def checkFulfilled(expr: Expr): Boolean = {
+      !expr.typeCheck().isError && checkCondition(
+        expr,
+        {
+          case Let(v, _, bound) => checkHasVar(bound, v)
+          case _                => false
+        }
+      )
+    }
+  }
+
+  private object UseVarInAssignmentTask extends Task {
+    override val name: String = "Use a variable in an assignment"
+    override val description: String =
+      "Bind a value to a variable using \"Let\", then use that variable in the assignment of another variable, inside" +
+        " another \"Let\". " +
+        "The expression must successfully type-check."
+    override val difficulty: Int = 3
+
+    override def checkFulfilled(expr: Expr): Boolean = {
+      !expr.typeCheck().isError && checkCondition(
+        expr,
+        {
+          case Let(v1, _, bound1) =>
+            checkCondition(
+              bound1,
+              {
+                case Let(_, assign2, _) => checkHasVar(assign2, v1)
+                case _                  => false
+              }
+            )
+          case _ => false
+        }
+      )
+    }
+  }
+
+  object OverwriteVarTask extends Task {
+    override val name: String = "Overwrite a variable"
+    override val description: String =
+      "Bind a value to a variable using \"Let\", use it, then overwrite that variable with a new value using another " +
+        "\"Let\" and use that new value. " +
+        "The expression must successfully type-check."
+    override val difficulty: Int = 3
+
+    override def checkFulfilled(expr: Expr): Boolean = {
+      def checkVarUsedNoOverwrite(e: Expr, v1: Literal): Boolean = e match {
+        case Var(v2) => v1 == v2
+        case Let(v2, assign, bound) => checkVarUsedNoOverwrite(assign, v1) || (v1 != v2 && checkVarUsedNoOverwrite(bound, v1))
+        case e => e.getExprFields.exists(checkVarUsedNoOverwrite(_, v1))
+      }
+
+      !expr.typeCheck().isError && checkCondition(
+        expr,
+        {
+          case Let(v1, _, bound1) =>
+            checkVarUsedNoOverwrite(bound1, v1) && checkCondition(
+              bound1,
+              {
+                case Let(v2, _, bound2) => v1 == v2 && checkHasVar(bound2, v1)
+                case _                  => false
+              }
+            )
+          case _ => false
+        }
+      )
+    }
+  }
 }
 
 object LLet extends LLet {}

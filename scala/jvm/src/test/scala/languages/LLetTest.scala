@@ -246,4 +246,17 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
       }
     })
   }
+
+  property("OverwriteVarTask is checked correctly") {
+    val task: Task = OverwriteVarTask
+
+    val x = "x"
+    val y = "y"
+    task.checkFulfilled(Let(x, Num(1), Var(x))) shouldEqual false
+    task.checkFulfilled(Let(x, Num(1), Let(y, Num(2), Var(x)))) shouldEqual false
+    task.checkFulfilled(Let(x, Num(1), Let(x, Num(2), Var(x)))) shouldEqual false
+    task.checkFulfilled(Let(x, Num(1), Plus(Let(x, Num(2), Var(x)), Var(x)))) shouldEqual true
+    task.checkFulfilled(Let(x, Num(1), Let(x, Times(Var(x), Num(2)), Var(x)))) shouldEqual true
+    task.checkFulfilled(Let(x, Num(1), Let(y, Num(2), Plus(Var(x), Let(x, Num(3), Times(Var(y), Var(x))))))) shouldEqual true
+  }
 }

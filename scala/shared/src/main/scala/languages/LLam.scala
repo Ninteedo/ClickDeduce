@@ -171,6 +171,10 @@ class LLam extends LLet {
       case _               => None
     }
   }
+  
+  // tasks
+  
+  clearTasks()
 }
 
 object LLam extends LLam {}
