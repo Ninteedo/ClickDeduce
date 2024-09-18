@@ -108,6 +108,10 @@ class LRec extends LLam {
     override val message: String =
       s"Recursive function expression declared return type $declared does not match actual return type $actual"
   }
+
+  // tasks
+
+  clearTasks()
 }
 
 object LRec extends LRec {}

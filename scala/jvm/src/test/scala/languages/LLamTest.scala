@@ -383,4 +383,27 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
     println(typeSelects.mkString("\n"))
     typeSelects.count(_.contains("disabled")) shouldEqual 1
   }
+
+  property("IntToBoolFunctionTask is checked correctly") {
+    val task = IntToBoolFunctionTask
+
+    val x = "x"
+
+    task.checkFulfilled(Lambda(x, IntType(), Equal(Var(x), Num(39)))) shouldBe true
+    task.checkFulfilled(Lambda(x, IntType(), Equal(Var(x), Num(-39)))) shouldBe false
+    task.checkFulfilled(Lambda(x, BoolType(), Equal(Var(x), Bool(true)))) shouldBe false
+    task.checkFulfilled(Apply(Lambda(x, IntType(), Equal(Var(x), Num(39))), Num(39))) shouldBe true
+  }
+
+  property("FunctionUsingFunctionAsInputTask is checked correctly") {
+    val task = FunctionUsingFunctionAsInputTask
+
+    val f = "f"
+    val x = "x"
+
+    task.checkFulfilled(Apply(twiceFunction, incrementFunction)) shouldBe true
+    task.checkFulfilled(incrementFunction) shouldBe false
+    task.checkFulfilled(Apply(incrementFunction, incrementFunction)) shouldBe false
+    task.checkFulfilled(Apply(incrementFunction, twiceFunction)) shouldBe false
+  }
 }

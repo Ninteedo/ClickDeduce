@@ -94,6 +94,8 @@ class LLam extends LLet {
       IncompatibleTypeErrorType(in, argType)
     }
 
+    override val isError: Boolean = in.isError || out.isError
+
     override def typeCheck(tEnv: TypeEnv): Type = Func(in.typeCheck(tEnv), out.typeCheck(tEnv))
 
     override def toText: ConvertableText =
@@ -171,10 +173,105 @@ class LLam extends LLet {
       case _               => None
     }
   }
-  
+
   // tasks
-  
+
   clearTasks()
+  DefineAFunctionTask.register()
+  IntToBoolFunctionTask.register()
+  FunctionUsingFunctionAsInputTask.register()
+
+  private object DefineAFunctionTask extends Task {
+    override val name: String = "Define a Lambda function"
+    override val description: String =
+      "Define a Lambda function with a input variable name and type, and body expression. " +
+        "The expression should successfully type-check."
+    override val difficulty: Int = 2
+
+    override def checkFulfilled(expr: Expr): Boolean = {
+      !expr.typeCheck().isError && checkCondition(
+        expr,
+        cond = {
+          case Lambda(_, _, _) => true
+          case _               => false
+        }
+      )
+    }
+  }
+
+  object IntToBoolFunctionTask extends Task {
+    override val name: String = "Define a function that converts Int to Bool"
+    override val description: String =
+      "Define a Lambda function that takes an Int and returns a Bool. " +
+        "The function should return true if the input is exactly 39, and false otherwise. " +
+        "The expression should successfully type-check."
+    override val difficulty: Int = 3
+
+    override def checkFulfilled(expr: Expr): Boolean = {
+      !expr.typeCheck().isError && checkCondition(
+        expr,
+        { (e, env) =>
+          e match {
+            case lambda: Lambda =>
+              lambda.typ match {
+                case IntType() =>
+                  Apply(lambda, Num(39)).eval(env) == BoolV(true) &&
+                  List(-39, -100, 0, 1, 38, 40, 100).forall(i =>
+                    Apply(lambda, Num(LiteralInt(i))).eval(env) == BoolV(false)
+                  )
+                case _ => false
+              }
+            case _ => false
+          }
+        },
+        ValueEnv.empty
+      )
+    }
+  }
+
+  object FunctionUsingFunctionAsInputTask extends Task {
+    override val name: String = "Define a function that uses another function as input"
+    override val description: String =
+      "Define a Lambda function that takes another Lambda function as input, then applies a value to that input " +
+        "function. " +
+        "The expression should successfully type-check."
+    override val difficulty: Int = 4
+
+    override def checkFulfilled(expr: Expr): Boolean = {
+      !expr.typeCheck().isError && checkCondition(
+        expr,
+        { (e, env) =>
+          e match {
+            case Lambda(v1, typ, body) =>
+              typ match {
+                case Func(_, _) =>
+                  checkCondition(
+                    body,
+                    { (e2, env2) =>
+                      e2 match {
+                        case Apply(e3, _) =>
+                          checkCondition(
+                            e3,
+                            {
+                              case Var(v2) => v2 == v1
+                              case _       => false
+                            },
+                            env2
+                          )
+                        case _ => false
+                      }
+                    },
+                    env
+                  )
+                case _ => false
+              }
+            case _ => false
+          }
+        },
+        ValueEnv.empty
+      )
+    }
+  }
 }
 
 object LLam extends LLam {}

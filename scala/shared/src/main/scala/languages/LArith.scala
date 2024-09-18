@@ -232,10 +232,9 @@ class LArith extends ClickDeduceLanguage {
 
     override def checkFulfilled(expr: Expr): Boolean = {
       def checkNum(expr: Expr): Boolean = checkCondition(
-        expr,
-        {
+        expr, cond = {
           case Num(LiteralInt(_)) => true
-          case _                  => false
+          case _ => false
         }
       )
 
@@ -251,10 +250,9 @@ class LArith extends ClickDeduceLanguage {
 
     override def checkFulfilled(expr: Expr): Boolean = {
       def checkNoZeroes(expr: Expr): Boolean = !checkCondition(
-        expr,
-        {
+        expr, cond = {
           case Num(LiteralInt(0)) => true
-          case _                  => false
+          case _ => false
         }
       )
 

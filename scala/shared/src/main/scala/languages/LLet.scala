@@ -133,10 +133,9 @@ class LLet extends LIf {
   OverwriteVarTask.register()
 
   private def checkHasVar(e: Expr, v: Literal): Boolean = checkCondition(
-    e,
-    {
+    e, cond = {
       case Var(v2) => v == v2
-      case _       => false
+      case _ => false
     }
   )
 
@@ -151,10 +150,9 @@ class LLet extends LIf {
 
     override def checkFulfilled(expr: Expr): Boolean = {
       !expr.typeCheck().isError && checkCondition(
-        expr,
-        {
+        expr, cond = {
           case Let(v, _, bound) => checkHasVar(bound, v)
-          case _                => false
+          case _ => false
         }
       )
     }
@@ -170,14 +168,13 @@ class LLet extends LIf {
 
     override def checkFulfilled(expr: Expr): Boolean = {
       !expr.typeCheck().isError && checkCondition(
-        expr,
-        {
+        expr, cond = {
           case Let(v1, _, bound1) =>
             checkCondition(
               bound1,
               {
                 case Let(_, assign2, _) => checkHasVar(assign2, v1)
-                case _                  => false
+                case _ => false
               }
             )
           case _ => false
@@ -202,14 +199,13 @@ class LLet extends LIf {
       }
 
       !expr.typeCheck().isError && checkCondition(
-        expr,
-        {
+        expr, cond = {
           case Let(v1, _, bound1) =>
             checkVarUsedNoOverwrite(bound1, v1) && checkCondition(
               bound1,
               {
                 case Let(v2, _, bound2) => v1 == v2 && checkHasVar(bound2, v1)
-                case _                  => false
+                case _ => false
               }
             )
           case _ => false
