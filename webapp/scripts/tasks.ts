@@ -31,18 +31,23 @@ function updateTasksDiv(): void {
     const tasksDiv = getTasksDiv();
     tasksDiv.innerHTML = "";
 
-    for (const task of taskList) {
-        const {name, description, difficulty} = task;
-        const taskDiv = document.createElement("div");
-        taskDiv.classList.add("task");
-        taskDiv.innerHTML = `
+    if (taskList.length === 0) {
+        tasksDiv.classList.add("hidden");
+    } else {
+        tasksDiv.classList.remove("hidden");
+        for (const task of taskList) {
+            const {name, description, difficulty} = task;
+            const taskDiv = document.createElement("div");
+            taskDiv.classList.add("task");
+            taskDiv.innerHTML = `
             <h3>${"★".repeat(difficulty)} ${name}</h3>
             <p class="description">${description}</p>
         `;
-        if (fulfilledTasks.includes(name)) {
-            taskDiv.classList.add("fulfilled");
+            if (fulfilledTasks.includes(name)) {
+                taskDiv.classList.add("fulfilled");
+            }
+            tasksDiv.appendChild(taskDiv);
         }
-        tasksDiv.appendChild(taskDiv);
     }
 }
 
