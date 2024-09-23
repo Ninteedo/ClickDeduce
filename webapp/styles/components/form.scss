@@ -31,8 +31,7 @@ select {
   color: $foreground;
   border: $input-outline solid 1px;
   border-radius: 3px;
-  padding: 0 2px;
-  height: 1.4rem;
+  padding: 0.2rem;
   font-size: 1.1rem;
 
   &:disabled {

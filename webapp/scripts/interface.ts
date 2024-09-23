@@ -1,5 +1,5 @@
 import {handleLiteralChanged, hasCopyCache} from "./actions";
-import {getActiveInputs, lastNodeString} from "./treeManipulation";
+import {getActiveInputs, lastNodeString, redo, undo} from "./treeManipulation";
 import {getSelectedLanguage, getSelectedMode, hasClassOrParentHasClass} from "./utils";
 import {panzoomInstance} from "./initialise";
 import {selectorEnterPressed} from "./customExprSelector";
@@ -24,6 +24,21 @@ export function resetInterfaceGlobals(): void {
 
     getContextMenu().style.display = 'none';
 }
+
+/**
+ * Handles any keydown event on the document.
+ */
+function globalHandleKeyDown(e: KeyboardEvent): void {
+    if (e.ctrlKey && e.key.toUpperCase() === 'Z') {
+        if (e.shiftKey) {
+            redo();
+        } else {
+            undo();
+        }
+    }
+}
+
+document.addEventListener('keydown', globalHandleKeyDown);
 
 /**
  * Handles the keydown event.
