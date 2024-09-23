@@ -166,7 +166,7 @@ export async function zoomToFit(): Promise<void> {
 
 let errorTimeoutId: number = 0;
 
-function incrementErrorTimeout(): void {
+function incrementErrorTimeoutId(): void {
     errorTimeoutId = (errorTimeoutId + 1) % 1000;
 }
 
@@ -183,7 +183,7 @@ export function displayError(error: any): void {
     errorDiv.classList.add('fade-in');
     errorDiv.classList.remove('fade-out');
 
-    incrementErrorTimeout();
+    incrementErrorTimeoutId();
     let myTimeoutId = errorTimeoutId;
     setTimeout(() => {
         if (myTimeoutId !== errorTimeoutId) return;
@@ -212,11 +212,17 @@ function toggleValueTypeColourHighlighting(newState: boolean): void {
     }
 }
 
+/**
+ * Returns whether the auto-zoom checkbox is checked.
+ */
 export function isAutoZoomEnabled(): boolean {
     const autoZoomCheckbox = document.getElementById('auto-zoom-toggle') as HTMLInputElement;
     return autoZoomCheckbox.checked;
 }
 
+/**
+ * Displays the export LaTeX output modal.
+ */
 export function exportLaTeX(): void {
     const langName = getSelectedLanguage();
     const modeName = getSelectedMode();
@@ -243,12 +249,18 @@ function showExportOutput(title: string, output: string, description: string | n
     getBlocker().classList.add('visible');
 }
 
+/**
+ * Copies the LaTeX output to the clipboard.
+ */
 export function copyExportOutput() {
     const outputTextArea = document.getElementById('export-output') as HTMLTextAreaElement;
     outputTextArea.select();
     navigator.clipboard.writeText(outputTextArea.value);
 }
 
+/**
+ * Closes the export output modal.
+ */
 export function closeExportOutput() {
     const outputDiv = document.getElementById('export-output-container') as HTMLDivElement;
     outputDiv.classList.remove('visible');
@@ -301,7 +313,6 @@ export function getContextMenuZoomToFitButton(): HTMLButtonElement {
     const zoomToFitButton = document.getElementById('zoom-button') as HTMLButtonElement;
     if (!zoomToFitButton) throw new Error('Context menu zoom to fit button not found');
     return zoomToFitButton;
-
 }
 
 export function getSaveButton(): HTMLButtonElement {
@@ -334,6 +345,9 @@ export function getExportCloseButton(): HTMLButtonElement {
     return exportCloseButton;
 }
 
+/**
+ * Returns the tree path string of the given tree element.
+ */
 export function getTreePathOfElement(element: HTMLElement | null): string {
     if (element === null) throw new Error("Cannot get tree path of null");
     const treePath = element.getAttribute("data-tree-path");

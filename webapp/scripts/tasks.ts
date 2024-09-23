@@ -2,11 +2,13 @@ import {checkTaskFulfilled, getTasksList} from "./serverRequest";
 
 let fulfilledTasks: string[] = [];
 
-let taskList: {
+export interface Task {
     name: string;
     description: string;
     difficulty: number;
-}[] = [];
+}
+
+let taskList: Task[] = [];
 
 export function updateTaskList(lang: string, nodeString: string): void {
     const tasks = getTasksList(lang);
@@ -27,6 +29,22 @@ export function updateTaskList(lang: string, nodeString: string): void {
     updateTasksDiv();
 }
 
+function createTaskElement({name, description, difficulty}: Task): HTMLDivElement {
+    const taskDiv = document.createElement("div");
+    taskDiv.classList.add("task");
+
+    const stars = "★".repeat(difficulty);
+
+    taskDiv.innerHTML = `
+      <h3>${stars} ${name}</h3>
+      <p class="description">${description}</p>
+    `;
+    if (fulfilledTasks.includes(name)) {
+        taskDiv.classList.add("fulfilled");
+    }
+    return taskDiv;
+}
+
 function updateTasksDiv(): void {
     const tasksDiv = getTasksDiv();
     tasksDiv.innerHTML = "";
@@ -36,17 +54,7 @@ function updateTasksDiv(): void {
     } else {
         tasksDiv.classList.remove("hidden");
         for (const task of taskList) {
-            const {name, description, difficulty} = task;
-            const taskDiv = document.createElement("div");
-            taskDiv.classList.add("task");
-            taskDiv.innerHTML = `
-            <h3>${"★".repeat(difficulty)} ${name}</h3>
-            <p class="description">${description}</p>
-        `;
-            if (fulfilledTasks.includes(name)) {
-                taskDiv.classList.add("fulfilled");
-            }
-            tasksDiv.appendChild(taskDiv);
+            tasksDiv.appendChild(createTaskElement(task));
         }
     }
 }

@@ -30,8 +30,10 @@ div#tasks.control-group {
     &.fulfilled {
       background-color: $success-background;
 
-      p.description {
-        display: none;
+      &:not(:hover) {
+        p.description {
+          display: none;
+        }
       }
     }
   }

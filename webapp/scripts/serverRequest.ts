@@ -1,5 +1,6 @@
 // @ts-ignore
 import {checkTask, getLangSelector, getTasks, processAction, startNodeBlank} from "scalajs:main.js";
+import {Task} from "./tasks";
 
 let actionHistory: {
     langName: string;
@@ -93,7 +94,7 @@ export function postProcessActionNew(
     return processAction(langName, modeName, actionName, nodeString, treePath, extraArgsStrings);
 }
 
-export function getTasksList(langName: string): {name: string, description: string, difficulty: number}[] {
+export function getTasksList(langName: string): Task[] {
     return getTasks(langName).map((details: any[]) => {
         return {
             name: details[0],
