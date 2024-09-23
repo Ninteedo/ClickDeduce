@@ -175,11 +175,7 @@ class LLam extends LLet {
   }
 
   // tasks
-
-  clearTasks()
-  DefineAFunctionTask.register()
-  IntToBoolFunctionTask.register()
-  FunctionUsingFunctionAsInputTask.register()
+  setTasks(DefineAFunctionTask, IntToBoolFunctionTask, FunctionUsingFunctionAsInputTask)
 
   private object DefineAFunctionTask extends Task {
     override val name: String = "Define a Lambda function"

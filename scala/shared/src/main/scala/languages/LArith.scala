@@ -208,9 +208,7 @@ class LArith extends ClickDeduceLanguage {
   case class UnexpectedArgType(override val message: String) extends TypeError
 
   // tasks
-  SelectAnyExprTask.register()
-  EnterANumberTask.register()
-  BasicArithmeticTask.register()
+  setTasks(SelectAnyExprTask, EnterANumberTask, BasicArithmeticTask)
 
   private object SelectAnyExprTask extends Task {
     override val name: String = "Select an expression"

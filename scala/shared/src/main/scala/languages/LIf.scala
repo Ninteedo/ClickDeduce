@@ -195,11 +195,7 @@ class LIf extends LArith {
   }
 
   // tasks
-
-  clearTasks()
-  SimpleBoolTask.register()
-  IfStatementTask.register()
-  IfAndComparisonTask.register()
+  setTasks(SimpleBoolTask, IfStatementTask, IfAndComparisonTask)
 
   private object SimpleBoolTask extends Task {
     override val name: String = "Enter a Boolean"

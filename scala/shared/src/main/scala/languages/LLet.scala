@@ -126,11 +126,7 @@ class LLet extends LIf {
   }
 
   // tasks
-
-  clearTasks()
-  LetAndVarTask.register()
-  UseVarInAssignmentTask.register()
-  OverwriteVarTask.register()
+  setTasks(LetAndVarTask, UseVarInAssignmentTask, OverwriteVarTask)
 
   private def checkHasVar(e: Expr, v: Literal): Boolean = checkCondition(
     e, cond = {

@@ -11,15 +11,15 @@ trait AbstractTaskLanguage extends AbstractActionLanguage {
     val difficulty: Int
 
     def checkFulfilled(expr: Expr): Boolean
-
-    final def register(): Unit = tasks += (name -> this)
   }
 
   private var tasks: Map[String, Task] = Map()
 
-  def getTasks: Map[String, Task] = tasks
+  final def getTasks: Map[String, Task] = tasks
 
-  protected def clearTasks(): Unit = tasks = Map()
+  protected final def clearTasks(): Unit = tasks = Map()
+
+  protected final def setTasks(newTasks: Task*): Unit = tasks = newTasks.map(t => (t.name, t)).toMap
 
   protected final def checkCondition(expr: Expr, cond: Expr => Boolean, env: ValueEnv = ValueEnv.empty): Boolean =
     checkCondition(expr, (e, _) => cond(e), env)
@@ -35,5 +35,5 @@ trait AbstractTaskLanguage extends AbstractActionLanguage {
           })
     }
 
-  protected def checkHasOp(expr: Expr, op: Class[_ <: Expr]): Boolean = checkCondition(expr, cond = _.getClass == op)
+  protected final def checkHasOp(expr: Expr, op: Class[_ <: Expr]): Boolean = checkCondition(expr, cond = _.getClass == op)
 }
