@@ -44,5 +44,5 @@ To build the website, run the following command:
 npm run build
 ```
 
-This will generate the website in the [build](build) directory,
-including [index.html](build/index.html) for the main page.
+This will generate the website in the [webapp/build](webapp/build) directory,
+including [index.html](webapp/build/index.html) for the main page.
