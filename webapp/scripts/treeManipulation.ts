@@ -121,6 +121,7 @@ function treeCleanup(): void {
     makePhantomInputsReadOnly();
     makeDisabledInputsFocusOriginal();
     setLiteralInitialValues();
+    addClickListeners();
 }
 
 /**
@@ -172,6 +173,25 @@ function addHoverListeners(): void {
                 clearHighlight();
             }
         });
+    });
+}
+
+/**
+ * Add left-click listeners to nodes that focus the node's input when clicked (if it exists).
+ */
+function addClickListeners(): void {
+    document.querySelectorAll('.subtree').forEach(subtree => {
+        if (subtree instanceof HTMLElement) {
+            const input = subtree.querySelector('.node input:not([disabled])');
+            if (input instanceof HTMLInputElement) {
+                subtree.addEventListener('click', (evt) => {
+                    if (!subtree.classList.contains('highlight')) return;
+                    evt.preventDefault();
+                    input.focus();
+                    input.select();
+                });
+            }
+        }
     });
 }
 
