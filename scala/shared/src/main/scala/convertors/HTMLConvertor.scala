@@ -18,36 +18,46 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
         case _           =>
       }
     }
-    outerNodeToHTML(fixedNode).toString
+    envCounter = -1
+    outerNodeToHTML(fixedNode, 0).toString
   }
 
-  private def outerNodeToHTML(node: OuterNode): HTML = node match {
-    case n: ExprNode => exprNode(n)
-    case n: TypeNode => typeNode(n)
+  private def outerNodeToHTML(node: OuterNode, envIndex: Int): HTML = node match {
+    case n: ExprNode => exprNode(n, envIndex)
+    case n: TypeNode => typeNode(n, envIndex)
   }
 
-  def exprNode(node: ExprNode): HTML = {
+  def exprNode(node: ExprNode, envIndex: Int): HTML = {
     val isAxiom = node.getVisibleChildren(mode).isEmpty
+
+    val newEnvIndex = if (node.hasUpdatedEnv(mode)) {
+      envCounter += 1
+      envCounter - 1
+    } else {
+      envIndex
+    }
 
     div(
       cls := f"${ClassDict.SUBTREE} ${if (isAxiom) ClassDict.AXIOM else ""} ${phantomClassName(node)}".strip,
       data("tree-path") := node.treePathString,
-      fullExprBottomDiv(node),
+      fullExprBottomDiv(node, envIndex),
       if (isAxiom)
         div(cls := ClassDict.ANNOTATION_AXIOM, node.exprName)
       else
         div(
           cls := ClassDict.ARGS,
-          node.getVisibleChildren(mode).map(outerNodeToHTML),
+          node.getVisibleChildren(mode).map(outerNodeToHTML(_, newEnvIndex)),
           div(cls := ClassDict.ANNOTATION, node.exprName)
         )
     )
   }
 
-  def fullExprBottomDiv(node: ExprNode): HTML =
-    div(cls := ClassDict.NODE, envDiv(node), exprDiv(node), resultDiv(node))
+  def fullExprBottomDiv(node: ExprNode, envIndex: Int): HTML =
+    div(cls := ClassDict.NODE, envDiv(node, envIndex), exprDiv(node), resultDiv(node))
 
-  def envDiv(node: OuterNode): HTML = {
+  private var envCounter: Int = 0
+
+  def envDiv(node: OuterNode, envIndex: Int): HTML = {
     def parseEnv(
       env: Iterable[(lang.Variable, lang.Term)],
       valueTooltips: Boolean
@@ -78,7 +88,7 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
 
     if (parentEnv.isDefined && parentEnv.get.nonEmpty) {
       val parsedParentEnv = parseEnv(parentEnv.get.env, valueTooltips = false)
-      val miniParent = span(cls := ClassDict.TOOLTIP, "σ", div(cls := ClassDict.TOOLTIP_TEXT, formatEnv(parsedParentEnv)))
+      val miniParent = span(cls := ClassDict.TOOLTIP, s"σ$envIndex", div(cls := ClassDict.TOOLTIP_TEXT, formatEnv(parsedParentEnv)))
 
       if (parsedEnv.nonEmpty) span(miniParent, " + ", formatEnv(parsedEnv), delimiter)
       else span(miniParent, delimiter)
@@ -112,7 +122,7 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
     case DisplayMode.Evaluation => List(evalArrowSpan, evalResultDiv(node))
   }
 
-  def typeNode(node: TypeNode): HTML = {
+  def typeNode(node: TypeNode, envIndex: Int): HTML = {
     val isAxiom = node.getVisibleChildren(mode).isEmpty
     div(
       cls := List(
@@ -122,20 +132,20 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
         phantomClassName(node)
       ).mkString(" "),
       data("tree-path") := node.treePathString,
-      fullTypeBottomDiv(node),
+      fullTypeBottomDiv(node, envIndex),
       if (isAxiom)
         div(cls := ClassDict.ANNOTATION_AXIOM, node.getTypeName)
       else
         div(
           cls := ClassDict.ARGS,
-          node.getVisibleChildren(mode).map(outerNodeToHTML),
+          node.getVisibleChildren(mode).map(outerNodeToHTML(_, envIndex)),
           div(cls := ClassDict.ANNOTATION, node.getTypeName)
         )
     )
   }
 
-  def fullTypeBottomDiv(node: TypeNode): HTML =
-    div(cls := ClassDict.NODE, envDiv(node), typeDiv(node), typeResultDiv(node))
+  def fullTypeBottomDiv(node: TypeNode, envIndex: Int): HTML =
+    div(cls := ClassDict.NODE, envDiv(node, envIndex), typeDiv(node), typeResultDiv(node))
 
   def typeDiv(node: TypeNode): HTML = node.toText(mode).asHtml(cls := ClassDict.TYPE)
 

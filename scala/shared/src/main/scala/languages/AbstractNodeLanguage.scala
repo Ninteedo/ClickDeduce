@@ -612,6 +612,12 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       case DisplayMode.TypeCheck  => getTypeEnv
       case DisplayMode.Evaluation => getEvalEnv
     }
+    
+    def hasUpdatedEnv(mode: DisplayMode): Boolean = {
+      val env = getEnv(mode)
+      val parentEnv = getParent.map(_.getEnv(mode))
+      !parentEnv.contains(env)
+    }
 
     private val visibleChildrenCache = collection.mutable.Map[DisplayMode, List[OuterNode]]()
 

@@ -5,6 +5,7 @@ import convertors.*
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
+import scala.annotation.targetName
 import scala.collection.immutable.List
 
 /** Base trait, defining the term structure of all languages.
@@ -33,10 +34,13 @@ trait AbstractLanguage {
 
     def set(key: Variable, value: T): Env[T] = new Env(env + (key -> value))
 
+    @targetName("setVariable")
     def +(key: Variable, value: T): Env[T] = set(key, value)
 
+    @targetName("setVariableTuple")
     def +(kv: (Variable, T)): Env[T] = set(kv._1, kv._2)
 
+    @targetName("setVariables")
     def ++(other: Env[T]): Env[T] = new Env(env ++ other.env)
 
     def getOrElse(key: Variable, default: => T): T = env.getOrElse(key, default)
