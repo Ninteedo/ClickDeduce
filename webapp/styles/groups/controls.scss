@@ -35,3 +35,53 @@ div.control-group {
   flex-shrink: 0;
   max-height: 10rem;
 }
+
+#mode-selector-div {
+  form {
+    display: flex;
+    flex-direction: column;
+
+    label {
+      display: flex;
+      align-items: center;
+    }
+
+    input[type="radio"] {
+      margin: 0 0.5rem 0 0;
+      appearance: none;
+
+      font: inherit;
+      color: $foreground;
+      background-color: $current-line;
+      border: $input-outline solid 1px;
+      border-radius: 50%;
+
+      width: 1em;
+      height: 1em;
+
+      display: grid;
+      place-content: center;
+
+      &::before {
+        content: "";
+        width: 0.5em;
+        height: 0.5em;
+        margin: 0.2em;
+        border-radius: 50%;
+        background-color: $foreground;
+        //box-shadow: 0 0 0.2em $foreground;
+
+        transition: transform 0.1s;
+        transform: scale(0);
+      }
+
+      &:checked::before {
+        transform: scale(1);
+      }
+
+      &:hover {
+        border: $foreground solid 1px;
+      }
+    }
+  }
+}

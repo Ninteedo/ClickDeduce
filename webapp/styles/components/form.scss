@@ -4,7 +4,7 @@ form {
   display: inline;
 }
 
-input {
+input[type='text'] {
   background-color: $current-line;
   color: $foreground;
   border: $input-outline solid 1px;
