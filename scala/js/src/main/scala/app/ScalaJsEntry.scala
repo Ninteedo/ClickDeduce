@@ -36,7 +36,7 @@ object ScalaJsEntry {
   def startNodeBlank(langName: String): js.Tuple2[String, String] = {
     val lang = getLanguage(langName)
     val convertor = HTMLConvertor(lang, DisplayMode.Edit)
-    val tree = convertor.lang.ExprChoiceNode()
+    val tree = lang.ExprChoiceNode()
     (tree.toString, convertor.convert(tree))
   }
 
@@ -82,7 +82,7 @@ object ScalaJsEntry {
     val originalLang = getLanguage(langName)
     val displayMode = DisplayMode.fromString(modeName)
     val convertor = HTMLConvertor(originalLang, displayMode)
-    val action = convertor.lang.createAction(actionName, nodeString, treePath, extraArgs.toList, modeName)
+    val action = originalLang.createAction(actionName, nodeString, treePath, extraArgs.toList, modeName)
     val updatedTree = action.newTree
     (updatedTree.toString, convertor.convert(updatedTree))
   }
@@ -101,8 +101,8 @@ object ScalaJsEntry {
     val originalLang = getLanguage(langName)
     val displayMode = DisplayMode.fromString(modeName)
     val convertor = LaTeXConvertor(originalLang, displayMode)
-    convertor.lang.Node.read(nodeString) match {
-      case Some(tree: convertor.lang.OuterNode) => convertor.convert(tree)
+    originalLang.Node.read(nodeString) match {
+      case Some(tree: originalLang.OuterNode) => convertor.convert(tree)
       case _ => throw new ClickDeduceException(s"Failed to parse node string: $nodeString")
     }
   }

@@ -374,8 +374,8 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
   }
 
   property("Lambda node type selects are not both editable") {
-    val convertor = HTMLConvertor(LLam, DisplayMode.Edit)
-    val l = convertor.lang
+    val l = LLam
+    val convertor = HTMLConvertor(l, DisplayMode.Edit)
     val tree = l.VariableNode.createFromExprName("Lambda").get
     val res: String = convertor.convert(tree)
     val regex = """<select class="type-dropdown[\s\w"-=]+>""".r

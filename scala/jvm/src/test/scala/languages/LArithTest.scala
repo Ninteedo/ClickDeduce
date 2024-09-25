@@ -263,8 +263,8 @@ class LArithTest extends TestTemplate[Expr, Value, Type] {
   }
 
   property("Num literal input is disabled in parent expressions") {
-    val convertor = HTMLConvertor(LArith, DisplayMode.Edit)
-    val l = convertor.lang
+    val l = LArith
+    val convertor = HTMLConvertor(l, DisplayMode.Edit)
     val tree = l.VariableNode(
       "Plus",
       List(l.SubExprNode(l.VariableNode("Num", List(l.LiteralNode("")))), l.SubExprNode(l.ExprChoiceNode()))

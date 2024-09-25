@@ -2,7 +2,7 @@ package convertors
 
 import languages.{AbstractNodeLanguage, ClickDeduceLanguage}
 
-class LaTeXConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) extends IConvertor(lang, mode) {
+class LaTeXConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConvertor(lang, mode) {
   private type LaTeX = String
   private type ExprNode = lang.ExprNode
   private type TypeNode = lang.TypeNodeParent
@@ -15,7 +15,7 @@ class LaTeXConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) 
 
   private def asProofTree(s: String): String = s"\\begin{prooftree}\n$s\n\\end{prooftree}"
 
-  def outerNodeToLaTeX(node: lang.OuterNode): LaTeX = node match {
+  private def outerNodeToLaTeX(node: lang.OuterNode): LaTeX = node match {
     case node: ExprNode => exprNodeToLaTeX(node)
     case node: TypeNode => typeNodeToLaTeX(node)
   }
@@ -48,10 +48,10 @@ class LaTeXConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) 
     s"""${children.mkString("\n")}\n\\$ruleKind{$dollar$below$dollar}""".stripMargin
   }
 
-  def fullExprBottomDiv(node: ExprNode): LaTeX =
+  private def fullExprBottomDiv(node: ExprNode): LaTeX =
     s"${envDiv(node.getEnv(mode))} ${exprDiv(node)} ${resultDiv(node)}".strip()
 
-  def envDiv(env: lang.ValueEnv | lang.TypeEnv): LaTeX = {
+  private def envDiv(env: lang.ValueEnv | lang.TypeEnv): LaTeX = {
     val variables: Option[LaTeX] =
       if (env.isEmpty) None
       else
@@ -71,9 +71,9 @@ class LaTeXConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) 
     result
   }
 
-  def exprDiv(node: ExprNode): LaTeX = node.getExpr.toText.asLaTeX
+  private def exprDiv(node: ExprNode): LaTeX = node.getExpr.toText.asLaTeX
 
-  def resultDiv(node: ExprNode): LaTeX = mode match {
+  private def resultDiv(node: ExprNode): LaTeX = mode match {
     case DisplayMode.Edit =>
       val typeCheckResult = node.getType
       if (typeCheckResult.isError) s"$typeCheckColon ${typeCheckResultDiv(node)}"
@@ -86,11 +86,11 @@ class LaTeXConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) 
     case DisplayMode.Evaluation => s"$evalArrowSpan ${evalResultDiv(node)}"
   }
 
-  def fullTypeBottomDiv(node: TypeNode): LaTeX = s"${envDiv(node.getEnv(mode))} ${typeDiv(node)} ${typeResultDiv(node)}"
+  private def fullTypeBottomDiv(node: TypeNode): LaTeX = s"${envDiv(node.getEnv(mode))} ${typeDiv(node)} ${typeResultDiv(node)}"
 
-  def typeDiv(node: TypeNode): LaTeX = node.getType.toText.asLaTeX
+  private def typeDiv(node: TypeNode): LaTeX = node.getType.toText.asLaTeX
 
-  def typeResultDiv(node: TypeNode): LaTeX = s"$typeCheckColon ${node.getTypeCheckResult(mode).toText.asLaTeX}"
+  private def typeResultDiv(node: TypeNode): LaTeX = s"$typeCheckColon ${node.getTypeCheckResult(mode).toText.asLaTeX}"
 
   private val typeCheckTurnstileSpan: LaTeX = "\\vdash"
 

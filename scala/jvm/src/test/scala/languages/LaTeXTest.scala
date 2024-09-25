@@ -11,8 +11,8 @@ class LaTeXTest extends AnyPropSpec with TableDrivenPropertyChecks {
   private val docEnd: String = "\n\\end{document}"
 
   private def latexOutputTest(displayMode: DisplayMode): Unit = {
-    val convertor: LaTeXConvertor = new LaTeXConvertor(LPoly(), displayMode)
-    val l: LPoly = convertor.lang.asInstanceOf[LPoly]
+    val l = LPoly
+    val convertor: LaTeXConvertor = new LaTeXConvertor(l, displayMode)
     val nodes: TableFor2[String, l.OuterNode] = Table(
       ("name", "node"),
       ("Empty node", l.ExprChoiceNode()),
