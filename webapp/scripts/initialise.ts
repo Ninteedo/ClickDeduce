@@ -1,11 +1,11 @@
 import '../styles/main.sass';
 import {
     clearTreeNode,
-    copyTreeNode,
+    contextMenuCopy,
+    contextMenuPaste,
     doStartNodeBlank,
     exampleLiteralChanged,
     handleLiteralChanged,
-    pasteTreeNode,
     resetCopyCache,
     startNodeBlank
 } from "./actions";
@@ -68,8 +68,8 @@ export function initialise(skipImages: boolean = false): void {
 function setupButtons() {
     getUndoButton().addEventListener('click', undo);
     getRedoButton().addEventListener('click', redo);
-    getPasteButton().addEventListener('click', pasteTreeNode);
-    getCopyButton().addEventListener('click', copyTreeNode);
+    getPasteButton().addEventListener('click', contextMenuPaste);
+    getCopyButton().addEventListener('click', contextMenuCopy);
     getDeleteButton().addEventListener('click', (e) => clearTreeNode(e));
     getZoomToFitButton().addEventListener('click', zoomToFit);
     getContextMenuZoomToFitButton().addEventListener('click', zoomToFit);

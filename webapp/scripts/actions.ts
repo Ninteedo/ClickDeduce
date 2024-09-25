@@ -167,6 +167,10 @@ export function runAction(actionName: string, treePath: string, extraArgs: any[]
     enableInputs();
 }
 
+export function deleteTreeNode(treePath: string): void {
+    runAction("DeleteAction", treePath, []);
+}
+
 /**
  * Clears the selected subtree.
  *
@@ -177,16 +181,19 @@ export function runAction(actionName: string, treePath: string, extraArgs: any[]
 export function clearTreeNode(event: Event): void {
     event.preventDefault();
     if (contextMenuSelectedElement) {
-        runAction("DeleteAction", getSelectedTreePath(), []);
+        deleteTreeNode(getContextMenuSelectedTreePath());
     }
 }
 
 /**
  * Copies the node string of the selected subtree to the copy cache.
  */
-export function copyTreeNode(): void {
-    // copyCache = contextMenuSelectedElement.getAttribute("data-node-string");
-    copyCache = getNodeStringFromPath(getSelectedTreePath());
+export function copyTreeNode(treePath: string): void {
+    copyCache = getNodeStringFromPath(treePath);
+}
+
+export function contextMenuCopy(): void {
+    copyTreeNode(getContextMenuSelectedTreePath());
 }
 
 /**
@@ -194,16 +201,20 @@ export function copyTreeNode(): void {
  *
  * Executes the PasteAction.
  */
-export function pasteTreeNode(): void {
+export function pasteTreeNode(treePath: string): void {
     if (copyCache) {
-        runAction("PasteAction", getSelectedTreePath(), [copyCache]);
+        runAction("PasteAction", treePath, [copyCache]);
     }
+}
+
+export function contextMenuPaste(): void {
+    pasteTreeNode(getContextMenuSelectedTreePath());
 }
 
 export function hasCopyCache(): boolean {
     return copyCache !== null;
 }
 
-function getSelectedTreePath(): string {
+function getContextMenuSelectedTreePath(): string {
     return getTreePathOfElement(contextMenuSelectedElement);
 }

@@ -1,4 +1,4 @@
-import {handleLiteralChanged, hasCopyCache} from "./actions";
+import {copyTreeNode, deleteTreeNode, handleLiteralChanged, hasCopyCache, pasteTreeNode} from "./actions";
 import {getActiveInputs, lastNodeString, redo, undo} from "./treeManipulation";
 import {getSelectedLanguage, getSelectedMode, hasClassOrParentHasClass} from "./utils";
 import {panzoomInstance} from "./initialise";
@@ -29,11 +29,23 @@ export function resetInterfaceGlobals(): void {
  * Handles any keydown event on the document.
  */
 function globalHandleKeyDown(e: KeyboardEvent): void {
+    const highlightElement = getHighlightElement();
+    const highlightPath = highlightElement && highlightElement.hasAttribute('data-tree-path') ? getTreePathOfElement(highlightElement) : null;
+
     if (e.ctrlKey && e.key.toUpperCase() === 'Z') {
         if (e.shiftKey) {
             redo();
         } else {
             undo();
+        }
+    } else if (highlightPath !== null) {
+        if (e.ctrlKey && e.key.toUpperCase() === 'C') {
+            copyTreeNode(highlightPath);
+        } else if (e.ctrlKey && e.key.toUpperCase() === 'V') {
+            pasteTreeNode(highlightPath);
+        } else if (e.ctrlKey && e.key.toUpperCase() === 'X') {
+            copyTreeNode(highlightPath);
+            deleteTreeNode(highlightPath);
         }
     }
 }
@@ -106,13 +118,21 @@ export function clearHighlight(): void {
 }
 
 /**
- * Opens the context menu on the subtree that was right-clicked.
- * @param e the mouse event
+ * Returns the currently highlighted tree element.
+ *
+ * If the element is a phantom element, or no element is highlighted, returns null.
  */
-function openContextMenu(e: MouseEvent): void {
+export function getHighlightElement(): HTMLElement | null {
+    const res = document.querySelector('.highlight');
+    if (res instanceof HTMLElement && !hasClassOrParentHasClass(res, 'phantom')) {
+        return res;
+    }
+    return null;
+}
+
+function getHighlightElementFromEvent(e: Event): HTMLElement | null {
     let target: EventTarget | null = e.target;
     if (contextMenuSelectedElement !== null) {
-        // closes the context menu if it is already open
         target = null;
     }
 
@@ -120,10 +140,20 @@ function openContextMenu(e: MouseEvent): void {
         target = target.parentElement;
     }
 
-    if (target && target instanceof HTMLElement && !hasClassOrParentHasClass(target, 'phantom')) {
+    return target instanceof HTMLElement ? target : null;
+}
+
+/**
+ * Opens the context menu on the subtree that was right-clicked.
+ * @param e the mouse event
+ */
+function openContextMenu(e: MouseEvent): void {
+    const highlightElement = getHighlightElementFromEvent(e);
+
+    if (highlightElement && !hasClassOrParentHasClass(highlightElement, 'phantom')) {
         e.preventDefault();
 
-        contextMenuSelectedElement = target;
+        contextMenuSelectedElement = highlightElement;
 
         const menu = getContextMenu();
         menu.style.display = 'block';
