@@ -10,7 +10,7 @@ class HTMLConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) e
   private type ExprNode = lang.ExprNode
   private type TypeNode = lang.TypeNodeParent
 
-  def convert[T <: AbstractNodeLanguage#OuterNode](node: T): Output = {
+  def convert(node: AbstractNodeLanguage#OuterNode): Output = {
     val fixedNode = node.asInstanceOf[OuterNode]
     if (mode == DisplayMode.Evaluation) {
       fixedNode match {

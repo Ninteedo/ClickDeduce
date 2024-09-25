@@ -7,7 +7,7 @@ class LaTeXConvertor(override val lang: ClickDeduceLanguage, mode: DisplayMode) 
   private type ExprNode = lang.ExprNode
   private type TypeNode = lang.TypeNodeParent
 
-  override def convert[T <: AbstractNodeLanguage#OuterNode](node: T): Output = {
+  override def convert(node: AbstractNodeLanguage#OuterNode): Output = {
     asProofTree(removeBlankLines(outerNodeToLaTeX(node.asInstanceOf[lang.OuterNode])))
   }
 

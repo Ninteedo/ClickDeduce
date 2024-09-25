@@ -7,7 +7,5 @@ trait IConvertor(val lang: ClickDeduceLanguage, mode: DisplayMode) {
 
   protected type Mode = DisplayMode
 
-//  type OuterNode = lang.OuterNode
-
-  def convert[T <: AbstractNodeLanguage#OuterNode](node: T): Output
+  def convert(node: AbstractNodeLanguage#OuterNode): Output
 }
