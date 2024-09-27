@@ -182,7 +182,7 @@ function addHoverListeners(): void {
 function addClickListeners(): void {
     document.querySelectorAll('.subtree').forEach(subtree => {
         if (subtree instanceof HTMLElement) {
-            const input = subtree.querySelector('.node input:not([disabled])');
+            const input = subtree.querySelector(':scope > .node input:not([disabled])');
             if (input instanceof HTMLInputElement) {
                 subtree.addEventListener('click', (evt) => {
                     if (!subtree.classList.contains('highlight')) return;
