@@ -36,7 +36,7 @@ div.control-group {
   max-height: 10rem;
 }
 
-#mode-selector-div {
+.control-group {
   form {
     display: flex;
     flex-direction: column;
@@ -46,7 +46,7 @@ div.control-group {
       align-items: center;
     }
 
-    input[type="radio"] {
+    .custom-input {
       margin: 0 0.5rem 0 0;
       appearance: none;
 
@@ -54,7 +54,6 @@ div.control-group {
       color: $foreground;
       background-color: $current-line;
       border: $input-outline solid 1px;
-      border-radius: 50%;
 
       width: 1em;
       height: 1em;
@@ -67,9 +66,20 @@ div.control-group {
         width: 0.5em;
         height: 0.5em;
         margin: 0.2em;
-        border-radius: 50%;
         background-color: $foreground;
-        //box-shadow: 0 0 0.2em $foreground;
+      }
+
+      &:hover {
+        border: $foreground solid 1px;
+      }
+    }
+
+    input[type="radio"] {
+      @extend .custom-input;
+      border-radius: 50%;
+
+      &::before {
+        border-radius: 50%;
 
         transition: transform 0.1s;
         transform: scale(0);
@@ -78,9 +88,21 @@ div.control-group {
       &:checked::before {
         transform: scale(1);
       }
+    }
 
-      &:hover {
-        border: $foreground solid 1px;
+    input[type="checkbox"] {
+      @extend .custom-input;
+      border-radius: 10%;
+
+      &::before {
+        border-radius: 10%;
+
+        transition: opacity 0.1s;
+        opacity: 0;
+      }
+
+      &:checked::before {
+        opacity: 1;
       }
     }
   }
