@@ -152,25 +152,21 @@ export function updateUndoRedoButtons(): void {
 function addHoverListeners(): void {
     document.querySelectorAll('.subtree').forEach(div => {
         div.addEventListener('mouseover', (event) => {
-            // Stop the event from bubbling up to parent subtree elements
-            event.stopPropagation();
+            event.stopPropagation();  // Stop the event from bubbling up to parent subtree elements
             const target: EventTarget | null = event.currentTarget;
 
             // Remove the highlight from any other subtree elements
             if (contextMenuSelectedElement === null) {
                 document.querySelectorAll('.subtree').forEach(el => el.classList.remove('highlight'));
                 if (target instanceof HTMLElement) {
-                    // Add the highlight to the subtree currently hovered over
-                    target.classList.add('highlight');
+                    target.classList.add('highlight');  // Add the highlight to the subtree currently hovered over
                 }
             }
         });
         div.addEventListener('mouseout', (event) => {
-            // Stop the event from bubbling up to parent subtree elements
-            event.stopPropagation();
-            // Remove the highlight from the currently hovered over subtree
+            event.stopPropagation();  // Stop the event from bubbling up to parent subtree elements
             if (contextMenuSelectedElement === null) {
-                clearHighlight();
+                clearHighlight();  // Remove the highlight from currently hovered over subtree
             }
         });
     });

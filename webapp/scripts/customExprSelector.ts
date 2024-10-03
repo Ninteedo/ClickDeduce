@@ -78,6 +78,8 @@ export function setupTermSelector(termSelectorContainer: HTMLDivElement): void {
     const button = getSelectorButton(termSelectorContainer);
     const dropdown = getSelectorDropdown(termSelectorContainer);
 
+    let isInteractingWithDropdown = false;
+
     input.addEventListener('input', () => updateExprSelectorDropdown(termSelectorContainer));
     input.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') {
@@ -89,7 +91,13 @@ export function setupTermSelector(termSelectorContainer: HTMLDivElement): void {
         }
     });
     input.addEventListener('focus', () => showExprSelectorDropdown(termSelectorContainer));
-    input.addEventListener('blur', () => hideExprSelectorDropdown(termSelectorContainer));
+    input.addEventListener('blur', () => {
+        if (!isInteractingWithDropdown) {
+            hideExprSelectorDropdown(termSelectorContainer)
+        } else {
+            setTimeout(() => input.focus(), 0);
+        }
+    });
 
     button.addEventListener('click', () => input.focus());
 
@@ -105,6 +113,15 @@ export function setupTermSelector(termSelectorContainer: HTMLDivElement): void {
         });
         option.classList.add('expr-selector-option');
     });
+
+    dropdown.addEventListener('wheel', evt => {
+        if (!((dropdown.scrollTop === 0 && evt.deltaY < 0) || (dropdown.scrollTop === dropdown.scrollHeight - dropdown.clientHeight && evt.deltaY > 0))) {
+            evt.stopPropagation();
+        }
+    });
+
+    dropdown.addEventListener('mousedown', () => isInteractingWithDropdown = true);
+    dropdown.addEventListener('mouseup', () => setTimeout(() => isInteractingWithDropdown = false, 0));
 }
 
 export function setupExampleSelector(termSelectorContainer: HTMLDivElement): void {
@@ -224,6 +241,7 @@ function toggleExprSelectorDropdownDisplay(selectorDiv: HTMLDivElement) {
 function showExprSelectorDropdown(selectorDiv: HTMLDivElement) {
     if (isExprSelectorDropdownVisible(selectorDiv)) return;
     getSelectorDropdown(selectorDiv).classList.add(DROPDOWN_VISIBLE_CLASS);
+    getSelectorDropdown(selectorDiv).scrollTop = 0;
     getSelectorButton(selectorDiv).innerHTML = UP_ARROW;
     getSelectorButton(selectorDiv).disabled = true;
     updateExprSelectorDropdown(selectorDiv, true);

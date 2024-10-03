@@ -37,6 +37,10 @@ div.expr-selector-container {
     border: $input-outline solid 1px;
     z-index: 1;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.16), 0 2px 4px rgba(0, 0, 0, 0.23);
+    pointer-events: bounding-box;
+
+    overflow-y: auto;
+    max-height: 20rem;
 
     &.show {
       display: block;
