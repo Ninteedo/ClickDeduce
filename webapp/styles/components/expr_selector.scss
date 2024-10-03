@@ -70,6 +70,10 @@ div.expr-selector-container {
         &.hidden {
           display: none;
         }
+
+        &:hover {
+          background-color: $hover-background;
+        }
       }
     }
   }
