@@ -5,10 +5,16 @@
   <title>ClickDeduce</title>
   <link rel="icon" href="images/icon.svg" type="image/svg+xml">
   <meta charset="UTF-8">
-  <script src="/scripts/initialise.ts" type="module"></script>
+  <script src="scripts/initialise.ts" type="module"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      initialise();
+    });
+  </script>
 </head>
 
-<body onload="initialise()">
+<body>
 <div id="controls">
   <div class="control-group">
     <div>
