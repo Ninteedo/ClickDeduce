@@ -76,9 +76,10 @@ class HTMLConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConve
       case n: TypeNode => n.getEnv(envMode)
     }
 
+    val parentNode = node.getParent
     val parentEnv = {
-      val res = node.getParent.map(getNodeEnv)
-      if (typeMode) res.map(lang.typeVariableEnv) else res
+      val res = parentNode.map(getNodeEnv)
+      if (typeMode && parentNode.exists(_.isInstanceOf[lang.ExprNode])) res.map(lang.typeVariableEnv) else res
     }
     val filteredEnv = getNodeEnv(node)
       .map((k, v) => {
@@ -92,7 +93,8 @@ class HTMLConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConve
 
     if (parentEnv.isDefined && parentEnv.get.nonEmpty) {
       val parsedParentEnv = parseEnv(parentEnv.get.env, valueTooltips = false)
-      val miniParent = span(cls := ClassDict.TOOLTIP, s"σ$envIndex", div(cls := ClassDict.TOOLTIP_TEXT, formatEnv(parsedParentEnv)))
+      val envLabel = span("σ", sub(envIndex), if (typeMode) sup(raw("τ")) else raw(""))
+      val miniParent = span(cls := ClassDict.TOOLTIP, envLabel, div(cls := ClassDict.TOOLTIP_TEXT, formatEnv(parsedParentEnv)))
 
       if (parsedEnv.nonEmpty) span(miniParent, " + ", formatEnv(parsedEnv), delimiter) else span(miniParent, delimiter)
     } else if (parsedEnv.nonEmpty) span(formatEnv(parsedEnv), delimiter)
