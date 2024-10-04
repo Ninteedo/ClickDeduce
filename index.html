@@ -3,12 +3,19 @@
 <head>
   <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
   <title>ClickDeduce</title>
+  <link rel="icon" href="/bundle-icon.svg" type="image/svg+xml">
   <meta charset="UTF-8">
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      initialise();
+    });
+  </script>
   <script type="module" crossorigin src="/initialise.js"></script>
   <link rel="stylesheet" crossorigin href="/bundle.css">
 </head>
 
-<body onload="initialise()">
+<body>
 <div id="controls">
   <div class="control-group">
     <div>
