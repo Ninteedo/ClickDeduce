@@ -111,7 +111,60 @@ class LRec extends LLam {
 
   // tasks
 
-  clearTasks()
+  setTasks(ImplementRecursiveFunctionTask, ImplementFactorialFunctionTask)
+
+  private object ImplementRecursiveFunctionTask extends Task {
+    override val name: String = "Implement a Recursive Function"
+    override val description: String = "Implement a recursive function that calls itself"
+    override val difficulty: Int = 3
+
+    override def checkFulfilled(expr: Expr): Boolean = {
+      checkCondition(
+        expr,
+        {
+          case Rec(f, v, inType, outType, e) =>
+            checkCondition(
+              e,
+              {
+                case Apply(l, r) =>
+                  checkCondition(
+                    l,
+                    {
+                      case Var(f) => true
+                      case _      => false
+                    }
+                  )
+                case _ => false
+              }
+            )
+          case _ => false
+        }
+      )
+    }
+  }
+
+  private object ImplementFactorialFunctionTask extends Task {
+    override val name: String = "Implement the Factorial Function"
+    override val description: String =
+      "Implement the recursive factorial function. It should return 1 for n=0. The function name does not matter. The" +
+        " expression must successfully type-check."
+    override val difficulty: Int = 5
+
+    override def checkFulfilled(expr: Expr): Boolean = {
+      val factorialTable = Map(0 -> 1, 1 -> 1, 2 -> 2, 3 -> 6, 4 -> 24, 5 -> 120, 6 -> 720)
+
+      !expr.typeCheck().isError && checkCondition(
+        expr,
+        { (expr, env) =>
+          expr match {
+            case f: Rec => factorialTable.forall((n, f_n) => Apply(f, Num(n)).eval(env) == NumV(f_n))
+            case _      => false
+          }
+        },
+        ValueEnv.empty
+      )
+    }
+  }
 }
 
 object LRec extends LRec {}
