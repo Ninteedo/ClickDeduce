@@ -53,11 +53,11 @@ class HTMLConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConve
   }
 
   private def fullExprBottomDiv(node: ExprNode, envIndex: Int): HTML =
-    div(cls := ClassDict.NODE, envDiv(node, envIndex), exprDiv(node), resultDiv(node))
+    div(cls := ClassDict.NODE, envDiv(node, envIndex, typeMode = false), exprDiv(node), resultDiv(node))
 
   private var envCounter: Int = 0
 
-  private def envDiv(node: OuterNode, envIndex: Int): HTML = {
+  private def envDiv(node: OuterNode, envIndex: Int, typeMode: Boolean): HTML = {
     def parseEnv(
       env: Iterable[(lang.Variable, lang.Term)],
       valueTooltips: Boolean
@@ -65,18 +65,22 @@ class HTMLConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConve
       env.map((k, v) =>
         v match {
           case value: lang.Value => k -> (if valueTooltips then value.toHtml else value.valueText)
-          case typ: lang.Type    => k -> typ.toHtml
+          case typ: lang.Type    => k -> (if valueTooltips then typ.toHtml else typ.valueText)
         }
       )
 
+    val envMode = if (typeMode) DisplayMode.TypeCheck else mode
+
     def getNodeEnv(node: OuterNode): lang.ValueEnv | lang.TypeEnv = node match {
-      case n: ExprNode => n.getEnv(mode)
-      case n: TypeNode => n.getEnv(mode)
+      case n: ExprNode => n.getEnv(envMode)
+      case n: TypeNode => n.getEnv(envMode)
     }
 
-    val env = getNodeEnv(node)
-    val parentEnv = node.getParent.map(getNodeEnv)
-    val filteredEnv = env
+    val parentEnv = {
+      val res = node.getParent.map(getNodeEnv)
+      if (typeMode) res.map(lang.typeVariableEnv) else res
+    }
+    val filteredEnv = getNodeEnv(node)
       .map((k, v) => {
         val parentValue = parentEnv.flatMap(_.get(k))
         if parentValue.contains(v) then None else Some(k -> v)
@@ -84,14 +88,13 @@ class HTMLConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConve
       .filter(_.isDefined)
       .map(_.get)
     val parsedEnv = parseEnv(filteredEnv, valueTooltips = true)
-    val delimiter = if (mode == DisplayMode.TypeCheck) raw(" &#x22a2;&nbsp;") else raw(",&nbsp;")
+    val delimiter = if (envMode == DisplayMode.TypeCheck) raw(" &#x22a2;&nbsp;") else raw(",&nbsp;")
 
     if (parentEnv.isDefined && parentEnv.get.nonEmpty) {
       val parsedParentEnv = parseEnv(parentEnv.get.env, valueTooltips = false)
       val miniParent = span(cls := ClassDict.TOOLTIP, s"σ$envIndex", div(cls := ClassDict.TOOLTIP_TEXT, formatEnv(parsedParentEnv)))
 
-      if (parsedEnv.nonEmpty) span(miniParent, " + ", formatEnv(parsedEnv), delimiter)
-      else span(miniParent, delimiter)
+      if (parsedEnv.nonEmpty) span(miniParent, " + ", formatEnv(parsedEnv), delimiter) else span(miniParent, delimiter)
     } else if (parsedEnv.nonEmpty) span(formatEnv(parsedEnv), delimiter)
     else span()
   }
@@ -145,7 +148,7 @@ class HTMLConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConve
   }
 
   private def fullTypeBottomDiv(node: TypeNode, envIndex: Int): HTML =
-    div(cls := ClassDict.NODE, envDiv(node, envIndex), typeDiv(node), typeResultDiv(node))
+    div(cls := ClassDict.NODE, envDiv(node, envIndex, typeMode = true), typeDiv(node), typeResultDiv(node))
 
   private def typeDiv(node: TypeNode): HTML = node.toText(mode).asHtml(cls := ClassDict.TYPE)
 
