@@ -33,8 +33,7 @@ export function startNodeBlank(): void {
 export function doStartNodeBlank(event?: Event): void {
     // prevent the form from submitting the old-fashioned way
     if (event) event.preventDefault();
-
-    // send a POST request to the server
+    
     const [newNodeString, newHtml] = postStartNodeBlankNew(getSelectedLanguage());
     updateTree(newHtml, newNodeString, getSelectedMode(), getSelectedLanguage(), true);
 }
