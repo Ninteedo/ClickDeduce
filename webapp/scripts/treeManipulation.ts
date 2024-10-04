@@ -186,6 +186,11 @@ function addClickListeners(): void {
                     input.focus();
                     input.select();
                 });
+                subtree.querySelectorAll('input').forEach(input => {
+                    input.addEventListener('click', (evt) => {
+                        evt.stopPropagation();
+                    });
+                })
             }
         }
     });
