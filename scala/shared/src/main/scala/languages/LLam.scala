@@ -35,7 +35,7 @@ class LLam extends LLet {
   }
 
   object Apply extends ExprCompanion {
-    override def createExpr(args: List[Any]): Option[Expr] = args match {
+    override def createExpr(args: BuilderArgs): Option[Expr] = args match {
       case List(e1: Expr, e2: Expr) => Some(Apply(e1, e2))
       case Nil                      => Some(Apply(defaultExpr, defaultExpr))
       case _                        => None
@@ -75,7 +75,7 @@ class LLam extends LLet {
   object Lambda extends ExprCompanion {
     def apply(v: Variable, typ: Type, e: Expr): Lambda = new Lambda(Literal.fromString(v), typ, e)
 
-    override def createExpr(args: List[Any]): Option[Expr] = args match {
+    override def createExpr(args: BuilderArgs): Option[Expr] = args match {
       case List(v: Literal, typ: Type, e: Expr) => Some(Lambda(v, typ, e))
       case Nil                                  => Some(Lambda(defaultLiteral, defaultType, defaultExpr))
       case _                                    => None
@@ -103,7 +103,7 @@ class LLam extends LLet {
   }
 
   object Func extends TypeCompanion {
-    override def createType(args: List[Any]): Option[Type] = args match {
+    override def createType(args: List[Literal | Term]): Option[Type] = args match {
       case List(in: Type, out: Type) => Some(Func(in, out))
       case Nil                       => Some(Func(defaultType, defaultType))
       case _                         => None

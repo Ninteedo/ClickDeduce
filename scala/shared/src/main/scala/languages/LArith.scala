@@ -39,7 +39,7 @@ class LArith extends ClickDeduceLanguage {
 
     def apply(x: Int): Num = new Num(LiteralInt(BigInt(x)))
 
-    override def createExpr(args: List[Any]): Option[Expr] = args match {
+    override def createExpr(args: BuilderArgs): Option[Expr] = args match {
       case List(l: Literal) => Some(Num(l))
       case defaultArgs      => Some(Num(defaultLiteral))
       case _                => None
@@ -75,7 +75,7 @@ class LArith extends ClickDeduceLanguage {
   }
 
   object Plus extends ExprCompanion {
-    override def createExpr(args: List[Any]): Option[Expr] = args match {
+    override def createExpr(args: BuilderArgs): Option[Expr] = args match {
       case List(e1: Expr, e2: Expr) => Some(Plus(e1, e2))
       case defaultArgs              => Some(Plus(defaultExpr, defaultExpr))
       case _                        => None
@@ -111,7 +111,7 @@ class LArith extends ClickDeduceLanguage {
   }
 
   object Times extends ExprCompanion {
-    override def createExpr(args: List[Any]): Option[Expr] = args match {
+    override def createExpr(args: BuilderArgs): Option[Expr] = args match {
       case List(e1: Expr, e2: Expr) => Some(Times(e1, e2))
       case defaultArgs              => Some(Times(defaultExpr, defaultExpr))
       case _                        => None
@@ -192,7 +192,7 @@ class LArith extends ClickDeduceLanguage {
   }
 
   object IntType extends TypeCompanion {
-    override def createType(args: List[Any]): Option[Type] = args match {
+    override def createType(args: List[Literal | Term]): Option[Type] = args match {
       case defaultArgs => Some(IntType())
       case _           => None
     }

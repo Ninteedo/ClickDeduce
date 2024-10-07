@@ -64,7 +64,7 @@ class LRec extends LLam {
     def apply(f: String, v: String, in_typ: Type, out_typ: Type, e: Expr): Rec =
       Rec(Literal.fromString(f), Literal.fromString(v), in_typ, out_typ, e)
 
-    override def createExpr(args: List[Any]): Option[Expr] = args match {
+    override def createExpr(args: BuilderArgs): Option[Expr] = args match {
       case List(f: Literal, v: Literal, inType: Type, outType: Type, e: Expr) => Some(Rec(f, v, inType, outType, e))
       case Nil => Some(Rec(defaultLiteral, defaultLiteral, defaultType, defaultType, defaultExpr))
       case _   => None

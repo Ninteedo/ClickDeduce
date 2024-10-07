@@ -690,7 +690,7 @@ trait AbstractLanguage {
       * @return
       *   Some expression, or None if the arguments are invalid.
       */
-    protected def createExpr(args: List[Any]): Option[Expr]
+    protected def createExpr(args: BuilderArgs): Option[Expr]
 
     final def register(): Unit = addExprBuilder(name, createExpr, hidden = isHidden, aliases = aliases)
   }
@@ -715,7 +715,7 @@ trait AbstractLanguage {
       * @return
       *   Some type, or None if the arguments are invalid.
       */
-    protected def createType(args: List[Any]): Option[Type]
+    protected def createType(args: List[Literal | Term]): Option[Type]
 
     final def register(): Unit = addTypeBuilder(name, createType, hidden = isHidden, aliases = aliases)
   }
@@ -741,9 +741,11 @@ trait AbstractLanguage {
     final def register(): Unit = addValueBuilder(name, createValue)
   }
 
+  protected type BuilderArgs = List[Literal | Term]
+
   /** A function that takes a list of arguments and returns a constructed expression if valid, or None if invalid.
     */
-  private type ExprBuilder = List[Any] => Option[Expr]
+  private type ExprBuilder = BuilderArgs => Option[Expr]
 
   private var exprBuilders: Map[String, ExprBuilder] = Map()
 
@@ -773,7 +775,7 @@ trait AbstractLanguage {
     */
   def exprBuilderNames: List[BuilderName] = exprBuilderNamesList
 
-  private type TypeBuilder = List[Any] => Option[Type]
+  private type TypeBuilder = List[Literal | Term] => Option[Type]
 
   private var typeBuilders: Map[String, TypeBuilder] = Map()
 
@@ -803,7 +805,7 @@ trait AbstractLanguage {
     */
   def typeBuilderNames: List[BuilderName] = typeBuilderNamesList
 
-  private type ValueBuilder = List[Any] => Option[Value]
+  private type ValueBuilder = BuilderArgs => Option[Value]
 
   private var valueBuilders: Map[String, ValueBuilder] = Map()
 
@@ -827,7 +829,7 @@ trait AbstractLanguage {
     * @return
     *   The expression, or throw an [[UnknownExprBuilder]] exception if the builder is not found.
     */
-  def buildExpr(name: String, args: List[Any]): Option[Expr] = getExprBuilder(name) match {
+  def buildExpr(name: String, args: BuilderArgs): Option[Expr] = getExprBuilder(name) match {
     case Some(builder) => builder.apply(args)
     case None          => throw UnknownExprBuilder(name)
   }
@@ -848,14 +850,14 @@ trait AbstractLanguage {
     * @return
     *   The type, or throw an [[UnknownTypeBuilder]] exception if the builder is not found.
     */
-  def buildType(name: String, args: List[Any]): Option[Type] = getTypeBuilder(name) match {
+  def buildType(name: String, args: BuilderArgs): Option[Type] = getTypeBuilder(name) match {
     case Some(builder) => builder.apply(args)
     case None          => throw UnknownTypeBuilder(name)
   }
 
   def getValueBuilder(name: String): Option[ValueBuilder] = valueBuilders.get(name)
 
-  def buildValue(name: String, args: List[Any]): Option[Value] = getValueBuilder(name) match {
+  def buildValue(name: String, args: BuilderArgs): Option[Value] = getValueBuilder(name) match {
     case Some(builder) => builder.apply(args)
     case None          => throw UnknownValueBuilder(name)
   }
@@ -874,35 +876,6 @@ trait AbstractLanguage {
 
   case class InvalidValueBuilderArgs(name: String, args: List[Any])
       extends ClickDeduceException(s"Invalid arguments for value builder: $name, $args")
-
-  addExprBuilder(
-    "ExprPlaceholder",
-    {
-      case List(s: String) => Some(ExprPlaceholder(TextElement(s)))
-      case Nil             => Some(ExprPlaceholder(TextElement("")))
-      case _               => None
-    },
-    hidden = true
-  )
-
-  addTypeBuilder(
-    "TypePlaceholder",
-    {
-      case List(s: String) => Some(TypePlaceholder(TextElement(s)))
-      case Nil             => Some(TypePlaceholder(TextElement("")))
-      case _               => None
-    },
-    hidden = true
-  )
-
-  addValueBuilder(
-    "ValuePlaceholder",
-    {
-      case List(s: String) => Some(ValuePlaceholder(TextElement(s)))
-      case Nil             => Some(ValuePlaceholder(TextElement("")))
-      case _               => None
-    }
-  )
 
   addValueBuilder(
     "TypeValueContainer",

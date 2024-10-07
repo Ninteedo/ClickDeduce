@@ -51,7 +51,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   private lazy val exprClassListDropdownHtml: TypedTag[String] = {
     def createExprOption(exprBuilderName: BuilderName) = exprBuilderName match {
       case name: String => option(value := name, name)
-      case (name: String, aliases: List[String]) => option(value := name, name, data("aliases") := aliases.mkString(","))
+      case (name: String, aliases: List[String]) =>
+        option(value := name, name, data("aliases") := aliases.mkString(","))
     }
 
     select(
@@ -64,7 +65,8 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   private lazy val typeClassListDropdownHtml: TypedTag[String] = {
     def createTypeOption(typeBuilderName: BuilderName) = typeBuilderName match {
       case name: String => option(value := name, name)
-      case (name: String, aliases: List[String]) => option(value := name, name, data("aliases") := aliases.mkString(","))
+      case (name: String, aliases: List[String]) =>
+        option(value := name, name, data("aliases") := aliases.mkString(","))
     }
 
     select(
@@ -88,16 +90,17 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     override val message: String = "Stack overflow error"
   }
 
-  /** Create an `Term` given its string representation.
+  /** Create a `Term` given its string representation.
     *
     * @return
     *   The `Term` created, if successful.
     */
   private def parseTerm(s: String): Option[Term] = {
-    def makeTerm(name: String, args: List[Any]): Option[Term] = {
-      val parsedArgs = args.map {
-        case Some(e) => e
-        case other   => other
+    def makeTerm(name: String, args: List[Literal | Option[Term]]): Option[Term] = {
+      val parsedArgs: List[Literal | Term] = args.map {
+        case Some(e)        => e
+        case other: Literal => other
+        case _              => throw new NodeStringParseException(s"$name(${args.mkString(", ")})")
       }
       getExprBuilder(name) match {
         case Some(builder) => builder(parsedArgs)
@@ -119,7 +122,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
       def identifier: Parser[String] = "[A-Za-z_$][\\w_$]*".r
 
-      def arg: Parser[Any] = term | stringLiteral ^^ (s => LiteralString(s)) |
+      def arg: Parser[Literal | Option[Term]] = term | stringLiteral ^^ (s => LiteralString(s)) |
         wholeNumber ^^ (n => LiteralInt(BigInt(n))) |
         "true" ^^ (_ => LiteralBool(true)) | "false" ^^ (_ => LiteralBool(false)) |
         identifier ^^ (s => LiteralIdentifier(s))
@@ -612,7 +615,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       case DisplayMode.TypeCheck  => getTypeEnv
       case DisplayMode.Evaluation => getEvalEnv
     }
-    
+
     def hasUpdatedEnv(mode: DisplayMode): Boolean = {
       val env = getEnv(mode)
       val parentEnv = getParent.map(_.getEnv(mode))
