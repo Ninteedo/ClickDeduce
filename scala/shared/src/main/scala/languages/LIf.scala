@@ -150,10 +150,6 @@ class LIf extends LArith {
   }
 
   object BoolV extends ValueCompanion {
-    override protected def createValue(args: List[Any]): Option[Value] = args match {
-      case List(b: Boolean) => Some(BoolV(b))
-      case _                => None
-    }
   }
 
   // types

@@ -336,10 +336,6 @@ class LData extends LRec {
   }
 
   object PairV extends ValueCompanion {
-    override def createValue(args: List[Any]): Option[Value] = args match {
-      case List(v1: Value, v2: Value) => Some(PairV(v1, v2))
-      case _                          => None
-    }
   }
 
   case class UnitV() extends Value {
@@ -351,10 +347,6 @@ class LData extends LRec {
   }
 
   object UnitV extends ValueCompanion {
-    override def createValue(args: List[Any]): Option[Value] = args match {
-      case Nil => Some(UnitV())
-      case _   => None
-    }
   }
 
   case class LeftV(v: Value, rightType: Type) extends Value {
@@ -366,10 +358,6 @@ class LData extends LRec {
   }
 
   object LeftV extends ValueCompanion {
-    override def createValue(args: List[Any]): Option[Value] = args match {
-      case List(v: Value, rightType: Type) => Some(LeftV(v, rightType))
-      case _                               => None
-    }
   }
 
   case class RightV(leftType: Type, v: Value) extends Value {
@@ -381,10 +369,6 @@ class LData extends LRec {
   }
 
   object RightV extends ValueCompanion {
-    override def createValue(args: List[Any]): Option[Value] = args match {
-      case List(leftType: Type, v: Value) => Some(RightV(leftType, v))
-      case _                              => None
-    }
   }
 
   // errors

@@ -147,10 +147,6 @@ class LLam extends LLet {
   }
 
   object LambdaV extends ValueCompanion {
-    override protected def createValue(args: List[Any]): Option[Value] = args match {
-      case List(v: Variable, inputType: Type, e: Expr, env: ValueEnv) => Some(LambdaV(v, inputType, e, env))
-      case _                                                          => None
-    }
   }
 
   case class ApplyToNonFunctionError(value: Value) extends EvalError {
@@ -168,10 +164,6 @@ class LLam extends LLet {
   }
 
   object HiddenValue extends ValueCompanion {
-    override def createValue(args: List[Any]): Option[Value] = args match {
-      case List(typ: Type) => Some(HiddenValue(typ))
-      case _               => None
-    }
   }
 
   // tasks

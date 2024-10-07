@@ -164,10 +164,6 @@ class LArith extends ClickDeduceLanguage {
   }
 
   object NumV extends ValueCompanion {
-    override def createValue(args: List[Any]): Option[Value] = args match {
-      case List(x: BigInt) => Some(NumV(x))
-      case _               => None
-    }
   }
 
   /** An error that occurs due to an incorrect argument type.

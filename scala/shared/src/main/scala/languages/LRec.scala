@@ -94,11 +94,6 @@ class LRec extends LLam {
   }
 
   object RecV extends ValueCompanion {
-    override def createValue(args: List[Any]): Option[Value] = args match {
-      case List(f: Literal, v: Literal, inType: Type, outType: Type, e: Expr, env: ValueEnv) =>
-        Some(RecV(f, v, inType, outType, e, env))
-      case _ => None
-    }
   }
 
   private def prettyPrintRec(f: Literal, v: Literal, in_typ: Type, out_typ: Type, e: Expr) =

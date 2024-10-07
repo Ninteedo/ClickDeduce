@@ -729,16 +729,10 @@ trait AbstractLanguage {
    * [[register]] needs to be called from outside the companion object to register the value builder.
    */
   trait ValueCompanion extends TermCompanion {
-    /** Create a value from a list of arguments.
-     *
-     * @param args
-     *   The arguments.
-     * @return
-     *   Some value, or None if the arguments are invalid.
+    /**
+     * Currently unused, left for future use.
      */
-    protected def createValue(args: List[Any]): Option[Value]
-
-    final def register(): Unit = addValueBuilder(name, createValue)
+    final def register(): Unit = ()
   }
 
   protected type BuilderArgs = List[Literal | Term]
@@ -805,14 +799,6 @@ trait AbstractLanguage {
     */
   def typeBuilderNames: List[BuilderName] = typeBuilderNamesList
 
-  private type ValueBuilder = BuilderArgs => Option[Value]
-
-  private var valueBuilders: Map[String, ValueBuilder] = Map()
-
-  private def addValueBuilder(name: String, builder: ValueBuilder): Unit = {
-    valueBuilders += (name -> builder)
-  }
-
   /** Get an expression builder by name.
     * @param name
     *   The name of the builder.
@@ -855,13 +841,6 @@ trait AbstractLanguage {
     case None          => throw UnknownTypeBuilder(name)
   }
 
-  def getValueBuilder(name: String): Option[ValueBuilder] = valueBuilders.get(name)
-
-  def buildValue(name: String, args: BuilderArgs): Option[Value] = getValueBuilder(name) match {
-    case Some(builder) => builder.apply(args)
-    case None          => throw UnknownValueBuilder(name)
-  }
-
   case class UnknownExprBuilder(name: String) extends ClickDeduceException(s"Unknown expression builder: $name")
 
   case class InvalidExprBuilderArgs(name: String, args: List[Any])
@@ -876,15 +855,6 @@ trait AbstractLanguage {
 
   case class InvalidValueBuilderArgs(name: String, args: List[Any])
       extends ClickDeduceException(s"Invalid arguments for value builder: $name, $args")
-
-  addValueBuilder(
-    "TypeValueContainer",
-    {
-      case List(t: Type) => Some(TypeValueContainer(t))
-      case Nil           => Some(TypeValueContainer(TypePlaceholder(TextElement(""))))
-      case _             => None
-    }
-  )
 
   addTypeBuilder(
     "TypeContainer",
