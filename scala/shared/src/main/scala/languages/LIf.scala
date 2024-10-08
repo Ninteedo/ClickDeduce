@@ -3,12 +3,7 @@ package languages
 import convertors.*
 
 class LIf extends LArith {
-  Bool.register()
-  Equal.register()
-  LessThan.register()
-  IfThenElse.register()
-  BoolType.register()
-  BoolV.register()
+  registerTerms("LIf", List(Bool, Equal, LessThan, IfThenElse, BoolType, BoolV))
 
   // expressions
   case class Bool(b: Literal) extends Expr {
@@ -30,7 +25,7 @@ class LIf extends LArith {
   object Bool extends ExprCompanion {
     def apply(b: Boolean): Bool = new Bool(LiteralBool(b))
 
-    override def createExpr(args: BuilderArgs): Option[Expr] = args match {
+    override def create(args: BuilderArgs): Option[Expr] = args match {
       case List(b: Literal) => Some(Bool(b))
       case Nil              => Some(Bool(defaultLiteral))
       case _                => None
@@ -65,7 +60,7 @@ class LIf extends LArith {
   }
 
   object Equal extends ExprCompanion {
-    override def createExpr(args: BuilderArgs): Option[Expr] = args match {
+    override def create(args: BuilderArgs): Option[Expr] = args match {
       case List(e1: Expr, e2: Expr) => Some(Equal(e1, e2))
       case Nil                      => Some(Equal(defaultExpr, defaultExpr))
       case _                        => None
@@ -92,7 +87,7 @@ class LIf extends LArith {
   object LessThan extends ExprCompanion {
     override val aliases: List[String] = List("<", "LT")
 
-    override def createExpr(args: BuilderArgs): Option[Expr] = args match {
+    override def create(args: BuilderArgs): Option[Expr] = args match {
       case List(e1: Expr, e2: Expr) => Some(LessThan(e1, e2))
       case Nil                      => Some(LessThan(defaultExpr, defaultExpr))
       case _                        => None
@@ -133,7 +128,7 @@ class LIf extends LArith {
   }
 
   object IfThenElse extends ExprCompanion {
-    override def createExpr(args: BuilderArgs): Option[Expr] = args match {
+    override def create(args: BuilderArgs): Option[Expr] = args match {
       case List(cond: Expr, then_expr: Expr, else_expr: Expr) => Some(IfThenElse(cond, then_expr, else_expr))
       case Nil                                                => Some(IfThenElse(defaultExpr, defaultExpr, defaultExpr))
       case _                                                  => None
@@ -160,7 +155,7 @@ class LIf extends LArith {
   }
 
   object BoolType extends TypeCompanion {
-    override def createType(args: List[Literal | Term]): Option[Type] = args match {
+    override def create(args: BuilderArgs): Option[Type] = args match {
       case Nil => Some(BoolType())
       case _   => None
     }

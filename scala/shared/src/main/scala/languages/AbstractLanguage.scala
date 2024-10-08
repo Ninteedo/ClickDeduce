@@ -435,6 +435,15 @@ trait AbstractLanguage {
     override val needsBrackets: Boolean = false
   }
 
+  object UnknownType extends TypeCompanion {
+    override protected val isHidden: Boolean = true
+
+    override def create(args: BuilderArgs): Option[Type] = args match {
+      case Nil => Some(UnknownType())
+      case _   => None
+    }
+  }
+
   case class TypePlaceholder(content: ConvertableText, override val needsBrackets: Boolean = true) extends Type {
     override def toText: ConvertableText = content
   }
@@ -447,6 +456,16 @@ trait AbstractLanguage {
     override def typeCheck(tEnv: TypeEnv): Type = typ
 
     override def toText: ConvertableText = typ.toText
+  }
+
+  object TypeContainer extends TypeCompanion {
+    override protected val isHidden: Boolean = true
+
+    override def create(args: BuilderArgs): Option[Type] = args match {
+      case List(t: Type) => Some(TypeContainer(t))
+      case Nil           => Some(TypeContainer(TypePlaceholder(TextElement(""))))
+      case _             => None
+    }
   }
 
   case class TypeValueContainer(typ: Type) extends Value {
@@ -633,171 +652,148 @@ trait AbstractLanguage {
 
   // <editor-fold desc="Builders">
 
-  /** Parent trait for all term companions.
-    */
-  trait TermCompanion {
-
-    /** Whether the term should be hidden from the user.
-      *
-      * If true, the term will not appear in the list of available terms.
-      *
-      * Default is false.
-      */
-    protected val isHidden: Boolean = false
-
-    /** The name of the term.
-      *
-      * By default, this is the name of the companion object, but can be overridden.
-      */
-    protected val name: String = toString.dropWhile(_ != '$').drop(1).takeWhile(_ != '$')
-
-    /** The arguments for the default term builder case.
-      *
-      * Equivalent to `Nil`.
-      */
-    protected final val defaultArgs: List[Any] = Nil
-
-    /**
-     * List of alternate names for the term.
-     */
-    protected val aliases: List[String] = Nil
-
-    /** Register the term builder.
-      *
-      * This needs to be called from outside the companion object to register the term builder. Otherwise, the Scala.js
-      * compiler will consider the companion object to be unused and remove it.
-      */
-    def register(): Unit
-  }
-
-  /** Trait for expression companions.
-    *
-    * Should be used by companion objects for expressions.
-    *
-    * [[createExpr]] needs to be implemented. [[register]] needs to be called from outside the companion object to
-    * register the expression builder.
-    */
-  trait ExprCompanion extends TermCompanion {
-
-    /** Create an expression from a list of arguments.
-      *
-      * Typically needs to handle 3 cases:
-      *   - [[defaultArgs]]: The default version of the expression, with unselected expressions and empty literals.
-      *   - Arguments matching the expected structure for this expression: The actual expression.
-      *   - Any other arguments: Invalid arguments, should return None.
-      * @param args
-      *   The arguments.
-      * @return
-      *   Some expression, or None if the arguments are invalid.
-      */
-    protected def createExpr(args: BuilderArgs): Option[Expr]
-
-    final def register(): Unit = addExprBuilder(name, createExpr, hidden = isHidden, aliases = aliases)
-  }
-
-  /** Trait for type companions.
-    *
-    * Should be used by companion objects for types.
-    *
-    * [[createType]] needs to be implemented. [[register]] needs to be called from outside the companion object to
-    * register the type builder.
-    */
-  trait TypeCompanion extends TermCompanion {
-
-    /** Create a type from a list of arguments.
-      *
-      * Typically needs to handle 3 cases:
-      *   - [[defaultArgs]]: The default version of the type, with unselected types and empty literals.
-      *   - Arguments matching the expected structure for this type: The actual type.
-      *   - Any other arguments: Invalid arguments, should return None.
-      * @param args
-      *   The arguments.
-      * @return
-      *   Some type, or None if the arguments are invalid.
-      */
-    protected def createType(args: List[Literal | Term]): Option[Type]
-
-    final def register(): Unit = addTypeBuilder(name, createType, hidden = isHidden, aliases = aliases)
+  /**
+   * Register a list of terms for a particular language.
+   *
+   * Should be called at the start of every language class.
+   * @param langName The name of the language.
+   * @param terms The companion objects of the terms to register.
+   */
+  protected def registerTerms(langName: String, terms: List[ExprCompanion | TypeCompanion | ValueCompanion]): Unit = {
+    terms.foreach(_.register(langName))
   }
 
   /**
-   * Trait for value companions.
-   *
-   * Should be used by companion objects for values.
-   *
-   * [[createValue]] needs to be implemented.
-   * [[register]] needs to be called from outside the companion object to register the value builder.
+   * Manages the defined builders for a particular type of term.
+   * @tparam T The type of term.
    */
-  trait ValueCompanion extends TermCompanion {
+  protected class BuilderManager[T <: Term] {
+    private var builders: Map[String, BuilderArgs => Option[T]] = Map()
+    private var builderNamesList: List[BuilderName] = List()
+
     /**
-     * Currently unused, left for future use.
+     * Add a builder to the manager.
+     * @param name The name of the builder.
+     * @param builder The builder function.
+     * @param langName The name of the language.
+     * @param hidden Whether the term should be hidden from the user.
+     * @param aliases List of alternate names for the term.
      */
-    final def register(): Unit = ()
+    private def addBuilder(name: String, builder: BuilderArgs => Option[T], langName: String, hidden: Boolean = false, aliases: List[String] = Nil): Unit = {
+      builders += (name -> builder)
+      if (!hidden) {
+        val entry = if (aliases.isEmpty) name else (name, aliases)
+        builderNamesList = builderNamesList :+ (langName, entry)
+      }
+    }
+
+    /**
+     * Get a builder by name.
+     * @param name The name of the builder. Does not match aliases.
+     * @return Some builder, or None if not found.
+     */
+    def getBuilder(name: String): Option[BuilderArgs => Option[T]] = builders.get(name)
+
+    /**
+     * Build a term by name and arguments.
+     * @param name The name of the builder.
+     * @param args The arguments.
+     * @return The result from the builder, either some term or None.
+     * @throws UnknownTermBuilder If the builder is not found.
+     */
+    def build(name: String, args: BuilderArgs): Option[T] = getBuilder(name) match {
+      case Some(builder) => builder.apply(args)
+      case None          => throw UnknownTermBuilder(name)
+    }
+
+    /**
+     * Get the names of all builders.
+     * @return The list of builder names.
+     */
+    def builderNames: List[BuilderName] = builderNamesList
+
+    /**
+     * Companion object for terms, to be extended by the term companion objects.
+     */
+    trait Companion {
+      /** Whether the term should be hidden from the user.
+       *
+       * If true, the term will not appear in the list of available terms.
+       *
+       * Default is false.
+       */
+      protected val isHidden: Boolean = false
+
+      /** The name of the term.
+       *
+       * By default, this is the name of the companion object, but can be overridden.
+       */
+      protected val name: String = toString.dropWhile(_ != '$').drop(1).takeWhile(_ != '$')
+
+      /** The arguments for the default term builder case.
+       *
+       * Equivalent to `Nil`.
+       */
+      protected final val defaultArgs: List[Any] = Nil
+
+      /**
+       * List of alternate names for the term.
+       */
+      protected val aliases: List[String] = Nil
+
+      /** Create a term from a list of arguments.
+       *
+       * Typically needs to handle 3 cases:
+       *   - [[defaultArgs]]: The default version of the term, with unselected sub-terms and empty literals.
+       *   - Arguments matching the expected structure for this term: The actual term.
+       *   - Any other arguments: Invalid arguments; should return None.
+       *
+       * @param args
+       * The arguments.
+       * @return
+       * Some expression, or None if the arguments are invalid.
+       */
+      def create(args: BuilderArgs): Option[T]
+
+      /**
+       * Register the term builder.
+       * @param langName The name of the language.
+       */
+      final def register(langName: String): Unit = {
+        addBuilder(name, create, langName, isHidden, aliases)
+      }
+    }
+
+  }
+
+  protected val exprBuilderManager = new BuilderManager[Expr]
+  protected val typeBuilderManager = new BuilderManager[Type]
+  protected val valueBuilderManager = new BuilderManager[Value]
+
+  protected trait ExprCompanion extends exprBuilderManager.Companion
+  protected trait TypeCompanion extends typeBuilderManager.Companion
+  protected trait ValueCompanion extends valueBuilderManager.Companion {
+    /**
+     * Value builders are not currently used, so this method always returns None.
+     */
+    override final def create(args: BuilderArgs): Option[Value] = None
   }
 
   protected type BuilderArgs = List[Literal | Term]
 
-  /** A function that takes a list of arguments and returns a constructed expression if valid, or None if invalid.
-    */
-  private type ExprBuilder = BuilderArgs => Option[Expr]
-
-  private var exprBuilders: Map[String, ExprBuilder] = Map()
-
-  private var exprBuilderNamesList: List[BuilderName] = List()
-
-  /** Add an expression builder to the language.
-    * @param name
-    *   The name of the builder.
-    * @param builder
-    *   The expression builder.
-    * @param hidden
-    *   Whether the builder should be hidden from the user (won't appear in the expression list), default is false.
-    */
-  private def addExprBuilder(name: String, builder: ExprBuilder, hidden: Boolean = false, aliases: List[String] = Nil): Unit = {
-    exprBuilders += (name -> builder)
-    if (!hidden) {
-      val entry = if (aliases.isEmpty) name else (name, aliases)
-      exprBuilderNamesList = exprBuilderNamesList :+ entry
-    }
-  }
-
-  type BuilderName = String | (String, List[String])  // either name or (name, aliases)
+  protected type BuilderName = (String, String | (String, List[String]))  // langName, then either name or (name, aliases)
 
   /** Returns the names of all expression builders.
     * @return
     *   The list of expression builder names.
     */
-  def exprBuilderNames: List[BuilderName] = exprBuilderNamesList
-
-  private type TypeBuilder = List[Literal | Term] => Option[Type]
-
-  private var typeBuilders: Map[String, TypeBuilder] = Map()
-
-  private var typeBuilderNamesList: List[BuilderName] = List()
-
-  /** Add a type builder to the language.
-    * @param name
-    *   The name of the builder.
-    * @param builder
-    *   The type builder.
-    * @param hidden
-    *   Whether the builder should be hidden from the user (won't appear in the type list), default is false.
-    * @param aliases
-    *   The aliases of the builder.
-    */
-  private def addTypeBuilder(name: String, builder: TypeBuilder, hidden: Boolean = false, aliases: List[String] = Nil): Unit = {
-    typeBuilders += (name -> builder)
-    if (!hidden) {
-      val entry = if (aliases.isEmpty) name else (name, aliases)
-      typeBuilderNamesList = typeBuilderNamesList :+ entry
-    }
-  }
+  def exprBuilderNames: List[BuilderName] = exprBuilderManager.builderNames
 
   /** Returns the names of all type builders.
     * @return
     *   The list of type builder names.
     */
-  def typeBuilderNames: List[BuilderName] = typeBuilderNamesList
+  def typeBuilderNames: List[BuilderName] = typeBuilderManager.builderNames
 
   /** Get an expression builder by name.
     * @param name
@@ -805,7 +801,7 @@ trait AbstractLanguage {
     * @return
     *   The builder, or None if not found.
     */
-  def getExprBuilder(name: String): Option[ExprBuilder] = exprBuilders.get(name)
+  def getExprBuilder(name: String): Option[BuilderArgs => Option[Expr]] = exprBuilderManager.getBuilder(name)
 
   /** Build an expression by name and arguments.
     * @param name
@@ -813,12 +809,9 @@ trait AbstractLanguage {
     * @param args
     *   The arguments.
     * @return
-    *   The expression, or throw an [[UnknownExprBuilder]] exception if the builder is not found.
+    *   The expression, or throw an [[UnknownTermBuilder]] exception if the builder is not found.
     */
-  def buildExpr(name: String, args: BuilderArgs): Option[Expr] = getExprBuilder(name) match {
-    case Some(builder) => builder.apply(args)
-    case None          => throw UnknownExprBuilder(name)
-  }
+  def buildExpr(name: String, args: BuilderArgs): Option[Expr] = exprBuilderManager.build(name, args)
 
   /** Get a type builder by name.
     * @param name
@@ -826,7 +819,7 @@ trait AbstractLanguage {
     * @return
     *   The builder, or None if not found.
     */
-  def getTypeBuilder(name: String): Option[TypeBuilder] = typeBuilders.get(name)
+  def getTypeBuilder(name: String): Option[BuilderArgs => Option[Type]] = typeBuilderManager.getBuilder(name)
 
   /** Build a type by name and arguments.
     * @param name
@@ -836,44 +829,11 @@ trait AbstractLanguage {
     * @return
     *   The type, or throw an [[UnknownTypeBuilder]] exception if the builder is not found.
     */
-  def buildType(name: String, args: BuilderArgs): Option[Type] = getTypeBuilder(name) match {
-    case Some(builder) => builder.apply(args)
-    case None          => throw UnknownTypeBuilder(name)
-  }
+  def buildType(name: String, args: BuilderArgs): Option[Type] = typeBuilderManager.build(name, args)
 
-  case class UnknownExprBuilder(name: String) extends ClickDeduceException(s"Unknown expression builder: $name")
+  private case class UnknownTermBuilder(name: String) extends ClickDeduceException(s"Unknown term builder: $name")
 
-  case class InvalidExprBuilderArgs(name: String, args: List[Any])
-      extends ClickDeduceException(s"Invalid arguments for expression builder: $name, $args")
-
-  case class UnknownTypeBuilder(name: String) extends ClickDeduceException(s"Unknown type builder: $name")
-
-  case class InvalidTypeBuilderArgs(name: String, args: List[Any])
-      extends ClickDeduceException(s"Invalid arguments for type builder: $name, $args")
-
-  case class UnknownValueBuilder(name: String) extends ClickDeduceException(s"Unknown value builder: $name")
-
-  case class InvalidValueBuilderArgs(name: String, args: List[Any])
-      extends ClickDeduceException(s"Invalid arguments for value builder: $name, $args")
-
-  addTypeBuilder(
-    "TypeContainer",
-    {
-      case List(t: Type) => Some(TypeContainer(t))
-      case Nil           => Some(TypeContainer(TypePlaceholder(TextElement(""))))
-      case _             => None
-    },
-    hidden = true
-  )
-
-  addTypeBuilder(
-    "UnknownType",
-    {
-      case Nil => Some(UnknownType())
-      case _   => None
-    },
-    hidden = true
-  )
+  registerTerms("AbstractLanguage", List(UnknownType, TypeContainer))
 
   // </editor-fold>
 

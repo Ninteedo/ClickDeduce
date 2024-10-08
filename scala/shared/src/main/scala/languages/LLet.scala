@@ -3,8 +3,7 @@ package languages
 import convertors.*
 
 class LLet extends LIf {
-  Var.register()
-  Let.register()
+  registerTerms("LLet", List(Var, Let))
 
   // expressions
 
@@ -37,7 +36,7 @@ class LLet extends LIf {
   object Var extends ExprCompanion {
     def apply(v: Variable): Var = new Var(Literal.fromString(v))
 
-    override def createExpr(args: BuilderArgs): Option[Expr] = args match {
+    override def create(args: BuilderArgs): Option[Expr] = args match {
       case List(v: Literal) => Some(Var(v))
       case Nil              => Some(Var(defaultLiteral))
       case _                => None
@@ -84,7 +83,7 @@ class LLet extends LIf {
   object Let extends ExprCompanion {
     def apply(v: Variable, assign: Expr, bound: Expr): Let = new Let(Literal.fromString(v), assign, bound)
 
-    override def createExpr(args: BuilderArgs): Option[Expr] = args match {
+    override def create(args: BuilderArgs): Option[Expr] = args match {
       case List(v: Literal, assign: Expr, bound: Expr) => Some(Let(v, assign, bound))
       case Nil                                         => Some(Let(defaultLiteral, defaultExpr, defaultExpr))
       case _                                           => None

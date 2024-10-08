@@ -278,7 +278,7 @@ class LArithTest extends TestTemplate[Expr, Value, Type] {
   }
 
   property("Expression and type builder names match expected") {
-    LArith.exprBuilderNames shouldBe List(("Num", List("Number", "Integer")), ("Plus", List("Addition", "+")), ("Times", List("Multiplication", "Multiply", "*")))
-    LArith.typeBuilderNames shouldBe List(("IntType", List("Number", "Integer")))
+    LArith.exprBuilderNames shouldBe List(("Num", List("Number", "Integer")), ("Plus", List("Addition", "+")), ("Times", List("Multiplication", "Multiply", "*"))).map(entry => ("LArith", entry))
+    LArith.typeBuilderNames shouldBe List(("IntType", List("Number", "Integer"))).map(entry => ("LArith", entry))
   }
 }

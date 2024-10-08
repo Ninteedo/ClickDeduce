@@ -4,11 +4,7 @@ import convertors.*
 import scalatags.Text.all.*
 
 class LPoly extends LData {
-  Poly.register()
-  ApplyType.register()
-  TypeVar.register()
-  PolyType.register()
-  PolyV.register()
+  registerTerms("LPoly", List(Poly, ApplyType, TypeVar, PolyType, PolyV))
 
   // expressions
 
@@ -34,7 +30,7 @@ class LPoly extends LData {
   object Poly extends ExprCompanion {
     def apply(v: Variable, e: Expr): Poly = Poly(Literal.fromString(v), e)
 
-    override def createExpr(args: BuilderArgs): Option[Expr] = args match {
+    override def create(args: BuilderArgs): Option[Expr] = args match {
       case List(v: Literal, e: Expr) => Some(Poly(v, e))
       case Nil                       => Some(Poly(defaultLiteral, defaultExpr))
       case _                         => None
@@ -67,7 +63,7 @@ class LPoly extends LData {
   }
 
   object ApplyType extends ExprCompanion {
-    override def createExpr(args: BuilderArgs): Option[Expr] = args match {
+    override def create(args: BuilderArgs): Option[Expr] = args match {
       case List(e: Expr, t: Type) => Some(ApplyType(e, t))
       case Nil                    => Some(ApplyType(defaultExpr, defaultType))
       case _                      => None
@@ -91,7 +87,7 @@ class LPoly extends LData {
   object TypeVar extends TypeCompanion {
     def apply(v: Variable): TypeVar = TypeVar(Literal.fromString(v))
 
-    override def createType(args: List[Literal | Term]): Option[Type] = args match {
+    override def create(args: BuilderArgs): Option[Type] = args match {
       case List(v: Literal) => Some(TypeVar(v))
       case Nil              => Some(TypeVar(defaultLiteral))
       case _                => None
@@ -109,7 +105,7 @@ class LPoly extends LData {
   }
 
   object PolyType extends TypeCompanion {
-    override def createType(args: List[Literal | Term]): Option[Type] = args match {
+    override def create(args: BuilderArgs): Option[Type] = args match {
       case List(tv: Type, t: Type) => Some(PolyType(tv, t))
       case Nil                     => Some(PolyType(defaultType, defaultType))
       case _                       => None

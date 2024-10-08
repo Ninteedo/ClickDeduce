@@ -3,21 +3,26 @@ package languages
 import convertors.*
 
 class LData extends LRec {
-  Pair.register()
-  Fst.register()
-  Snd.register()
-  LetPair.register()
-  UnitExpr.register()
-  Left.register()
-  Right.register()
-  CaseSwitch.register()
-  PairType.register()
-  UnionType.register()
-  EmptyType.register()
-  PairV.register()
-  UnitV.register()
-  LeftV.register()
-  RightV.register()
+  registerTerms(
+    "LData",
+    List(
+      Pair,
+      Fst,
+      Snd,
+      LetPair,
+      UnitExpr,
+      Left,
+      Right,
+      CaseSwitch,
+      PairType,
+      UnionType,
+      EmptyType,
+      PairV,
+      UnitV,
+      LeftV,
+      RightV
+    )
+  )
 
   // expressions
 
@@ -33,7 +38,7 @@ class LData extends LRec {
   }
 
   object Pair extends ExprCompanion {
-    override def createExpr(args: BuilderArgs): Option[Expr] = args match {
+    override def create(args: BuilderArgs): Option[Expr] = args match {
       case List(e1: Expr, e2: Expr) => Some(Pair(e1, e2))
       case Nil                      => Some(Pair(defaultExpr, defaultExpr))
       case _                        => None
@@ -59,7 +64,7 @@ class LData extends LRec {
   }
 
   object Fst extends ExprCompanion {
-    override def createExpr(args: BuilderArgs): Option[Expr] = args match {
+    override def create(args: BuilderArgs): Option[Expr] = args match {
       case List(e: Expr) => Some(Fst(e))
       case Nil           => Some(Fst(defaultExpr))
       case _             => None
@@ -85,7 +90,7 @@ class LData extends LRec {
   }
 
   object Snd extends ExprCompanion {
-    override def createExpr(args: BuilderArgs): Option[Expr] = args match {
+    override def create(args: BuilderArgs): Option[Expr] = args match {
       case List(e: Expr) => Some(Snd(e))
       case Nil           => Some(Snd(defaultExpr))
       case _             => None
@@ -140,7 +145,7 @@ class LData extends LRec {
     def apply(x: Variable, y: Variable, assign: Expr, bound: Expr): LetPair =
       LetPair(Literal.fromString(x), Literal.fromString(y), assign, bound)
 
-    override def createExpr(args: BuilderArgs): Option[Expr] = args match {
+    override def create(args: BuilderArgs): Option[Expr] = args match {
       case List(x: Literal, y: Literal, assign: Expr, bound: Expr) => Some(LetPair(x, y, assign, bound))
       case Nil => Some(LetPair(defaultLiteral, defaultLiteral, defaultExpr, defaultExpr))
       case _   => None
@@ -160,7 +165,7 @@ class LData extends LRec {
   }
 
   object UnitExpr extends ExprCompanion {
-    override def createExpr(args: BuilderArgs): Option[Expr] = args match {
+    override def create(args: BuilderArgs): Option[Expr] = args match {
       case Nil => Some(UnitExpr())
       case _   => None
     }
@@ -177,7 +182,7 @@ class LData extends LRec {
   }
 
   object Left extends ExprCompanion {
-    override def createExpr(args: BuilderArgs): Option[Expr] = args match {
+    override def create(args: BuilderArgs): Option[Expr] = args match {
       case List(e: Expr, rightType: Type) => Some(Left(e, rightType))
       case Nil                            => Some(Left(defaultExpr, defaultType))
       case _                              => None
@@ -195,7 +200,7 @@ class LData extends LRec {
   }
 
   object Right extends ExprCompanion {
-    override def createExpr(args: BuilderArgs): Option[Expr] = args match {
+    override def create(args: BuilderArgs): Option[Expr] = args match {
       case List(leftType: Type, e: Expr) => Some(Right(leftType, e))
       case Nil                           => Some(Right(defaultType, defaultExpr))
       case _                             => None
@@ -263,7 +268,7 @@ class LData extends LRec {
     def apply(e: Expr, l: Variable, r: Variable, lExpr: Expr, rExpr: Expr): CaseSwitch =
       CaseSwitch(e, Literal.fromString(l), Literal.fromString(r), lExpr, rExpr)
 
-    override def createExpr(args: BuilderArgs): Option[Expr] = args match {
+    override def create(args: BuilderArgs): Option[Expr] = args match {
       case List(e: Expr, l: Literal, r: Literal, lExpr: Expr, rExpr: Expr) => Some(CaseSwitch(e, l, r, lExpr, rExpr))
       case Nil => Some(CaseSwitch(defaultExpr, defaultLiteral, defaultLiteral, defaultExpr, defaultExpr))
       case _   => None
@@ -280,7 +285,7 @@ class LData extends LRec {
   }
 
   object PairType extends TypeCompanion {
-    override def createType(args: List[Literal | Term]): Option[Type] = args match {
+    override def create(args: BuilderArgs): Option[Type] = args match {
       case List(l: Type, r: Type) => Some(PairType(l, r))
       case Nil                    => Some(PairType(defaultType, defaultType))
       case _                      => None
@@ -297,7 +302,7 @@ class LData extends LRec {
   }
 
   object UnionType extends TypeCompanion {
-    override def createType(args: List[Literal | Term]): Option[Type] = args match {
+    override def create(args: BuilderArgs): Option[Type] = args match {
       case List(l: Type, r: Type) => Some(UnionType(l, r))
       case Nil                    => Some(UnionType(defaultType, defaultType))
       case _                      => None
@@ -311,7 +316,7 @@ class LData extends LRec {
   }
 
   object EmptyType extends TypeCompanion {
-    override def createType(args: List[Literal | Term]): Option[Type] = args match {
+    override def create(args: BuilderArgs): Option[Type] = args match {
       case Nil => Some(EmptyType())
       case _   => None
     }
@@ -335,8 +340,7 @@ class LData extends LRec {
     )
   }
 
-  object PairV extends ValueCompanion {
-  }
+  object PairV extends ValueCompanion {}
 
   case class UnitV() extends Value {
     override val typ: Type = EmptyType()
@@ -346,8 +350,7 @@ class LData extends LRec {
     override def toText: ConvertableText = TextElement("()")
   }
 
-  object UnitV extends ValueCompanion {
-  }
+  object UnitV extends ValueCompanion {}
 
   case class LeftV(v: Value, rightType: Type) extends Value {
     override val typ: Type = UnionType(v.typ, rightType)
@@ -357,8 +360,7 @@ class LData extends LRec {
     override def toText: ConvertableText = MultiElement(TextElement("left"), BracketedElement(v.toText))
   }
 
-  object LeftV extends ValueCompanion {
-  }
+  object LeftV extends ValueCompanion {}
 
   case class RightV(leftType: Type, v: Value) extends Value {
     override val typ: Type = UnionType(leftType, v.typ)
@@ -368,8 +370,7 @@ class LData extends LRec {
     override def toText: ConvertableText = MultiElement(TextElement("right"), BracketedElement(v.toText))
   }
 
-  object RightV extends ValueCompanion {
-  }
+  object RightV extends ValueCompanion {}
 
   // errors
 

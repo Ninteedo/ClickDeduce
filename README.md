@@ -153,7 +153,7 @@ which are also matched when the user filters the term list.
 object Bool extends ExprCompanion {
  def apply(b: Boolean): Bool = new Bool(LiteralBool(b))
 
- override def createExpr(args: BuilderArgs): Option[Expr] = args match {
+ override def create(args: BuilderArgs): Option[Expr] = args match {
    case List(b: Literal) => Some(Bool(b))
    case Nil              => Some(Bool(defaultLiteral))
    case _                => None
@@ -165,7 +165,7 @@ object Bool extends ExprCompanion {
 
 ```scala 3
 object IfThenElse extends ExprCompanion {
- override def createExpr(args: BuilderArgs): Option[Expr] = args match {
+ override def create(args: BuilderArgs): Option[Expr] = args match {
    case List(cond: Expr, then_expr: Expr, else_expr: Expr) => Some(IfThenElse(cond, then_expr, else_expr))
    case Nil                                                => Some(IfThenElse(defaultExpr, defaultExpr, defaultExpr))
    case _                                                  => None
