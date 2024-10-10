@@ -245,7 +245,11 @@ class LData extends LRec {
       val (lVal, rVal): (Value, Value) = e.eval(env) match {
         case LeftV(v, rTyp)  => (v, HiddenValue(rTyp))
         case RightV(lTyp, v) => (HiddenValue(lTyp), v)
-        case _               => (HiddenValue(UnknownType()), HiddenValue(UnknownType()))
+        case _ =>
+          e.typeCheck(envToTypeEnv(env)) match {
+            case UnionType(l, r) => (HiddenValue(l), HiddenValue(r))
+            case _               => (HiddenValue(UnknownType()), HiddenValue(UnknownType()))
+          }
       }
       List((e, env), (lExpr, env + (l.toString -> lVal)), (rExpr, env + (r.toString -> rVal)))
     }
