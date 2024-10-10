@@ -218,6 +218,6 @@ class LRecTest extends TestTemplate[Expr, Value, Type] {
 
     factorialFunction.prettyPrint shouldEqual factorialPretty
 
-    factorialFunction.eval().prettyPrint shouldEqual factorialPretty
+    factorialFunction.eval().prettyPrint shouldEqual "rec factorial"
   }
 }

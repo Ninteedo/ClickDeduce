@@ -353,8 +353,8 @@ class LLamTest extends TestTemplate[Expr, Value, Type] {
     incrementFunction.prettyPrint shouldEqual "λx: Int. x + 1"
     twiceFunction.prettyPrint shouldEqual "λf: (Int → Int). λx: Int. f (f x)"
 
-    incrementFunction.eval().prettyPrint shouldEqual "λx: Int. x + 1"
-    twiceFunction.eval().prettyPrint shouldEqual "λf: (Int → Int). λx: Int. f (f x)"
+    incrementFunction.eval().prettyPrint shouldEqual "λx"
+    twiceFunction.eval().prettyPrint shouldEqual "λf"
   }
 
   property("Apply pretty prints correctly") {

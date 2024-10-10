@@ -135,10 +135,10 @@ class LLam extends LLet {
     override def toText: ConvertableText = MultiElement(
       LambdaSymbol(),
       ItalicsElement(TextElement(v)),
-      SpaceAfter(MathElement.colon),
-      TypeElement(properInputType.toTextBracketed),
-      SpaceAfter(MathElement.period),
-      e.toText
+//      SpaceAfter(MathElement.colon),
+//      TypeElement(properInputType.toTextBracketed),
+//      SpaceAfter(MathElement.period),
+//      e.toText
     )
   }
 
