@@ -140,8 +140,8 @@ class LRec extends LLam {
   private object ImplementFactorialFunctionTask extends Task {
     override val name: String = "Implement the Factorial Function"
     override val description: String =
-      "Implement the recursive factorial function. It should return 1 for n=0. The function name does not matter. The" +
-        " expression must successfully type-check."
+      "Implement the recursive factorial function. It should return 1 for n=0, and is not required to handle negative numbers." +
+        " The function name does not matter. The expression must successfully type-check."
     override val difficulty: Int = 5
 
     override def checkFulfilled(expr: Expr): Boolean = {

@@ -219,4 +219,10 @@ class LDataTest extends TestTemplate[Expr, Value, Type] {
       TypeMismatchType(UnionType(IntType(), BoolType()), UnionType(BoolType(), BoolType()))
   }
 
+  property("UnionFunctionWithNumber2Task is checked correctly") {
+    UnionFunctionWithNumber2Task.checkFulfilled(
+      Lambda("x", UnionType(IntType(), Func(IntType(), IntType())),
+        CaseSwitch(Var("x"), "n", "f", Times(Var("n"), Num(2)), Apply(Var("f"), Num(2))))
+    ) shouldBe true
+  }
 }

@@ -282,6 +282,8 @@ class LData extends LRec {
 
     override def toText: ConvertableText =
       MultiElement(l.toTextBracketed, SurroundSpaces(TimesSymbol()), r.toTextBracketed)
+
+    override val isError: Boolean = l.isError || r.isError
   }
 
   object PairType extends TypeCompanion {
@@ -299,6 +301,8 @@ class LData extends LRec {
 
     override def toText: ConvertableText =
       MultiElement(l.toTextBracketed, SurroundSpaces(MathElement("+")), r.toTextBracketed)
+
+    override val isError: Boolean = l.isError || r.isError
   }
 
   object UnionType extends TypeCompanion {
@@ -405,6 +409,78 @@ class LData extends LRec {
     l.find(!_.isInstanceOf[LiteralIdentifier]) match {
       case Some(lit) => InvalidIdentifierTypeError(lit)
       case None      => continue
+    }
+  }
+
+  // tasks
+  setTasks(DefinePairDifferentTypesTask, UseCaseSwitchTask, UnionFunctionWithNumber2Task)
+
+  private object DefinePairDifferentTypesTask extends Task {
+    override val name: String = "Define a Pair with Different Types"
+    override val description: String =
+      "Define a pair with different types for the left and right elements. The expression must successfully type-check."
+    override val difficulty: Int = 2
+
+    override def checkFulfilled(expr: Expr): Boolean = !expr.typeCheck().isError && checkCondition(
+      expr,
+      (e, env) => {
+        val tEnv = envToTypeEnv(env)
+        e match {
+          case Pair(e1, e2) => e1.typeCheck(tEnv) != e2.typeCheck(tEnv)
+          case _            => false
+        }
+      },
+      ValueEnv.empty
+    )
+  }
+
+  private object UseCaseSwitchTask extends Task {
+    override val name: String = "Use a Case Switch Expression"
+    override val description: String =
+      "Use a case switch expression to handle a union type. The expression must successfully type-check."
+    override val difficulty: Int = 3
+
+    override def checkFulfilled(expr: Expr): Boolean = !expr.typeCheck().isError && checkCondition(
+      expr,
+      (e, env) =>
+        e match {
+          case _: CaseSwitch => true
+          case _             => false
+        },
+      ValueEnv.empty
+    )
+  }
+
+  object UnionFunctionWithNumber2Task extends Task {
+    override val name: String = "Union Function using 2"
+    override val description: String =
+      "Create a lambda function that takes a parameter of the union type of (Int) and (Int -> Int), then returns " +
+        "double the left value or the result of applying the right value to 2. " +
+        "The expression must successfully type-check."
+    override val difficulty: Int = 4
+
+    override def checkFulfilled(expr: Expr): Boolean = {
+      val cases: Map[Expr, NumV] = Map(
+        Left(Num(3), Func(IntType(), IntType())) -> NumV(6),
+        Left(Num(-53), Func(IntType(), IntType())) -> NumV(-106),
+        Left(Times(Num(3), Num(4)), Func(IntType(), IntType())) -> NumV(24),
+        Right(IntType(), Lambda("x", IntType(), Plus(Var("x"), Num(3)))) -> NumV(5),
+        Right(IntType(), Lambda("x", IntType(), Times(Var("x"), Num(120)))) -> NumV(240),
+        Right(IntType(), Lambda("x", IntType(), IfThenElse(Equal(Var("x"), Num(2)), Num(1), Num(0)))) -> NumV(1)
+      )
+      !expr.typeCheck().isError && checkCondition(
+        expr,
+        (e, env) =>
+          e match {
+            case Lambda(v, t, e) =>
+              val tEnv = envToTypeEnv(env) + (v.toString -> t)
+              t == UnionType(IntType(), Func(IntType(), IntType())) &&
+              e.typeCheck(tEnv) == IntType() &&
+              cases.forall((input, expected) => Apply(Lambda(v, t, e), input).eval(env) == expected)
+            case _ => false
+          },
+        ValueEnv.empty
+      )
     }
   }
 }
