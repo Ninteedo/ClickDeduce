@@ -58,6 +58,13 @@ case class BracketedElement(elem: ConvertableText) extends ConvertableText {
   override def asLaTeX: String = s"(${elem.asLaTeX})"
 }
 
+case class SubscriptElement(elem: ConvertableText) extends ConvertableText {
+  override def asPlainText: String = elem.asPlainText
+  override def asHtml: TypedTag[String] = sub(elem.asHtml)
+  override def asHtmlReadOnly: TypedTag[String] = sub(elem.asHtmlReadOnly)
+  override def asLaTeX: String = s"_{${elem.asLaTeX}}"
+}
+
 case class TimesSymbol() extends ConvertableText {
   override def asPlainText: String = "×"
   override def asHtml: TypedTag[String] = span(raw("&times;"))

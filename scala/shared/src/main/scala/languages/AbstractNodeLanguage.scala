@@ -716,23 +716,23 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     private val htmlLineReadOnlyCache = collection.mutable.Map[DisplayMode, TypedTag[String]]()
 
     override def toText(mode: DisplayMode): ConvertableText =
-      HtmlElement(div(raw(getExprHtmlLine(mode))), getExpr.toText)
+      HtmlElement(getExprHtmlLine(mode).asHtml, getExpr.toText)
 
     override def toTextReadOnly(mode: DisplayMode): ConvertableText =
-      HtmlElement(div(raw(getExprHtmlLineReadOnly(mode))), getExpr.toText)
+      HtmlElement(getExprHtmlLineReadOnly(mode).asHtmlReadOnly, getExpr.toText)
 
-    private def getExprHtmlLine(mode: DisplayMode): String = {
+    private def getExprHtmlLine(mode: DisplayMode): ConvertableText = {
       val arguments = args.map {
         case n: SubExprNode => n.getPlaceholder(mode)
         case n: LiteralNode => n.getPlaceholder(mode, false)
         case n: SubTypeNode => n.getPlaceholder(mode)
       }
-      buildExpr(exprName, arguments).get.prettyPrint
+      buildExpr(exprName, arguments).get.toText
     }
 
-    private def getExprHtmlLineReadOnly(mode: DisplayMode): String = {
+    private def getExprHtmlLineReadOnly(mode: DisplayMode): ConvertableText = {
       val arguments = args.map(_.getPlaceholder(mode))
-      buildExpr(exprName, arguments).get.prettyPrint
+      buildExpr(exprName, arguments).get.toText
     }
 
     override def toString: String = s"VariableNode(${UtilityFunctions.quote(exprName)}, $args)"
