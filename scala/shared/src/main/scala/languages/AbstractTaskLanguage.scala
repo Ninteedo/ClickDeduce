@@ -34,6 +34,17 @@ trait AbstractTaskLanguage extends AbstractActionLanguage {
             case _                              => false
           })
     }
+    
+  protected final def checkCondition(typ: Type, cond: (Type, TypeEnv) => Boolean, env: TypeEnv): Boolean =
+    typ match {
+      case t if cond(t, env) => true
+      case t =>
+        t.getChildrenTypeCheck(env)
+          .exists({
+            case (typ: Type, newEnv: TypeEnv) => checkCondition(typ, cond, newEnv)
+            case _                             => false
+          })
+    }
 
   protected final def checkHasOp(expr: Expr, op: Class[_ <: Expr]): Boolean = checkCondition(expr, cond = _.getClass == op)
 }

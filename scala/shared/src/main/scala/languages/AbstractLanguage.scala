@@ -427,6 +427,15 @@ trait AbstractLanguage {
     val isError: Boolean = false
 
     def typeCheck(tEnv: TypeEnv): Type = this
+
+    private def getTypeFields: List[Type] = this match {
+      case t0: Product => t0.productIterator.toList.collect({ case t: Type => t })
+      case _ => Nil
+    }
+
+    private def defaultChildren(env: TypeEnv): List[(Term, TypeEnv)] = getTypeFields.zip(LazyList.continually(env))
+
+    override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] = defaultChildren(tEnv)
   }
 
   case class UnknownType() extends Type {

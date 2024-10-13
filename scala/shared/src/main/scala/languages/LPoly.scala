@@ -102,6 +102,8 @@ class LPoly extends LData {
         SpaceAfter(MathElement.period),
         incompleteType.toTextBracketed
       )
+
+    override val isError: Boolean = typeVar.isError || incompleteType.isError
   }
 
   object PolyType extends TypeCompanion {
@@ -130,8 +132,7 @@ class LPoly extends LData {
     )
   }
 
-  object PolyV extends ValueCompanion {
-  }
+  object PolyV extends ValueCompanion {}
 
   // errors
 
@@ -160,7 +161,52 @@ class LPoly extends LData {
   }
 
   // tasks
-  setTasks()
+  setTasks(CreatePolyFunctionTask)
+
+  object CreatePolyFunctionTask extends Task {
+    override val name: String = "Create a Polymorphic Function"
+    override val description: String =
+      "Use the Poly expression to create a type variable which is then used as the input type for a lambda function." +
+        " The function must use the input variable." +
+        " It must successfully type-check."
+    override val difficulty: Int = 3
+
+    override def checkFulfilled(expr: Expr): Boolean = !expr.typeCheck().isError && checkCondition(
+      expr,
+      (e, env) =>
+        e match {
+          case Poly(typVar, e) =>
+            checkCondition(
+              e,
+              (e, env) =>
+                e match {
+                  case Lambda(lamVar, lamTyp, e) =>
+                    checkCondition(
+                      lamTyp,
+                      (t, env) =>
+                        t match {
+                          case TypeVar(v) => v == typVar
+                          case _          => false
+                        },
+                      envToTypeEnv(env)
+                    ) && checkCondition(
+                      e,
+                      (e, env) =>
+                        e match {
+                          case Var(v) => v == lamVar
+                          case _      => false
+                        },
+                      env
+                    )
+                  case _ => false
+                },
+              env
+            )
+          case _ => false
+        },
+      ValueEnv.empty
+    )
+  }
 }
 
 object LPoly extends LPoly {}

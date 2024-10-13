@@ -155,4 +155,9 @@ class LPolyTest extends TestTemplate[Expr, Value, Type] {
     Lambda("x", TypeVar("X"), Var("x")).eval(Env("X" -> TypeValueContainer(IntType()))) shouldEqual
       LambdaV("x", IntType(), Var("x"), Env("X" -> TypeValueContainer(IntType())))
   }
+
+  property("CreatePolyFunctionTask is checked correctly") {
+    CreatePolyFunctionTask.checkFulfilled(Poly("T", Lambda("x", TypeVar("T"), Var("x")))) shouldBe true
+    CreatePolyFunctionTask.checkFulfilled(Poly("T", Lambda("x", TypeVar("T"), IfThenElse(Var("x"), BlankExprDropDown(), BlankExprDropDown())))) shouldBe false
+  }
 }
