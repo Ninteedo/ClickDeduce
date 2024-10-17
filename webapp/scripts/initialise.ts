@@ -41,7 +41,7 @@ export let panzoomInstance: PanZoom;
  * Can be called again to reset the state of the app
  */
 export function initialise(skipImages: boolean = false): void {
-    console.log('initialising');
+    // console.log('initialising');
     resetInterfaceGlobals();
     resetCopyCache();
     if (!skipImages) {

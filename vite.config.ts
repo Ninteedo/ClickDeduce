@@ -6,13 +6,12 @@ import scalaJSPlugin from "@scala-js/vite-plugin-scalajs";
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [scalaJSPlugin(), react()],
-  root: 'webapp',
   build: {
-    outDir: 'build',
+    outDir: 'webapp/build',
     rollupOptions: {
       input: {
-        index: 'webapp/index.html',
-        guide: 'webapp/guide.html',
+        index: 'index.html',
+        guide: 'guide.html',
       },
       output: {
         entryFileNames: 'bundle.js',
