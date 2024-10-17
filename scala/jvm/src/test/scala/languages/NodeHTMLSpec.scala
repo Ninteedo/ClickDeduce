@@ -55,7 +55,7 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
       }
 
       "contain a div which contains an input" should {
-        val selector = "div.subtree > div.node > div.expr > div > input"
+        val selector = "div.subtree > div.node > div.expr input.literal"
 
         "should exist" in {
           checkHtmlDocAllModes(tree) { doc =>
@@ -219,7 +219,7 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
         }
 
         "have an input for the lambda variable name" in {
-          val inputSelector = leftSubtreeSelector + " > div.node > div.expr > div > input"
+          val inputSelector = leftSubtreeSelector + " > div.node > div.expr input.literal:not([readonly])"
           forAll(modes) { mode =>
             checkHtmlDoc(tree)(mode) { doc =>
               doc >> elementList(inputSelector) should have size 1
@@ -346,7 +346,7 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
         }
 
         "have an input for the lambda variable name" in {
-          val inputSelector = selector + " > div.node > div.expr > div > input"
+          val inputSelector = selector + " > div.node > div.expr input.literal:not([readonly])"
           checkHtmlDoc(tree)(mode) { doc =>
             doc >> elementList(inputSelector) should have size 1
             val element = (doc >> elementList(inputSelector)).head
