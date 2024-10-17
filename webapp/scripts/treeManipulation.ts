@@ -1,4 +1,3 @@
-import {tree} from "./initialise";
 import {hasClassOrParentHasClass} from "./utils";
 import {handleLiteralChanged, runAction} from "./actions";
 import {
@@ -24,6 +23,8 @@ let langSelector: HTMLSelectElement;
 
 export let activeInputs: HTMLElement[] = [];
 export let initialValues: [string, string][] = [];
+
+export let tree: HTMLDivElement;
 
 export let lastNodeString: string | null = null;
 
@@ -71,6 +72,7 @@ function loadLangSelector(): void {
     })
 }
 
+
 /**
  * Updates the contents of the tree.
  *
@@ -83,7 +85,7 @@ function loadLangSelector(): void {
  * @param addToHistory whether to add this change to the history
  */
 export function updateTree(newTreeHtml: string, newNodeString: string, modeName: string, lang: string, addToHistory: boolean = false): void {
-    tree.innerHTML = newTreeHtml;
+    getTree().innerHTML = newTreeHtml;
     lastNodeString = newNodeString;
     treeCleanup();
     if (addToHistory && (treeHistory.length === 0 ||
@@ -557,4 +559,16 @@ function getSelectedMode(): string {
     const selectedRadio = modeRadios.find(radio => radio.checked);
     if (!selectedRadio) throw new Error("No mode selected");
     return selectedRadio.value;
+}
+
+export function getTree(): HTMLDivElement {
+    if (!tree) {
+        const foundTree = document.getElementById('tree');
+        if (foundTree instanceof HTMLDivElement) {
+            tree = foundTree;
+        } else {
+            throw new Error('Could not find tree element');
+        }
+    }
+    return tree;
 }

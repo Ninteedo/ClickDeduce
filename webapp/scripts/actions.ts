@@ -1,8 +1,7 @@
-import {compareTreePaths, getSelectedLanguage, getSelectedMode} from "./utils";
+import {getSelectedLanguage, getSelectedMode} from "./utils";
 import {
     disableInputs,
     enableInputs,
-    getActiveInputs,
     getNodeStringFromPath,
     initialValues,
     lastNodeString,
@@ -10,7 +9,13 @@ import {
     updateTree,
     useTreeFromHistory
 } from "./treeManipulation";
-import {contextMenuSelectedElement, displayError, getTreePathOfElement, nextFocusElement} from "./interface";
+import {
+    contextMenuSelectedElement,
+    displayError,
+    getTreePathOfElement,
+    nextFocusElement,
+    setFocusElement
+} from "./interface";
 import {postProcessActionNew, postStartNodeBlankNew} from "./serverRequest";
 
 let copyCache: string | null = null;
@@ -33,7 +38,7 @@ export function startNodeBlank(): void {
 export function doStartNodeBlank(event?: Event): void {
     // prevent the form from submitting the old-fashioned way
     if (event) event.preventDefault();
-    
+
     const [newNodeString, newHtml] = postStartNodeBlankNew(getSelectedLanguage());
     updateTree(newHtml, newNodeString, getSelectedMode(), getSelectedLanguage(), true);
 }
@@ -132,14 +137,7 @@ export function handleExprSelectorChoice(selector: HTMLDivElement, value: string
     runAction(actionName, getTreePathOfElement(selector), [value])
 
     if (focusedTreePath === null) return;
-    const focusedElement = getActiveInputs().find(input => compareTreePaths(focusedTreePath!, getTreePathOfElement(input)) <= 0);
-
-    if (focusedElement && focusedElement instanceof HTMLElement) {
-        focusedElement.focus();
-        if (focusedElement instanceof HTMLInputElement) {
-            focusedElement.select();
-        }
-    }
+    setFocusElement(focusedTreePath);
 }
 
 /**
@@ -168,6 +166,7 @@ export function runAction(actionName: string, treePath: string, extraArgs: any[]
 
 export function deleteTreeNode(treePath: string): void {
     runAction("DeleteAction", treePath, []);
+    setFocusElement(treePath);
 }
 
 /**
@@ -203,6 +202,7 @@ export function contextMenuCopy(): void {
 export function pasteTreeNode(treePath: string): void {
     if (copyCache) {
         runAction("PasteAction", treePath, [copyCache]);
+        setFocusElement(treePath);
     }
 }
 

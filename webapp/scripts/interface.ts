@@ -1,6 +1,6 @@
 import {copyTreeNode, deleteTreeNode, handleLiteralChanged, hasCopyCache, pasteTreeNode} from "./actions";
 import {getActiveInputs, lastNodeString, redo, undo} from "./treeManipulation";
-import {getSelectedLanguage, getSelectedMode, hasClassOrParentHasClass} from "./utils";
+import {compareTreePaths, getSelectedLanguage, getSelectedMode, hasClassOrParentHasClass} from "./utils";
 import {panzoomInstance} from "./initialise";
 import {selectorEnterPressed} from "./customExprSelector";
 // @ts-ignore
@@ -32,18 +32,23 @@ function globalHandleKeyDown(e: KeyboardEvent): void {
     const highlightElement = getHighlightElement();
     const highlightPath = highlightElement && highlightElement.hasAttribute('data-tree-path') ? getTreePathOfElement(highlightElement) : null;
 
-    if (e.ctrlKey && e.key.toUpperCase() === 'Z') {
-        if (e.shiftKey) {
+    const ctrl = e.ctrlKey || e.metaKey;
+    const shift = e.shiftKey;
+    const key = e.key.toUpperCase();
+
+    if (ctrl && key === 'Z') {
+        if (shift) {
             redo();
         } else {
             undo();
         }
     } else if (highlightPath !== null) {
-        if (e.ctrlKey && e.key.toUpperCase() === 'C') {
+        if (ctrl && key === 'C') {
             copyTreeNode(highlightPath);
-        } else if (e.ctrlKey && e.key.toUpperCase() === 'V') {
+        } else if (ctrl && key === 'V') {
+            e.preventDefault();
             pasteTreeNode(highlightPath);
-        } else if (e.ctrlKey && e.key.toUpperCase() === 'X') {
+        } else if (ctrl && key === 'X') {
             copyTreeNode(highlightPath);
             deleteTreeNode(highlightPath);
         }
@@ -141,6 +146,21 @@ function getHighlightElementFromEvent(e: Event): HTMLElement | null {
     }
 
     return target instanceof HTMLElement ? target : null;
+}
+
+/**
+ * Sets the focus to the input element with the given tree path.
+ * If that element is not found, will instead try to focus on the first input element in a subtree of that path.
+ * If there is no input element in the subtree, will do nothing.
+ */
+export function setFocusElement(path: string): void {
+    const focusedElement = getActiveInputs().find(input => compareTreePaths(path!, getTreePathOfElement(input)) <= 0);
+    if (focusedElement && focusedElement instanceof HTMLElement) {
+        focusedElement.focus();
+        if (focusedElement instanceof HTMLInputElement) {
+            focusedElement.select();
+        }
+    }
 }
 
 /**

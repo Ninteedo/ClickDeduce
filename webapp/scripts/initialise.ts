@@ -9,7 +9,7 @@ import {
     resetCopyCache,
     startNodeBlank
 } from "./actions";
-import {loadTree, redo, resetTreeManipulation, saveTree, undo, updateTextInputWidth} from "./treeManipulation";
+import {getTree, loadTree, redo, resetTreeManipulation, saveTree, undo, updateTextInputWidth} from "./treeManipulation";
 import {
     closeExportOutput,
     copyExportOutput,
@@ -33,7 +33,6 @@ import {loadImages} from "./imageLoading";
 import {setupExampleSelector} from "./customExprSelector";
 import {getRedoButton, getUndoButton} from "./test/helper";
 
-export let tree: HTMLDivElement;
 export let panzoomInstance: PanZoom;
 
 /**
@@ -42,15 +41,14 @@ export let panzoomInstance: PanZoom;
  * Can be called again to reset the state of the app
  */
 export function initialise(skipImages: boolean = false): void {
+    console.log('initialising');
     resetInterfaceGlobals();
     resetCopyCache();
     if (!skipImages) {
         loadImages();
     }
     resetTreeManipulation();
-    tree = document.getElementById('tree') as HTMLDivElement;
-
-    panzoomInstance = panzoom(tree, {
+    panzoomInstance = panzoom(getTree(), {
         bounds: false, boundsPadding: 0, zoomDoubleClickSpeed: 1,
         onTouch: () => {
             // TODO: cannot use on mobile currently

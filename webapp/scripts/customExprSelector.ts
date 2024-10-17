@@ -1,7 +1,7 @@
-import {tree} from "./initialise";
 import {hasClassOrParentHasClass} from "./utils";
 import {handleExprSelectorChoice} from "./actions";
 import {getTreePathOfElement} from "./interface";
+import {tree} from "./treeManipulation";
 
 const SELECTOR_FOCUS_CLASS = 'focused';
 const DROPDOWN_VISIBLE_CLASS = 'show';
