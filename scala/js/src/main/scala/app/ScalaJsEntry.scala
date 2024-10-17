@@ -19,7 +19,6 @@ object ScalaJsEntry {
     "LRec" -> LRec(),
     "LData" -> LData(),
     "LPoly" -> LPoly(),
-    "LList" -> LList(),
   )
 
   private def getLanguage(langName: String): ClickDeduceLanguage = knownLanguages.find(_._1 == langName) match {
