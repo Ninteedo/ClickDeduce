@@ -26,6 +26,7 @@ import {
     getZoomToFitButton,
     handleTabPressed,
     resetInterfaceGlobals,
+    setPanZoomInstance,
     zoomToFit
 } from "./interface";
 import panzoom, {PanZoom} from "panzoom";
@@ -48,8 +49,12 @@ export function initialise(skipImages: boolean = false): void {
         loadImages();
     }
     resetTreeManipulation();
-    panzoomInstance = panzoom(getTree(), {
-        bounds: false, boundsPadding: 0, zoomDoubleClickSpeed: 1,
+    setPanZoomInstance(panzoom(getTree(), {
+        bounds: true,
+        boundsPadding: -0.1,
+        zoomDoubleClickSpeed: 1,
+        minZoom: 0.1,
+        maxZoom: 10,
         onTouch: () => {
             // TODO: cannot use on mobile currently
             return false;  // tells the library to not preventDefault.
@@ -57,7 +62,7 @@ export function initialise(skipImages: boolean = false): void {
         filterKey: () => {
             return true;  // don't let panzoom handle this event:
         }
-    });
+    }));
 
     setupButtons();
     startNodeBlank();

@@ -1,14 +1,15 @@
 import {copyTreeNode, deleteTreeNode, handleLiteralChanged, hasCopyCache, pasteTreeNode} from "./actions";
 import {getActiveInputs, lastNodeString, redo, undo} from "./treeManipulation";
 import {compareTreePaths, getSelectedLanguage, getSelectedMode, hasClassOrParentHasClass} from "./utils";
-import {panzoomInstance} from "./initialise";
 import {selectorEnterPressed} from "./customExprSelector";
 // @ts-ignore
 import {convertToLaTeX} from "scalajs:main.js";
+import {PanZoom} from "panzoom";
 
 let errorDiv: HTMLDivElement;
 export let nextFocusElement: HTMLElement | null = null;
 export let contextMenuSelectedElement: HTMLElement | null = null;
+let panzoomInstance: PanZoom;
 
 /**
  * Resets the global variables used by the interface code.
@@ -403,4 +404,8 @@ export function getTreePathOfElement(element: HTMLElement | null): string {
     const treePath = element.getAttribute("data-tree-path");
     if (treePath === null) throw new Error("Element does not have a tree path");
     return treePath;
+}
+
+export function setPanZoomInstance(instance: PanZoom): void {
+    panzoomInstance = instance;
 }
