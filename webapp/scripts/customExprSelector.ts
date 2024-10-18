@@ -1,7 +1,7 @@
 import {hasClassOrParentHasClass} from "./utils";
 import {handleExprSelectorChoice} from "./actions";
 import {getTreePathOfElement} from "./interface";
-import {tree} from "./treeManipulation";
+import {getTree} from "./treeManipulation";
 
 const SELECTOR_FOCUS_CLASS = 'focused';
 const DROPDOWN_VISIBLE_CLASS = 'show';
@@ -11,7 +11,7 @@ const UP_ARROW = '&#9650;';
 const DOWN_ARROW = '&#9660;';
 
 export function replaceSelectInputs(): void {
-    const selectInputs: NodeListOf<HTMLSelectElement> = tree.querySelectorAll(
+    const selectInputs: NodeListOf<HTMLSelectElement> = getTree().querySelectorAll(
         'select.expr-dropdown[data-tree-path]:not([disabled]), select.type-dropdown[data-tree-path]:not([disabled])'
     );
     selectInputs.forEach(select => {
@@ -32,7 +32,7 @@ export function replaceSelectInputs(): void {
         }
         select.outerHTML = createExprSelectorHTML(treePath, kind, placeholderText, options);
 
-        const newSelector = tree.querySelector(`.expr-selector-container[data-tree-path="${treePath}"]`) as HTMLDivElement;
+        const newSelector = getTree().querySelector(`.expr-selector-container[data-tree-path="${treePath}"]`) as HTMLDivElement;
         setupTermSelector(newSelector);
     });
 
@@ -40,7 +40,7 @@ export function replaceSelectInputs(): void {
 }
 
 function replaceDisabledSelectInputs(): void {
-    const selectInputs: NodeListOf<HTMLSelectElement> = tree.querySelectorAll(
+    const selectInputs: NodeListOf<HTMLSelectElement> = getTree().querySelectorAll(
         'select.expr-dropdown:disabled, select.type-dropdown:disabled, .phantom select.expr-dropdown, .phantom select.type-dropdown'
     );
 

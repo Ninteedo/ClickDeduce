@@ -24,8 +24,6 @@ let langSelector: HTMLSelectElement;
 export let activeInputs: HTMLElement[] = [];
 export let initialValues: [string, string][] = [];
 
-export let tree: HTMLDivElement;
-
 export let lastNodeString: string | null = null;
 
 const fileInput: HTMLInputElement = document.createElement('input');
@@ -225,7 +223,7 @@ function makeDisabledInputsFocusOriginal(): void {
         const treePath = input.getAttribute('data-tree-path');
         if (treePath === null) return;
 
-        const origin = tree.querySelector(`input:not([disabled])[data-tree-path="${treePath}"]`) as HTMLInputElement;
+        const origin = getTree().querySelector(`input:not([disabled])[data-tree-path="${treePath}"]`) as HTMLInputElement;
         input.addEventListener('mouseover', () => {
             origin.parentElement?.classList.add('guide-highlight');
         });
@@ -238,7 +236,7 @@ function makeDisabledInputsFocusOriginal(): void {
         const origin = input.getAttribute('data-origin');
         if (origin === null) return;
 
-        const originInput = tree.querySelector(`input:not([disabled])[data-tree-path="${origin}"]`) as HTMLInputElement;
+        const originInput = getTree().querySelector(`input:not([disabled])[data-tree-path="${origin}"]`) as HTMLInputElement;
         if (originInput === null) return;
         input.addEventListener('mouseover', () => {
             originInput.classList.add('guide-highlight');
@@ -325,7 +323,7 @@ export function updateTextInputWidth(textInput: HTMLInputElement): void {
 function updateLinkedInputPlaceholders(input: HTMLInputElement): void {
     const treePath: string = getTreePathOfElement(input);
     const selector = `input[data-origin="${treePath}"]`;
-    tree.querySelectorAll(selector).forEach((el: Element) => {
+    getTree().querySelectorAll(selector).forEach((el: Element) => {
         if (!(el instanceof HTMLInputElement)) return;
         el.value = input.value;
         updateTextInputWidth(el);
@@ -351,7 +349,7 @@ export function disableInputs(): void {
     });
     modeRadios.forEach(radio => radio.setAttribute('disabled', "true"));
     langSelector.setAttribute('disabled', "true");
-    tree.querySelectorAll('.expr-selector-button').forEach(button => button.setAttribute('disabled', "true"));
+    getTree().querySelectorAll('.expr-selector-button').forEach(button => button.setAttribute('disabled', "true"));
 
     // re-enable inputs after 5 seconds
     incrementReEnableInputsId();
@@ -373,7 +371,7 @@ export function enableInputs(): void {
         radio.removeAttribute('disabled');
     });
     langSelector.removeAttribute('disabled');
-    tree.querySelectorAll('.expr-selector-button').forEach(button => button.removeAttribute('disabled'));
+    getTree().querySelectorAll('.expr-selector-button').forEach(button => button.removeAttribute('disabled'));
 }
 
 export function saveTree(): void {
@@ -562,13 +560,10 @@ function getSelectedMode(): string {
 }
 
 export function getTree(): HTMLDivElement {
-    if (!tree) {
-        const foundTree = document.getElementById('tree');
-        if (foundTree instanceof HTMLDivElement) {
-            tree = foundTree;
-        } else {
-            throw new Error('Could not find tree element');
-        }
+    const foundTree = document.getElementById('tree');
+    if (foundTree instanceof HTMLDivElement) {
+        return foundTree;
+    } else {
+        throw new Error('Could not find tree element');
     }
-    return tree;
 }

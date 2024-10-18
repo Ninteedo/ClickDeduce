@@ -8,7 +8,7 @@ export function slightDelay(delay: number = 10): Promise<void> {
 }
 
 export function loadHtmlTemplate(filename: string): string {
-    const templatePath = path.resolve(__dirname, '..', '..', `${filename}.html`);
+    const templatePath = path.resolve(__dirname, '..', '..', '..', `${filename}.html`);
     const readResult: string = fs.readFileSync(templatePath, 'utf8');
     return readResult.replace(/\r\n/g, '\n');
 }
