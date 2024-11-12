@@ -37,24 +37,26 @@ class LIf extends LArith {
   case class Equal(e1: Expr, e2: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = {
       val v1 = e1.eval(env)
+      val v2 = e2.eval(env)
       if (v1.isError) {
         v1
+      } else if (v2.isError) {
+        v2
+      } else if (v1.typ == v2.typ) {
+        BoolV(v1 == v2)
       } else {
-        val v2 = e2.eval(env)
-        if (v2.isError) {
-          v2
-        } else if (v1.typ == v2.typ) {
-          BoolV(v1 == v2)
-        } else {
-          TypeMismatchError("Equal", v1.typ, v2.typ)
-        }
+        TypeMismatchError("Equal", v1.typ, v2.typ)
       }
     }
 
     override def typeCheckInner(tEnv: TypeEnv): Type = {
       val t1 = e1.typeCheck(tEnv)
       val t2 = e2.typeCheck(tEnv)
-      if (t1 == t2) {
+      if (t1.isError) {
+        t1
+      } else if (t2.isError) {
+        t2
+      } else if (t1 == t2) {
         BoolType()
       } else {
         TypeMismatchType(t1, t2)
