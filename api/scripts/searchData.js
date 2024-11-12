@@ -435,6 +435,7 @@ pages = [{"l":"index.html#","e":false,"i":"","n":"ClickDeduceShared","t":"ClickD
 {"l":"languages/LLam$FunctionValue.html#evalApply-fffffea0","e":false,"i":"","n":"evalApply","t":"evalApply(value: Value): Value","d":"languages.LLam.FunctionValue","k":"def","x":""},
 {"l":"languages/LLam$FunctionValue.html#getFunctionEvaluation-fffffe82","e":false,"i":"","n":"getFunctionEvaluation","t":"getFunctionEvaluation(applyValue: Value): (Expr, ValueEnv)","d":"languages.LLam.FunctionValue","k":"def","x":""},
 {"l":"languages/LLam$HiddenValue.html#","e":false,"i":"","n":"HiddenValue","t":"HiddenValue(typ: Type) extends Value","d":"languages.LLam","k":"class","x":""},
+{"l":"languages/LLam$HiddenValue.html#isError-0","e":false,"i":"","n":"isError","t":"isError: Boolean","d":"languages.LLam.HiddenValue","k":"val","x":""},
 {"l":"languages/LLam$HiddenValue.html#needsBrackets-0","e":false,"i":"","n":"needsBrackets","t":"needsBrackets: Boolean","d":"languages.LLam.HiddenValue","k":"val","x":""},
 {"l":"languages/LLam$HiddenValue$.html#","e":false,"i":"","n":"HiddenValue","t":"HiddenValue extends ValueCompanion","d":"languages.LLam","k":"object","x":""},
 {"l":"languages/LLam$IncompatibleTypeErrorType.html#","e":false,"i":"","n":"IncompatibleTypeErrorType","t":"IncompatibleTypeErrorType(typ1: Type, typ2: Type) extends TypeError","d":"languages.LLam","k":"class","x":""},
