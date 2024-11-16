@@ -38,25 +38,22 @@ class LLam extends LLet {
     }
   }
 
-  case class Lambda(v: Literal, typ: Type, e: Expr) extends Expr {
-    override def evalInner(env: ValueEnv): Value = v match {
-      case LiteralIdentifier(identifier) => LambdaV(identifier, typ.typeCheck(envToTypeEnv(env)), e, env)
-      case _                             => InvalidIdentifierEvalError(v)
+  case class Lambda(v: LiteralIdentifier, typ: Type, e: Expr) extends Expr {
+    override def evalInner(env: ValueEnv): Value = if (!v.validIdentifier) InvalidIdentifierEvalError(v) else {
+      LambdaV(v.value, typ.typeCheck(envToTypeEnv(env)), e, env)
     }
 
-    override def typeCheckInner(tEnv: TypeEnv): Type = v match {
-      case LiteralIdentifier(identifier) =>
-        val inputType = typ.typeCheck(tEnv)
-        Func(inputType, e.typeCheck(tEnv + (identifier -> inputType)))
-      case _ => InvalidIdentifierTypeError(v)
+    override def typeCheckInner(tEnv: TypeEnv): Type = if (!v.validIdentifier) InvalidIdentifierTypeError(v) else {
+      val inputType = typ.typeCheck(tEnv)
+      Func(inputType, e.typeCheck(tEnv + (v.value -> inputType)))
     }
 
     override def getChildrenBase(env: ValueEnv): List[(Term, ValueEnv)] =
-      List((v, env), (typ, env), (e, env + (v.toString -> HiddenValue(typ))))
+      List((v, env), (typ, env), (e, env + (v.prettyPrint -> HiddenValue(typ))))
 
     override def getChildrenEval(env: ValueEnv): List[(Term, ValueEnv)] = Nil
 
-    override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] = List((e, tEnv + (v.toString -> typ)))
+    override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] = List((e, tEnv + (v.prettyPrint -> typ)))
 
     override def toText: ConvertableText = MultiElement(
       LambdaSymbol(),
@@ -69,11 +66,11 @@ class LLam extends LLet {
   }
 
   object Lambda extends ExprCompanion {
-    def apply(v: Variable, typ: Type, e: Expr): Lambda = new Lambda(Literal.fromString(v), typ, e)
+    def apply(v: Variable, typ: Type, e: Expr): Lambda = new Lambda(LiteralIdentifier(v), typ, e)
 
     override def create(args: BuilderArgs): Option[Expr] = args match {
-      case List(v: Literal, typ: Type, e: Expr) => Some(Lambda(v, typ, e))
-      case Nil                                  => Some(Lambda(defaultLiteral, defaultType, defaultExpr))
+      case List(v: LiteralIdentifier, typ: Type, e: Expr) => Some(Lambda(v, typ, e))
+      case Nil                                  => Some(Lambda(LiteralIdentifier(""), defaultType, defaultExpr))
       case _                                    => None
     }
   }

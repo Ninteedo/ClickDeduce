@@ -1,12 +1,14 @@
 package languages
 
-import app.ClickDeduceException
+import app.{ClickDeduceException, UtilityFunctions}
 import convertors.*
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
 import scala.annotation.targetName
 import scala.collection.immutable.List
+import scala.util.matching.Regex
+import scala.util.parsing.combinator.JavaTokenParsers
 
 /** Base trait, defining the term structure of all languages.
   *
@@ -571,7 +573,15 @@ trait AbstractLanguage {
 
     override lazy val toHtml: TypedTag[String] = p(value.toString)
 
-    override lazy val toString: String = value.toString
+//    override lazy val toString: String = value.toString
+
+    val defaultContents: String = ""
+
+    private var overrideContents: Option[String] = None
+
+    def getValue: String = overrideContents.getOrElse(value.toString)
+
+    def setOverrideContents(contents: String): Unit = overrideContents = Some(contents)
   }
 
   /** Companion object for [[Literal]].
@@ -599,12 +609,45 @@ trait AbstractLanguage {
       LiteralString(s.substring(1, s.length - 1))
     } else if ("-?\\d+".r.matches(s)) {
       LiteralInt(BigInt(s))
-    } else if ("[A-Za-z_$][\\w_$]*".r.matches(s)) {
+    } else if (LiteralIdentifier.identifierRegex.matches(s)) {
       LiteralIdentifier(s)
     } else {
       LiteralAny(s)
     }
+    
+    def fromStringOfType(s: String, l: Class[_ <: Literal]): Literal = l match {
+      case c if c == classOf[LiteralBool] => LiteralBool(s.toBoolean)
+      case c if c == classOf[LiteralString] => LiteralString(s)
+      case c if c == classOf[LiteralInt] => LiteralInt(BigInt(s))
+      case c if c == classOf[LiteralIdentifier] => LiteralIdentifier(s)
+      case c if c == classOf[LiteralAny] => LiteralAny(s)
+      case _ => throw LiteralParseException(s)
+    }
   }
+
+  protected trait LiteralParser extends JavaTokenParsers {
+    def literalName: Parser[String] = "LiteralString" | "LiteralInt" | "LiteralBool" | "LiteralIdentifier" | "LiteralAny"
+
+    def literalArg: Parser[BigInt | String | Boolean] = wholeNumber ^^ (n => BigInt(n))
+      | "true" ^^ (_ => true) | "false" ^^ (_ => false)
+      | stringLiteral
+      | ident // any identifier
+      | ""
+
+    def literal: Parser[Literal] = literalName ~ "(" ~ literalArg ~ ")" ^^ {
+      case name ~ "(" ~ arg ~ ")" => (name, arg) match {
+        case ("LiteralInt", n: BigInt) => LiteralInt(n)
+        case ("LiteralString", s: String) => LiteralString(s)
+        case ("LiteralBool", b: Boolean) => LiteralBool(b)
+        case ("LiteralIdentifier", s: String) => LiteralIdentifier(s)
+        case ("LiteralAny", s: String) => LiteralAny(s)
+        case _ => throw LiteralParseException(s"$name($arg)")
+      }
+      case other => throw LiteralParseException(other.toString)
+    }
+  }
+
+  private case class LiteralParseException(message: String) extends ClickDeduceException(message)
 
   /** A literal integer.
     *
@@ -614,7 +657,9 @@ trait AbstractLanguage {
     *   The integer value.
     */
   case class LiteralInt(value: BigInt) extends Literal {
-    override def toText: ConvertableText = MathElement(value.toString)
+    override def toText: ConvertableText = MathElement(getValue.toString)
+
+    override val defaultContents: String = "0"
   }
 
   /** A literal boolean.
@@ -622,7 +667,7 @@ trait AbstractLanguage {
     *   The boolean value.
     */
   case class LiteralBool(value: Boolean) extends Literal {
-    override def toText: ConvertableText = MathElement(value.toString)
+    override def toText: ConvertableText = MathElement(getValue.toString)
   }
 
   /** A literal string.
@@ -632,9 +677,9 @@ trait AbstractLanguage {
     *   The string value.
     */
   case class LiteralString(value: String) extends Literal {
-    override lazy val toString: String = s""""$value""""
+    override lazy val toString: String = s"LiteralString(${UtilityFunctions.quote(value)})"
 
-    override def toText: ConvertableText = TextElement(toString)
+    override def toText: ConvertableText = TextElement(getValue)
   }
 
   /** A literal identifier.
@@ -642,9 +687,15 @@ trait AbstractLanguage {
     *   The identifier value.
     */
   case class LiteralIdentifier(value: String) extends Literal {
-    override lazy val toString: String = value
+//    override lazy val toString: String = s"LiteralIdentifier(${UtilityFunctions.quote(value)})"
 
-    override def toText: ConvertableText = ItalicsElement(TextElement(toString))
+    override def toText: ConvertableText = ItalicsElement(TextElement(getValue))
+    
+    def validIdentifier: Boolean = LiteralIdentifier.identifierRegex.matches(value) 
+  }
+  
+  object LiteralIdentifier {
+    val identifierRegex: Regex = "[A-Za-z_$][\\w_$]*".r
   }
 
   /** A literal with no restrictions.
@@ -652,9 +703,21 @@ trait AbstractLanguage {
     *   The value.
     */
   case class LiteralAny(value: String) extends Literal {
-    override lazy val toString: String = value
+//    override lazy val toString: String = s"LiteralAny(${UtilityFunctions.quote(value)})"
 
-    override def toText: ConvertableText = TextElement(toString)
+    override def toText: ConvertableText = TextElement(getValue)
+  }
+
+  protected def placeholderOfLiteral(literal: Literal, contents: String): Literal = {
+    val copy = literal match {
+      case LiteralInt(n) => LiteralInt(n)
+      case LiteralBool(b) => LiteralBool(b)
+      case LiteralString(s) => LiteralString(s)
+      case LiteralIdentifier(s) => LiteralIdentifier(s)
+      case LiteralAny(s) => LiteralAny(s)
+    }
+    copy.setOverrideContents(contents)
+    copy
   }
 
   // </editor-fold>

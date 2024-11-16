@@ -156,6 +156,7 @@ export function runAction(actionName: string, treePath: string, extraArgs: any[]
     const langName: string = getSelectedLanguage();
     try {
         const [newNodeString, newHtml] = postProcessActionNew(langName, modeName, actionName, lastNodeString, treePath, extraArgs);
+        console.log(newNodeString);
         updateTree(newHtml, newNodeString, modeName, langName, true);
     } catch (e) {
         displayError(e);

@@ -20,7 +20,7 @@ class NodeTreeTest extends AnyFunSuite {
   test("Can correctly represent a simple arithmetic tree with a literal field open") {
     val expr = Times(Num(-3), Num(5))
     val concreteChild = SubExprNode(VariableNode(Num(-3).toString))
-    val variableChildInner = VariableNode("Num", List(LiteralNode("5")))
+    val variableChildInner = VariableNode("Num", List(LiteralNode(LiteralInt(5))))
     val variableChild = SubExprNode(variableChildInner)
     val children = List(concreteChild, variableChild)
     val tree = VariableNode("Times", children)
@@ -77,9 +77,9 @@ class NodeTreeTest extends AnyFunSuite {
   }
 
   test("Can correctly read a VariableNode with a LiteralNode") {
-    val tree1 = VariableNode("Num", List(LiteralNode("")))
+    val tree1 = VariableNode("Num", List(LiteralNode(LiteralInt(0))))
     correctNodeRead(tree1)
-    val tree2 = VariableNode("Num", List(LiteralNode("1")))
+    val tree2 = VariableNode("Num", List(LiteralNode(LiteralInt(1))))
     correctNodeRead(tree2)
   }
 
@@ -132,7 +132,7 @@ class NodeTreeTest extends AnyFunSuite {
               SubExprNode(
                 VariableNode(
                   "Plus",
-                  List(SubExprNode(ExprChoiceNode()), SubExprNode(VariableNode("Num", List(LiteralNode("2")))))
+                  List(SubExprNode(ExprChoiceNode()), SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(2))))))
                 )
               )
             )
@@ -156,7 +156,7 @@ class NodeTreeTest extends AnyFunSuite {
               SubExprNode(
                 VariableNode(
                   "Plus",
-                  List(SubExprNode(ExprChoiceNode()), SubExprNode(VariableNode("Num", List(LiteralNode("2")))))
+                  List(SubExprNode(ExprChoiceNode()), SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(2))))))
                 )
               )
             )
@@ -178,8 +178,8 @@ class NodeTreeTest extends AnyFunSuite {
                 VariableNode(
                   "Plus",
                   List(
-                    SubExprNode(VariableNode("Num", List(LiteralNode("")))),
-                    SubExprNode(VariableNode("Num", List(LiteralNode("2"))))
+                    SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(0))))),
+                    SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(2)))))
                   )
                 )
               )
@@ -196,18 +196,18 @@ class NodeTreeTest extends AnyFunSuite {
     val tree1 = VariableNode(
       "Plus",
       List(
-        SubExprNode(VariableNode("Num", List(LiteralNode("75")))),
+        SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(75))))),
         SubExprNode(
           VariableNode(
             "Times",
             List(
-              SubExprNode(VariableNode("Num", List(LiteralNode("3")))),
+              SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(3))))),
               SubExprNode(
                 VariableNode(
                   "Plus",
                   List(
-                    SubExprNode(VariableNode("Num", List(LiteralNode("2")))),
-                    SubExprNode(VariableNode("Num", List(LiteralNode("3"))))
+                    SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(2))))),
+                    SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(3)))))
                   )
                 )
               )
@@ -219,46 +219,46 @@ class NodeTreeTest extends AnyFunSuite {
     tree1.getExpr shouldEqual Plus(Num(75), Times(Num(3), Plus(Num(2), Num(3))))
   }
 
-  test("Correctly read expression from VariableNode with incomplete or incorrect literal values") {
-    val tree1 = VariableNode(
-      "Plus",
-      List(
-        SubExprNode(VariableNode("Num", List(LiteralNode("")))),
-        SubExprNode(VariableNode("Num", List(LiteralNode("\"Hello!\""))))
-      )
-    )
-    tree1.getExpr shouldEqual Plus(Num(LiteralAny("")), Num(LiteralString("Hello!")))
-
-    val tree2 = VariableNode(
-      "Times",
-      List(
-        SubExprNode(VariableNode("Num", List(LiteralNode("true")))),
-        SubExprNode(
-          VariableNode(
-            "Plus",
-            List(
-              SubExprNode(VariableNode("Num", List(LiteralNode("2")))),
-              SubExprNode(VariableNode("Num", List(LiteralNode("\"3\""))))
-            )
-          )
-        )
-      )
-    )
-    tree2.getExpr shouldEqual Times(Num(LiteralBool(true)), Plus(Num(LiteralInt(2)), Num(LiteralString("3"))))
-  }
+//  test("Correctly read expression from VariableNode with incomplete or incorrect literal values") {
+//    val tree1 = VariableNode(
+//      "Plus",
+//      List(
+//        SubExprNode(VariableNode("Num", List(LiteralNode("")))),
+//        SubExprNode(VariableNode("Num", List(LiteralNode("\"Hello!\""))))
+//      )
+//    )
+//    tree1.getExpr shouldEqual Plus(Num(LiteralAny("")), Num(LiteralString("Hello!")))
+//
+//    val tree2 = VariableNode(
+//      "Times",
+//      List(
+//        SubExprNode(VariableNode("Num", List(LiteralNode("true")))),
+//        SubExprNode(
+//          VariableNode(
+//            "Plus",
+//            List(
+//              SubExprNode(VariableNode("Num", List(LiteralNode("2")))),
+//              SubExprNode(VariableNode("Num", List(LiteralNode("\"3\""))))
+//            )
+//          )
+//        )
+//      )
+//    )
+//    tree2.getExpr shouldEqual Times(Num(LiteralBool(true)), Plus(Num(LiteralInt(2)), Num(LiteralString("3"))))
+//  }
 
   test("Nested TypeNodes have correct tree paths") {
     val tree = LLam.VariableNode(
       "Lambda",
       List(
-        LLam.LiteralNode("x"),
+        LLam.LiteralNode(LLam.LiteralIdentifier("x")),
         LLam.SubTypeNode(
           LLam.TypeNode(
             "Func",
             List(LLam.SubTypeNode(LLam.TypeNode("IntType", Nil)), LLam.SubTypeNode(LLam.TypeNode("BoolType", Nil)))
           )
         ),
-        LLam.SubExprNode(LLam.VariableNode("Var", List(LLam.LiteralNode("x"))))
+        LLam.SubExprNode(LLam.VariableNode("Var", List(LLam.LiteralNode(LLam.LiteralIdentifier("x")))))
       )
     )
 

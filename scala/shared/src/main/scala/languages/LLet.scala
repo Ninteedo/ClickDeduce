@@ -7,25 +7,21 @@ class LLet extends LIf {
 
   // expressions
 
-  case class Var(v: Literal) extends Expr {
-    override def evalInner(env: ValueEnv): Value = v match {
-      case LiteralIdentifier(identifier) =>
-        env.get(identifier) match {
-          case None                          => UnknownVariableEvalError(v)
-          case Some(TypeValueContainer(typ)) => VariableOnlyEvalError(v)
-          case Some(value)                   => value
-        }
-      case _ => InvalidIdentifierEvalError(v)
+  case class Var(v: LiteralIdentifier) extends Expr {
+    override def evalInner(env: ValueEnv): Value = if (!v.validIdentifier) InvalidIdentifierEvalError(v) else {
+      env.get(v.value) match {
+        case None => UnknownVariableEvalError(v)
+        case Some(TypeValueContainer(typ)) => VariableOnlyEvalError(v)
+        case Some(value) => value
+      }
     }
 
-    override def typeCheckInner(tEnv: TypeEnv): Type = v match {
-      case LiteralIdentifier(identifier) =>
-        tEnv.get(identifier) match {
-          case None                     => UnknownVariableTypeError(v)
-          case Some(TypeContainer(typ)) => VariableOnlyTypeError(v)
-          case Some(typ)                => typ
-        }
-      case _ => InvalidIdentifierTypeError(v)
+    override def typeCheckInner(tEnv: TypeEnv): Type = if (!v.validIdentifier) InvalidIdentifierTypeError(v) else {
+      tEnv.get(v.value) match {
+        case None                     => UnknownVariableTypeError(v)
+        case Some(TypeContainer(typ)) => VariableOnlyTypeError(v)
+        case Some(typ)                => typ
+      }
     }
 
     override val needsBrackets: Boolean = false
@@ -34,40 +30,36 @@ class LLet extends LIf {
   }
 
   object Var extends ExprCompanion {
-    def apply(v: Variable): Var = new Var(Literal.fromString(v))
+    def apply(v: Variable): Var = new Var(LiteralIdentifier(v))
 
     override def create(args: BuilderArgs): Option[Expr] = args match {
-      case List(v: Literal) => Some(Var(v))
-      case Nil              => Some(Var(defaultLiteral))
+      case List(v: LiteralIdentifier) => Some(Var(v))
+      case Nil              => Some(Var(LiteralIdentifier("")))
       case _                => None
     }
 
     override val aliases: List[String] = List("Variable", "X")
   }
 
-  case class Let(v: Literal, assign: Expr, bound: Expr) extends Expr {
-    override def evalInner(env: ValueEnv): Value = v match {
-      case LiteralIdentifier(identifier) =>
-        val assign_val: Value = assign.eval(env)
-        if (assign_val.isError) assign_val else bound.eval(env + (identifier -> assign_val))
-      case _ => InvalidIdentifierEvalError(v)
+  case class Let(v: LiteralIdentifier, assign: Expr, bound: Expr) extends Expr {
+    override def evalInner(env: ValueEnv): Value = if (!v.validIdentifier) InvalidIdentifierEvalError(v) else {
+      val assign_val: Value = assign.eval(env)
+      if (assign_val.isError) assign_val else bound.eval(env + (v.value -> assign_val))
     }
 
-    override def typeCheckInner(tEnv: TypeEnv): Type = v match {
-      case LiteralIdentifier(identifier) =>
-        val assign_type: Type = assign.typeCheck(tEnv)
-        if (assign_type.isError) assign_type else bound.typeCheck(tEnv + (identifier -> assign_type))
-      case _ => InvalidIdentifierTypeError(v)
+    override def typeCheckInner(tEnv: TypeEnv): Type = if (!v.validIdentifier) InvalidIdentifierTypeError(v) else {
+      val assign_type: Type = assign.typeCheck(tEnv)
+      if (assign_type.isError) assign_type else bound.typeCheck(tEnv + (v.value -> assign_type))
     }
 
     override def getChildrenBase(env: ValueEnv): List[(Term, ValueEnv)] =
-      List((v, env), (assign, env), (bound, env + (v.toString -> assign.eval(env))))
+      List((v, env), (assign, env), (bound, env + (v.value -> assign.eval(env))))
 
     override def getChildrenEval(env: ValueEnv): List[(Term, ValueEnv)] =
-      List((assign, env), (bound, env + (v.toString -> assign.eval(env))))
+      List((assign, env), (bound, env + (v.value -> assign.eval(env))))
 
     override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] =
-      List((assign, tEnv), (bound, tEnv + (v.toString -> assign.typeCheck(tEnv))))
+      List((assign, tEnv), (bound, tEnv + (v.value -> assign.typeCheck(tEnv))))
 
     override def toText: ConvertableText =
       MultiElement(
@@ -81,12 +73,12 @@ class LLet extends LIf {
   }
 
   object Let extends ExprCompanion {
-    def apply(v: Variable, assign: Expr, bound: Expr): Let = new Let(Literal.fromString(v), assign, bound)
+    def apply(v: Variable, assign: Expr, bound: Expr): Let = new Let(LiteralIdentifier(v), assign, bound)
 
     override def create(args: BuilderArgs): Option[Expr] = args match {
-      case List(v: Literal, assign: Expr, bound: Expr) => Some(Let(v, assign, bound))
-      case Nil                                         => Some(Let(defaultLiteral, defaultExpr, defaultExpr))
-      case _                                           => None
+      case List(v: LiteralIdentifier, assign: Expr, bound: Expr) => Some(Let(v, assign, bound))
+      case Nil => Some(Let(LiteralIdentifier(""), defaultExpr, defaultExpr))
+      case _   => None
     }
 
     override val aliases: List[String] = List("=")
@@ -128,9 +120,10 @@ class LLet extends LIf {
   setTasks(LetAndVarTask, UseVarInAssignmentTask, OverwriteVarTask)
 
   private def checkHasVar(e: Expr, v: Literal): Boolean = checkCondition(
-    e, cond = {
+    e,
+    cond = {
       case Var(v2) => v == v2
-      case _ => false
+      case _       => false
     }
   )
 
@@ -145,9 +138,10 @@ class LLet extends LIf {
 
     override def checkFulfilled(expr: Expr): Boolean = {
       !expr.typeCheck().isError && checkCondition(
-        expr, cond = {
+        expr,
+        cond = {
           case Let(v, _, bound) => checkHasVar(bound, v)
-          case _ => false
+          case _                => false
         }
       )
     }
@@ -163,13 +157,14 @@ class LLet extends LIf {
 
     override def checkFulfilled(expr: Expr): Boolean = {
       !expr.typeCheck().isError && checkCondition(
-        expr, cond = {
+        expr,
+        cond = {
           case Let(v1, _, bound1) =>
             checkCondition(
               bound1,
               {
                 case Let(_, assign2, _) => checkHasVar(assign2, v1)
-                case _ => false
+                case _                  => false
               }
             )
           case _ => false
@@ -189,18 +184,20 @@ class LLet extends LIf {
     override def checkFulfilled(expr: Expr): Boolean = {
       def checkVarUsedNoOverwrite(e: Expr, v1: Literal): Boolean = e match {
         case Var(v2) => v1 == v2
-        case Let(v2, assign, bound) => checkVarUsedNoOverwrite(assign, v1) || (v1 != v2 && checkVarUsedNoOverwrite(bound, v1))
+        case Let(v2, assign, bound) =>
+          checkVarUsedNoOverwrite(assign, v1) || (v1 != v2 && checkVarUsedNoOverwrite(bound, v1))
         case e => e.getExprFields.exists(checkVarUsedNoOverwrite(_, v1))
       }
 
       !expr.typeCheck().isError && checkCondition(
-        expr, cond = {
+        expr,
+        cond = {
           case Let(v1, _, bound1) =>
             checkVarUsedNoOverwrite(bound1, v1) && checkCondition(
               bound1,
               {
                 case Let(v2, _, bound2) => v1 == v2 && checkHasVar(bound2, v1)
-                case _ => false
+                case _                  => false
               }
             )
           case _ => false

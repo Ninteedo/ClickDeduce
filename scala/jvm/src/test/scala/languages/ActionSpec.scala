@@ -91,13 +91,13 @@ class ActionSpec extends AnyWordSpec with Matchers {
           VariableNode.fromExpr(Plus(BlankExprDropDown(), Num(1))),
           List(0),
           "Num",
-          VariableNode.fromExpr(Plus(Num(LiteralAny("")), Num(1)))
+          VariableNode.fromExpr(Plus(Num(LiteralInt(0)), Num(1)))
         ),
         (
           VariableNode.fromExpr(Plus(Num(1), BlankExprDropDown())),
           List(1),
           "Bool",
-          VariableNode.fromExpr(Plus(Num(1), Bool(LiteralAny(""))))
+          VariableNode.fromExpr(Plus(Num(1), Bool(LiteralBool(false))))
         ),
         (
           VariableNode.fromExpr(IfThenElse(Plus(Num(1), BlankExprDropDown()), Num(6), BlankExprDropDown())),
@@ -251,12 +251,12 @@ class ActionSpec extends AnyWordSpec with Matchers {
         (VariableNode.fromExpr(Plus(Num(1), Num(2))), List(0, 0), "3", VariableNode.fromExpr(Plus(Num(3), Num(2)))),
         (
           VariableNode.fromExpr(
-            Times(Num(61), IfThenElse(Equal(Num(5), Bool(Literal.fromString("foo"))), Num(1), Num(-62)))
+            Times(Num(61), IfThenElse(Equal(Num(5), Bool(LiteralBool(false))), Num(1), Num(-62)))
           ),
           List(1, 0, 1, 0),
-          "bar",
+          "true",
           VariableNode.fromExpr(
-            Times(Num(61), IfThenElse(Equal(Num(5), Bool(Literal.fromString("bar"))), Num(1), Num(-62)))
+            Times(Num(61), IfThenElse(Equal(Num(5), Bool(LiteralBool(true))), Num(1), Num(-62)))
           )
         ),
         (
@@ -286,7 +286,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
         (VariableNode.fromExpr(Num(1)), List(), "st"),
         (VariableNode.fromExpr(Plus(Num(1), Num(2))), List(0), "tj461"),
         (
-          VariableNode.fromExpr(IfThenElse(Bool(true), Lambda("z", IntType(), Bool(LiteralAny("hi"))), Num(2))),
+          VariableNode.fromExpr(IfThenElse(Bool(true), Lambda("z", IntType(), Bool(LiteralBool(true))), Num(2))),
           List(1, 2),
           "err"
         )

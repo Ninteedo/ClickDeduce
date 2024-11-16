@@ -122,7 +122,7 @@ class LRecTest extends TestTemplate[Expr, Value, Type] {
     children.head shouldBe a[VariableNode]
     children.head.asInstanceOf[VariableNode].exprName shouldEqual "Rec"
 
-    children(1) shouldEqual VariableNode("Num", List(LiteralNode("3")))
+    children(1) shouldEqual VariableNode("Num", List(LiteralNode(LiteralInt(3))))
 
     children(2) shouldBe a[VariableNode]
     val phantomNode = children(2).asInstanceOf[VariableNode]
@@ -149,23 +149,23 @@ class LRecTest extends TestTemplate[Expr, Value, Type] {
           VariableNode(
             "Rec",
             List(
-              LiteralNode("f"),
-              LiteralNode("x"),
+              LiteralNode(LiteralIdentifier("f")),
+              LiteralNode(LiteralIdentifier("x")),
               SubTypeNode(TypeNode("IntType", Nil)),
               SubTypeNode(TypeNode("IntType", Nil)),
               SubExprNode(
                 VariableNode(
                   "Apply",
                   List(
-                    SubExprNode(VariableNode("Var", List(LiteralNode("f")))),
-                    SubExprNode(VariableNode("Var", List(LiteralNode("x"))))
+                    SubExprNode(VariableNode("Var", List(LiteralNode(LiteralIdentifier("f"))))),
+                    SubExprNode(VariableNode("Var", List(LiteralNode(LiteralIdentifier("x")))))
                   )
                 )
               )
             )
           )
         ),
-        SubExprNode(VariableNode("Num", List(LiteralNode("1"))))
+        SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(1)))))
       )
     )
 

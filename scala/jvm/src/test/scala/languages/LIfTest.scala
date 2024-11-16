@@ -145,7 +145,7 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
     selectCondAction.newTree shouldEqual VariableNode(
       "IfThenElse",
       List(
-        SubExprNode(VariableNode("Bool", List(LiteralNode("")))),
+        SubExprNode(VariableNode("Bool", List(LiteralNode(LiteralBool(false))))),
         SubExprNode(ExprChoiceNode()),
         SubExprNode(ExprChoiceNode())
       )
@@ -155,7 +155,7 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
     enterBoolAction.newTree shouldEqual VariableNode(
       "IfThenElse",
       List(
-        SubExprNode(VariableNode("Bool", List(LiteralNode("true")))),
+        SubExprNode(VariableNode("Bool", List(LiteralNode(LiteralBool(true))))),
         SubExprNode(ExprChoiceNode()),
         SubExprNode(ExprChoiceNode())
       )
@@ -165,8 +165,8 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
     selectThenExprAction.newTree shouldEqual VariableNode(
       "IfThenElse",
       List(
-        SubExprNode(VariableNode("Bool", List(LiteralNode("true")))),
-        SubExprNode(VariableNode("Num", List(LiteralNode("")))),
+        SubExprNode(VariableNode("Bool", List(LiteralNode(LiteralBool(true))))),
+        SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(0))))),
         SubExprNode(ExprChoiceNode())
       )
     )
@@ -175,8 +175,8 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
     enterThenExprAction.newTree shouldEqual VariableNode(
       "IfThenElse",
       List(
-        SubExprNode(VariableNode("Bool", List(LiteralNode("true")))),
-        SubExprNode(VariableNode("Num", List(LiteralNode("1")))),
+        SubExprNode(VariableNode("Bool", List(LiteralNode(LiteralBool(true))))),
+        SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(1))))),
         SubExprNode(ExprChoiceNode())
       )
     )
@@ -185,9 +185,9 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
     selectElseExprAction.newTree shouldEqual VariableNode(
       "IfThenElse",
       List(
-        SubExprNode(VariableNode("Bool", List(LiteralNode("true")))),
-        SubExprNode(VariableNode("Num", List(LiteralNode("1")))),
-        SubExprNode(VariableNode("Num", List(LiteralNode(""))))
+        SubExprNode(VariableNode("Bool", List(LiteralNode(LiteralBool(true))))),
+        SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(1))))),
+        SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(0)))))
       )
     )
 
@@ -195,9 +195,9 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
     enterElseExprAction.newTree shouldEqual VariableNode(
       "IfThenElse",
       List(
-        SubExprNode(VariableNode("Bool", List(LiteralNode("true")))),
-        SubExprNode(VariableNode("Num", List(LiteralNode("1")))),
-        SubExprNode(VariableNode("Num", List(LiteralNode("2"))))
+        SubExprNode(VariableNode("Bool", List(LiteralNode(LiteralBool(true))))),
+        SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(1))))),
+        SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(2)))))
       )
     )
 
@@ -210,9 +210,9 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
     val tree = VariableNode(
       "IfThenElse",
       List(
-        SubExprNode(VariableNode("Bool", List(LiteralNode("true")))),
-        SubExprNode(VariableNode("Num", List(LiteralNode("1")))),
-        SubExprNode(VariableNode("Num", List(LiteralNode("2"))))
+        SubExprNode(VariableNode("Bool", List(LiteralNode(LiteralBool(true))))),
+        SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(1))))),
+        SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(2)))))
       )
     )
 
@@ -235,23 +235,6 @@ class LIfTest extends TestTemplate[Expr, Value, Type] {
     Times(Bool(false), Bool(true)).typeCheck() shouldBe an[UnexpectedArgType]
     Times(Num(5), Bool(true)).typeCheck() shouldBe an[UnexpectedArgType]
     Times(Bool(false), Num(5)).typeCheck() shouldBe an[UnexpectedArgType]
-  }
-
-  property("Bool returns an error when given an argument other than a LiteralBool") {
-    val invalidLiterals: TableFor1[Literal] = Table(
-      "invalidLiterals",
-      LiteralInt(5),
-      LiteralString("hello"),
-      LiteralIdentifier("hello"),
-      Literal.fromString("\"true\""),
-      Literal.fromString("\"false\""),
-      LiteralString("true")
-    )
-
-    forAll(invalidLiterals) { l =>
-      Bool(l).eval() shouldBe an[UnexpectedArgValue]
-      Bool(l).typeCheck() shouldBe an[UnexpectedArgType]
-    }
   }
 
   property("Bool pretty prints correctly") {
