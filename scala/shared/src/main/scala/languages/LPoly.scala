@@ -8,32 +8,32 @@ class LPoly extends LData {
 
   // expressions
 
-  case class Poly(v: Literal, e: Expr) extends Expr {
+  case class Poly(v: LiteralIdentifier, e: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = PolyV(TypeVar(v), e, env)
 
     override def typeCheckInner(tEnv: TypeEnv): Type =
-      PolyType(TypeVar(v), e.typeCheck(tEnv + (v.toString -> TypeContainer(TypeVar(v)))))
+      PolyType(TypeVar(v), e.typeCheck(tEnv + (v -> TypeContainer(TypeVar(v)))))
 
     override def getChildrenBase(env: ValueEnv): List[(Term, ValueEnv)] =
-      List((v, env), (e, env + (v.toString -> TypeValueContainer(TypeVar(v)))))
+      List((v, env), (e, env + (v -> TypeValueContainer(TypeVar(v)))))
 
     override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] =
-      List((v, tEnv), (e, tEnv + (v.toString -> TypeContainer(TypeVar(v)))))
+      List((v, tEnv), (e, tEnv + (v -> TypeContainer(TypeVar(v)))))
 
     override def getChildrenEval(env: ValueEnv): List[(Term, ValueEnv)] =
-      List((e, env + (v.toString -> TypeValueContainer(TypeVar(v)))))
+      List((e, env + (v -> TypeValueContainer(TypeVar(v)))))
 
     override def toText: ConvertableText =
       MultiElement(LambdaSymbol(capital = true), v.toText, MathElement.period, e.toTextBracketed)
   }
 
   object Poly extends ExprCompanion {
-    def apply(v: Variable, e: Expr): Poly = Poly(Literal.fromString(v), e)
+    def apply(v: Variable, e: Expr): Poly = Poly(LiteralIdentifier(v), e)
 
     override def create(args: BuilderArgs): Option[Expr] = args match {
-      case List(v: Literal, e: Expr) => Some(Poly(v, e))
-      case Nil                       => Some(Poly(defaultLiteral, defaultExpr))
-      case _                         => None
+      case List(v: LiteralIdentifier, e: Expr) => Some(Poly(v, e))
+      case Nil                                 => Some(Poly(LiteralIdentifier.default, defaultExpr))
+      case _                                   => None
     }
 
     override val aliases: List[String] = List("Polymorphic", "PolyType")
@@ -43,7 +43,7 @@ class LPoly extends LData {
     override def evalInner(env: ValueEnv): Value = e.eval(env) match {
       case PolyV(tv, e, env) =>
         tv match {
-          case TypeVar(v) => e.eval(env + (v.toString -> TypeValueContainer(typ)))
+          case TypeVar(v) => e.eval(env + (v -> TypeValueContainer(typ)))
           case other      => PolyVRequiresTypeVar(other)
         }
       case other => CannotApplyTypeUnlessPolyV(other)
@@ -52,7 +52,7 @@ class LPoly extends LData {
     override def typeCheckInner(tEnv: TypeEnv): Type = e.typeCheck(tEnv) match {
       case PolyType(tv, incompleteType) =>
         tv match {
-          case TypeVar(v) => incompleteType.typeCheck(tEnv + (v.toString -> typ))
+          case TypeVar(v) => incompleteType.typeCheck(tEnv + (v -> typ))
           case other      => PolyVRequiresTypeVarType(other)
         }
       case other => CannotApplyTypeUnlessPolyType(other)
@@ -72,12 +72,15 @@ class LPoly extends LData {
 
   // types
 
-  case class TypeVar(v: Literal) extends Type {
-    override def typeCheck(tEnv: TypeEnv): Type = tEnv.get(v.toString) match {
-      case None             => UnknownTypeVar(v)
-      case Some(TypeVar(t)) => TypeVar(t)
-      case Some(other)      => other.typeCheck(tEnv)
-    }
+  case class TypeVar(v: LiteralIdentifier) extends Type {
+    override def typeCheck(tEnv: TypeEnv): Type = guardValidIdentifierType(
+      v,
+      tEnv.get(v) match {
+        case None              => UnknownTypeVar(v)
+        case Some(TypeVar(t))  => TypeVar(t)
+        case Some(other: Type) => other.typeCheck(tEnv)
+      }
+    )
 
     override val needsBrackets: Boolean = false
 
@@ -85,11 +88,11 @@ class LPoly extends LData {
   }
 
   object TypeVar extends TypeCompanion {
-    def apply(v: Variable): TypeVar = TypeVar(Literal.fromString(v))
+    def apply(v: Variable): TypeVar = TypeVar(LiteralIdentifier(v))
 
     override def create(args: BuilderArgs): Option[Type] = args match {
-      case List(v: Literal) => Some(TypeVar(v))
-      case Nil              => Some(TypeVar(defaultLiteral))
+      case List(v: LiteralIdentifier) => Some(TypeVar(v))
+      case Nil              => Some(TypeVar(LiteralIdentifier.default))
       case _                => None
     }
   }
@@ -120,7 +123,7 @@ class LPoly extends LData {
 
   case class PolyV(typeVar: Type, e: Expr, env: ValueEnv) extends Value {
     override val typ: Type = typeVar match {
-      case TypeVar(v) => PolyType(typeVar, e.typeCheck(envToTypeEnv(env) + (v.toString -> TypeContainer(typeVar))))
+      case TypeVar(v) => PolyType(typeVar, e.typeCheck(envToTypeEnv(env) + (v -> TypeContainer(typeVar))))
       case other      => PolyVRequiresTypeVarType(other)
     }
 

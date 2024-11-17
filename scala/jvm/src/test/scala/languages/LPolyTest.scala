@@ -5,7 +5,7 @@ import org.scalatest.matchers.should.Matchers.*
 
 class LPolyTest extends TestTemplate[Expr, Value, Type] {
   property("Example identity function expressions") {
-    val literalT = Literal.fromString("T")
+    val literalT = LiteralIdentifier("T")
     val identityFunction = Poly(literalT, Lambda("x", TypeVar(literalT), Var("x")))
 
     identityFunction
@@ -17,7 +17,7 @@ class LPolyTest extends TestTemplate[Expr, Value, Type] {
       "x",
       Func(IntType(), BoolType()),
       Var("x"),
-      Env("T" -> TypeValueContainer(Func(IntType(), BoolType())))
+      Env() + (literalT -> TypeValueContainer(Func(IntType(), BoolType())))
     )
 
     Apply(ApplyType(identityFunction, IntType()), Num(1)).typeCheck() shouldEqual IntType()

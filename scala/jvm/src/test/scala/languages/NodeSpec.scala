@@ -181,7 +181,7 @@ class NodeSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChecks 
           VariableNode(
             "Let",
             List(
-              LiteralNode(LiteralInt(5)),
+              LiteralNode(LiteralIdentifier("5")),
               SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(5))))),
               SubExprNode(VariableNode("Bool", List(LiteralNode(LiteralBool(false)))))
             )
