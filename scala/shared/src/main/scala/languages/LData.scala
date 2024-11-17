@@ -99,10 +99,10 @@ class LData extends LRec {
     override val aliases: List[String] = List("Second", "2nd")
   }
 
-  case class LetPair(x: Literal, y: Literal, assign: Expr, bound: Expr) extends Expr {
+  case class LetPair(x: LiteralIdentifier, y: LiteralIdentifier, assign: Expr, bound: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = verifyLiteralIdentifierEval(x, y) {
       assign.eval(env) match {
-        case PairV(v1, v2)    => bound.eval(env + (x.toString -> v1) + (y.toString -> v2))
+        case PairV(v1, v2)    => bound.eval(env + (x -> v1) + (y -> v2))
         case error: EvalError => error
         case other            => TupleOperationOnNonTupleValue(other)
       }
@@ -110,7 +110,7 @@ class LData extends LRec {
 
     override def typeCheckInner(tEnv: TypeEnv): Type = verifyLiteralIdentifierType(x, y) {
       assign.typeCheck(tEnv) match {
-        case PairType(l, r)   => bound.typeCheck(tEnv + (x.toString -> l) + (y.toString -> r))
+        case PairType(l, r)   => bound.typeCheck(tEnv + (x -> l) + (y -> r))
         case error: TypeError => error
         case other            => TupleOperationOnNonTupleType(other)
       }
@@ -129,25 +129,26 @@ class LData extends LRec {
       (x, env),
       (y, env),
       (assign, env),
-      (bound, env + (x.toString -> Fst(assign).eval(env)) + (y.toString -> Snd(assign).eval(env)))
+      (bound, env + (x -> Fst(assign).eval(env)) + (y -> Snd(assign).eval(env)))
     )
 
     override def getChildrenEval(env: ValueEnv): List[(Term, ValueEnv)] =
-      List((assign, env), (bound, env + (x.toString -> Fst(assign).eval(env)) + (y.toString -> Snd(assign).eval(env))))
+      List((assign, env), (bound, env + (x -> Fst(assign).eval(env)) + (y -> Snd(assign).eval(env))))
 
     override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] = List(
       (assign, tEnv),
-      (bound, tEnv + (x.toString -> Fst(assign).typeCheck(tEnv)) + (y.toString -> Snd(assign).typeCheck(tEnv)))
+      (bound, tEnv + (x -> Fst(assign).typeCheck(tEnv)) + (y -> Snd(assign).typeCheck(tEnv)))
     )
   }
 
   object LetPair extends ExprCompanion {
     def apply(x: Variable, y: Variable, assign: Expr, bound: Expr): LetPair =
-      LetPair(Literal.fromString(x), Literal.fromString(y), assign, bound)
+      LetPair(LiteralIdentifier(x), LiteralIdentifier(y), assign, bound)
 
     override def create(args: BuilderArgs): Option[Expr] = args match {
-      case List(x: Literal, y: Literal, assign: Expr, bound: Expr) => Some(LetPair(x, y, assign, bound))
-      case Nil => Some(LetPair(defaultLiteral, defaultLiteral, defaultExpr, defaultExpr))
+      case List(x: LiteralIdentifier, y: LiteralIdentifier, assign: Expr, bound: Expr) =>
+        Some(LetPair(x, y, assign, bound))
+      case Nil => Some(LetPair(LiteralIdentifier.default, LiteralIdentifier.default, defaultExpr, defaultExpr))
       case _   => None
     }
 
@@ -207,11 +208,11 @@ class LData extends LRec {
     }
   }
 
-  case class CaseSwitch(e: Expr, l: Literal, r: Literal, lExpr: Expr, rExpr: Expr) extends Expr {
+  case class CaseSwitch(e: Expr, l: LiteralIdentifier, r: LiteralIdentifier, lExpr: Expr, rExpr: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = verifyLiteralIdentifierEval(l, r) {
       e.eval(env) match {
-        case LeftV(v, rightType) => lExpr.eval(env + (l.toString -> v))
-        case RightV(leftType, v) => rExpr.eval(env + (r.toString -> v))
+        case LeftV(v, rightType) => lExpr.eval(env + (l -> v))
+        case RightV(leftType, v) => rExpr.eval(env + (r -> v))
         case other               => CaseSwitchOnNonUnionValue(other)
       }
     }
@@ -219,8 +220,8 @@ class LData extends LRec {
     override def typeCheckInner(tEnv: TypeEnv): Type = verifyLiteralIdentifierType(l, r) {
       e.typeCheck(tEnv) match {
         case UnionType(lType, rType) =>
-          val leftResult = lExpr.typeCheck(tEnv + (l.toString -> lType))
-          val rightResult = rExpr.typeCheck(tEnv + (r.toString -> rType))
+          val leftResult = lExpr.typeCheck(tEnv + (l -> lType))
+          val rightResult = rExpr.typeCheck(tEnv + (r -> rType))
           if (leftResult == rightResult) leftResult
           else TypeMismatchType(leftResult, rightResult)
         case other => CaseSwitchOnNonUnionType(other)
@@ -251,31 +252,33 @@ class LData extends LRec {
             case _               => (HiddenValue(UnknownType()), HiddenValue(UnknownType()))
           }
       }
-      List((e, env), (lExpr, env + (l.toString -> lVal)), (rExpr, env + (r.toString -> rVal)))
+      List((e, env), (lExpr, env + (l -> lVal)), (rExpr, env + (r -> rVal)))
     }
 
     override def getChildrenEval(env: ValueEnv): List[(Term, ValueEnv)] = e.eval(env) match {
-      case LeftV(v, _)  => List((e, env), (lExpr, env + (l.toString -> v)))
-      case RightV(_, v) => List((e, env), (rExpr, env + (r.toString -> v)))
+      case LeftV(v, _)  => List((e, env), (lExpr, env + (l -> v)))
+      case RightV(_, v) => List((e, env), (rExpr, env + (r -> v)))
       case other        => List((e, env))
     }
 
     override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] = e.typeCheck(tEnv) match {
       case UnionType(lType, rType) =>
-        List((e, tEnv), (lExpr, tEnv + (l.toString -> lType)), (rExpr, tEnv + (r.toString -> rType)))
+        List((e, tEnv), (lExpr, tEnv + (l -> lType)), (rExpr, tEnv + (r -> rType)))
       case other =>
-        List((e, tEnv), (lExpr, tEnv + (l.toString -> UnknownType())), (rExpr, tEnv + (r.toString -> UnknownType())))
+        List((e, tEnv), (lExpr, tEnv + (l -> UnknownType())), (rExpr, tEnv + (r -> UnknownType())))
     }
   }
 
   object CaseSwitch extends ExprCompanion {
     def apply(e: Expr, l: Variable, r: Variable, lExpr: Expr, rExpr: Expr): CaseSwitch =
-      CaseSwitch(e, Literal.fromString(l), Literal.fromString(r), lExpr, rExpr)
+      CaseSwitch(e, LiteralIdentifier(l), LiteralIdentifier(r), lExpr, rExpr)
 
     override def create(args: BuilderArgs): Option[Expr] = args match {
-      case List(e: Expr, l: Literal, r: Literal, lExpr: Expr, rExpr: Expr) => Some(CaseSwitch(e, l, r, lExpr, rExpr))
-      case Nil => Some(CaseSwitch(defaultExpr, defaultLiteral, defaultLiteral, defaultExpr, defaultExpr))
-      case _   => None
+      case List(e: Expr, l: LiteralIdentifier, r: LiteralIdentifier, lExpr: Expr, rExpr: Expr) =>
+        Some(CaseSwitch(e, l, r, lExpr, rExpr))
+      case Nil =>
+        Some(CaseSwitch(defaultExpr, LiteralIdentifier.default, LiteralIdentifier.default, defaultExpr, defaultExpr))
+      case _ => None
     }
   }
 
@@ -477,7 +480,7 @@ class LData extends LRec {
         (e, env) =>
           e match {
             case Lambda(v, t, e) =>
-              val tEnv = envToTypeEnv(env) + (v.toString -> t)
+              val tEnv = envToTypeEnv(env) + (v -> t)
               t == UnionType(IntType(), Func(IntType(), IntType())) &&
               e.typeCheck(tEnv) == IntType() &&
               cases.forall((input, expected) => Apply(Lambda(v, t, e), input).eval(env) == expected)
