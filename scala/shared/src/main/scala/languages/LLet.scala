@@ -8,21 +8,21 @@ class LLet extends LIf {
   // expressions
 
   case class Var(v: LiteralIdentifier) extends Expr {
-    override def evalInner(env: ValueEnv): Value = if (!v.validIdentifier) InvalidIdentifierEvalError(v) else {
+    override def evalInner(env: ValueEnv): Value = guardValidIdentifierEval(v,
       env.get(v.value) match {
         case None => UnknownVariableEvalError(v)
         case Some(TypeValueContainer(typ)) => VariableOnlyEvalError(v)
         case Some(value) => value
       }
-    }
+    )
 
-    override def typeCheckInner(tEnv: TypeEnv): Type = if (!v.validIdentifier) InvalidIdentifierTypeError(v) else {
+    override def typeCheckInner(tEnv: TypeEnv): Type = guardValidIdentifierType(v,
       tEnv.get(v.value) match {
         case None                     => UnknownVariableTypeError(v)
         case Some(TypeContainer(typ)) => VariableOnlyTypeError(v)
         case Some(typ)                => typ
       }
-    }
+    )
 
     override val needsBrackets: Boolean = false
 
@@ -42,24 +42,24 @@ class LLet extends LIf {
   }
 
   case class Let(v: LiteralIdentifier, assign: Expr, bound: Expr) extends Expr {
-    override def evalInner(env: ValueEnv): Value = if (!v.validIdentifier) InvalidIdentifierEvalError(v) else {
+    override def evalInner(env: ValueEnv): Value = guardValidIdentifierEval(v, {
       val assign_val: Value = assign.eval(env)
-      if (assign_val.isError) assign_val else bound.eval(env + (v.value -> assign_val))
-    }
+      if (assign_val.isError) assign_val else bound.eval(env + (v -> assign_val))
+    })
 
-    override def typeCheckInner(tEnv: TypeEnv): Type = if (!v.validIdentifier) InvalidIdentifierTypeError(v) else {
+    override def typeCheckInner(tEnv: TypeEnv): Type = guardValidIdentifierType(v, {
       val assign_type: Type = assign.typeCheck(tEnv)
-      if (assign_type.isError) assign_type else bound.typeCheck(tEnv + (v.value -> assign_type))
-    }
+      if (assign_type.isError) assign_type else bound.typeCheck(tEnv + (v -> assign_type))
+    })
 
     override def getChildrenBase(env: ValueEnv): List[(Term, ValueEnv)] =
-      List((v, env), (assign, env), (bound, env + (v.value -> assign.eval(env))))
+      List((v, env), (assign, env), (bound, env + (v -> assign.eval(env))))
 
     override def getChildrenEval(env: ValueEnv): List[(Term, ValueEnv)] =
-      List((assign, env), (bound, env + (v.value -> assign.eval(env))))
+      List((assign, env), (bound, env + (v -> assign.eval(env))))
 
     override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] =
-      List((assign, tEnv), (bound, tEnv + (v.value -> assign.typeCheck(tEnv))))
+      List((assign, tEnv), (bound, tEnv + (v -> assign.typeCheck(tEnv))))
 
     override def toText: ConvertableText =
       MultiElement(
@@ -115,6 +115,14 @@ class LLet extends LIf {
   case class InvalidIdentifierTypeError(v: Literal) extends TypeError {
     override val message: String = s"Invalid identifier '$v'"
   }
+
+  // helpers
+
+  protected def guardValidIdentifierEval(v: LiteralIdentifier, f: => Value): Value =
+    if (!v.validIdentifier) InvalidIdentifierEvalError(v) else f
+
+  protected def guardValidIdentifierType(v: LiteralIdentifier, f: => Type): Type =
+    if (!v.validIdentifier) InvalidIdentifierTypeError(v) else f
 
   // tasks
   setTasks(LetAndVarTask, UseVarInAssignmentTask, OverwriteVarTask)

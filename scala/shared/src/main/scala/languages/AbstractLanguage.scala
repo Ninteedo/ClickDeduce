@@ -37,10 +37,19 @@ trait AbstractLanguage {
     def set(key: Variable, value: T): Env[T] = new Env(env + (key -> value))
 
     @targetName("setVariable")
-    def +(key: Variable, value: T): Env[T] = set(key, value)
+    def +(key: Variable | LiteralIdentifier, value: T): Env[T] = {
+      val k = key match {
+        case v: Variable          => v
+        case LiteralIdentifier(v) => v
+      }
+      set(k, value)
+    }
 
     @targetName("setVariableTuple")
-    def +(kv: (Variable, T)): Env[T] = set(kv._1, kv._2)
+    def +(kv: (Variable | LiteralIdentifier, T)): Env[T] = {
+      val (k, v) = kv
+      this + (k, v)
+    }
 
     @targetName("setVariables")
     def ++(other: Env[T]): Env[T] = new Env(env ++ other.env)
@@ -614,7 +623,7 @@ trait AbstractLanguage {
     } else {
       LiteralAny(s)
     }
-    
+
     def fromStringOfType(s: String, l: Class[_ <: Literal]): Literal = l match {
       case c if c == classOf[LiteralBool] => LiteralBool(s.toBoolean)
       case c if c == classOf[LiteralString] => LiteralString(s)
@@ -690,12 +699,14 @@ trait AbstractLanguage {
 //    override lazy val toString: String = s"LiteralIdentifier(${UtilityFunctions.quote(value)})"
 
     override def toText: ConvertableText = ItalicsElement(TextElement(getValue))
-    
-    def validIdentifier: Boolean = LiteralIdentifier.identifierRegex.matches(value) 
+
+    def validIdentifier: Boolean = LiteralIdentifier.identifierRegex.matches(value)
   }
-  
+
   object LiteralIdentifier {
     val identifierRegex: Regex = "[A-Za-z_$][\\w_$]*".r
+    
+    val default: LiteralIdentifier = LiteralIdentifier("")
   }
 
   /** A literal with no restrictions.

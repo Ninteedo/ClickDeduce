@@ -39,21 +39,21 @@ class LLam extends LLet {
   }
 
   case class Lambda(v: LiteralIdentifier, typ: Type, e: Expr) extends Expr {
-    override def evalInner(env: ValueEnv): Value = if (!v.validIdentifier) InvalidIdentifierEvalError(v) else {
+    override def evalInner(env: ValueEnv): Value = guardValidIdentifierEval(v, {
       LambdaV(v.value, typ.typeCheck(envToTypeEnv(env)), e, env)
-    }
+    })
 
-    override def typeCheckInner(tEnv: TypeEnv): Type = if (!v.validIdentifier) InvalidIdentifierTypeError(v) else {
+    override def typeCheckInner(tEnv: TypeEnv): Type = guardValidIdentifierType(v, {
       val inputType = typ.typeCheck(tEnv)
-      Func(inputType, e.typeCheck(tEnv + (v.value -> inputType)))
-    }
+      Func(inputType, e.typeCheck(tEnv + (v -> inputType)))
+    })
 
     override def getChildrenBase(env: ValueEnv): List[(Term, ValueEnv)] =
-      List((v, env), (typ, env), (e, env + (v.prettyPrint -> HiddenValue(typ))))
+      List((v, env), (typ, env), (e, env + (v -> HiddenValue(typ))))
 
     override def getChildrenEval(env: ValueEnv): List[(Term, ValueEnv)] = Nil
 
-    override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] = List((e, tEnv + (v.prettyPrint -> typ)))
+    override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] = List((e, tEnv + (v -> typ)))
 
     override def toText: ConvertableText = MultiElement(
       LambdaSymbol(),
