@@ -36,7 +36,7 @@ trait AbstractLanguage {
       case v: Variable          => v
       case LiteralIdentifier(v) => v
     }
-    
+
     def get(key: Variable | LiteralIdentifier): Option[T] = env.get(readKey(key))
 
     def set(key: Variable | LiteralIdentifier, value: T): Env[T] = new Env(env + (readKey(key) -> value))
@@ -581,9 +581,13 @@ trait AbstractLanguage {
   abstract class Literal extends Term {
     val value: Any
 
-    override lazy val toHtml: TypedTag[String] = p(value.toString)
+    override lazy val toHtml: TypedTag[String] = p(getValue)
 
-//    override lazy val toString: String = value.toString
+    lazy val toHtmlInput: TypedTag[String] = input(
+      `type` := "text",
+      cls := ClassDict.LITERAL,
+      attr("value") := getValue,
+    )
 
     val defaultContents: String = ""
 
@@ -669,7 +673,13 @@ trait AbstractLanguage {
     *   The integer value.
     */
   case class LiteralInt(value: BigInt) extends Literal {
-    override def toText: ConvertableText = MathElement(getValue.toString)
+    override def toText: ConvertableText = MathElement(getValue)
+
+    override lazy val toHtmlInput: TypedTag[String] = input(
+      `type` := "number",
+      cls := ClassDict.LITERAL + " " + "integer",
+      attr("value") := getValue,
+    )
 
     override val defaultContents: String = "0"
   }
@@ -679,7 +689,13 @@ trait AbstractLanguage {
     *   The boolean value.
     */
   case class LiteralBool(value: Boolean) extends Literal {
-    override def toText: ConvertableText = MathElement(getValue.toString)
+    override def toText: ConvertableText = MathElement(getValue)
+
+    override lazy val toHtmlInput: TypedTag[String] = input(
+      `type` := "checkbox",
+      cls := ClassDict.LITERAL + " " + "boolean",
+      if (getValue.toBoolean) checked else (),
+    )
   }
 
   /** A literal string.
@@ -702,6 +718,12 @@ trait AbstractLanguage {
     override lazy val toString: String = s"LiteralIdentifier(${UtilityFunctions.quote(value)})"
 
     override def toText: ConvertableText = ItalicsElement(TextElement(getValue))
+
+    override lazy val toHtmlInput: TypedTag[String] = input(
+      `type` := "text",
+      cls := ClassDict.LITERAL + " " + "identifier",
+      attr("value") := getValue,
+    )
 
     def validIdentifier: Boolean = LiteralIdentifier.identifierRegex.matches(value)
   }

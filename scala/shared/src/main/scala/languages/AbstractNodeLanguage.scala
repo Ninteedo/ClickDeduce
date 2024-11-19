@@ -866,8 +866,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   case class LiteralNode(literal: Literal) extends InnerNode {
     override val name: String = "LiteralNode"
 
-    private val htmlLineShared: TypedTag[String] =
-      input(`type` := "text", cls := ClassDict.LITERAL, value := literalText)
+    private val htmlLineShared: TypedTag[String] = literal.toHtmlInput
 
     def toHtmlLine(mode: DisplayMode): TypedTag[String] =
       htmlLineShared(width := s"${Math.max(2, literalText.length)}ch", data("tree-path") := treePathString)
