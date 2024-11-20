@@ -43,6 +43,13 @@ export function doStartNodeBlank(event?: Event): void {
     updateTree(newHtml, newNodeString, getSelectedMode(), getSelectedLanguage(), true);
 }
 
+function parseLiteralValue(inputElement: HTMLInputElement): string {
+    if (inputElement.type === "checkbox") {
+        return inputElement.checked ? "true" : "false";
+    }
+    return inputElement.value;
+}
+
 /**
  * Handles a literal input value being changed.
  *
@@ -51,7 +58,7 @@ export function doStartNodeBlank(event?: Event): void {
  * @param textInput the literal input element
  */
 export function handleLiteralChanged(textInput: HTMLInputElement): void {
-    const literalValue: string = textInput.value;
+    const literalValue: string = parseLiteralValue(textInput);
     const treePath: string = getTreePathOfElement(textInput);
 
     if (initialValues.find(([path, value]) => path === treePath && value === literalValue)) {

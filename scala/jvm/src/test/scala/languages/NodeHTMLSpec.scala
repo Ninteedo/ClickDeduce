@@ -63,9 +63,9 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
           }
         }
 
-        "should have 'text' input type" in {
+        "should have 'number' input type" in {
           checkHtmlDocAllModes(tree) { doc =>
-            (doc >> elementList(selector)).head.attr("type") shouldBe "text"
+            (doc >> elementList(selector)).head.attr("type") shouldBe "number"
           }
         }
 

@@ -372,7 +372,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
         case "LiteralNode" =>
           parsedArgs match {
             case List(l: Literal) => Some(LiteralNode(l))
-            case _               => None
+            case _                => None
           }
         case _ => None
       }
@@ -866,17 +866,9 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   case class LiteralNode(literal: Literal) extends InnerNode {
     override val name: String = "LiteralNode"
 
-    private val htmlLineShared: TypedTag[String] = literal.toHtmlInput
+    def toHtmlLine(mode: DisplayMode): TypedTag[String] = literal.toHtmlInput(treePathString)
 
-    def toHtmlLine(mode: DisplayMode): TypedTag[String] =
-      htmlLineShared(width := s"${Math.max(2, literalText.length)}ch", data("tree-path") := treePathString)
-
-    def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] = htmlLineShared(
-      width := s"${Math.max(1, literalText.length)}ch",
-      data("origin") := treePathString,
-      readonly,
-      disabled
-    )
+    def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] = literal.toHtmlInputReadOnly(treePathString)
 
     override def toText(mode: DisplayMode): ConvertableText = HtmlElement(toHtmlLine(mode), getLiteral.toText)
 
@@ -888,11 +880,14 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     override val children: List[OuterNode] = Nil
 
-//    override def toString: String = s"LiteralNode(${UtilityFunctions.quote(literalText)})"
-
     lazy val literalText: String = literal.getValue
 
     lazy val getLiteral: Literal = literal
+
+    def getEnv(mode: DisplayMode): ValueEnv | TypeEnv = getParent match
+      case Some(exprNode: ExprNode)       => exprNode.getEnv(mode)
+      case Some(typeNode: TypeNodeParent) => typeNode.getEnv(mode)
+      case None                           => Env()
   }
 
   /** Parent class for nodes that represent a type.

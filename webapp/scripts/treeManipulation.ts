@@ -270,6 +270,10 @@ function updateActiveInputsList(): void {
                 updateTextInputWidth(input);
                 updateLinkedInputPlaceholders(input);
             });
+
+            if (input.type === 'checkbox') {
+                input.style.width = '';
+            }
         }
     })
 }

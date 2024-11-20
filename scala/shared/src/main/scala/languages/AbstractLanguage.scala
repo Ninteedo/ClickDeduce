@@ -1,6 +1,6 @@
 package languages
 
-import app.{ClickDeduceException, UtilityFunctions}
+import app.{ClickDeduceException, HTMLHelper, UtilityFunctions}
 import convertors.*
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
@@ -583,10 +583,14 @@ trait AbstractLanguage {
 
     override lazy val toHtml: TypedTag[String] = p(getValue)
 
-    lazy val toHtmlInput: TypedTag[String] = input(
-      `type` := "text",
-      cls := ClassDict.LITERAL,
-      attr("value") := getValue,
+    def toHtmlInput(treePath: String): TypedTag[String] = HTMLHelper.literalInputBase(
+      treePath,
+      getValue,
+    )
+
+    def toHtmlInputReadOnly(originPath: String): TypedTag[String] = HTMLHelper.literalInputBaseReadOnly(
+      originPath,
+      getValue,
     )
 
     val defaultContents: String = ""
@@ -622,7 +626,7 @@ trait AbstractLanguage {
     } else if (s.startsWith("\"") && s.endsWith("\"") && s.length > 1) {
       LiteralString(s.substring(1, s.length - 1))
     } else if ("-?\\d+".r.matches(s)) {
-      LiteralInt(BigInt(s))
+      LiteralInt.fromString(s)
     } else if (LiteralIdentifier.identifierRegex.matches(s)) {
       LiteralIdentifier(s)
     } else {
@@ -632,7 +636,7 @@ trait AbstractLanguage {
     def fromStringOfType(s: String, l: Class[_ <: Literal]): Literal = l match {
       case c if c == classOf[LiteralBool]       => LiteralBool(s.toBoolean)
       case c if c == classOf[LiteralString]     => LiteralString(s)
-      case c if c == classOf[LiteralInt]        => LiteralInt(BigInt(s))
+      case c if c == classOf[LiteralInt]        => LiteralInt.fromString(s)
       case c if c == classOf[LiteralIdentifier] => LiteralIdentifier(s)
       case c if c == classOf[LiteralAny]        => LiteralAny(s)
       case _                                    => throw LiteralParseException(s)
@@ -675,13 +679,22 @@ trait AbstractLanguage {
   case class LiteralInt(value: BigInt) extends Literal {
     override def toText: ConvertableText = MathElement(getValue)
 
-    override lazy val toHtmlInput: TypedTag[String] = input(
-      `type` := "number",
-      cls := ClassDict.LITERAL + " " + "integer",
-      attr("value") := getValue,
+    override def toHtmlInput(treePath: String): TypedTag[String] = HTMLHelper.literalInputBase(
+      treePath,
+      getValue,
+      inputKind = "number",
+      extraClasses = "integer"
     )
+  }
 
-    override val defaultContents: String = "0"
+  object LiteralInt {
+    def fromString(s: String): LiteralInt = try {
+      LiteralInt(BigInt(s))
+    } catch {
+      case _: NumberFormatException => throw LiteralParseException(s"LiteralInt only accepts integer values, not \"$s\"")
+    }
+
+    val default: LiteralInt = LiteralInt(0)
   }
 
   /** A literal boolean.
@@ -691,10 +704,20 @@ trait AbstractLanguage {
   case class LiteralBool(value: Boolean) extends Literal {
     override def toText: ConvertableText = MathElement(getValue)
 
-    override lazy val toHtmlInput: TypedTag[String] = input(
-      `type` := "checkbox",
-      cls := ClassDict.LITERAL + " " + "boolean",
-      if (getValue.toBoolean) checked else (),
+    override def toHtmlInput(treePath: String): TypedTag[String] = div(
+      cls := "literal-checkbox-container",
+      input(
+        `type` := "checkbox",
+        data("tree-path") := treePath,
+        cls := ClassDict.LITERAL + " " + "boolean",
+        if (getValue.toBoolean) checked else (),
+      )
+    )
+
+    override def toHtmlInputReadOnly(originPath: String): TypedTag[String] = HTMLHelper.literalInputBaseReadOnly(
+      originPath,
+      getValue,
+      extraClasses = "boolean"
     )
   }
 
@@ -719,10 +742,10 @@ trait AbstractLanguage {
 
     override def toText: ConvertableText = ItalicsElement(TextElement(getValue))
 
-    override lazy val toHtmlInput: TypedTag[String] = input(
-      `type` := "text",
-      cls := ClassDict.LITERAL + " " + "identifier",
-      attr("value") := getValue,
+    override def toHtmlInput(treePath: String): TypedTag[String] = HTMLHelper.literalInputBase(
+      treePath,
+      getValue,
+      extraClasses = "identifier"
     )
 
     def validIdentifier: Boolean = LiteralIdentifier.identifierRegex.matches(value)
