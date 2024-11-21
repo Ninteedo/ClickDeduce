@@ -9,9 +9,9 @@ import {
     zoomToFit
 } from "./interface";
 import {getLangSelectorNew} from "./serverRequest";
-import {replaceSelectInputs} from "./customExprSelector";
+import {replaceSelectInputs} from "./components/customExprSelector";
 import {updateTaskList} from "./tasks";
-import {setupLiteralInputs} from "./literalInput";
+import {setupLiteralInputs} from "./components/literalInput";
 
 let treeHistory: { mode: string; html: string; nodeString: string; lang: string }[] = [];
 export let treeHistoryIndex: number = 0;

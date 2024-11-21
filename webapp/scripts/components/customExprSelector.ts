@@ -1,7 +1,7 @@
-import {hasClassOrParentHasClass} from "./utils";
-import {getTreePathOfElement, handleTabPressed, setNextFocusElement} from "./interface";
-import {getTree} from "./treeManipulation";
-import {handleExprSelectorChoice} from "./actions";
+import {hasClassOrParentHasClass} from "../utils";
+import {getTreePathOfElement, handleTabPressed, setNextFocusElement} from "../interface";
+import {getTree} from "../treeManipulation";
+import {handleExprSelectorChoice} from "../actions";
 
 const SELECTOR_FOCUS_CLASS = 'focused';
 const DROPDOWN_VISIBLE_CLASS = 'show';

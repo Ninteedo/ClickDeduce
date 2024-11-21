@@ -1,6 +1,6 @@
-import {getTreePathOfElement, handleKeyDown} from "./interface";
-import {handleLiteralChanged} from "./actions";
-import {getTree} from "./treeManipulation";
+import {getTreePathOfElement, handleKeyDown} from "../interface";
+import {handleLiteralChanged} from "../actions";
+import {getTree} from "../treeManipulation";
 
 abstract class LiteralInput {
     protected readonly input: HTMLInputElement;
@@ -118,6 +118,7 @@ class LiteralIdentifierLookupInput extends LiteralInput {
     private readonly container: HTMLDivElement;
     private readonly suggestionsUl: HTMLUListElement;
     private readonly suggestions: HTMLLIElement[];
+
     constructor(input: HTMLInputElement) {
         super(input);
         this.container = input.parentElement as HTMLDivElement;

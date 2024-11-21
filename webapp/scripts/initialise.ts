@@ -31,7 +31,7 @@ import {
 } from "./interface";
 import panzoom, {PanZoom} from "panzoom";
 import {loadImages} from "./imageLoading";
-import {setupExampleSelector} from "./customExprSelector";
+import {setupExampleSelector} from "./components/customExprSelector";
 import {getRedoButton, getUndoButton} from "./test/helper";
 
 export let panzoomInstance: PanZoom;
