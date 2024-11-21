@@ -3,7 +3,6 @@ import {
     disableInputs,
     enableInputs,
     getNodeStringFromPath,
-    initialValues,
     lastNodeString,
     treeHistoryIndex,
     updateTree,
@@ -61,10 +60,6 @@ export function handleLiteralChanged(textInput: HTMLInputElement): void {
     const literalValue: string = parseLiteralValue(textInput);
     const treePath: string = getTreePathOfElement(textInput);
 
-    if (initialValues.find(([path, value]) => path === treePath && value === literalValue)) {
-        return;
-    }
-
     let focusedTreePath: string | null = null;
     if (nextFocusElement != null) {
         focusedTreePath = getTreePathOfElement(nextFocusElement);
@@ -84,11 +79,6 @@ export function handleLiteralChanged(textInput: HTMLInputElement): void {
 
 export function exampleLiteralChanged(textInput: HTMLInputElement): void {
     const literalValue: string = textInput.value;
-    const treePath: string = getTreePathOfElement(textInput);
-
-    if (initialValues.find(([path, value]) => path === treePath && value === literalValue)) {
-        return;
-    }
 
     const exampleLiteralOuter = document.getElementById('example-literal-outer');
     if (!exampleLiteralOuter) throw new Error('Could not find example-literal-outer');

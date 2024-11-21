@@ -1,5 +1,5 @@
 import {hasClassOrParentHasClass} from "./utils";
-import {getTreePathOfElement, setNextFocusElement} from "./interface";
+import {getTreePathOfElement, handleTabPressed, setNextFocusElement} from "./interface";
 import {getTree} from "./treeManipulation";
 import {handleExprSelectorChoice} from "./actions";
 
@@ -30,6 +30,7 @@ class CustomExprSelector {
 
     private setup(): void {
         this.setupListeners();
+        this.button.tabIndex = -1;
     }
 
     private setupListeners(): void {
@@ -75,6 +76,8 @@ class CustomExprSelector {
             this.moveHighlight(1);
         } else if (event.key === 'ArrowUp') {
             this.moveHighlight(-1);
+        } else if (event.key === 'Tab') {
+            handleTabPressed(event);
         }
     }
 

@@ -1,17 +1,17 @@
 import {hasClassOrParentHasClass} from "./utils";
-import {handleLiteralChanged, runAction} from "./actions";
+import {runAction} from "./actions";
 import {
     clearHighlight,
     contextMenuSelectedElement,
     displayError,
     getTreePathOfElement,
-    handleKeyDown,
     isAutoZoomEnabled,
     zoomToFit
 } from "./interface";
 import {getLangSelectorNew} from "./serverRequest";
 import {replaceSelectInputs} from "./customExprSelector";
 import {updateTaskList} from "./tasks";
+import {setupLiteralInputs} from "./literalInput";
 
 let treeHistory: { mode: string; html: string; nodeString: string; lang: string }[] = [];
 export let treeHistoryIndex: number = 0;
@@ -22,7 +22,6 @@ let modeRadios: HTMLInputElement[];
 let langSelector: HTMLSelectElement;
 
 export let activeInputs: HTMLElement[] = [];
-export let initialValues: [string, string][] = [];
 
 export let lastNodeString: string | null = null;
 
@@ -37,7 +36,6 @@ export function resetTreeManipulation(): void {
     undoButton = document.getElementById('undoButton') as HTMLButtonElement;
     redoButton = document.getElementById('redoButton') as HTMLButtonElement;
     activeInputs = [];
-    initialValues = [];
     lastNodeString = null;
 
     updateUndoRedoButtons();
@@ -101,7 +99,7 @@ export function updateTree(newTreeHtml: string, newNodeString: string, modeName:
     }
     updateUndoRedoButtons();
     updateActiveInputsList();
-    addLiteralSuggestionListeners();
+    // addLiteralSuggestionListeners();
     setSelectedMode(modeName);
     langSelector.value = lang;
     updateTaskList(lang, lastNodeString);
@@ -121,7 +119,6 @@ function treeCleanup(): void {
     makeOrphanedInputsReadOnly();
     makePhantomInputsReadOnly();
     makeDisabledInputsFocusOriginal();
-    setLiteralInitialValues();
     addClickListeners();
 }
 
@@ -232,20 +229,6 @@ function makeDisabledInputsFocusOriginal(): void {
             origin.parentElement?.classList.remove('guide-highlight');
         });
     });
-
-    document.querySelectorAll('input.literal[disabled]').forEach(input => {
-        const origin = input.getAttribute('data-origin');
-        if (origin === null) return;
-
-        const originInput = getTree().querySelector(`input:not([disabled])[data-tree-path="${origin}"]`) as HTMLInputElement;
-        if (originInput === null) return;
-        input.addEventListener('mouseover', () => {
-            originInput.classList.add('guide-highlight');
-        });
-        input.addEventListener('mouseout', () => {
-            originInput.classList.remove('guide-highlight');
-        });
-    });
 }
 
 /**
@@ -262,76 +245,50 @@ function updateActiveInputsList(): void {
         const bPath = getTreePathOfElement(b);
         return aPath.localeCompare(bPath, undefined, {numeric: true, sensitivity: 'base'});
     });
-    activeInputs.forEach(input => {
-        input.addEventListener('keydown', handleKeyDown);
-        if (input instanceof HTMLInputElement && input.classList.contains('literal')) {
-            input.addEventListener('blur', () => handleLiteralChanged(input));
-            input.addEventListener('change', () => handleLiteralChanged(input));
-            input.addEventListener('input', () => {
-                updateTextInputWidth(input);
-                updateLinkedInputPlaceholders(input);
-            });
-
-            if (input.type === 'checkbox') {
-                input.style.width = '';
-            }
-        }
-    });
+    setupLiteralInputs();
 }
 
 export function getActiveInputs(): HTMLElement[] {
     return activeInputs;
 }
 
-/**
- * Updates the list of initial values for literal inputs.
- */
-function setLiteralInitialValues() {
-    initialValues = [];
-    document.querySelectorAll('input[data-tree-path]').forEach(input => {
-        if (input instanceof HTMLInputElement) {
-            initialValues.push([getTreePathOfElement(input), input.value]);
-        }
-    });
-}
-
-function addLiteralSuggestionListeners(): void {
-    document.querySelectorAll('div.literal-identifier-container').forEach(container => {
-        const input = container.querySelector('input');
-        const suggestions = container.querySelector('ul.identifier-suggestions');
-
-        if (input instanceof HTMLInputElement && suggestions instanceof HTMLUListElement) {
-            input.addEventListener('focus', () => {
-                suggestions.style.display = 'block';
-            });
-            input.addEventListener('blur', () => {
-                suggestions.style.display = 'none';
-            });
-
-            suggestions.querySelectorAll('li').forEach(li => {
-                li.addEventListener('click', evt => {
-                    input.value = li.textContent ?? '';
-                    console.log("Text is " + li.textContent);
-                    input.focus();
-
-                    evt.preventDefault();
-                });
-                li.classList.add('debug');
-            });
-
-            input.addEventListener('input', () => {
-                const value = input.value.toLowerCase();
-                suggestions.querySelectorAll('li').forEach(li => {
-                    if (li.textContent?.toLowerCase().includes(value)) {
-                        li.style.display = 'block';
-                    } else {
-                        li.style.display = 'none';
-                    }
-                });
-            });
-        }
-    });
-}
+// function addLiteralSuggestionListeners(): void {
+//     document.querySelectorAll('div.literal-identifier-container').forEach(container => {
+//         const input = container.querySelector('input');
+//         const suggestions = container.querySelector('ul.identifier-suggestions');
+//
+//         if (input instanceof HTMLInputElement && suggestions instanceof HTMLUListElement) {
+//             input.addEventListener('focus', () => {
+//                 suggestions.style.display = 'block';
+//             });
+//             input.addEventListener('blur', () => {
+//                 suggestions.style.display = 'none';
+//             });
+//
+//             suggestions.querySelectorAll('li').forEach(li => {
+//                 li.addEventListener('click', evt => {
+//                     input.value = li.textContent ?? '';
+//                     console.log("Text is " + li.textContent);
+//                     input.focus();
+//
+//                     evt.preventDefault();
+//                 });
+//                 li.classList.add('debug');
+//             });
+//
+//             input.addEventListener('input', () => {
+//                 const value = input.value.toLowerCase();
+//                 suggestions.querySelectorAll('li').forEach(li => {
+//                     if (li.textContent?.toLowerCase().includes(value)) {
+//                         li.style.display = 'block';
+//                     } else {
+//                         li.style.display = 'none';
+//                     }
+//                 });
+//             });
+//         }
+//     });
+// }
 
 /**
  * Undoes the last change to the tree.
@@ -361,16 +318,6 @@ export function redo(): void {
 export function updateTextInputWidth(textInput: HTMLInputElement): void {
     const minWidth: number = 2;
     textInput.style.width = Math.max(minWidth, textInput.value.length) + "ch";
-}
-
-function updateLinkedInputPlaceholders(input: HTMLInputElement): void {
-    const treePath: string = getTreePathOfElement(input);
-    const selector = `input[data-origin="${treePath}"]`;
-    getTree().querySelectorAll(selector).forEach((el: Element) => {
-        if (!(el instanceof HTMLInputElement)) return;
-        el.value = input.value;
-        updateTextInputWidth(el);
-    });
 }
 
 function setSelectedMode(mode: string): void {
