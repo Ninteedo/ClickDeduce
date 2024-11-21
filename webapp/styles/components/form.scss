@@ -4,7 +4,7 @@ form {
   display: inline;
 }
 
-input[type='text'] {
+@mixin textbox-base {
   background-color: $current-line;
   color: $foreground;
   border: $input-outline solid 1px;
@@ -26,7 +26,13 @@ input[type='text'] {
   }
 }
 
+input[type='text'] {
+  @include textbox-base;
+}
+
 input[type='number'] {
+  @include textbox-base;
+
   /* Chrome, Safari, Edge, Opera */
   &::-webkit-outer-spin-button,
   &::-webkit-inner-spin-button {

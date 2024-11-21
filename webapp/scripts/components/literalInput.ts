@@ -3,7 +3,7 @@ import {handleLiteralChanged} from "../actions";
 import {getTree} from "../treeManipulation";
 import {BaseDropdownSelector} from "./baseDropdownSelector";
 
-abstract class LiteralInput {
+class LiteralInput {
     protected readonly input: HTMLInputElement;
     protected readonly linkedPlaceholders: LiteralPlaceholder[];
     public readonly treePath: string;
@@ -19,6 +19,7 @@ abstract class LiteralInput {
         this.initialValue = this.getValue();
 
         this.setupEventListeners();
+        this.onInit();
     }
 
     private createLinkedPlaceholders(): LiteralPlaceholder[] {
@@ -33,6 +34,10 @@ abstract class LiteralInput {
         this.input.addEventListener('focus', () => this.onFocused());
         this.input.addEventListener('blur', () => this.onBlurred());
         this.input.addEventListener('keydown', handleKeyDown);
+    }
+
+    protected onInit(): void {
+
     }
 
     protected onInput(): void {
@@ -65,7 +70,7 @@ abstract class LiteralInput {
 
     public setValue(value: string): void {
         this.input.value = value;
-        this.handleInputChanged();
+        this.onInput();
     }
 
     public getValue(): string {
@@ -80,7 +85,12 @@ abstract class LiteralInput {
         this.input.classList.remove(this.GUIDE_HIGHLIGHT_CLASS);
     }
 
-    protected abstract getPlaceholderContent(): HTMLElement;
+    protected getPlaceholderContent(): HTMLElement {
+        const html = `<input class="literal" type="text" value="${this.getValue()}" readonly disabled/>`;
+        const div = document.createElement('div');
+        div.innerHTML = html;
+        return div;
+    }
 }
 
 class LiteralPlaceholder {
@@ -105,60 +115,30 @@ class LiteralPlaceholder {
     }
 }
 
-class LiteralTextInput extends LiteralInput {
-    protected getPlaceholderContent(): HTMLElement {
-        const html = `<input class="literal" type="text" value="${this.getValue()}" readonly disabled data-test="hello"/>`;
-        const div = document.createElement('div');
-        div.innerHTML = html;
-        return div;
+class LiteralIntInput extends LiteralInput {
+    protected override onInit() {
+        this.input.type = 'text';
+    }
+
+    protected override onInput(): void {
+        super.onInput();
+        const original = this.getValue();
+        const onlyDigits = original.replace(/[^0-9]/g, '');
+        if (original.startsWith('-')) {
+            this.setValue('-' + onlyDigits);
+        } else {
+            this.setValue(onlyDigits);
+        }
     }
 }
 
 class LiteralIdentifierLookupInput extends LiteralInput {
-    // private readonly container: HTMLDivElement;
-
     constructor(input: HTMLInputElement) {
         super(input);
         console.log(input);
         const container = input.parentElement as HTMLDivElement;
-        // this.suggestionsUl = this.container.querySelector('ul.identifier-suggestions') as HTMLUListElement;
-        // this.suggestions = Array.from(this.suggestionsUl.querySelectorAll('li'));
-        //
+
         new BaseDropdownSelector(container, 'input', 'div.dropdown', 'li');
-
-        // this.updateSuggestions();
-    }
-
-    // protected override onFocused(): void {
-    //     this.suggestionsUl.style.display = 'block';
-    // }
-    //
-    // protected override onBlurred(): void {
-    //     this.suggestionsUl.style.display = 'none';
-    // }
-
-    // protected override onInput() {
-    //     super.onInput();
-    //     this.updateSuggestions();
-    // }
-
-    // private updateSuggestions(): void {
-    //     const inputValue = this.getValue();
-    //     this.suggestions.forEach((suggestion: HTMLLIElement) => {
-    //         const suggestionText = suggestion.textContent;
-    //         if (!suggestionText || suggestionText.includes(inputValue)) {
-    //             suggestion.style.display = 'block';
-    //         } else {
-    //             suggestion.style.display = 'none';
-    //         }
-    //     });
-    // }
-
-    protected getPlaceholderContent(): HTMLElement {
-        const html = `<input class="literal" type="text" value="${this.getValue()}" readonly disabled/>`;
-        const div = document.createElement('div');
-        div.innerHTML = html;
-        return div;
     }
 }
 
@@ -167,8 +147,10 @@ export function setupLiteralInputs(): void {
         if (!(input instanceof HTMLInputElement)) throw new Error('Expected input to be an HTMLInputElement');
         if (input.classList.contains('identifier-lookup')) {
             new LiteralIdentifierLookupInput(input);
+        } else if (input.classList.contains('integer')) {
+            new LiteralIntInput(input);
         } else {
-            new LiteralTextInput(input);
+            new LiteralInput(input);
         }
     });
 }
