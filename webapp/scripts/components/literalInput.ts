@@ -143,6 +143,12 @@ class LiteralIdentifierLookupInput extends LiteralInput {
     }
 }
 
+class LiteralBoolInput extends LiteralInput {
+    public override getValue(): string {
+        return this.input.checked ? 'true' : 'false';
+    }
+}
+
 export function setupLiteralInputs(): void {
     Array.from(document.querySelectorAll('input.literal[data-tree-path]:not([disabled])')).forEach((input: Element) => {
         if (!(input instanceof HTMLInputElement)) throw new Error('Expected input to be an HTMLInputElement');
@@ -150,6 +156,8 @@ export function setupLiteralInputs(): void {
             new LiteralIdentifierLookupInput(input);
         } else if (input.classList.contains('integer')) {
             new LiteralIntInput(input);
+        } else if (input.type === 'checkbox') {
+            new LiteralBoolInput(input);
         } else {
             new LiteralInput(input);
         }
