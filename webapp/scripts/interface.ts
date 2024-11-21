@@ -1,7 +1,6 @@
 import {copyTreeNode, deleteTreeNode, handleLiteralChanged, hasCopyCache, pasteTreeNode} from "./actions";
 import {getActiveInputs, lastNodeString, redo, undo} from "./treeManipulation";
 import {compareTreePaths, getSelectedLanguage, getSelectedMode, hasClassOrParentHasClass} from "./utils";
-import {selectorEnterPressed} from "./customExprSelector";
 // @ts-ignore
 import {convertToLaTeX} from "scalajs:main.js";
 import {PanZoom} from "panzoom";
@@ -70,17 +69,21 @@ export function handleKeyDown(e: KeyboardEvent): void {
     if (e.key === 'Tab' && (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement)) {
         handleTabPressed(e);
     } else if (e.key === 'Enter' && e.target instanceof HTMLInputElement) {
-        e.preventDefault();
         nextFocusElement = e.target;
         if (e.target.classList.contains('literal')) {
+            e.preventDefault();
             handleLiteralChanged(e.target);
         } else if (e.target.classList.contains('expr-selector-input')) {
             const selector = e.target.parentElement;
             if (selector instanceof HTMLDivElement) {
-                selectorEnterPressed(selector);
+                // selectorEnterPressed(selector);
             }
         }
     }
+}
+
+export function setNextFocusElement(element: HTMLElement): void {
+    nextFocusElement = element;
 }
 
 /**

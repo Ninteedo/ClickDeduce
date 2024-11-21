@@ -101,6 +101,7 @@ export function updateTree(newTreeHtml: string, newNodeString: string, modeName:
     }
     updateUndoRedoButtons();
     updateActiveInputsList();
+    addLiteralSuggestionListeners();
     setSelectedMode(modeName);
     langSelector.value = lang;
     updateTaskList(lang, lastNodeString);
@@ -275,7 +276,7 @@ function updateActiveInputsList(): void {
                 input.style.width = '';
             }
         }
-    })
+    });
 }
 
 export function getActiveInputs(): HTMLElement[] {
@@ -290,6 +291,44 @@ function setLiteralInitialValues() {
     document.querySelectorAll('input[data-tree-path]').forEach(input => {
         if (input instanceof HTMLInputElement) {
             initialValues.push([getTreePathOfElement(input), input.value]);
+        }
+    });
+}
+
+function addLiteralSuggestionListeners(): void {
+    document.querySelectorAll('div.literal-identifier-container').forEach(container => {
+        const input = container.querySelector('input');
+        const suggestions = container.querySelector('ul.identifier-suggestions');
+
+        if (input instanceof HTMLInputElement && suggestions instanceof HTMLUListElement) {
+            input.addEventListener('focus', () => {
+                suggestions.style.display = 'block';
+            });
+            input.addEventListener('blur', () => {
+                suggestions.style.display = 'none';
+            });
+
+            suggestions.querySelectorAll('li').forEach(li => {
+                li.addEventListener('click', evt => {
+                    input.value = li.textContent ?? '';
+                    console.log("Text is " + li.textContent);
+                    input.focus();
+
+                    evt.preventDefault();
+                });
+                li.classList.add('debug');
+            });
+
+            input.addEventListener('input', () => {
+                const value = input.value.toLowerCase();
+                suggestions.querySelectorAll('li').forEach(li => {
+                    if (li.textContent?.toLowerCase().includes(value)) {
+                        li.style.display = 'block';
+                    } else {
+                        li.style.display = 'none';
+                    }
+                });
+            });
         }
     });
 }

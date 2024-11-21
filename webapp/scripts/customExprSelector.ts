@@ -1,7 +1,7 @@
 import {hasClassOrParentHasClass} from "./utils";
-import {handleExprSelectorChoice} from "./actions";
-import {getTreePathOfElement} from "./interface";
+import {getTreePathOfElement, setNextFocusElement} from "./interface";
 import {getTree} from "./treeManipulation";
+import {handleExprSelectorChoice} from "./actions";
 
 const SELECTOR_FOCUS_CLASS = 'focused';
 const DROPDOWN_VISIBLE_CLASS = 'show';
@@ -10,7 +10,171 @@ const OPTION_HIGHLIGHT_CLASS = 'highlight';
 const UP_ARROW = '&#9650;';
 const DOWN_ARROW = '&#9660;';
 
+
+class CustomExprSelector {
+    private readonly container: HTMLDivElement;
+    private readonly input: HTMLInputElement;
+    private readonly button: HTMLButtonElement;
+    private readonly dropdown: HTMLDivElement;
+
+    constructor(container: HTMLDivElement) {
+        this.container = container;
+        this.input = container.querySelector('.expr-selector-input') as HTMLInputElement;
+        this.button = container.querySelector('.expr-selector-button') as HTMLButtonElement;
+        this.dropdown = container.querySelector('.expr-selector-dropdown') as HTMLDivElement;
+
+        this.setup();
+    }
+
+    private setup(): void {
+        this.setupListeners();
+    }
+
+    private setupListeners(): void {
+        this.input.addEventListener('input', () => this.updateDropdown());
+        this.input.addEventListener('keydown', evt => this.handleKeydown(evt));
+        this.input.addEventListener('focus', () => this.showDropdown());
+        this.input.addEventListener('blur', () => this.handleBlur());
+
+        this.button.addEventListener('click', () => this.toggleDropdown());
+
+        this.dropdown.addEventListener('mousedown', () => this.setInteractingWithDropdown(true));
+        this.dropdown.addEventListener('mouseup', () => this.setInteractingWithDropdown(false));
+
+        this.setupOptionListeners();
+    }
+
+    private setupOptionListeners(): void {
+        const options = this.dropdown.querySelectorAll('ul > li');
+        options.forEach(option => {
+            if (!(option instanceof HTMLLIElement)) {
+                throw new Error('Option was not an HTMLLIElement');
+            }
+            option.addEventListener('mousedown', evt => {
+                evt.preventDefault();
+                this.selectOption(option);
+            });
+        });
+    }
+
+    private updateDropdown(): void {
+        const filterText = this.input.value.toLowerCase();
+        const options = Array.from(this.dropdown.querySelectorAll('ul > li')) as HTMLLIElement[];
+        options.forEach((option) => {
+            const matches = option.innerText.toLowerCase().includes(filterText);
+            matches ? this.showOption(option) : this.hideOption(option);
+        });
+        this.highlightOption(0);
+    }
+
+    private handleKeydown(event: KeyboardEvent) {
+        if (event.key === 'Enter') {
+            this.selectHighlightedOption();
+        } else if (event.key === 'ArrowDown') {
+            this.moveHighlight(1);
+        } else if (event.key === 'ArrowUp') {
+            this.moveHighlight(-1);
+        }
+    }
+
+    private handleBlur() {
+        setTimeout(() => {
+            if (!this.isDropdownInteracting) {
+                this.hideDropdown();
+            }
+        });
+    }
+
+    private toggleDropdown() {
+        if (this.isDropdownVisible()) {
+            this.hideDropdown();
+        } else {
+            this.showDropdown();
+        }
+    }
+
+    private showDropdown() {
+        this.dropdown.classList.add(DROPDOWN_VISIBLE_CLASS);
+        this.button.innerHTML = UP_ARROW;
+    }
+
+    private hideDropdown() {
+        this.dropdown.classList.remove(DROPDOWN_VISIBLE_CLASS);
+        this.button.innerHTML = DOWN_ARROW;
+    }
+
+    private isDropdownVisible() {
+        return this.dropdown.classList.contains(DROPDOWN_VISIBLE_CLASS);
+    }
+
+    private showOption(option: HTMLLIElement) {
+        option.classList.remove(OPTION_HIDDEN_CLASS);
+    }
+
+    private hideOption(option: HTMLLIElement) {
+        option.classList.add(OPTION_HIDDEN_CLASS);
+    }
+
+    private highlightOption(index: number) {
+        const options = Array.from(this.getVisibleOptions());
+        options.forEach((opt) => opt.classList.remove(OPTION_HIGHLIGHT_CLASS));
+        if (options[index]) {
+            options[index].classList.add(OPTION_HIGHLIGHT_CLASS);
+        }
+    }
+
+    private moveHighlight(offset: number) {
+        const options = this.getVisibleOptions();
+        const currentIndex = this.getSelectedIndex();
+        const newIndex = (currentIndex + offset + options.length) % options.length;
+        this.highlightOption(newIndex);
+    }
+
+    private selectHighlightedOption() {
+        const highlighted = this.getSelectedOption();
+        if (highlighted) {
+            setNextFocusElement(this.container);
+            this.selectOption(highlighted);
+        }
+    }
+
+    private selectOption(option: HTMLLIElement) {
+        this.input.value = option.innerText;
+        this.hideDropdown();
+        handleExprSelectorChoice(this.container, option.getAttribute('data-value'));
+        this.hideDropdown();
+    }
+
+    private getVisibleOptions(): HTMLLIElement[] {
+        return Array.from(this.dropdown.querySelectorAll('ul > li:not(.hidden)')) as HTMLLIElement[];
+    }
+
+    private isDropdownInteracting = false;
+
+    private setInteractingWithDropdown(value: boolean) {
+        this.isDropdownInteracting = value;
+    }
+
+    private getSelectedIndex(): number {
+        return this.getVisibleOptions().findIndex((opt) =>
+            opt.classList.contains(OPTION_HIGHLIGHT_CLASS)
+        );
+    }
+
+    private getSelectedOption(): HTMLLIElement | undefined {
+        return this.getVisibleOptions().find((opt) =>
+            opt.classList.contains(OPTION_HIGHLIGHT_CLASS)
+        );
+    }
+}
+
+
+let exprSelectors: CustomExprSelector[] = [];
+
+
 export function replaceSelectInputs(): void {
+    exprSelectors = [];
+
     const selectInputs: NodeListOf<HTMLSelectElement> = getTree().querySelectorAll(
         'select.expr-dropdown[data-tree-path]:not([disabled]), select.type-dropdown[data-tree-path]:not([disabled])'
     );
@@ -33,7 +197,7 @@ export function replaceSelectInputs(): void {
         select.outerHTML = createExprSelectorHTML(treePath, kind, placeholderText, options);
 
         const newSelector = getTree().querySelector(`.expr-selector-container[data-tree-path="${treePath}"]`) as HTMLDivElement;
-        setupTermSelector(newSelector);
+        exprSelectors.push(setupTermSelector(newSelector));
     });
 
     replaceDisabledSelectInputs();
@@ -73,55 +237,8 @@ function createExprSelectorOptionHtml(optionElement: HTMLOptionElement): string 
     return `<li data-value="${optionElement.value}" data-aliases="${aliases}">${optionElement.innerHTML}</li>`;
 }
 
-export function setupTermSelector(termSelectorContainer: HTMLDivElement): void {
-    const input = getSelectorInput(termSelectorContainer);
-    const button = getSelectorButton(termSelectorContainer);
-    const dropdown = getSelectorDropdown(termSelectorContainer);
-
-    let isInteractingWithDropdown = false;
-
-    input.addEventListener('input', () => updateExprSelectorDropdown(termSelectorContainer));
-    input.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter') {
-            // selectorEnterPressed(newSelector);
-        } else if (event.key === 'ArrowDown') {
-            moveSelectorOptionHighlight(termSelectorContainer, 1);
-        } else if (event.key === 'ArrowUp') {
-            moveSelectorOptionHighlight(termSelectorContainer, -1);
-        }
-    });
-    input.addEventListener('focus', () => showExprSelectorDropdown(termSelectorContainer));
-    input.addEventListener('blur', () => {
-        if (!isInteractingWithDropdown) {
-            hideExprSelectorDropdown(termSelectorContainer)
-        } else {
-            setTimeout(() => input.focus(), 0);
-        }
-    });
-
-    button.addEventListener('click', () => input.focus());
-
-    const selectorOptions = Array.from(dropdown.querySelectorAll('ul > li'));
-    selectorOptions.forEach(option => {
-        if (!(option instanceof HTMLLIElement)) {
-            throw new Error('Selector option was not an HTMLLIElement');
-        }
-
-        option.addEventListener('mousedown', event => {
-            event.preventDefault();
-            selectorSelectOption(termSelectorContainer, option)
-        });
-        option.classList.add('expr-selector-option');
-    });
-
-    dropdown.addEventListener('wheel', evt => {
-        if (!((dropdown.scrollTop === 0 && evt.deltaY < 0) || (dropdown.scrollTop === dropdown.scrollHeight - dropdown.clientHeight && evt.deltaY > 0))) {
-            evt.stopPropagation();
-        }
-    });
-
-    dropdown.addEventListener('mousedown', () => isInteractingWithDropdown = true);
-    dropdown.addEventListener('mouseup', () => setTimeout(() => isInteractingWithDropdown = false, 0));
+function setupTermSelector(termSelectorContainer: HTMLDivElement): CustomExprSelector {
+    return new CustomExprSelector(termSelectorContainer);
 }
 
 export function setupExampleSelector(termSelectorContainer: HTMLDivElement): void {
@@ -278,25 +395,6 @@ function isSelectorOptionHidden(option: HTMLLIElement): boolean {
 
 function visibleSelectorOptions(selectorDiv: HTMLDivElement): HTMLLIElement[] {
     return getSelectorOptions(selectorDiv).filter(option => !isSelectorOptionHidden(option));
-}
-
-function selectorSelectOption(selectorDiv: HTMLDivElement, option: HTMLLIElement): void {
-    getSelectorInput(selectorDiv).value = option.innerText;
-    handleExprSelectorChoice(selectorDiv, option.getAttribute('data-value'));
-    hideExprSelectorDropdown(selectorDiv);
-}
-
-export function selectorEnterPressed(selectorDiv: HTMLDivElement): void {
-    if (!isExprSelectorDropdownVisible(selectorDiv)) {
-        toggleExprSelectorDropdownDisplay(selectorDiv);
-        return;
-    }
-
-    const selectedIndex = getExprSelectorOptionHighlight(selectorDiv, false);
-    const selectedOption = getSelectorOptions(selectorDiv)[selectedIndex];
-    if (selectedOption) {
-        selectorSelectOption(selectorDiv, selectedOption);
-    }
 }
 
 function getSelectorInput(selectorDiv: HTMLDivElement): HTMLInputElement {
