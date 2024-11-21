@@ -130,7 +130,7 @@ class LLet extends LIf {
   private def checkHasVar(e: Expr, v: Literal): Boolean = checkCondition(
     e,
     cond = {
-      case Var(v2) => v == v2
+      case Var(v2) => v2.identEquals(v)
       case _       => false
     }
   )
@@ -191,9 +191,9 @@ class LLet extends LIf {
 
     override def checkFulfilled(expr: Expr): Boolean = {
       def checkVarUsedNoOverwrite(e: Expr, v1: Literal): Boolean = e match {
-        case Var(v2) => v1 == v2
+        case Var(v2) => v2.identEquals(v2)
         case Let(v2, assign, bound) =>
-          checkVarUsedNoOverwrite(assign, v1) || (v1 != v2 && checkVarUsedNoOverwrite(bound, v1))
+          checkVarUsedNoOverwrite(assign, v1) || (!v2.identEquals(v1) && checkVarUsedNoOverwrite(bound, v1))
         case e => e.getExprFields.exists(checkVarUsedNoOverwrite(_, v1))
       }
 
@@ -204,7 +204,7 @@ class LLet extends LIf {
             checkVarUsedNoOverwrite(bound1, v1) && checkCondition(
               bound1,
               {
-                case Let(v2, _, bound2) => v1 == v2 && checkHasVar(bound2, v1)
+                case Let(v2, _, bound2) => v1.identEquals(v2) && checkHasVar(bound2, v1)
                 case _                  => false
               }
             )

@@ -678,13 +678,8 @@ trait AbstractLanguage {
   case class LiteralInt(value: BigInt) extends Literal {
     override def toText: ConvertableText = MathElement(getValue)
 
-//    override def toHtmlInput(treePath: String, env: ValueEnv | TypeEnv): TypedTag[String] = HTMLHelper
-    //    .literalInputBase(
-//      treePath,
-//      getValue,
-//      inputKind = "number",
-//      extraClasses = "integer"
-//    )
+    override def toHtmlInput(treePath: String, env: ValueEnv | TypeEnv): TypedTag[String] = HTMLHelper
+      .literalInputBase(treePath, getValue, inputKind = "number", extraClasses = "integer")
   }
 
   object LiteralInt {
@@ -747,6 +742,12 @@ trait AbstractLanguage {
     override def validIdentifier: Boolean = identifierRegex.matches(value)
 
     def toLookup: LiteralIdentifierLookup = LiteralIdentifierLookup(value)
+
+    def identEquals(other: Any): Boolean = other match {
+      case LiteralIdentifierBind(s)   => s == value
+      case LiteralIdentifierLookup(s) => s == value
+      case _                          => false
+    }
   }
 
   object LiteralIdentifierBind {
@@ -783,6 +784,12 @@ trait AbstractLanguage {
     override def validIdentifier: Boolean = identifierRegex.matches(value)
 
     def toBind: LiteralIdentifierBind = LiteralIdentifierBind(value)
+
+    def identEquals(other: Any): Boolean = other match {
+      case LiteralIdentifierBind(s)   => s == value
+      case LiteralIdentifierLookup(s) => s == value
+      case _                          => false
+    }
   }
 
   object LiteralIdentifierLookup {

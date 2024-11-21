@@ -89,7 +89,7 @@ class LPoly extends LData {
 
   object TypeVar extends TypeCompanion {
     def apply(v: Variable): TypeVar = TypeVar(LiteralIdentifierLookup(v))
-    
+
     def apply(v: LiteralIdentifierBind): TypeVar = TypeVar(v.toLookup)
 
     override def create(args: BuilderArgs): Option[Type] = args match {
@@ -190,7 +190,7 @@ class LPoly extends LData {
                       lamTyp,
                       (t, env) =>
                         t match {
-                          case TypeVar(v) => v == typVar
+                          case TypeVar(v) => v.identEquals(typVar)
                           case _          => false
                         },
                       envToTypeEnv(env)
@@ -198,7 +198,7 @@ class LPoly extends LData {
                       e,
                       (e, env) =>
                         e match {
-                          case Var(v) => v == lamVar
+                          case Var(v) => v.identEquals(lamVar)
                           case _      => false
                         },
                       env

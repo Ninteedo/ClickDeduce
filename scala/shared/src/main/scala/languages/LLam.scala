@@ -238,7 +238,7 @@ class LLam extends LLet {
                           checkCondition(
                             e3,
                             {
-                              case Var(v2) => v2 == v1
+                              case Var(v2) => v2.identEquals(v1)
                               case _       => false
                             },
                             env2
