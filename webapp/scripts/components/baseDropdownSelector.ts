@@ -1,22 +1,22 @@
 import {handleTabPressed, setNextFocusElement} from "../interface";
+import {stripTooltip} from "../utils";
 
 export class BaseDropdownSelector {
     protected readonly container: HTMLDivElement;
     protected readonly input: HTMLInputElement;
     protected readonly dropdown: HTMLDivElement;
-    protected readonly options: HTMLLIElement[];
+    protected readonly options: DropdownOption[];
 
     protected readonly SELECTOR_FOCUS_CLASS = 'focused';
     protected readonly DROPDOWN_VISIBLE_CLASS = 'show';
-    protected readonly OPTION_HIDDEN_CLASS = 'hidden';
-    protected readonly OPTION_HIGHLIGHT_CLASS = 'highlight';
 
     constructor(container: HTMLDivElement, inputSelector: string, dropdownSelector: string, optionsSelector: string) {
         this.container = container;
         this.input = container.querySelector(inputSelector) as HTMLInputElement;
         console.log(this.input);
         this.dropdown = container.querySelector(dropdownSelector) as HTMLDivElement;
-        this.options = Array.from(this.dropdown.querySelectorAll(optionsSelector)) as HTMLLIElement[];
+        this.options = Array.from(this.dropdown.querySelectorAll(optionsSelector))
+            .map(option => new DropdownOption(option as HTMLLIElement));
 
         this.container.classList.add('dropdown-selector-container');
         this.dropdown.classList.add('dropdown');
@@ -39,28 +39,27 @@ export class BaseDropdownSelector {
 
     private setupOptionListeners(): void {
         this.options.forEach(option => {
-            if (!(option instanceof HTMLLIElement)) {
-                throw new Error('Option was not an HTMLLIElement');
-            }
-            option.addEventListener('mousedown', evt => {
+            option.element.addEventListener('mousedown', evt => {
                 evt.preventDefault();
                 this.selectOption(option);
             });
         });
     }
 
-    protected selectOption(option: HTMLLIElement): void {
-        this.input.value = option.innerText;
+    protected selectOption(option: DropdownOption): void {
+        this.input.value = option.getValue();
         this.input.dispatchEvent(new Event('input'));
         this.hideDropdown();
         this.input.dispatchEvent(new Event('change'));
+        this.postSelectOption(option.getValue());
     }
+
+    protected postSelectOption(_value: string): void {}
 
     protected updateDropdown(): void {
         const filterText = this.input.value.toLowerCase();
         this.options.forEach(option => {
-            const matches = option.innerText.toLowerCase().includes(filterText);
-            matches ? this.showOption(option) : this.hideOption(option);
+            option.matchesFilter(filterText) ? option.show() : option.hide();
         });
         this.highlightOption(0);
     }
@@ -111,14 +110,6 @@ export class BaseDropdownSelector {
         return this.dropdown.classList.contains(this.DROPDOWN_VISIBLE_CLASS);
     }
 
-    protected showOption(option: HTMLLIElement): void {
-        option.classList.remove(this.OPTION_HIDDEN_CLASS);
-    }
-
-    protected hideOption(option: HTMLLIElement): void {
-        option.classList.add(this.OPTION_HIDDEN_CLASS);
-    }
-
     private moveHighlight(offset: number) {
         const options = this.getVisibleOptions();
         const currentIndex = this.getSelectedIndex();
@@ -132,11 +123,10 @@ export class BaseDropdownSelector {
         }
 
         const options = this.getVisibleOptions();
-        options.forEach((opt) => opt.classList.remove(this.OPTION_HIGHLIGHT_CLASS));
+        options.forEach(option => option.removeHighlight());
         const option = options[index];
         if (option) {
-            option.classList.add(this.OPTION_HIGHLIGHT_CLASS);
-            option.scrollIntoView({block: 'nearest'});
+            option.highlight();
         }
     }
 
@@ -148,20 +138,16 @@ export class BaseDropdownSelector {
         }
     }
 
-    private getVisibleOptions(): HTMLLIElement[] {
-        return this.options.filter((opt) => !opt.classList.contains(this.OPTION_HIDDEN_CLASS));
+    private getVisibleOptions(): DropdownOption[] {
+        return this.options.filter((option) => !option.isHidden());
     }
 
     private getSelectedIndex(): number {
-        return this.getVisibleOptions().findIndex((opt) =>
-            opt.classList.contains(this.OPTION_HIGHLIGHT_CLASS)
-        );
+        return this.getVisibleOptions().findIndex((option) => option.isHighlighted());
     }
 
-    private getSelectedOption(): HTMLLIElement | undefined {
-        return this.getVisibleOptions().find((opt) =>
-            opt.classList.contains(this.OPTION_HIGHLIGHT_CLASS)
-        );
+    private getSelectedOption(): DropdownOption | undefined {
+        return this.getVisibleOptions().find(option => option.isHighlighted());
     }
 
     private handleDropdownWheel(evt: WheelEvent) {
@@ -175,5 +161,61 @@ export class BaseDropdownSelector {
 
     private setInteractingWithDropdown(value: boolean) {
         this.isDropdownInteracting = value;
+    }
+}
+
+class DropdownOption {
+    public readonly element: HTMLLIElement;
+
+    protected readonly OPTION_HIDDEN_CLASS = 'hidden';
+    protected readonly OPTION_HIGHLIGHT_CLASS = 'highlight';
+
+    constructor(option: HTMLLIElement) {
+        this.element = option;
+        this.element.querySelectorAll('.tooltip').forEach(tooltipDiv => stripTooltip(tooltipDiv));
+    }
+
+    public show(): void {
+        this.element.classList.remove(this.OPTION_HIDDEN_CLASS);
+    }
+
+    public hide(): void {
+        this.element.classList.add(this.OPTION_HIDDEN_CLASS);
+    }
+
+    public highlight(): void {
+        this.element.classList.add(this.OPTION_HIGHLIGHT_CLASS);
+        this.element.scrollIntoView({block: 'nearest'});
+    }
+
+    public removeHighlight(): void {
+        this.element.classList.remove(this.OPTION_HIGHLIGHT_CLASS);
+    }
+
+    public isHidden(): boolean {
+        return this.element.classList.contains(this.OPTION_HIDDEN_CLASS);
+    }
+
+    public isHighlighted(): boolean {
+        return this.element.classList.contains(this.OPTION_HIGHLIGHT_CLASS);
+    }
+
+    public getFilterText(): string {
+        return this.element.getAttribute('data-filter') || this.element.innerText;
+    }
+
+    public getAliases(): string[] {
+        return this.element.getAttribute('data-aliases')?.split(',') || [];
+    }
+
+    public matchesFilter(filter: string): boolean {
+        return this.getFilterText().toLowerCase().includes(filter)
+            || this.getAliases().some(alias => alias.toLowerCase().includes(filter));
+    }
+
+    public getValue(): string {
+        const value = this.element.getAttribute('data-value');
+        if (!value) throw new Error('Option does not have a data-value attribute. ' + this.element.outerHTML);
+        return value;
     }
 }

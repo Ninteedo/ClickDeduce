@@ -773,7 +773,10 @@ trait AbstractLanguage {
             cls := "identifier-suggestions",
             env.keys
               .map(k => {
-                li(attr("value") := k, k)
+                li(data("value") := k, data("filter") := k, env.get(k) match {
+                  case Some(t: Term) => span(k, ": ", t.toHtml)
+                  case _             => k
+                })
               })
               .toSeq
           )

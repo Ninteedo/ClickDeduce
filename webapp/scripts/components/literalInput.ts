@@ -69,6 +69,7 @@ class LiteralInput {
     }
 
     public setValue(value: string): void {
+        if (this.getValue() === value) return;
         this.input.value = value;
         this.onInput();
     }

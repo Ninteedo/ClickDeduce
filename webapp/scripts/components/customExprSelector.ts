@@ -32,9 +32,8 @@ class CustomExprSelector extends BaseDropdownSelector {
         this.button.innerHTML = DOWN_ARROW;
     }
 
-    protected override selectOption(option: HTMLLIElement) {
-        super.selectOption(option);
-        handleExprSelectorChoice(this.container, option.getAttribute('data-value'));
+    protected override postSelectOption(value: string) {
+        handleExprSelectorChoice(this.container, value);
     }
 }
 
@@ -119,10 +118,8 @@ class ExampleExprSelector extends CustomExprSelector {
         this.output = output;
     }
 
-    protected override selectOption(option: HTMLLIElement) {
-        this.input.value = option.innerText;
-        this.output.textContent = option.textContent;
-        this.hideDropdown();
+    protected override postSelectOption(value: string) {
+        this.output.textContent = value;
         this.input.focus();
         this.container.classList.add(this.SELECTOR_FOCUS_CLASS);
     }

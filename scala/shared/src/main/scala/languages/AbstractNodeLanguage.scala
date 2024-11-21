@@ -52,9 +52,9 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     def createExprOption(exprBuilderName: BuilderName): TypedTag[String] = {
       val langName = exprBuilderName._1
       exprBuilderName._2 match {
-        case name: String => option(value := name, name)
+        case name: String => option(data("value") := name, name)
         case (name: String, aliases: List[String]) =>
-          option(value := name, name, data("aliases") := aliases.mkString(","), data("lang") := langName)
+          option(data("value") := name, name, data("aliases") := aliases.mkString(","), data("lang") := langName)
       }
     }
 
@@ -69,9 +69,9 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     def createTypeOption(typeBuilderName: BuilderName) = {
       val langName = typeBuilderName._1
       typeBuilderName._2 match {
-        case name: String => option(value := name, name)
+        case name: String => option(data("value") := name, name)
         case (name: String, aliases: List[String]) =>
-          option(value := name, name, data("aliases") := aliases.mkString(","))
+          option(data("value") := name, name, data("aliases") := aliases.mkString(","))
       }
     }
 

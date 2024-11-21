@@ -37,6 +37,7 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.16), 0 2px 4px rgba(0, 0, 0, 0.23);
     pointer-events: bounding-box;
 
+    overflow-x: hidden;
     overflow-y: auto;
     max-height: 20rem;
 
@@ -55,7 +56,7 @@
 
       li {
         cursor: pointer;
-        padding: 5px;
+        padding: 0.2rem;
         text-align: left;
         z-index: 100;
         font-style: normal;
