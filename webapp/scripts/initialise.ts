@@ -9,7 +9,7 @@ import {
     resetCopyCache,
     startNodeBlank
 } from "./actions";
-import {getTree, loadTree, redo, resetTreeManipulation, saveTree, undo, updateTextInputWidth} from "./treeManipulation";
+import {getTree, redo, resetTreeManipulation, undo, updateTextInputWidth} from "./treeManipulation";
 import {
     closeExportOutput,
     copyExportOutput,
@@ -33,6 +33,7 @@ import panzoom, {PanZoom} from "panzoom";
 import {loadImages} from "./imageLoading";
 import {setupExampleSelector} from "./components/customExprSelector";
 import {getRedoButton, getUndoButton} from "./test/helper";
+import {loadTree, saveTree} from "./saveLoad";
 
 export let panzoomInstance: PanZoom;
 

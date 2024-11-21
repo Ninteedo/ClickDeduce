@@ -3,7 +3,6 @@ import {runAction} from "./actions";
 import {
     clearHighlight,
     contextMenuSelectedElement,
-    displayError,
     getTreePathOfElement,
     isAutoZoomEnabled,
     zoomToFit
@@ -12,6 +11,7 @@ import {getLangSelectorNew} from "./serverRequest";
 import {replaceSelectInputs} from "./components/customExprSelector";
 import {updateTaskList} from "./tasks";
 import {setupLiteralInputs} from "./components/literalInput";
+import {setupFileDragAndDrop, setupFileInput} from "./saveLoad";
 
 let treeHistory: { mode: string; html: string; nodeString: string; lang: string }[] = [];
 export let treeHistoryIndex: number = 0;
@@ -24,8 +24,6 @@ let langSelector: HTMLSelectElement;
 export let activeInputs: HTMLElement[] = [];
 
 export let lastNodeString: string | null = null;
-
-const fileInput: HTMLInputElement = document.createElement('input');
 
 /**
  * Resets the global variables used by the tree manipulation code.
@@ -99,7 +97,7 @@ export function updateTree(newTreeHtml: string, newNodeString: string, modeName:
     }
     updateUndoRedoButtons();
     updateActiveInputsList();
-    // addLiteralSuggestionListeners();
+    setupLiteralInputs();
     setSelectedMode(modeName);
     langSelector.value = lang;
     updateTaskList(lang, lastNodeString);
@@ -212,6 +210,10 @@ function makePhantomInputsReadOnly(): void {
         if (el instanceof HTMLElement && hasClassOrParentHasClass(el, 'phantom')) {
             el.setAttribute('readonly', "true");
             el.setAttribute('disabled', "true");
+
+            if (el.classList.contains('identifier-lookup')) {
+                el.parentElement?.classList.add('dropdown-selector-container')
+            }
         }
     })
 }
@@ -245,50 +247,11 @@ function updateActiveInputsList(): void {
         const bPath = getTreePathOfElement(b);
         return aPath.localeCompare(bPath, undefined, {numeric: true, sensitivity: 'base'});
     });
-    setupLiteralInputs();
 }
 
 export function getActiveInputs(): HTMLElement[] {
     return activeInputs;
 }
-
-// function addLiteralSuggestionListeners(): void {
-//     document.querySelectorAll('div.literal-identifier-container').forEach(container => {
-//         const input = container.querySelector('input');
-//         const suggestions = container.querySelector('ul.identifier-suggestions');
-//
-//         if (input instanceof HTMLInputElement && suggestions instanceof HTMLUListElement) {
-//             input.addEventListener('focus', () => {
-//                 suggestions.style.display = 'block';
-//             });
-//             input.addEventListener('blur', () => {
-//                 suggestions.style.display = 'none';
-//             });
-//
-//             suggestions.querySelectorAll('li').forEach(li => {
-//                 li.addEventListener('click', evt => {
-//                     input.value = li.textContent ?? '';
-//                     console.log("Text is " + li.textContent);
-//                     input.focus();
-//
-//                     evt.preventDefault();
-//                 });
-//                 li.classList.add('debug');
-//             });
-//
-//             input.addEventListener('input', () => {
-//                 const value = input.value.toLowerCase();
-//                 suggestions.querySelectorAll('li').forEach(li => {
-//                     if (li.textContent?.toLowerCase().includes(value)) {
-//                         li.style.display = 'block';
-//                     } else {
-//                         li.style.display = 'none';
-//                     }
-//                 });
-//             });
-//         }
-//     });
-// }
 
 /**
  * Undoes the last change to the tree.
@@ -320,7 +283,7 @@ export function updateTextInputWidth(textInput: HTMLInputElement): void {
     textInput.style.width = Math.max(minWidth, textInput.value.length) + "ch";
 }
 
-function setSelectedMode(mode: string): void {
+export function setSelectedMode(mode: string): void {
     modeRadios.forEach(radio => {
         radio.checked = radio.value === mode;
     });
@@ -364,98 +327,7 @@ export function enableInputs(): void {
     getTree().querySelectorAll('.expr-selector-button').forEach(button => button.removeAttribute('disabled'));
 }
 
-export function saveTree(): void {
-    const contents = JSON.stringify({
-        nodeString: lastNodeString,
-        lang: langSelector.value,
-        mode: getSelectedMode(),
-    })
-    const blob = new Blob([contents], {type: 'text/plain'});
-    const url = window.URL.createObjectURL(blob);
-
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'tree.cdtree';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-
-    window.URL.revokeObjectURL(url);
-}
-
-function setupFileInput(): void {
-    fileInput.type = 'file';
-    fileInput.accept = '.cdtree';
-    fileInput.onchange = (event) => {
-        const files = (event.target as HTMLInputElement).files;
-        if (!files || files.length === 0) throw new Error('No file selected');
-        const file = files[0];
-        const reader = new FileReader();
-        reader.onload = () => {
-            loadFromFile(reader);
-        };
-        reader.readAsText(file);
-    };
-}
-
-function setupFileDragAndDrop(): void {
-    const treeContainer = document.getElementById('tree-container');
-    if (!treeContainer) {
-        console.error('Tree container not found');
-        return;
-    }
-
-    const highlightClass: string = 'file-drag-highlight';
-    const addHighlight = () => treeContainer.classList.add(highlightClass);
-    const removeHighlight = () => treeContainer.classList.remove(highlightClass);
-
-    treeContainer.addEventListener('dragover', (event) => {
-        event.preventDefault();
-        addHighlight();
-    });
-
-    treeContainer.addEventListener('dragleave', removeHighlight);
-
-    treeContainer.addEventListener('drop', (event) => {
-        event.preventDefault();
-        removeHighlight();
-
-        const file: File | undefined = event.dataTransfer?.files[0];
-        if (!file) {
-            displayError('No file dropped');
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = () => loadFromFile(reader);
-        reader.readAsText(file);
-    });
-}
-
-function loadFromFile(reader: FileReader): void {
-    reader.onerror = () => displayError(new Error('Error occurred while attempting to read file'))
-    try {
-        const contents: string = reader.result as string;
-        const json = JSON.parse(contents);
-        if (!json.nodeString || !json.lang || !json.mode) {
-            throw new Error('Provided file did not contain required tree data');
-        }
-        langSelector.value = json.lang;
-        setSelectedMode(json.mode);
-        loadTreeFromString(json.nodeString);
-    } catch (e) {
-        if (e instanceof SyntaxError) {
-            e = new SyntaxError('Provided file was not valid JSON');
-        }
-        displayError(e);
-    }
-}
-
-export function loadTree(): void {
-    fileInput.click();
-}
-
-function loadTreeFromString(nodeString: string): void {
+export function loadTreeFromString(nodeString: string): void {
     lastNodeString = nodeString;
     runAction("IdentityAction", "", [])
 }
@@ -543,12 +415,6 @@ export function getNodeStringFromPath(path: string): string {
     return recurse(lastNodeString, path.split('-').map(s => parseInt(s)).filter(n => !isNaN(n)));
 }
 
-function getSelectedMode(): string {
-    const selectedRadio = modeRadios.find(radio => radio.checked);
-    if (!selectedRadio) throw new Error("No mode selected");
-    return selectedRadio.value;
-}
-
 export function getTree(): HTMLDivElement {
     const foundTree = document.getElementById('tree');
     if (foundTree instanceof HTMLDivElement) {
@@ -556,4 +422,12 @@ export function getTree(): HTMLDivElement {
     } else {
         throw new Error('Could not find tree element');
     }
+}
+
+export function getCurrentLanguage(): string {
+    return langSelector.value;
+}
+
+export function setCurrentLanguage(lang: string): void {
+    langSelector.value = lang;
 }
