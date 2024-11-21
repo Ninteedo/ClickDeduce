@@ -107,19 +107,19 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
 
   property("Let behaviour is correct with actions") {
     val tree = VariableNode.createFromExprName("Let").get
-    tree.args shouldEqual List(LiteralNode(LiteralIdentifier("")), SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode()))
+    tree.args shouldEqual List(LiteralNode(LiteralIdentifierBind("")), SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode()))
 
     val v: Variable = "x"
     val setVarNameAction = EditLiteralAction(tree, List(0), v)
     setVarNameAction.newTree.args shouldEqual List(
-      LiteralNode(LiteralIdentifier(v)),
+      LiteralNode(LiteralIdentifierBind(v)),
       SubExprNode(ExprChoiceNode()),
       SubExprNode(ExprChoiceNode())
     )
 
     val assignExprChoiceAction = SelectExprAction(setVarNameAction.newTree, List(1), "Num")
     assignExprChoiceAction.newTree.args shouldEqual List(
-      LiteralNode(LiteralIdentifier(v)),
+      LiteralNode(LiteralIdentifierBind(v)),
       SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(0))))),
       SubExprNode(ExprChoiceNode())
     )
@@ -127,23 +127,23 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
     val assignValue: Int = 34
     val assignExprValueAction = EditLiteralAction(assignExprChoiceAction.newTree, List(1, 0), assignValue.toString)
     assignExprValueAction.newTree.args shouldEqual List(
-      LiteralNode(LiteralIdentifier(v)),
+      LiteralNode(LiteralIdentifierBind(v)),
       SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(assignValue))))),
       SubExprNode(ExprChoiceNode())
     )
 
     val boundExprChoiceAction = SelectExprAction(assignExprValueAction.newTree, List(2), "Var")
     boundExprChoiceAction.newTree.args shouldEqual List(
-      LiteralNode(LiteralIdentifier(v)),
+      LiteralNode(LiteralIdentifierBind(v)),
       SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(assignValue))))),
-      SubExprNode(VariableNode("Var", List(LiteralNode(LiteralIdentifier("")))))
+      SubExprNode(VariableNode("Var", List(LiteralNode(LiteralIdentifierLookup("")))))
     )
 
     val boundExprValueAction = EditLiteralAction(boundExprChoiceAction.newTree, List(2, 0), v)
     boundExprValueAction.newTree.args shouldEqual List(
-      LiteralNode(LiteralIdentifier(v)),
+      LiteralNode(LiteralIdentifierBind(v)),
       SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(assignValue))))),
-      SubExprNode(VariableNode("Var", List(LiteralNode(LiteralIdentifier(v)))))
+      SubExprNode(VariableNode("Var", List(LiteralNode(LiteralIdentifierLookup(v)))))
     )
 
     val finalTree = boundExprValueAction.newTree.asInstanceOf[ExprNode]
@@ -170,12 +170,12 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
 
   property("Edit tree with bound variables is correct with IfThenElse in edit mode") {
     val cond = VariableNode("Bool", List(LiteralNode(LiteralBool(true))))
-    val thenExpr = VariableNode("Var", List(LiteralNode(LiteralIdentifier("x"))))
-    val elseExpr = VariableNode("Var", List(LiteralNode(LiteralIdentifier("x"))))
+    val thenExpr = VariableNode("Var", List(LiteralNode(LiteralIdentifierLookup("x"))))
+    val elseExpr = VariableNode("Var", List(LiteralNode(LiteralIdentifierLookup("x"))))
     val ifThenElseNode =
       VariableNode("IfThenElse", List(SubExprNode(cond), SubExprNode(thenExpr), SubExprNode(elseExpr)))
     val numNode = VariableNode("Num", List(LiteralNode(LiteralInt(1))))
-    val tree = VariableNode("Let", List(LiteralNode(LiteralIdentifier("x")), SubExprNode(numNode), SubExprNode(ifThenElseNode)))
+    val tree = VariableNode("Let", List(LiteralNode(LiteralIdentifierBind("x")), SubExprNode(numNode), SubExprNode(ifThenElseNode)))
 
     tree.getEditValueResult shouldEqual NumV(1)
     ifThenElseNode.getEditValueResult shouldEqual NumV(1)
@@ -193,11 +193,11 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
 
   property("Var pretty prints correctly") {
     forAll(Table("identifier", variableNames: _*)) { v =>
-      Var(LiteralIdentifier(v)).prettyPrint shouldEqual v
+      Var(LiteralIdentifierLookup(v)).prettyPrint shouldEqual v
     }
 
     forAll(Table("identifier", invalidVariableNames: _*)) { v =>
-      Var(LiteralIdentifier(v)).prettyPrint shouldEqual v
+      Var(LiteralIdentifierLookup(v)).prettyPrint shouldEqual v
     }
   }
 
@@ -221,7 +221,7 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
     val let = Let("x", Num(1), Var("x"))
 
     let.getChildrenBase() shouldEqual List(
-      (LiteralIdentifier("x"), Env()),
+      (LiteralIdentifierBind("x"), Env()),
       (Num(1), Env()),
       (Var("x"), Env("x" -> NumV(1)))
     )
@@ -232,7 +232,7 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
   property("Let with unselected expression has correct children") {
     val letNode = VariableNode(
       "Let",
-      List(LiteralNode(LiteralIdentifier("x")), SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(1))))), SubExprNode(ExprChoiceNode()))
+      List(LiteralNode(LiteralIdentifierBind("x")), SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(1))))), SubExprNode(ExprChoiceNode()))
     )
 
     DisplayMode.values.foreach(mode => {

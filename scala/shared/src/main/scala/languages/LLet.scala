@@ -7,7 +7,7 @@ class LLet extends LIf {
 
   // expressions
 
-  case class Var(v: LiteralIdentifier) extends Expr {
+  case class Var(v: LiteralIdentifierLookup) extends Expr {
     override def evalInner(env: ValueEnv): Value = guardValidIdentifierEval(v,
       env.get(v.value) match {
         case None => UnknownVariableEvalError(v)
@@ -30,18 +30,18 @@ class LLet extends LIf {
   }
 
   object Var extends ExprCompanion {
-    def apply(v: Variable): Var = new Var(LiteralIdentifier(v))
+    def apply(v: Variable): Var = new Var(LiteralIdentifierLookup(v))
 
     override def create(args: BuilderArgs): Option[Expr] = args match {
-      case List(v: LiteralIdentifier) => Some(Var(v))
-      case Nil              => Some(Var(LiteralIdentifier("")))
+      case List(v: LiteralIdentifierLookup) => Some(Var(v))
+      case Nil              => Some(Var(LiteralIdentifierLookup("")))
       case _                => None
     }
 
     override val aliases: List[String] = List("Variable", "X")
   }
 
-  case class Let(v: LiteralIdentifier, assign: Expr, bound: Expr) extends Expr {
+  case class Let(v: LiteralIdentifierBind, assign: Expr, bound: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = guardValidIdentifierEval(v, {
       val assign_val: Value = assign.eval(env)
       if (assign_val.isError) assign_val else bound.eval(env + (v -> assign_val))
@@ -73,11 +73,11 @@ class LLet extends LIf {
   }
 
   object Let extends ExprCompanion {
-    def apply(v: Variable, assign: Expr, bound: Expr): Let = new Let(LiteralIdentifier(v), assign, bound)
+    def apply(v: Variable, assign: Expr, bound: Expr): Let = new Let(LiteralIdentifierBind(v), assign, bound)
 
     override def create(args: BuilderArgs): Option[Expr] = args match {
-      case List(v: LiteralIdentifier, assign: Expr, bound: Expr) => Some(Let(v, assign, bound))
-      case Nil => Some(Let(LiteralIdentifier(""), defaultExpr, defaultExpr))
+      case List(v: LiteralIdentifierBind, assign: Expr, bound: Expr) => Some(Let(v, assign, bound))
+      case Nil => Some(Let(LiteralIdentifierBind.default, defaultExpr, defaultExpr))
       case _   => None
     }
 

@@ -251,14 +251,14 @@ class NodeTreeTest extends AnyFunSuite {
     val tree = LLam.VariableNode(
       "Lambda",
       List(
-        LLam.LiteralNode(LLam.LiteralIdentifier("x")),
+        LLam.LiteralNode(LLam.LiteralIdentifierLookup("x")),
         LLam.SubTypeNode(
           LLam.TypeNode(
             "Func",
             List(LLam.SubTypeNode(LLam.TypeNode("IntType", Nil)), LLam.SubTypeNode(LLam.TypeNode("BoolType", Nil)))
           )
         ),
-        LLam.SubExprNode(LLam.VariableNode("Var", List(LLam.LiteralNode(LLam.LiteralIdentifier("x")))))
+        LLam.SubExprNode(LLam.VariableNode("Var", List(LLam.LiteralNode(LLam.LiteralIdentifierLookup("x")))))
       )
     )
 

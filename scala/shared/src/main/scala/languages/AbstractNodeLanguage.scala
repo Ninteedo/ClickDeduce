@@ -706,7 +706,9 @@ trait AbstractNodeLanguage extends AbstractLanguage {
         case n: LiteralNode => n.getLiteral
         case n: SubTypeNode => n.node.getType
       }
-      buildExpr(exprName, arguments).get
+      buildExpr(exprName, arguments) match
+        case Some(value) => value
+        case None => throw new ClickDeduceException(s"Could not build an instance of $exprName with arguments $arguments")
     }
 
     private val htmlLineCache = collection.mutable.Map[DisplayMode, TypedTag[String]]()
@@ -866,7 +868,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   case class LiteralNode(literal: Literal) extends InnerNode {
     override val name: String = "LiteralNode"
 
-    def toHtmlLine(mode: DisplayMode): TypedTag[String] = literal.toHtmlInput(treePathString)
+    def toHtmlLine(mode: DisplayMode): TypedTag[String] = literal.toHtmlInput(treePathString, getEnv(mode))
 
     def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] = literal.toHtmlInputReadOnly(treePathString)
 

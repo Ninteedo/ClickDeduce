@@ -8,7 +8,8 @@ class LRec extends LLam {
   registerTerms("LRec", List(Rec, RecV))
 
   // expressions
-  case class Rec(f: LiteralIdentifier, v: LiteralIdentifier, inType: Type, outType: Type, e: Expr) extends Expr {
+  case class Rec(f: LiteralIdentifierBind, v: LiteralIdentifierBind, inType: Type, outType: Type, e: Expr)
+      extends Expr {
     override def evalInner(env: ValueEnv): Value = guardValidIdentifierEval(
       f,
       guardValidIdentifierEval(
@@ -58,20 +59,28 @@ class LRec extends LLam {
 
   object Rec extends ExprCompanion {
     def apply(f: String, v: String, in_typ: Type, out_typ: Type, e: Expr): Rec =
-      Rec(LiteralIdentifier(f), LiteralIdentifier(v), in_typ, out_typ, e)
+      Rec(LiteralIdentifierBind(f), LiteralIdentifierBind(v), in_typ, out_typ, e)
 
     override def create(args: BuilderArgs): Option[Expr] = args match {
-      case List(f: LiteralIdentifier, v: LiteralIdentifier, inType: Type, outType: Type, e: Expr) =>
+      case List(f: LiteralIdentifierBind, v: LiteralIdentifierBind, inType: Type, outType: Type, e: Expr) =>
         Some(Rec(f, v, inType, outType, e))
-      case Nil => Some(Rec(LiteralIdentifier.default, LiteralIdentifier.default, defaultType, defaultType, defaultExpr))
-      case _   => None
+      case Nil =>
+        Some(Rec(LiteralIdentifierBind.default, LiteralIdentifierBind.default, defaultType, defaultType, defaultExpr))
+      case _ => None
     }
 
     override val aliases: List[String] = List("RecursiveFunction")
   }
 
   // values
-  case class RecV(f: LiteralIdentifier, v: LiteralIdentifier, in_typ: Type, out_typ: Type, e: Expr, env: ValueEnv) extends FunctionValue {
+  case class RecV(
+    f: LiteralIdentifierBind,
+    v: LiteralIdentifierBind,
+    in_typ: Type,
+    out_typ: Type,
+    e: Expr,
+    env: ValueEnv
+  ) extends FunctionValue {
     override val typ: Type = Func(in_typ, out_typ)
 
     override def getFunctionEvaluation(applyValue: Value): (Expr, ValueEnv) =

@@ -99,7 +99,7 @@ class LData extends LRec {
     override val aliases: List[String] = List("Second", "2nd")
   }
 
-  case class LetPair(x: LiteralIdentifier, y: LiteralIdentifier, assign: Expr, bound: Expr) extends Expr {
+  case class LetPair(x: LiteralIdentifierBind, y: LiteralIdentifierBind, assign: Expr, bound: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = verifyLiteralIdentifierEval(x, y) {
       assign.eval(env) match {
         case PairV(v1, v2)    => bound.eval(env + (x -> v1) + (y -> v2))
@@ -143,12 +143,12 @@ class LData extends LRec {
 
   object LetPair extends ExprCompanion {
     def apply(x: Variable, y: Variable, assign: Expr, bound: Expr): LetPair =
-      LetPair(LiteralIdentifier(x), LiteralIdentifier(y), assign, bound)
+      LetPair(LiteralIdentifierBind(x), LiteralIdentifierBind(y), assign, bound)
 
     override def create(args: BuilderArgs): Option[Expr] = args match {
-      case List(x: LiteralIdentifier, y: LiteralIdentifier, assign: Expr, bound: Expr) =>
+      case List(x: LiteralIdentifierBind, y: LiteralIdentifierBind, assign: Expr, bound: Expr) =>
         Some(LetPair(x, y, assign, bound))
-      case Nil => Some(LetPair(LiteralIdentifier.default, LiteralIdentifier.default, defaultExpr, defaultExpr))
+      case Nil => Some(LetPair(LiteralIdentifierBind.default, LiteralIdentifierBind.default, defaultExpr, defaultExpr))
       case _   => None
     }
 
@@ -208,7 +208,7 @@ class LData extends LRec {
     }
   }
 
-  case class CaseSwitch(e: Expr, l: LiteralIdentifier, r: LiteralIdentifier, lExpr: Expr, rExpr: Expr) extends Expr {
+  case class CaseSwitch(e: Expr, l: LiteralIdentifierBind, r: LiteralIdentifierBind, lExpr: Expr, rExpr: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = verifyLiteralIdentifierEval(l, r) {
       e.eval(env) match {
         case LeftV(v, rightType) => lExpr.eval(env + (l -> v))
@@ -271,13 +271,13 @@ class LData extends LRec {
 
   object CaseSwitch extends ExprCompanion {
     def apply(e: Expr, l: Variable, r: Variable, lExpr: Expr, rExpr: Expr): CaseSwitch =
-      CaseSwitch(e, LiteralIdentifier(l), LiteralIdentifier(r), lExpr, rExpr)
+      CaseSwitch(e, LiteralIdentifierBind(l), LiteralIdentifierBind(r), lExpr, rExpr)
 
     override def create(args: BuilderArgs): Option[Expr] = args match {
-      case List(e: Expr, l: LiteralIdentifier, r: LiteralIdentifier, lExpr: Expr, rExpr: Expr) =>
+      case List(e: Expr, l: LiteralIdentifierBind, r: LiteralIdentifierBind, lExpr: Expr, rExpr: Expr) =>
         Some(CaseSwitch(e, l, r, lExpr, rExpr))
       case Nil =>
-        Some(CaseSwitch(defaultExpr, LiteralIdentifier.default, LiteralIdentifier.default, defaultExpr, defaultExpr))
+        Some(CaseSwitch(defaultExpr, LiteralIdentifierBind.default, LiteralIdentifierBind.default, defaultExpr, defaultExpr))
       case _ => None
     }
   }
@@ -406,14 +406,14 @@ class LData extends LRec {
   }
 
   private def verifyLiteralIdentifierEval(l: Literal*)(continue: => Value): Value = {
-    l.find(!_.isInstanceOf[LiteralIdentifier]) match {
+    l.find(!_.isInstanceOf[LiteralIdentifierBind]) match {
       case Some(lit) => InvalidIdentifierEvalError(lit)
       case None      => continue
     }
   }
 
   private def verifyLiteralIdentifierType(l: Literal*)(continue: => Type): Type = {
-    l.find(!_.isInstanceOf[LiteralIdentifier]) match {
+    l.find(!_.isInstanceOf[LiteralIdentifierBind]) match {
       case Some(lit) => InvalidIdentifierTypeError(lit)
       case None      => continue
     }

@@ -10,7 +10,8 @@ object HTMLHelper {
     treePath: String,
     inputValue: String,
     inputKind: String = "text",
-    extraClasses: String | List[String] = Nil
+    extraClasses: String | List[String] = Nil,
+    extraAttrs: Map[String, String] = Map.empty
   ): TypedTag[String] = {
     input(
       `type` := inputKind,
@@ -18,6 +19,7 @@ object HTMLHelper {
       width := Math.max(2, inputValue.length).toString + "ch",
       data("tree-path") := treePath,
       value := inputValue,
+      (extraAttrs map { case (k, v) => attr(k) := v }).toSeq,
     )
   }
 

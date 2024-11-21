@@ -34,20 +34,20 @@ trait AbstractLanguage {
   case class Env[T](env: Map[Variable, T] = Map()) {
     private def readKey(key: Variable | LiteralIdentifier): Variable = key match {
       case v: Variable          => v
-      case LiteralIdentifier(v) => v
+      case l: LiteralIdentifier => l.getIdentifier
     }
 
-    def get(key: Variable | LiteralIdentifier): Option[T] = env.get(readKey(key))
+    def get(key: Variable | LiteralIdentifierLookup): Option[T] = env.get(readKey(key))
 
-    def set(key: Variable | LiteralIdentifier, value: T): Env[T] = new Env(env + (readKey(key) -> value))
+    def set(key: Variable | LiteralIdentifierBind, value: T): Env[T] = new Env(env + (readKey(key) -> value))
 
     @targetName("setVariable")
-    def +(key: Variable | LiteralIdentifier, value: T): Env[T] = {
+    def +(key: Variable | LiteralIdentifierBind, value: T): Env[T] = {
       set(key, value)
     }
 
     @targetName("setVariableTuple")
-    def +(kv: (Variable | LiteralIdentifier, T)): Env[T] = {
+    def +(kv: (Variable | LiteralIdentifierBind, T)): Env[T] = {
       val (k, v) = kv
       this + (k, v)
     }
@@ -55,7 +55,7 @@ trait AbstractLanguage {
     @targetName("setVariables")
     def ++(other: Env[T]): Env[T] = new Env(env ++ other.env)
 
-    def getOrElse(key: Variable | LiteralIdentifier, default: => T): T = env.getOrElse(readKey(key), default)
+    def getOrElse(key: Variable | LiteralIdentifierLookup, default: => T): T = env.getOrElse(readKey(key), default)
 
     def isEmpty: Boolean = env.isEmpty
 
@@ -583,15 +583,11 @@ trait AbstractLanguage {
 
     override lazy val toHtml: TypedTag[String] = p(getValue)
 
-    def toHtmlInput(treePath: String): TypedTag[String] = HTMLHelper.literalInputBase(
-      treePath,
-      getValue,
-    )
+    def toHtmlInput(treePath: String, env: ValueEnv | TypeEnv): TypedTag[String] =
+      HTMLHelper.literalInputBase(treePath, getValue)
 
-    def toHtmlInputReadOnly(originPath: String): TypedTag[String] = HTMLHelper.literalInputBaseReadOnly(
-      originPath,
-      getValue,
-    )
+    def toHtmlInputReadOnly(originPath: String): TypedTag[String] =
+      HTMLHelper.literalInputBaseReadOnly(originPath, getValue)
 
     val defaultContents: String = ""
 
@@ -612,8 +608,8 @@ trait AbstractLanguage {
       *   - [[LiteralBool]]: `true` or `false` (case-insensitive)
       *   - [[LiteralString]]: Enclosed in double quotes
       *   - [[LiteralInt]]: A sequence of digits, optionally preceded by a minus sign
-      *   - [[LiteralIdentifier]]: A sequence of letters, digits, and underscores, starting with a letter or underscore
-      *     (non-empty)
+      *   - [[LiteralIdentifierLookup]]: A sequence of letters, digits, and underscores, starting with a letter or
+      *     underscore (non-empty)
       *   - [[LiteralAny]]: Anything else
       *
       * @param s
@@ -627,25 +623,27 @@ trait AbstractLanguage {
       LiteralString(s.substring(1, s.length - 1))
     } else if ("-?\\d+".r.matches(s)) {
       LiteralInt.fromString(s)
-    } else if (LiteralIdentifier.identifierRegex.matches(s)) {
-      LiteralIdentifier(s)
+    } else if (LiteralIdentifierLookup.identifierRegex.matches(s)) {
+      LiteralIdentifierLookup(s)
     } else {
       LiteralAny(s)
     }
 
     def fromStringOfType(s: String, l: Class[_ <: Literal]): Literal = l match {
-      case c if c == classOf[LiteralBool]       => LiteralBool(s.toBoolean)
-      case c if c == classOf[LiteralString]     => LiteralString(s)
-      case c if c == classOf[LiteralInt]        => LiteralInt.fromString(s)
-      case c if c == classOf[LiteralIdentifier] => LiteralIdentifier(s)
-      case c if c == classOf[LiteralAny]        => LiteralAny(s)
-      case _                                    => throw LiteralParseException(s)
+      case c if c == classOf[LiteralBool]             => LiteralBool(s.toBoolean)
+      case c if c == classOf[LiteralString]           => LiteralString(s)
+      case c if c == classOf[LiteralInt]              => LiteralInt.fromString(s)
+      case c if c == classOf[LiteralIdentifierBind]   => LiteralIdentifierBind(s)
+      case c if c == classOf[LiteralIdentifierLookup] => LiteralIdentifierLookup(s)
+      case c if c == classOf[LiteralAny]              => LiteralAny(s)
+      case _                                          => throw LiteralParseException(s)
     }
   }
 
   protected trait LiteralParser extends JavaTokenParsers {
     def literalName: Parser[String] =
-      "LiteralString" | "LiteralInt" | "LiteralBool" | "LiteralIdentifier" | "LiteralAny"
+      "LiteralString" | "LiteralInt" | "LiteralBool" | "LiteralIdentifierBind" | "LiteralIdentifierLookup" |
+        "LiteralAny"
 
     def literalArg: Parser[BigInt | String | Boolean] = wholeNumber ^^ (n => BigInt(n))
       | "true" ^^ (_ => true) | "false" ^^ (_ => false)
@@ -656,12 +654,13 @@ trait AbstractLanguage {
     def literal: Parser[Literal] = literalName ~ "(" ~ literalArg ~ ")" ^^ {
       case name ~ "(" ~ arg ~ ")" =>
         (name, arg) match {
-          case ("LiteralInt", n: BigInt)        => LiteralInt(n)
-          case ("LiteralString", s: String)     => LiteralString(s)
-          case ("LiteralBool", b: Boolean)      => LiteralBool(b)
-          case ("LiteralIdentifier", s: String) => LiteralIdentifier(s)
-          case ("LiteralAny", s: String)        => LiteralAny(s)
-          case _                                => throw LiteralParseException(s"$name($arg)")
+          case ("LiteralInt", n: BigInt)              => LiteralInt(n)
+          case ("LiteralString", s: String)           => LiteralString(s)
+          case ("LiteralBool", b: Boolean)            => LiteralBool(b)
+          case ("LiteralIdentifierBind", s: String)   => LiteralIdentifierBind(s)
+          case ("LiteralIdentifierLookup", s: String) => LiteralIdentifierLookup(s)
+          case ("LiteralAny", s: String)              => LiteralAny(s)
+          case _                                      => throw LiteralParseException(s"$name($arg)")
         }
       case other => throw LiteralParseException(other.toString)
     }
@@ -679,19 +678,21 @@ trait AbstractLanguage {
   case class LiteralInt(value: BigInt) extends Literal {
     override def toText: ConvertableText = MathElement(getValue)
 
-    override def toHtmlInput(treePath: String): TypedTag[String] = HTMLHelper.literalInputBase(
-      treePath,
-      getValue,
-      inputKind = "number",
-      extraClasses = "integer"
-    )
+//    override def toHtmlInput(treePath: String, env: ValueEnv | TypeEnv): TypedTag[String] = HTMLHelper
+    //    .literalInputBase(
+//      treePath,
+//      getValue,
+//      inputKind = "number",
+//      extraClasses = "integer"
+//    )
   }
 
   object LiteralInt {
     def fromString(s: String): LiteralInt = try {
       LiteralInt(BigInt(s))
     } catch {
-      case _: NumberFormatException => throw LiteralParseException(s"LiteralInt only accepts integer values, not \"$s\"")
+      case _: NumberFormatException =>
+        throw LiteralParseException(s"LiteralInt only accepts integer values, not \"$s\"")
     }
 
     val default: LiteralInt = LiteralInt(0)
@@ -704,21 +705,18 @@ trait AbstractLanguage {
   case class LiteralBool(value: Boolean) extends Literal {
     override def toText: ConvertableText = MathElement(getValue)
 
-    override def toHtmlInput(treePath: String): TypedTag[String] = div(
+    override def toHtmlInput(treePath: String, env: ValueEnv | TypeEnv): TypedTag[String] = div(
       cls := "literal-checkbox-container",
       input(
         `type` := "checkbox",
         data("tree-path") := treePath,
         cls := ClassDict.LITERAL + " " + "boolean",
-        if (getValue.toBoolean) checked else (),
+        if (getValue.toBoolean) checked else ()
       )
     )
 
-    override def toHtmlInputReadOnly(originPath: String): TypedTag[String] = HTMLHelper.literalInputBaseReadOnly(
-      originPath,
-      getValue,
-      extraClasses = "boolean"
-    )
+    override def toHtmlInputReadOnly(originPath: String): TypedTag[String] =
+      HTMLHelper.literalInputBaseReadOnly(originPath, getValue, extraClasses = "boolean")
   }
 
   /** A literal string.
@@ -733,28 +731,64 @@ trait AbstractLanguage {
     override def toText: ConvertableText = TextElement(getValue)
   }
 
-  /** A literal identifier.
+  trait LiteralIdentifier extends Literal {
+    def validIdentifier: Boolean
+
+    protected val identifierRegex: Regex = "[A-Za-z_$][\\w_$]*".r
+
+    def getIdentifier: String = getValue
+  }
+
+  case class LiteralIdentifierBind(value: String) extends Literal, LiteralIdentifier {
+    override lazy val toString: String = s"LiteralIdentifierBind(${UtilityFunctions.quote(value)})"
+
+    override def toText: ConvertableText = TextElement(getValue)
+
+    override def validIdentifier: Boolean = identifierRegex.matches(value)
+
+    def toLookup: LiteralIdentifierLookup = LiteralIdentifierLookup(value)
+  }
+
+  object LiteralIdentifierBind {
+    val default: LiteralIdentifierBind = LiteralIdentifierBind("")
+  }
+
+  /** A literal identifier lookup.
     * @param value
     *   The identifier value.
     */
-  case class LiteralIdentifier(value: String) extends Literal {
-    override lazy val toString: String = s"LiteralIdentifier(${UtilityFunctions.quote(value)})"
+  case class LiteralIdentifierLookup(value: String) extends Literal, LiteralIdentifier {
+    override lazy val toString: String = s"LiteralIdentifierLookup(${UtilityFunctions.quote(value)})"
 
     override def toText: ConvertableText = ItalicsElement(TextElement(getValue))
 
-    override def toHtmlInput(treePath: String): TypedTag[String] = HTMLHelper.literalInputBase(
-      treePath,
-      getValue,
-      extraClasses = "identifier"
-    )
+    override def toHtmlInput(treePath: String, env: ValueEnv | TypeEnv): TypedTag[String] = {
+      div(
+        cls := "literal-identifier-container",
+        HTMLHelper.literalInputBase(treePath, getValue, extraClasses = "identifier-lookup"),
+        div(
+          cls := "dropdown",
+          ul(
+            cls := "identifier-suggestions",
+            env.keys
+              .map(k => {
+                li(attr("value") := k, k)
+              })
+              .toSeq
+          )
+        )
+      )
+    }
 
-    def validIdentifier: Boolean = LiteralIdentifier.identifierRegex.matches(value)
+    override def validIdentifier: Boolean = identifierRegex.matches(value)
+
+    def toBind: LiteralIdentifierBind = LiteralIdentifierBind(value)
   }
 
-  object LiteralIdentifier {
+  object LiteralIdentifierLookup {
     val identifierRegex: Regex = "[A-Za-z_$][\\w_$]*".r
 
-    val default: LiteralIdentifier = LiteralIdentifier("")
+    val default: LiteralIdentifierLookup = LiteralIdentifierLookup("")
   }
 
   /** A literal with no restrictions.
@@ -769,11 +803,12 @@ trait AbstractLanguage {
 
   protected def placeholderOfLiteral(literal: Literal, contents: String): Literal = {
     val copy = literal match {
-      case LiteralInt(n)        => LiteralInt(n)
-      case LiteralBool(b)       => LiteralBool(b)
-      case LiteralString(s)     => LiteralString(s)
-      case LiteralIdentifier(s) => LiteralIdentifier(s)
-      case LiteralAny(s)        => LiteralAny(s)
+      case LiteralInt(n)              => LiteralInt(n)
+      case LiteralBool(b)             => LiteralBool(b)
+      case LiteralString(s)           => LiteralString(s)
+      case LiteralIdentifierBind(s)   => LiteralIdentifierBind(s)
+      case LiteralIdentifierLookup(s) => LiteralIdentifierLookup(s)
+      case LiteralAny(s)              => LiteralAny(s)
     }
     copy.setOverrideContents(contents)
     copy
