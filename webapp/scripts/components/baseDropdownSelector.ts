@@ -39,7 +39,7 @@ export class BaseDropdownSelector {
 
     private setupOptionListeners(): void {
         this.options.forEach(option => {
-            option.element.addEventListener('mousedown', evt => {
+            option.element.addEventListener('click', evt => {
                 evt.preventDefault();
                 this.selectOption(option);
             });
