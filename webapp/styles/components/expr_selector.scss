@@ -1,82 +1,83 @@
 @import '../abstracts/colours';
+@import 'custom_dropdown';
 
 div.expr-selector-container {
-  display: inline-flex;
-  position: relative;
-
-  &.focused {
-    box-shadow: -1px 0 2px 1px $foreground, 0 -1px 2px 1px $foreground, 1px 0 2px 1px $foreground, 0 1px 2px 1px $foreground;
-    border-radius: 3px;
-  }
-
-  &.guide-highlight {
-    .expr-selector-input, .expr-selector-button {
-      background-color: $highlighted-input;
-      color: $highlighted-input-text;
-    }
-  }
-
-  .expr-selector-input {
-    margin: 0;
-    border-radius: 3px 0 0 3px;
-    outline: none;
-  }
-
-  .expr-selector-button {
-    margin: 0;
-    border: $input-outline solid 1px;
-    border-radius: 0 3px 3px 0;
-  }
-
-  .expr-selector-dropdown {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    background-color: $context-menu-background;
-    color: $foreground;
-    border: $input-outline solid 1px;
-    z-index: 1;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.16), 0 2px 4px rgba(0, 0, 0, 0.23);
-    pointer-events: bounding-box;
-
-    overflow-y: auto;
-    max-height: 20rem;
-
-    &.show {
-      display: block;
-    }
-
-    &:not(.show) {
-      display: none;
-    }
-
-    > ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-
-      li {
-        cursor: pointer;
-        padding: 5px;
-        text-align: left;
-        z-index: 100;
-
-        &.highlight {
-          background-color: $highlighted-tree;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.16), 0 2px 4px rgba(0, 0, 0, 0.23);
-          font-weight: bold;
-        }
-
-        &.hidden {
-          display: none;
-        }
-
-        &:hover {
-          background-color: $hover-background;
-        }
-      }
-    }
-  }
+  //display: inline-flex;
+  //position: relative;
+  //
+  //&.focused {
+  //  box-shadow: -1px 0 2px 1px $foreground, 0 -1px 2px 1px $foreground, 1px 0 2px 1px $foreground, 0 1px 2px 1px $foreground;
+  //  border-radius: 3px;
+  //}
+  //
+  //&.guide-highlight {
+  //  .expr-selector-input, .expr-selector-button {
+  //    background-color: $highlighted-input;
+  //    color: $highlighted-input-text;
+  //  }
+  //}
+  //
+  //.expr-selector-input {
+  //  margin: 0;
+  //  border-radius: 3px 0 0 3px;
+  //  outline: none;
+  //}
+  //
+  //.expr-selector-button {
+  //  margin: 0;
+  //  border: $input-outline solid 1px;
+  //  border-radius: 0 3px 3px 0;
+  //}
+  //
+  //.expr-selector-dropdown {
+  //  position: absolute;
+  //  top: 100%;
+  //  left: 0;
+  //  background-color: $context-menu-background;
+  //  color: $foreground;
+  //  border: $input-outline solid 1px;
+  //  z-index: 1;
+  //  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.16), 0 2px 4px rgba(0, 0, 0, 0.23);
+  //  pointer-events: bounding-box;
+  //
+  //  overflow-y: auto;
+  //  max-height: 20rem;
+  //
+  //  &.show {
+  //    display: block;
+  //  }
+  //
+  //  &:not(.show) {
+  //    display: none;
+  //  }
+  //
+  //  > ul {
+  //    list-style: none;
+  //    padding: 0;
+  //    margin: 0;
+  //
+  //    li {
+  //      cursor: pointer;
+  //      padding: 5px;
+  //      text-align: left;
+  //      z-index: 100;
+  //
+  //      &.highlight {
+  //        background-color: $highlighted-tree;
+  //        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.16), 0 2px 4px rgba(0, 0, 0, 0.23);
+  //        font-weight: bold;
+  //      }
+  //
+  //      &.hidden {
+  //        display: none;
+  //      }
+  //
+  //      &:hover {
+  //        background-color: $hover-background;
+  //      }
+  //    }
+  //  }
+  //}
 }
 
 div.expr-selector-placeholder {

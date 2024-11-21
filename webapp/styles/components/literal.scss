@@ -17,36 +17,36 @@ div.literal-checkbox-container {
   //}
 }
 
-div.literal-identifier-container {
-  //background:  $foreground;
-
-  ul.identifier-suggestions {
-    position: absolute;
-    //top: 100%;
-    //left: 0;
-    width: 100%;
-
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    max-height: 10rem;
-    overflow-y: auto;
-    z-index: 50;
-    display: none;
-
-    background: $context-menu-background;
-    border: $input-outline solid 1px;
-    border-radius: 0.1rem;
-
-    li {
-      padding: 0.5rem;
-      cursor: pointer;
-
-      color: $foreground;
-
-      &:hover {
-        background: $hover-background;
-      }
-    }
-  }
-}
+//div.literal-identifier-container {
+//  //background:  $foreground;
+//
+//  ul.identifier-suggestions {
+//    position: absolute;
+//    //top: 100%;
+//    //left: 0;
+//    width: 100%;
+//
+//    list-style: none;
+//    margin: 0;
+//    padding: 0;
+//    max-height: 10rem;
+//    overflow-y: auto;
+//    z-index: 50;
+//    display: none;
+//
+//    background: $context-menu-background;
+//    border: $input-outline solid 1px;
+//    border-radius: 0.1rem;
+//
+//    li {
+//      padding: 0.5rem;
+//      cursor: pointer;
+//
+//      color: $foreground;
+//
+//      &:hover {
+//        background: $hover-background;
+//      }
+//    }
+//  }
+//}

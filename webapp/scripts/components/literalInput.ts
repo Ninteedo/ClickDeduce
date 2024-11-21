@@ -1,6 +1,7 @@
 import {getTreePathOfElement, handleKeyDown} from "../interface";
 import {handleLiteralChanged} from "../actions";
 import {getTree} from "../treeManipulation";
+import {BaseDropdownSelector} from "./baseDropdownSelector";
 
 abstract class LiteralInput {
     protected readonly input: HTMLInputElement;
@@ -15,7 +16,6 @@ abstract class LiteralInput {
         this.input = input;
         this.treePath = getTreePathOfElement(input);
         this.linkedPlaceholders = this.createLinkedPlaceholders();
-        console.log(this.linkedPlaceholders);
         this.initialValue = this.getValue();
 
         this.setupEventListeners();
@@ -115,43 +115,44 @@ class LiteralTextInput extends LiteralInput {
 }
 
 class LiteralIdentifierLookupInput extends LiteralInput {
-    private readonly container: HTMLDivElement;
-    private readonly suggestionsUl: HTMLUListElement;
-    private readonly suggestions: HTMLLIElement[];
+    // private readonly container: HTMLDivElement;
 
     constructor(input: HTMLInputElement) {
         super(input);
-        this.container = input.parentElement as HTMLDivElement;
-        this.suggestionsUl = this.container.querySelector('ul.identifier-suggestions') as HTMLUListElement;
-        this.suggestions = Array.from(this.suggestionsUl.querySelectorAll('li'));
+        console.log(input);
+        const container = input.parentElement as HTMLDivElement;
+        // this.suggestionsUl = this.container.querySelector('ul.identifier-suggestions') as HTMLUListElement;
+        // this.suggestions = Array.from(this.suggestionsUl.querySelectorAll('li'));
+        //
+        new BaseDropdownSelector(container, 'input', 'div.dropdown', 'li');
 
-        this.updateSuggestions();
+        // this.updateSuggestions();
     }
 
-    protected override onFocused(): void {
-        this.suggestionsUl.style.display = 'block';
-    }
+    // protected override onFocused(): void {
+    //     this.suggestionsUl.style.display = 'block';
+    // }
+    //
+    // protected override onBlurred(): void {
+    //     this.suggestionsUl.style.display = 'none';
+    // }
 
-    protected override onBlurred(): void {
-        this.suggestionsUl.style.display = 'none';
-    }
+    // protected override onInput() {
+    //     super.onInput();
+    //     this.updateSuggestions();
+    // }
 
-    protected override onInput() {
-        super.onInput();
-        this.updateSuggestions();
-    }
-
-    private updateSuggestions(): void {
-        const inputValue = this.getValue();
-        this.suggestions.forEach((suggestion: HTMLLIElement) => {
-            const suggestionText = suggestion.textContent;
-            if (!suggestionText || suggestionText.includes(inputValue)) {
-                suggestion.style.display = 'block';
-            } else {
-                suggestion.style.display = 'none';
-            }
-        });
-    }
+    // private updateSuggestions(): void {
+    //     const inputValue = this.getValue();
+    //     this.suggestions.forEach((suggestion: HTMLLIElement) => {
+    //         const suggestionText = suggestion.textContent;
+    //         if (!suggestionText || suggestionText.includes(inputValue)) {
+    //             suggestion.style.display = 'block';
+    //         } else {
+    //             suggestion.style.display = 'none';
+    //         }
+    //     });
+    // }
 
     protected getPlaceholderContent(): HTMLElement {
         const html = `<input class="literal" type="text" value="${this.getValue()}" readonly disabled/>`;
