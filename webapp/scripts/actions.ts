@@ -62,7 +62,7 @@ export function handleLiteralChanged(textInput: HTMLInputElement): void {
 
     let focusedTreePath: string | null = null;
     if (nextFocusElement != null) {
-        focusedTreePath = getTreePathOfElement(nextFocusElement);
+        focusedTreePath = nextFocusElement.getTreePath();
     }
 
     runAction("EditLiteralAction", treePath, [literalValue]);
@@ -117,7 +117,7 @@ export function handleExprSelectorChoice(selector: HTMLDivElement, value: string
 
     let focusedTreePath: string | null = null;
     if (nextFocusElement) {
-        focusedTreePath = nextFocusElement.getAttribute("data-tree-path");
+        focusedTreePath = nextFocusElement.getTreePath();
     }
 
     const kind = selector.getAttribute("data-kind");

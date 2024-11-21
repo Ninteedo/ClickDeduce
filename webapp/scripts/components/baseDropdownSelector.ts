@@ -1,7 +1,8 @@
 import {handleTabPressed, setNextFocusElement} from "../interface";
 import {stripTooltip} from "../utils";
+import {AbstractTreeInput} from "./abstractTreeInput";
 
-export class BaseDropdownSelector {
+export class BaseDropdownSelector implements AbstractTreeInput {
     protected readonly container: HTMLDivElement;
     protected readonly input: HTMLInputElement;
     protected readonly dropdown: HTMLDivElement;
@@ -13,7 +14,6 @@ export class BaseDropdownSelector {
     constructor(container: HTMLDivElement, inputSelector: string, dropdownSelector: string, optionsSelector: string) {
         this.container = container;
         this.input = container.querySelector(inputSelector) as HTMLInputElement;
-        console.log(this.input);
         this.dropdown = container.querySelector(dropdownSelector) as HTMLDivElement;
         this.options = Array.from(this.dropdown.querySelectorAll(optionsSelector))
             .map(option => new DropdownOption(option as HTMLLIElement));
@@ -22,6 +22,31 @@ export class BaseDropdownSelector {
         this.dropdown.classList.add('dropdown');
 
         this.setupListeners();
+    }
+
+    focus(): void {
+        this.input.focus();
+        this.input.select();
+    }
+
+    blur(): void {
+        this.input.blur();
+    }
+
+    disable(): void {
+        this.input.disabled = true;
+        this.input.readOnly = true;
+    }
+
+    enable(): void {
+        this.input.disabled = false;
+        this.input.readOnly = false;
+    }
+
+    getTreePath(): string {
+        const treePath = this.container.getAttribute('data-tree-path');
+        if (treePath === null) throw new Error('Dropdown selector does not have a data-tree-path attribute.');
+        return treePath;
     }
 
     protected setupListeners(): void {
@@ -133,7 +158,7 @@ export class BaseDropdownSelector {
     private selectHighlightedOption() {
         const highlighted = this.getSelectedOption();
         if (highlighted) {
-            setNextFocusElement(this.input);
+            setNextFocusElement(this);
             this.selectOption(highlighted);
         }
     }

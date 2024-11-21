@@ -8,7 +8,7 @@ const UP_ARROW = '&#9650;';
 const DOWN_ARROW = '&#9660;';
 
 
-class CustomExprSelector extends BaseDropdownSelector {
+export class CustomExprSelector extends BaseDropdownSelector {
     private readonly button: HTMLButtonElement;
 
     constructor(container: HTMLDivElement) {
@@ -41,7 +41,7 @@ class CustomExprSelector extends BaseDropdownSelector {
 let exprSelectors: CustomExprSelector[] = [];
 
 
-export function replaceSelectInputs(): void {
+export function replaceSelectInputs(): CustomExprSelector[] {
     exprSelectors = [];
 
     const selectInputs: NodeListOf<HTMLSelectElement> = getTree().querySelectorAll(
@@ -70,6 +70,8 @@ export function replaceSelectInputs(): void {
     });
 
     replaceDisabledSelectInputs();
+
+    return exprSelectors;
 }
 
 function replaceDisabledSelectInputs(): void {

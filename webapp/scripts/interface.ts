@@ -1,12 +1,13 @@
-import {copyTreeNode, deleteTreeNode, handleLiteralChanged, hasCopyCache, pasteTreeNode} from "./actions";
+import {copyTreeNode, deleteTreeNode, hasCopyCache, pasteTreeNode} from "./actions";
 import {getActiveInputs, lastNodeString, redo, undo} from "./treeManipulation";
 import {compareTreePaths, getSelectedLanguage, getSelectedMode, hasClassOrParentHasClass} from "./utils";
 // @ts-ignore
 import {convertToLaTeX} from "scalajs:main.js";
 import {PanZoom} from "panzoom";
+import {AbstractTreeInput} from "./components/abstractTreeInput";
 
 let errorDiv: HTMLDivElement;
-export let nextFocusElement: HTMLElement | null = null;
+export let nextFocusElement: AbstractTreeInput | null = null;
 export let contextMenuSelectedElement: HTMLElement | null = null;
 let panzoomInstance: PanZoom;
 
@@ -57,33 +58,8 @@ function globalHandleKeyDown(e: KeyboardEvent): void {
 
 document.addEventListener('keydown', globalHandleKeyDown);
 
-/**
- * Handles the keydown event.
- *
- * On TAB, moves focus to the next input element.
- * On ENTER while focused on an input element, submits the literal change.
- *
- * @param e the keydown event
- */
-export function handleKeyDown(e: KeyboardEvent): void {
-    if (e.key === 'Tab' && (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement)) {
-        handleTabPressed(e);
-    } else if (e.key === 'Enter' && e.target instanceof HTMLInputElement) {
-        nextFocusElement = e.target;
-        if (e.target.classList.contains('literal')) {
-            e.preventDefault();
-            handleLiteralChanged(e.target);
-        } else if (e.target.classList.contains('expr-selector-input')) {
-            const selector = e.target.parentElement;
-            if (selector instanceof HTMLDivElement) {
-                // selectorEnterPressed(selector);
-            }
-        }
-    }
-}
-
-export function setNextFocusElement(element: HTMLElement): void {
-    nextFocusElement = element;
+export function setNextFocusElement(input: AbstractTreeInput): void {
+    nextFocusElement = input;
 }
 
 /**
@@ -93,7 +69,7 @@ export function setNextFocusElement(element: HTMLElement): void {
 export function handleTabPressed(e: KeyboardEvent): void {
     if (e.key === 'Tab' && (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement)) {
         e.preventDefault();
-        const activeInputPaths: string[] = getActiveInputs().map(getTreePathOfElement);
+        const activeInputPaths: string[] = getActiveInputs().map(input => input.getTreePath());
         const targetOuterPath: string = getTreePathOfElement(e.target);
         let activeElemIndex = activeInputPaths.indexOf(targetOuterPath);
         if (e.shiftKey) {
@@ -109,9 +85,6 @@ export function handleTabPressed(e: KeyboardEvent): void {
         e.target.dispatchEvent(new Event('blur'));
         nextFocusElement = getActiveInputs()[activeElemIndex];
         nextFocusElement.focus();
-        if (nextFocusElement instanceof HTMLInputElement) {
-            nextFocusElement.select();
-        }
         nextFocusElement = null;
     }
 }
@@ -158,12 +131,9 @@ function getHighlightElementFromEvent(e: Event): HTMLElement | null {
  * If there is no input element in the subtree, will do nothing.
  */
 export function setFocusElement(path: string): void {
-    const focusedElement = getActiveInputs().find(input => compareTreePaths(path!, getTreePathOfElement(input)) <= 0);
-    if (focusedElement && focusedElement instanceof HTMLElement) {
+    const focusedElement = getActiveInputs().find(input => compareTreePaths(path!, input.getTreePath()) <= 0);
+    if (focusedElement) {
         focusedElement.focus();
-        if (focusedElement instanceof HTMLInputElement) {
-            focusedElement.select();
-        }
     }
 }
 

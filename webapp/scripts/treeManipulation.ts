@@ -1,17 +1,12 @@
 import {hasClassOrParentHasClass} from "./utils";
 import {runAction} from "./actions";
-import {
-    clearHighlight,
-    contextMenuSelectedElement,
-    getTreePathOfElement,
-    isAutoZoomEnabled,
-    zoomToFit
-} from "./interface";
+import {clearHighlight, contextMenuSelectedElement, isAutoZoomEnabled, zoomToFit} from "./interface";
 import {getLangSelectorNew} from "./serverRequest";
-import {replaceSelectInputs} from "./components/customExprSelector";
+import {CustomExprSelector, replaceSelectInputs} from "./components/customExprSelector";
 import {updateTaskList} from "./tasks";
-import {setupLiteralInputs} from "./components/literalInput";
+import {createLiteralInputs, LiteralInput} from "./components/literalInput";
 import {setupFileDragAndDrop, setupFileInput} from "./saveLoad";
+import {AbstractTreeInput} from "./components/abstractTreeInput";
 
 let treeHistory: { mode: string; html: string; nodeString: string; lang: string }[] = [];
 export let treeHistoryIndex: number = 0;
@@ -21,7 +16,9 @@ let redoButton: HTMLButtonElement;
 let modeRadios: HTMLInputElement[];
 let langSelector: HTMLSelectElement;
 
-export let activeInputs: HTMLElement[] = [];
+let activeInputs: AbstractTreeInput[] = [];
+let literalInputs: LiteralInput[] = [];
+let exprSelectors: CustomExprSelector[] = [];
 
 export let lastNodeString: string | null = null;
 
@@ -96,10 +93,10 @@ export function updateTree(newTreeHtml: string, newNodeString: string, modeName:
         treeHistoryIndex = treeHistory.push(newEntry) - 1;
     }
     updateUndoRedoButtons();
+    literalInputs = createLiteralInputs();
     updateActiveInputsList();
-    setupLiteralInputs();
     setSelectedMode(modeName);
-    langSelector.value = lang;
+    setCurrentLanguage(lang);
     updateTaskList(lang, lastNodeString);
 
     if (isAutoZoomEnabled()) zoomToFit();
@@ -112,7 +109,7 @@ export function updateTree(newTreeHtml: string, newNodeString: string, modeName:
  * and updates the stored initial values of literal inputs.
  */
 function treeCleanup(): void {
-    replaceSelectInputs();
+    exprSelectors = replaceSelectInputs();
     addHoverListeners();
     makeOrphanedInputsReadOnly();
     makePhantomInputsReadOnly();
@@ -239,17 +236,13 @@ function makeDisabledInputsFocusOriginal(): void {
  * Also adds event listeners to the inputs.
  */
 function updateActiveInputsList(): void {
-    activeInputs = Array.from(document.querySelectorAll(
-        'input.literal[data-tree-path]:not([disabled]), input.expr-selector-input:not([disabled])'
-    ));
+    activeInputs = (literalInputs as AbstractTreeInput[]).concat(exprSelectors as AbstractTreeInput[]);
     activeInputs.sort((a, b) => {
-        const aPath = getTreePathOfElement(a);
-        const bPath = getTreePathOfElement(b);
-        return aPath.localeCompare(bPath, undefined, {numeric: true, sensitivity: 'base'});
+        return a.getTreePath().localeCompare(b.getTreePath(), undefined, {numeric: true, sensitivity: 'base'});
     });
 }
 
-export function getActiveInputs(): HTMLElement[] {
+export function getActiveInputs(): AbstractTreeInput[] {
     return activeInputs;
 }
 
@@ -296,10 +289,7 @@ function incrementReEnableInputsId(): void {
 }
 
 export function disableInputs(): void {
-    activeInputs.forEach(input => {
-        input.setAttribute('readonly', "true");
-        input.setAttribute('disabled', "true");
-    });
+    activeInputs.forEach(input => input.disable());
     modeRadios.forEach(radio => radio.setAttribute('disabled', "true"));
     langSelector.setAttribute('disabled', "true");
     getTree().querySelectorAll('.expr-selector-button').forEach(button => button.setAttribute('disabled', "true"));
@@ -316,10 +306,7 @@ export function disableInputs(): void {
 
 export function enableInputs(): void {
     incrementReEnableInputsId();
-    activeInputs.forEach(input => {
-        input.removeAttribute('readonly');
-        input.removeAttribute('disabled');
-    });
+    activeInputs.forEach(input => input.enable());
     modeRadios.forEach(radio => {
         radio.removeAttribute('disabled');
     });
