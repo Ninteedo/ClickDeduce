@@ -2,7 +2,7 @@ package languages
 
 import convertors.*
 
-class LList extends LData {
+class LList extends LPoly {
   registerTerms("LList", List(ListNil, Cons, CaseList, ListType, NilV, ConsV))
 
   // expressions
@@ -20,8 +20,6 @@ class LList extends LData {
       case Nil               => Some(ListNil(defaultType))
       case _                 => None
     }
-
-    override protected val name: String = "Nil"
 
     override protected val aliases: List[String] = List("ListNil")
   }
@@ -53,7 +51,7 @@ class LList extends LData {
     override protected val aliases: List[String] = List("ListCons", "::")
   }
 
-  case class CaseList(list: Expr, nilCase: Expr, headVar: Literal, tailVar: Literal, consCase: Expr) extends Expr {
+  case class CaseList(list: Expr, nilCase: Expr, headVar: LiteralIdentifierBind, tailVar: LiteralIdentifierBind, consCase: Expr) extends Expr {
     override protected def evalInner(env: ValueEnv): Value = list.eval(env) match {
       case NilV(_)           => nilCase.eval(env)
       case ConsV(head, tail) => consCase.eval(consEnv(env, head, tail))
@@ -72,9 +70,9 @@ class LList extends LData {
     }
 
     private def consEnv(env: ValueEnv, head: Value, tail: Value): ValueEnv =
-      env + (headVar.toString -> head) + (tailVar.toString -> tail)
+      env + (headVar -> head) + (tailVar -> tail)
     private def consTEnv(tEnv: TypeEnv, elTyp: Type): TypeEnv =
-      tEnv + (headVar.toString -> elTyp) + (tailVar.toString -> ListType(elTyp))
+      tEnv + (headVar -> elTyp) + (tailVar -> ListType(elTyp))
 
     override def toText: ConvertableText = MultiElement(
       TextElement("case"),
@@ -133,9 +131,9 @@ class LList extends LData {
 
   object CaseList extends ExprCompanion {
     override def create(args: BuilderArgs): Option[Expr] = args match {
-      case List(list: Expr, nilCase: Expr, headVar: Literal, tailVar: Literal, consCase: Expr) =>
+      case List(list: Expr, nilCase: Expr, headVar: LiteralIdentifierBind, tailVar: LiteralIdentifierBind, consCase: Expr) =>
         Some(CaseList(list, nilCase, headVar, tailVar, consCase))
-      case Nil => Some(CaseList(defaultExpr, defaultExpr, defaultLiteral, defaultLiteral, defaultExpr))
+      case Nil => Some(CaseList(defaultExpr, defaultExpr, LiteralIdentifierBind.default, LiteralIdentifierBind.default, defaultExpr))
       case _   => None
     }
 
