@@ -1,5 +1,6 @@
 package convertors
 
+import languages.LIf.Literal
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
@@ -93,6 +94,13 @@ case class HtmlElement(html: TypedTag[String], nonHtml: ConvertableText) extends
   override def asLaTeX: String = nonHtml.asLaTeX
 
   override def toReadOnly: ConvertableText = HtmlElement(asHtmlReadOnly, nonHtml)
+}
+
+case class LiteralElement(literal: Literal) extends ConvertableText {
+  override def asPlainText: String = literal.toString
+  override def asHtml: TypedTag[String] = literal.toHtml
+  override def asHtmlReadOnly: TypedTag[String] = literal.toHtml(readonly, disabled)
+  override def asLaTeX: String = literal.toText.asLaTeX
 }
 
 case class ValueElement(elem: ConvertableText) extends ConvertableText {

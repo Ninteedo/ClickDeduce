@@ -4,7 +4,7 @@ form {
   display: inline;
 }
 
-input[type='text'] {
+@mixin textbox-base {
   background-color: $current-line;
   color: $foreground;
   border: $input-outline solid 1px;
@@ -23,6 +23,84 @@ input[type='text'] {
   &.guide-highlight {
     background-color: $highlighted-input;
     color: $highlighted-input-text;
+  }
+}
+
+input[type='text'] {
+  @include textbox-base;
+}
+
+input[type='number'] {
+  @include textbox-base;
+
+  /* Chrome, Safari, Edge, Opera */
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* Firefox */
+  -moz-appearance: textfield;
+}
+
+.custom-input {
+  margin: 0 0.5rem 0 0;
+  appearance: none;
+
+  font: inherit;
+  color: $foreground;
+  background-color: $current-line;
+  border: $input-outline solid 1px;
+
+  width: 1em;
+  height: 1em;
+
+  display: grid;
+  place-content: center;
+
+  &::before {
+    content: "";
+    width: 0.5em;
+    height: 0.5em;
+    margin: 0.2em;
+    background-color: $foreground;
+  }
+
+  &:hover {
+    border: $foreground solid 1px;
+  }
+}
+
+input[type="radio"] {
+  @extend .custom-input;
+  border-radius: 50%;
+
+  &::before {
+    border-radius: 50%;
+
+    transition: transform 0.1s;
+    transform: scale(0);
+  }
+
+  &:checked::before {
+    transform: scale(1);
+  }
+}
+
+input[type="checkbox"] {
+  @extend .custom-input;
+  border-radius: 10%;
+
+  &::before {
+    border-radius: 10%;
+
+    transition: opacity 0.1s;
+    opacity: 0;
+  }
+
+  &:checked::before {
+    opacity: 1;
   }
 }
 

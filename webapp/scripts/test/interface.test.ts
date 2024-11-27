@@ -1,5 +1,6 @@
 import {beforeEach, describe, expect, test, vitest} from "vitest";
 import {
+    basicMocks,
     changeLanguage,
     contextMenuSelect,
     doLiteralEdit,
@@ -20,6 +21,7 @@ const indexHtml = loadIndexHtmlTemplate();
 
 beforeEach(() => {
     document.body.innerHTML = indexHtml;
+    basicMocks();
     initialise(true);
 });
 

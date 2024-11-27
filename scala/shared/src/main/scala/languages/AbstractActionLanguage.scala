@@ -93,7 +93,7 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
     newLiteralText: String
   ) extends Action(originalTree, treePath) {
     override lazy val newTree: OuterNode = originalTree.findChild(treePath) match {
-      case Some(literalNode: LiteralNode) => originalTree.replace(treePath, LiteralNode(newLiteralText))
+      case Some(literalNode: LiteralNode) => originalTree.replace(treePath, LiteralNode(Literal.fromStringOfType(newLiteralText, literalNode.literal.getClass)))
       case other                          => throw new InvalidEditTargetException(other)
     }
   }

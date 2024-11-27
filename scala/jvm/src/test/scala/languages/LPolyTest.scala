@@ -5,7 +5,7 @@ import org.scalatest.matchers.should.Matchers.*
 
 class LPolyTest extends TestTemplate[Expr, Value, Type] {
   property("Example identity function expressions") {
-    val literalT = Literal.fromString("T")
+    val literalT = LiteralIdentifierBind("T")
     val identityFunction = Poly(literalT, Lambda("x", TypeVar(literalT), Var("x")))
 
     identityFunction
@@ -17,7 +17,7 @@ class LPolyTest extends TestTemplate[Expr, Value, Type] {
       "x",
       Func(IntType(), BoolType()),
       Var("x"),
-      Env("T" -> TypeValueContainer(Func(IntType(), BoolType())))
+      Env() + (literalT -> TypeValueContainer(Func(IntType(), BoolType())))
     )
 
     Apply(ApplyType(identityFunction, IntType()), Num(1)).typeCheck() shouldEqual IntType()
@@ -154,6 +154,23 @@ class LPolyTest extends TestTemplate[Expr, Value, Type] {
       Func(IntType(), IntType())
     Lambda("x", TypeVar("X"), Var("x")).eval(Env("X" -> TypeValueContainer(IntType()))) shouldEqual
       LambdaV("x", IntType(), Var("x"), Env("X" -> TypeValueContainer(IntType())))
+  }
+
+  property("Abstracting away function call") {
+    val applyFuncAB = Lambda("f", Func(TypeVar("A"), TypeVar("B")), Lambda("x", TypeVar("A"), Apply(Var("f"), Var("x"))))
+    val applyFuncABWithPoly = Poly("A", Poly("B", applyFuncAB))
+    val equalsTwo = Lambda("x", IntType(), Equal(Var("x"), Num(2)))
+    val fullExpr = Apply(ApplyType(ApplyType(applyFuncABWithPoly, IntType()), BoolType()), equalsTwo)
+
+    applyFuncAB.typeCheck(Env("A" -> TypeContainer(IntType()), "B" -> TypeContainer(BoolType()))) shouldEqual
+      Func(Func(IntType(), BoolType()), Func(IntType(), BoolType()))
+    applyFuncABWithPoly.typeCheck() shouldEqual
+      PolyType(TypeVar("A"), PolyType(TypeVar("B"), Func(Func(TypeVar("A"), TypeVar("B")), Func(TypeVar("A"), TypeVar("B")))))
+    ApplyType(applyFuncABWithPoly, IntType()).typeCheck() shouldEqual
+      PolyType(TypeVar("B"), Func(Func(IntType(), TypeVar("B")), Func(IntType(), TypeVar("B"))))
+    ApplyType(ApplyType(applyFuncABWithPoly, IntType()), BoolType()).typeCheck() shouldEqual
+      Func(Func(IntType(), BoolType()), Func(IntType(), BoolType()))
+    fullExpr.typeCheck() shouldEqual Func(IntType(), BoolType())
   }
 
   property("CreatePolyFunctionTask is checked correctly") {

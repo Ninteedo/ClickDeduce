@@ -6,28 +6,22 @@ class LIf extends LArith {
   registerTerms("LIf", List(Bool, Equal, LessThan, IfThenElse, BoolType, BoolV))
 
   // expressions
-  case class Bool(b: Literal) extends Expr {
-    override def evalInner(env: ValueEnv): Value = b match {
-      case LiteralBool(b) => BoolV(b)
-      case _              => UnexpectedArgValue(s"Bool can only accept LiteralBool, not $b")
-    }
+  case class Bool(b: LiteralBool) extends Expr {
+    override def evalInner(env: ValueEnv): Value = BoolV(b.value)
 
-    override def typeCheckInner(tEnv: TypeEnv): Type = b match {
-      case LiteralBool(_) => BoolType()
-      case _              => UnexpectedArgType(s"Bool can only accept LiteralBool, not $b")
-    }
+    override def typeCheckInner(tEnv: TypeEnv): Type = BoolType()
 
     override val needsBrackets: Boolean = false
 
-    override def toText: ConvertableText = TextElement(b.toString)
+    override def toText: ConvertableText = b.toText
   }
 
   object Bool extends ExprCompanion {
     def apply(b: Boolean): Bool = new Bool(LiteralBool(b))
 
     override def create(args: BuilderArgs): Option[Expr] = args match {
-      case List(b: Literal) => Some(Bool(b))
-      case Nil              => Some(Bool(defaultLiteral))
+      case List(b: LiteralBool) => Some(Bool(b))
+      case Nil              => Some(Bool(LiteralBool(false)))
       case _                => None
     }
 

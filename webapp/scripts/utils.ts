@@ -49,3 +49,8 @@ export function compareTreePaths(path1: string, path2: string): number {
     }
     return 0;
 }
+
+export function stripTooltip(tooltipElement: Element): void {
+    tooltipElement.classList.remove('tooltip');
+    tooltipElement.querySelector('.tooltip-text')?.remove();
+}

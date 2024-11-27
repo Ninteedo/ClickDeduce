@@ -1,12 +1,14 @@
 package languages
 
-import app.ClickDeduceException
+import app.{ClickDeduceException, HTMLHelper, UtilityFunctions}
 import convertors.*
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
 import scala.annotation.targetName
 import scala.collection.immutable.List
+import scala.util.matching.Regex
+import scala.util.parsing.combinator.JavaTokenParsers
 
 /** Base trait, defining the term structure of all languages.
   *
@@ -30,20 +32,30 @@ trait AbstractLanguage {
     * Contains variables with bound values.
     */
   case class Env[T](env: Map[Variable, T] = Map()) {
-    def get(key: Variable): Option[T] = env.get(key)
+    private def readKey(key: Variable | LiteralIdentifier): Variable = key match {
+      case v: Variable          => v
+      case l: LiteralIdentifier => l.getIdentifier
+    }
 
-    def set(key: Variable, value: T): Env[T] = new Env(env + (key -> value))
+    def get(key: Variable | LiteralIdentifierLookup): Option[T] = env.get(readKey(key))
+
+    def set(key: Variable | LiteralIdentifierBind, value: T): Env[T] = new Env(env + (readKey(key) -> value))
 
     @targetName("setVariable")
-    def +(key: Variable, value: T): Env[T] = set(key, value)
+    def +(key: Variable | LiteralIdentifierBind, value: T): Env[T] = {
+      set(key, value)
+    }
 
     @targetName("setVariableTuple")
-    def +(kv: (Variable, T)): Env[T] = set(kv._1, kv._2)
+    def +(kv: (Variable | LiteralIdentifierBind, T)): Env[T] = {
+      val (k, v) = kv
+      this + (k, v)
+    }
 
     @targetName("setVariables")
     def ++(other: Env[T]): Env[T] = new Env(env ++ other.env)
 
-    def getOrElse(key: Variable, default: => T): T = env.getOrElse(key, default)
+    def getOrElse(key: Variable | LiteralIdentifierLookup, default: => T): T = env.getOrElse(readKey(key), default)
 
     def isEmpty: Boolean = env.isEmpty
 
@@ -430,7 +442,7 @@ trait AbstractLanguage {
 
     private def getTypeFields: List[Type] = this match {
       case t0: Product => t0.productIterator.toList.collect({ case t: Type => t })
-      case _ => Nil
+      case _           => Nil
     }
 
     private def defaultChildren(env: TypeEnv): List[(Term, TypeEnv)] = getTypeFields.zip(LazyList.continually(env))
@@ -569,9 +581,21 @@ trait AbstractLanguage {
   abstract class Literal extends Term {
     val value: Any
 
-    override lazy val toHtml: TypedTag[String] = p(value.toString)
+    override lazy val toHtml: TypedTag[String] = p(getValue)
 
-    override lazy val toString: String = value.toString
+    def toHtmlInput(treePath: String, env: ValueEnv | TypeEnv): TypedTag[String] =
+      HTMLHelper.literalInputBase(treePath, getValue)
+
+    def toHtmlInputReadOnly(originPath: String): TypedTag[String] =
+      HTMLHelper.literalInputBaseReadOnly(originPath, getValue)
+
+    val defaultContents: String = ""
+
+    private var overrideContents: Option[String] = None
+
+    def getValue: String = overrideContents.getOrElse(value.toString)
+
+    def setOverrideContents(contents: String): Unit = overrideContents = Some(contents)
   }
 
   /** Companion object for [[Literal]].
@@ -584,8 +608,8 @@ trait AbstractLanguage {
       *   - [[LiteralBool]]: `true` or `false` (case-insensitive)
       *   - [[LiteralString]]: Enclosed in double quotes
       *   - [[LiteralInt]]: A sequence of digits, optionally preceded by a minus sign
-      *   - [[LiteralIdentifier]]: A sequence of letters, digits, and underscores, starting with a letter or underscore
-      *     (non-empty)
+      *   - [[LiteralIdentifierLookup]]: A sequence of letters, digits, and underscores, starting with a letter or
+      *     underscore (non-empty)
       *   - [[LiteralAny]]: Anything else
       *
       * @param s
@@ -598,13 +622,51 @@ trait AbstractLanguage {
     } else if (s.startsWith("\"") && s.endsWith("\"") && s.length > 1) {
       LiteralString(s.substring(1, s.length - 1))
     } else if ("-?\\d+".r.matches(s)) {
-      LiteralInt(BigInt(s))
-    } else if ("[A-Za-z_$][\\w_$]*".r.matches(s)) {
-      LiteralIdentifier(s)
+      LiteralInt.fromString(s)
+    } else if (LiteralIdentifierLookup.identifierRegex.matches(s)) {
+      LiteralIdentifierLookup(s)
     } else {
       LiteralAny(s)
     }
+
+    def fromStringOfType(s: String, l: Class[_ <: Literal]): Literal = l match {
+      case c if c == classOf[LiteralBool]             => LiteralBool(s.toBoolean)
+      case c if c == classOf[LiteralString]           => LiteralString(s)
+      case c if c == classOf[LiteralInt]              => LiteralInt.fromString(s)
+      case c if c == classOf[LiteralIdentifierBind]   => LiteralIdentifierBind(s)
+      case c if c == classOf[LiteralIdentifierLookup] => LiteralIdentifierLookup(s)
+      case c if c == classOf[LiteralAny]              => LiteralAny(s)
+      case _                                          => throw LiteralParseException(s)
+    }
   }
+
+  protected trait LiteralParser extends JavaTokenParsers {
+    def literalName: Parser[String] =
+      "LiteralString" | "LiteralInt" | "LiteralBool" | "LiteralIdentifierBind" | "LiteralIdentifierLookup" |
+        "LiteralAny"
+
+    def literalArg: Parser[BigInt | String | Boolean] = wholeNumber ^^ (n => BigInt(n))
+      | "true" ^^ (_ => true) | "false" ^^ (_ => false)
+      | stringLiteral ^^ (s => UtilityFunctions.unquote(s))
+      | ident // any identifier
+      | ""
+
+    def literal: Parser[Literal] = literalName ~ "(" ~ literalArg ~ ")" ^^ {
+      case name ~ "(" ~ arg ~ ")" =>
+        (name, arg) match {
+          case ("LiteralInt", n: BigInt)              => LiteralInt(n)
+          case ("LiteralString", s: String)           => LiteralString(s)
+          case ("LiteralBool", b: Boolean)            => LiteralBool(b)
+          case ("LiteralIdentifierBind", s: String)   => LiteralIdentifierBind(s)
+          case ("LiteralIdentifierLookup", s: String) => LiteralIdentifierLookup(s)
+          case ("LiteralAny", s: String)              => LiteralAny(s)
+          case _                                      => throw LiteralParseException(s"$name($arg)")
+        }
+      case other => throw LiteralParseException(other.toString)
+    }
+  }
+
+  private case class LiteralParseException(message: String) extends ClickDeduceException(message)
 
   /** A literal integer.
     *
@@ -614,7 +676,21 @@ trait AbstractLanguage {
     *   The integer value.
     */
   case class LiteralInt(value: BigInt) extends Literal {
-    override def toText: ConvertableText = MathElement(value.toString)
+    override def toText: ConvertableText = MathElement(getValue)
+
+    override def toHtmlInput(treePath: String, env: ValueEnv | TypeEnv): TypedTag[String] = HTMLHelper
+      .literalInputBase(treePath, getValue, inputKind = "number", extraClasses = "integer")
+  }
+
+  object LiteralInt {
+    def fromString(s: String): LiteralInt = try {
+      LiteralInt(BigInt(s))
+    } catch {
+      case _: NumberFormatException =>
+        throw LiteralParseException(s"LiteralInt only accepts integer values, not \"$s\"")
+    }
+
+    val default: LiteralInt = LiteralInt(0)
   }
 
   /** A literal boolean.
@@ -622,7 +698,20 @@ trait AbstractLanguage {
     *   The boolean value.
     */
   case class LiteralBool(value: Boolean) extends Literal {
-    override def toText: ConvertableText = MathElement(value.toString)
+    override def toText: ConvertableText = MathElement(getValue)
+
+    override def toHtmlInput(treePath: String, env: ValueEnv | TypeEnv): TypedTag[String] = div(
+      cls := "literal-checkbox-container",
+      input(
+        `type` := "checkbox",
+        data("tree-path") := treePath,
+        cls := ClassDict.LITERAL + " " + "boolean",
+        if (getValue.toBoolean) checked else ()
+      )
+    )
+
+    override def toHtmlInputReadOnly(originPath: String): TypedTag[String] =
+      HTMLHelper.literalInputBaseReadOnly(originPath, getValue, extraClasses = "boolean")
   }
 
   /** A literal string.
@@ -632,19 +721,84 @@ trait AbstractLanguage {
     *   The string value.
     */
   case class LiteralString(value: String) extends Literal {
-    override lazy val toString: String = s""""$value""""
+    override lazy val toString: String = s"LiteralString(${UtilityFunctions.quote(value)})"
 
-    override def toText: ConvertableText = TextElement(toString)
+    override def toText: ConvertableText = TextElement(getValue)
   }
 
-  /** A literal identifier.
+  trait LiteralIdentifier extends Literal {
+    def validIdentifier: Boolean
+
+    protected val identifierRegex: Regex = "[A-Za-z_$][\\w_$]*".r
+
+    def getIdentifier: String = getValue
+  }
+
+  case class LiteralIdentifierBind(value: String) extends Literal, LiteralIdentifier {
+    override lazy val toString: String = s"LiteralIdentifierBind(${UtilityFunctions.quote(value)})"
+
+    override def toText: ConvertableText = TextElement(getValue)
+
+    override def validIdentifier: Boolean = identifierRegex.matches(value)
+
+    def toLookup: LiteralIdentifierLookup = LiteralIdentifierLookup(value)
+
+    def identEquals(other: Any): Boolean = other match {
+      case LiteralIdentifierBind(s)   => s == value
+      case LiteralIdentifierLookup(s) => s == value
+      case _                          => false
+    }
+  }
+
+  object LiteralIdentifierBind {
+    val default: LiteralIdentifierBind = LiteralIdentifierBind("")
+  }
+
+  /** A literal identifier lookup.
     * @param value
     *   The identifier value.
     */
-  case class LiteralIdentifier(value: String) extends Literal {
-    override lazy val toString: String = value
+  case class LiteralIdentifierLookup(value: String) extends Literal, LiteralIdentifier {
+    override lazy val toString: String = s"LiteralIdentifierLookup(${UtilityFunctions.quote(value)})"
 
-    override def toText: ConvertableText = ItalicsElement(TextElement(toString))
+    override def toText: ConvertableText = ItalicsElement(TextElement(getValue))
+
+    override def toHtmlInput(treePath: String, env: ValueEnv | TypeEnv): TypedTag[String] = {
+      div(
+        cls := "literal-identifier-container",
+        HTMLHelper.literalInputBase(treePath, getValue, extraClasses = "identifier-lookup"),
+        div(
+          cls := "dropdown",
+          ul(
+            cls := "identifier-suggestions",
+            env.keys
+              .map(k => {
+                li(data("value") := k, data("filter") := k, env.get(k) match {
+                  case Some(t: Term) => span(k, ": ", t.toHtml)
+                  case _             => k
+                })
+              })
+              .toSeq
+          )
+        )
+      )
+    }
+
+    override def validIdentifier: Boolean = identifierRegex.matches(value)
+
+    def toBind: LiteralIdentifierBind = LiteralIdentifierBind(value)
+
+    def identEquals(other: Any): Boolean = other match {
+      case LiteralIdentifierBind(s)   => s == value
+      case LiteralIdentifierLookup(s) => s == value
+      case _                          => false
+    }
+  }
+
+  object LiteralIdentifierLookup {
+    val identifierRegex: Regex = "[A-Za-z_$][\\w_$]*".r
+
+    val default: LiteralIdentifierLookup = LiteralIdentifierLookup("")
   }
 
   /** A literal with no restrictions.
@@ -652,43 +806,67 @@ trait AbstractLanguage {
     *   The value.
     */
   case class LiteralAny(value: String) extends Literal {
-    override lazy val toString: String = value
+    override lazy val toString: String = s"LiteralAny(${UtilityFunctions.quote(value)})"
 
-    override def toText: ConvertableText = TextElement(toString)
+    override def toText: ConvertableText = TextElement(getValue)
+  }
+
+  protected def placeholderOfLiteral(literal: Literal, contents: String): Literal = {
+    val copy = literal match {
+      case LiteralInt(n)              => LiteralInt(n)
+      case LiteralBool(b)             => LiteralBool(b)
+      case LiteralString(s)           => LiteralString(s)
+      case LiteralIdentifierBind(s)   => LiteralIdentifierBind(s)
+      case LiteralIdentifierLookup(s) => LiteralIdentifierLookup(s)
+      case LiteralAny(s)              => LiteralAny(s)
+    }
+    copy.setOverrideContents(contents)
+    copy
   }
 
   // </editor-fold>
 
   // <editor-fold desc="Builders">
 
-  /**
-   * Register a list of terms for a particular language.
-   *
-   * Should be called at the start of every language class.
-   * @param langName The name of the language.
-   * @param terms The companion objects of the terms to register.
-   */
+  /** Register a list of terms for a particular language.
+    *
+    * Should be called at the start of every language class.
+    * @param langName
+    *   The name of the language.
+    * @param terms
+    *   The companion objects of the terms to register.
+    */
   protected def registerTerms(langName: String, terms: List[ExprCompanion | TypeCompanion | ValueCompanion]): Unit = {
     terms.foreach(_.register(langName))
   }
 
-  /**
-   * Manages the defined builders for a particular type of term.
-   * @tparam T The type of term.
-   */
+  /** Manages the defined builders for a particular type of term.
+    * @tparam T
+    *   The type of term.
+    */
   protected class BuilderManager[T <: Term] {
     private var builders: Map[String, BuilderArgs => Option[T]] = Map()
     private var builderNamesList: List[BuilderName] = List()
 
-    /**
-     * Add a builder to the manager.
-     * @param name The name of the builder.
-     * @param builder The builder function.
-     * @param langName The name of the language.
-     * @param hidden Whether the term should be hidden from the user.
-     * @param aliases List of alternate names for the term.
-     */
-    private def addBuilder(name: String, builder: BuilderArgs => Option[T], langName: String, hidden: Boolean = false, aliases: List[String] = Nil): Unit = {
+    /** Add a builder to the manager.
+      * @param name
+      *   The name of the builder.
+      * @param builder
+      *   The builder function.
+      * @param langName
+      *   The name of the language.
+      * @param hidden
+      *   Whether the term should be hidden from the user.
+      * @param aliases
+      *   List of alternate names for the term.
+      */
+    private def addBuilder(
+      name: String,
+      builder: BuilderArgs => Option[T],
+      langName: String,
+      hidden: Boolean = false,
+      aliases: List[String] = Nil
+    ): Unit = {
       builders += (name -> builder)
       if (!hidden) {
         val entry = if (aliases.isEmpty) name else (name, aliases)
@@ -696,78 +874,84 @@ trait AbstractLanguage {
       }
     }
 
-    /**
-     * Get a builder by name.
-     * @param name The name of the builder. Does not match aliases.
-     * @return Some builder, or None if not found.
-     */
+    /** Get a builder by name.
+      * @param name
+      *   The name of the builder. Does not match aliases.
+      * @return
+      *   Some builder, or None if not found.
+      */
     def getBuilder(name: String): Option[BuilderArgs => Option[T]] = builders.get(name)
 
-    /**
-     * Build a term by name and arguments.
-     * @param name The name of the builder.
-     * @param args The arguments.
-     * @return The result from the builder, either some term or None.
-     * @throws UnknownTermBuilder If the builder is not found.
-     */
-    def build(name: String, args: BuilderArgs): Option[T] = getBuilder(name) match {
-      case Some(builder) => builder.apply(args)
+    /** Build a term by name and arguments.
+      * @param name
+      *   The name of the builder.
+      * @param args
+      *   The arguments.
+      * @return
+      *   The result from the builder, either some term or None.
+      * @throws UnknownTermBuilder
+      *   If the builder is not found.
+      */
+    def build(name: String, args: BuilderArgs): T = getBuilder(name) match {
+      case Some(builder) =>
+        val res = builder.apply(args)
+        if (res.isEmpty) throw TermBuilderFailed(name, args)
+        res.get
       case None          => throw UnknownTermBuilder(name)
     }
 
-    /**
-     * Get the names of all builders.
-     * @return The list of builder names.
-     */
+    /** Get the names of all builders.
+      * @return
+      *   The list of builder names.
+      */
     def builderNames: List[BuilderName] = builderNamesList
 
-    /**
-     * Companion object for terms, to be extended by the term companion objects.
-     */
+    /** Companion object for terms, to be extended by the term companion objects.
+      */
     trait Companion {
+
       /** Whether the term should be hidden from the user.
-       *
-       * If true, the term will not appear in the list of available terms.
-       *
-       * Default is false.
-       */
+        *
+        * If true, the term will not appear in the list of available terms.
+        *
+        * Default is false.
+        */
       protected val isHidden: Boolean = false
 
       /** The name of the term.
-       *
-       * By default, this is the name of the companion object, but can be overridden.
-       */
+        *
+        * By default, this is the name of the companion object, but can be overridden.
+        */
       protected val name: String = toString.dropWhile(_ != '$').drop(1).takeWhile(_ != '$')
 
       /** The arguments for the default term builder case.
-       *
-       * Equivalent to `Nil`.
-       */
+        *
+        * Equivalent to `Nil`.
+        */
       protected final val defaultArgs: List[Any] = Nil
 
-      /**
-       * List of alternate names for the term.
-       */
+      /** List of alternate names for the term.
+        */
       protected val aliases: List[String] = Nil
 
       /** Create a term from a list of arguments.
-       *
-       * Typically needs to handle 3 cases:
-       *   - [[defaultArgs]]: The default version of the term, with unselected sub-terms and empty literals.
-       *   - Arguments matching the expected structure for this term: The actual term.
-       *   - Any other arguments: Invalid arguments; should return None.
-       *
-       * @param args
-       * The arguments.
-       * @return
-       * Some expression, or None if the arguments are invalid.
-       */
+        *
+        * Typically needs to handle 3 cases:
+        *   - [[defaultArgs]]: The default version of the term, with unselected sub-terms and empty literals.
+        *   - Arguments matching the expected structure for this term: The actual term.
+        *   - Any other arguments: Invalid arguments; should return None.
+        *
+        * @param args
+        *   The arguments.
+        * @return
+        *   Some expression, or None if the arguments are invalid.
+        */
       def create(args: BuilderArgs): Option[T]
 
-      /**
-       * Register the term builder.
-       * @param langName The name of the language.
-       */
+      /** Register the term builder.
+        * @param langName
+        *   The name of the language.
+        */
       final def register(langName: String): Unit = {
         addBuilder(name, create, langName, isHidden, aliases)
       }
@@ -782,15 +966,16 @@ trait AbstractLanguage {
   protected trait ExprCompanion extends exprBuilderManager.Companion
   protected trait TypeCompanion extends typeBuilderManager.Companion
   protected trait ValueCompanion extends valueBuilderManager.Companion {
-    /**
-     * Value builders are not currently used, so this method always returns None.
-     */
+
+    /** Value builders are not currently used, so this method always returns None.
+      */
     override final def create(args: BuilderArgs): Option[Value] = None
   }
 
   protected type BuilderArgs = List[Literal | Term]
 
-  protected type BuilderName = (String, String | (String, List[String]))  // langName, then either name or (name, aliases)
+  protected type BuilderName =
+    (String, String | (String, List[String])) // langName, then either name or (name, aliases)
 
   /** Returns the names of all expression builders.
     * @return
@@ -820,7 +1005,7 @@ trait AbstractLanguage {
     * @return
     *   The expression, or throw an [[UnknownTermBuilder]] exception if the builder is not found.
     */
-  def buildExpr(name: String, args: BuilderArgs): Option[Expr] = exprBuilderManager.build(name, args)
+  def buildExpr(name: String, args: BuilderArgs): Expr = exprBuilderManager.build(name, args)
 
   /** Get a type builder by name.
     * @param name
@@ -838,9 +1023,11 @@ trait AbstractLanguage {
     * @return
     *   The type, or throw an [[UnknownTypeBuilder]] exception if the builder is not found.
     */
-  def buildType(name: String, args: BuilderArgs): Option[Type] = typeBuilderManager.build(name, args)
+  def buildType(name: String, args: BuilderArgs): Type = typeBuilderManager.build(name, args)
 
   private case class UnknownTermBuilder(name: String) extends ClickDeduceException(s"Unknown term builder: $name")
+
+  private case class TermBuilderFailed(name: String, args: BuilderArgs) extends ClickDeduceException(s"Failed to build $name with args $args")
 
   registerTerms("AbstractLanguage", List(UnknownType, TypeContainer))
 

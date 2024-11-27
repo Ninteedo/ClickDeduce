@@ -3,7 +3,6 @@ import {
     disableInputs,
     enableInputs,
     getNodeStringFromPath,
-    initialValues,
     lastNodeString,
     treeHistoryIndex,
     updateTree,
@@ -43,6 +42,13 @@ export function doStartNodeBlank(event?: Event): void {
     updateTree(newHtml, newNodeString, getSelectedMode(), getSelectedLanguage(), true);
 }
 
+function parseLiteralValue(inputElement: HTMLInputElement): string {
+    if (inputElement.type === "checkbox") {
+        return inputElement.checked ? "true" : "false";
+    }
+    return inputElement.value;
+}
+
 /**
  * Handles a literal input value being changed.
  *
@@ -51,16 +57,12 @@ export function doStartNodeBlank(event?: Event): void {
  * @param textInput the literal input element
  */
 export function handleLiteralChanged(textInput: HTMLInputElement): void {
-    const literalValue: string = textInput.value;
+    const literalValue: string = parseLiteralValue(textInput);
     const treePath: string = getTreePathOfElement(textInput);
-
-    if (initialValues.find(([path, value]) => path === treePath && value === literalValue)) {
-        return;
-    }
 
     let focusedTreePath: string | null = null;
     if (nextFocusElement != null) {
-        focusedTreePath = getTreePathOfElement(nextFocusElement);
+        focusedTreePath = nextFocusElement.getTreePath();
     }
 
     runAction("EditLiteralAction", treePath, [literalValue]);
@@ -77,11 +79,6 @@ export function handleLiteralChanged(textInput: HTMLInputElement): void {
 
 export function exampleLiteralChanged(textInput: HTMLInputElement): void {
     const literalValue: string = textInput.value;
-    const treePath: string = getTreePathOfElement(textInput);
-
-    if (initialValues.find(([path, value]) => path === treePath && value === literalValue)) {
-        return;
-    }
 
     const exampleLiteralOuter = document.getElementById('example-literal-outer');
     if (!exampleLiteralOuter) throw new Error('Could not find example-literal-outer');
@@ -120,7 +117,7 @@ export function handleExprSelectorChoice(selector: HTMLDivElement, value: string
 
     let focusedTreePath: string | null = null;
     if (nextFocusElement) {
-        focusedTreePath = nextFocusElement.getAttribute("data-tree-path");
+        focusedTreePath = nextFocusElement.getTreePath();
     }
 
     const kind = selector.getAttribute("data-kind");
@@ -156,6 +153,7 @@ export function runAction(actionName: string, treePath: string, extraArgs: any[]
     const langName: string = getSelectedLanguage();
     try {
         const [newNodeString, newHtml] = postProcessActionNew(langName, modeName, actionName, lastNodeString, treePath, extraArgs);
+        console.log(newNodeString);
         updateTree(newHtml, newNodeString, modeName, langName, true);
     } catch (e) {
         displayError(e);

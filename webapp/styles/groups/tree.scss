@@ -8,7 +8,7 @@
   width: 100%;
   height: 100%;
   min-height: 100px;
-  overflow: hidden;
+  overflow: clip;
 
   &.file-drag-highlight {
     border: 2px dashed #4CAF50;
@@ -55,6 +55,19 @@
     display: flex;
     flex-direction: column-reverse;
   }
+
+  .annotation-axiom, .annotation-new {
+    font-size: 12px;
+    color: $comment;
+
+    &.annotation-axiom {
+      align-self: end;
+    }
+
+    &.annotation-new {
+      align-self: flex-end;
+    }
+  }
 }
 
 .highlight {
@@ -73,54 +86,6 @@
 
   div.scoped-variables {
     display: inline-flex;
-  }
-}
-
-.annotation-axiom, .annotation-new {
-  font-size: 12px;
-  color: $comment;
-
-  &.annotation-axiom {
-    align-self: end;
-  }
-
-  &.annotation-new {
-    align-self: flex-end;
-  }
-}
-
-.tooltip {
-  .tooltip-text {
-    visibility: hidden;
-    background-color: $context-menu-background;
-    color: $foreground;
-    border: $input-outline solid 1px;
-    text-align: center;
-    border-radius: 6px;
-    padding: 2px 3px;
-    position: absolute;
-    z-index: 1;
-    bottom: 125%;
-    left: 50%;
-    margin-left: -60px;
-    opacity: 0;
-    transition: opacity 0.3s;
-    box-shadow: 1px 1px 2px 0 rgba(0, 0, 0, 0.3);
-  }
-
-  &:hover .tooltip-text {
-    visibility: visible;
-    opacity: 1;
-  }
-
-  div {
-    display: inline;
-  }
-
-  &:not(.tooltip .tooltip) {
-    position: relative;
-    display: inline-block;
-    border-bottom: 1px dashed $foreground;
   }
 }
 

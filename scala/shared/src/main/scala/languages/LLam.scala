@@ -38,25 +38,26 @@ class LLam extends LLet {
     }
   }
 
-  case class Lambda(v: Literal, typ: Type, e: Expr) extends Expr {
-    override def evalInner(env: ValueEnv): Value = v match {
-      case LiteralIdentifier(identifier) => LambdaV(identifier, typ.typeCheck(envToTypeEnv(env)), e, env)
-      case _                             => InvalidIdentifierEvalError(v)
-    }
+  case class Lambda(v: LiteralIdentifierBind, typ: Type, e: Expr) extends Expr {
+    override def evalInner(env: ValueEnv): Value = guardValidIdentifierEval(
+      v, {
+        LambdaV(v.value, typ.typeCheck(envToTypeEnv(env)), e, env)
+      }
+    )
 
-    override def typeCheckInner(tEnv: TypeEnv): Type = v match {
-      case LiteralIdentifier(identifier) =>
+    override def typeCheckInner(tEnv: TypeEnv): Type = guardValidIdentifierType(
+      v, {
         val inputType = typ.typeCheck(tEnv)
-        Func(inputType, e.typeCheck(tEnv + (identifier -> inputType)))
-      case _ => InvalidIdentifierTypeError(v)
-    }
+        Func(inputType, e.typeCheck(tEnv + (v -> inputType)))
+      }
+    )
 
     override def getChildrenBase(env: ValueEnv): List[(Term, ValueEnv)] =
-      List((v, env), (typ, env), (e, env + (v.toString -> HiddenValue(typ))))
+      List((v, env), (typ, env), (e, env + (v -> HiddenValue(typ))))
 
     override def getChildrenEval(env: ValueEnv): List[(Term, ValueEnv)] = Nil
 
-    override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] = List((e, tEnv + (v.toString -> typ)))
+    override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] = List((e, tEnv + (v -> typ)))
 
     override def toText: ConvertableText = MultiElement(
       LambdaSymbol(),
@@ -69,12 +70,12 @@ class LLam extends LLet {
   }
 
   object Lambda extends ExprCompanion {
-    def apply(v: Variable, typ: Type, e: Expr): Lambda = new Lambda(Literal.fromString(v), typ, e)
+    def apply(v: Variable, typ: Type, e: Expr): Lambda = new Lambda(LiteralIdentifierBind(v), typ, e)
 
     override def create(args: BuilderArgs): Option[Expr] = args match {
-      case List(v: Literal, typ: Type, e: Expr) => Some(Lambda(v, typ, e))
-      case Nil                                  => Some(Lambda(defaultLiteral, defaultType, defaultExpr))
-      case _                                    => None
+      case List(v: LiteralIdentifierBind, typ: Type, e: Expr) => Some(Lambda(v, typ, e))
+      case Nil => Some(Lambda(LiteralIdentifierBind.default, defaultType, defaultExpr))
+      case _   => None
     }
   }
 
@@ -134,7 +135,7 @@ class LLam extends LLet {
 
     override def toText: ConvertableText = MultiElement(
       LambdaSymbol(),
-      ItalicsElement(TextElement(v)),
+      ItalicsElement(TextElement(v))
 //      SpaceAfter(MathElement.colon),
 //      TypeElement(properInputType.toTextBracketed),
 //      SpaceAfter(MathElement.period),
@@ -142,8 +143,7 @@ class LLam extends LLet {
     )
   }
 
-  object LambdaV extends ValueCompanion {
-  }
+  object LambdaV extends ValueCompanion {}
 
   case class ApplyToNonFunctionError(value: Value) extends EvalError {
     override val message: String = s"Cannot apply with left expression being ${value.prettyPrint}"
@@ -161,8 +161,7 @@ class LLam extends LLet {
     override def toText: ConvertableText = MathElement("?")
   }
 
-  object HiddenValue extends ValueCompanion {
-  }
+  object HiddenValue extends ValueCompanion {}
 
   // tasks
   setTasks(DefineAFunctionTask, IntToBoolFunctionTask, FunctionUsingFunctionAsInputTask)
@@ -239,7 +238,7 @@ class LLam extends LLet {
                           checkCondition(
                             e3,
                             {
-                              case Var(v2) => v2 == v1
+                              case Var(v2) => v2.identEquals(v1)
                               case _       => false
                             },
                             env2

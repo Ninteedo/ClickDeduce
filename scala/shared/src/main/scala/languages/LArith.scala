@@ -14,18 +14,12 @@ class LArith extends ClickDeduceLanguage {
     * @param x
     *   The integer value of the number.
     */
-  case class Num(x: Literal) extends Expr {
-    override def evalInner(env: ValueEnv): Value = x match {
-      case LiteralInt(x) => NumV(x)
-      case _             => UnexpectedArgValue(s"Num can only accept LiteralInt, not $x")
-    }
+  case class Num(x: LiteralInt) extends Expr {
+    override def evalInner(env: ValueEnv): Value = NumV(x.value)
 
-    override def typeCheckInner(tEnv: TypeEnv): Type = x match {
-      case LiteralInt(_) => IntType()
-      case _             => UnexpectedArgType(s"Num can only accept LiteralInt, not $x")
-    }
+    override def typeCheckInner(tEnv: TypeEnv): Type = IntType()
 
-    override def toText: ConvertableText = MathElement(x.toString)
+    override def toText: ConvertableText = x.toText
 
     override val needsBrackets: Boolean = false
   }
@@ -36,8 +30,8 @@ class LArith extends ClickDeduceLanguage {
     def apply(x: Int): Num = new Num(LiteralInt(BigInt(x)))
 
     override def create(args: BuilderArgs): Option[Expr] = args match {
-      case List(l: Literal) => Some(Num(l))
-      case defaultArgs      => Some(Num(defaultLiteral))
+      case List(l: LiteralInt) => Some(Num(l))
+      case defaultArgs      => Some(Num(LiteralInt(0)))
       case _                => None
     }
 
