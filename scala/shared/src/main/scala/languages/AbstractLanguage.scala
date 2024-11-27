@@ -892,8 +892,11 @@ trait AbstractLanguage {
       * @throws UnknownTermBuilder
       *   If the builder is not found.
       */
-    def build(name: String, args: BuilderArgs): Option[T] = getBuilder(name) match {
-      case Some(builder) => builder.apply(args)
+    def build(name: String, args: BuilderArgs): T = getBuilder(name) match {
+      case Some(builder) =>
+        val res = builder.apply(args)
+        if (res.isEmpty) throw TermBuilderFailed(name, args)
+        res.get
       case None          => throw UnknownTermBuilder(name)
     }
 
@@ -1002,7 +1005,7 @@ trait AbstractLanguage {
     * @return
     *   The expression, or throw an [[UnknownTermBuilder]] exception if the builder is not found.
     */
-  def buildExpr(name: String, args: BuilderArgs): Option[Expr] = exprBuilderManager.build(name, args)
+  def buildExpr(name: String, args: BuilderArgs): Expr = exprBuilderManager.build(name, args)
 
   /** Get a type builder by name.
     * @param name
@@ -1020,9 +1023,11 @@ trait AbstractLanguage {
     * @return
     *   The type, or throw an [[UnknownTypeBuilder]] exception if the builder is not found.
     */
-  def buildType(name: String, args: BuilderArgs): Option[Type] = typeBuilderManager.build(name, args)
+  def buildType(name: String, args: BuilderArgs): Type = typeBuilderManager.build(name, args)
 
   private case class UnknownTermBuilder(name: String) extends ClickDeduceException(s"Unknown term builder: $name")
+
+  private case class TermBuilderFailed(name: String, args: BuilderArgs) extends ClickDeduceException(s"Failed to build $name with args $args")
 
   registerTerms("AbstractLanguage", List(UnknownType, TypeContainer))
 

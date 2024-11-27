@@ -706,9 +706,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
         case n: LiteralNode => n.getLiteral
         case n: SubTypeNode => n.node.getType
       }
-      buildExpr(exprName, arguments) match
-        case Some(value) => value
-        case None => throw new ClickDeduceException(s"Could not build an instance of $exprName with arguments $arguments")
+      buildExpr(exprName, arguments)
     }
 
     private val htmlLineCache = collection.mutable.Map[DisplayMode, TypedTag[String]]()
@@ -726,12 +724,12 @@ trait AbstractNodeLanguage extends AbstractLanguage {
         case n: LiteralNode => n.getPlaceholder(mode, false)
         case n: SubTypeNode => n.getPlaceholder(mode)
       }
-      buildExpr(exprName, arguments).get.toText
+      buildExpr(exprName, arguments).toText
     }
 
     private def getExprHtmlLineReadOnly(mode: DisplayMode): ConvertableText = {
       val arguments = args.map(_.getPlaceholder(mode))
-      buildExpr(exprName, arguments).get.toText
+      buildExpr(exprName, arguments).toText
     }
 
     override def toString: String = s"VariableNode(${UtilityFunctions.quote(exprName)}, $args)"
@@ -755,7 +753,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       */
     def createFromExprName(exprName: String): Option[VariableNode] = {
       val innerNodes = buildExpr(exprName, Nil) match {
-        case Some(e: Product) =>
+        case e: Product =>
           e.productIterator.toList.collect({
             case c: Expr    => SubExprNode(ExprChoiceNode())
             case c: Literal => LiteralNode(c)
@@ -951,7 +949,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
         case tn: SubTypeNode => tn.node.getType
         case ln: LiteralNode => ln.getLiteral
       }
-      buildType(typeName, arguments).get
+      buildType(typeName, arguments)
     }
 
     override def toText(mode: DisplayMode): ConvertableText = {
@@ -959,15 +957,15 @@ trait AbstractNodeLanguage extends AbstractLanguage {
         case n: LiteralNode => n.getPlaceholder(mode, false)
         case other          => other.getPlaceholder(mode)
       }
-      buildType(typeName, arguments).get.toText
+      buildType(typeName, arguments).toText
     }
 
     override def toTextReadOnly(mode: DisplayMode): ConvertableText = {
       val arguments = args.map {
-        case n: LiteralNode => LiteralAny(n.toHtmlLineReadOnly(mode).toString)
+        case n: LiteralNode => placeholderOfLiteral(n.literal, n.toHtmlLineReadOnly(mode).toString)
         case n: SubTypeNode => TypePlaceholder(n.node.toTextReadOnly(mode), n.node.getType.needsBrackets)
       }
-      buildType(typeName, arguments).get.toText
+      buildType(typeName, arguments).toText
     }
 
     override val children: List[OuterNode] = args.filter(_.isInstanceOf[SubTypeNode]).flatMap(_.children)
