@@ -44,7 +44,7 @@ export class BaseDropdownSelector implements AbstractTreeInput {
     }
 
     getTreePath(): string {
-        const treePath = this.container.getAttribute('data-tree-path');
+        const treePath = this.container.getAttribute('data-tree-path') ?? this.input.getAttribute('data-tree-path');
         if (treePath === null) throw new Error('Dropdown selector does not have a data-tree-path attribute.');
         return treePath;
     }
@@ -226,7 +226,7 @@ class DropdownOption {
     }
 
     public getFilterText(): string {
-        return this.element.getAttribute('data-filter') || this.element.innerText;
+        return this.element.getAttribute('data-filter') ?? this.element.innerText;
     }
 
     public getAliases(): string[] {
