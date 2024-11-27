@@ -53,7 +53,6 @@ class LPoly extends LData {
       case PolyType(tv, incompleteType) =>
         tv match {
           case TypeVar(v) => incompleteType.typeCheck(tEnv + (v.toBind -> typ))
-          case other      => PolyVRequiresTypeVarType(other)
         }
       case other => CannotApplyTypeUnlessPolyType(other)
     }
@@ -99,7 +98,7 @@ class LPoly extends LData {
     }
   }
 
-  case class PolyType(typeVar: Type, incompleteType: Type) extends Type {
+  case class PolyType(typeVar: TypeVar, incompleteType: Type) extends Type {
     override def toText: ConvertableText =
       MultiElement(
         ForAllSymbol(),
@@ -108,13 +107,16 @@ class LPoly extends LData {
         incompleteType.toTextBracketed
       )
 
+    override def typeCheck(tEnv: TypeEnv): Type =
+      PolyType(typeVar, incompleteType.typeCheck(tEnv + (typeVar.v.toBind -> TypeContainer(typeVar))))
+
     override val isError: Boolean = typeVar.isError || incompleteType.isError
   }
 
   object PolyType extends TypeCompanion {
     override def create(args: BuilderArgs): Option[Type] = args match {
-      case List(tv: Type, t: Type) => Some(PolyType(tv, t))
-      case Nil                     => Some(PolyType(defaultType, defaultType))
+      case List(tv: TypeVar, t: Type) => Some(PolyType(tv, t))
+      case Nil                     => Some(PolyType(TypeVar(""), defaultType))
       case _                       => None
     }
 
@@ -123,11 +125,8 @@ class LPoly extends LData {
 
   // values
 
-  case class PolyV(typeVar: Type, e: Expr, env: ValueEnv) extends Value {
-    override val typ: Type = typeVar match {
-      case TypeVar(v) => PolyType(typeVar, e.typeCheck(envToTypeEnv(env) + (v.toBind -> TypeContainer(typeVar))))
-      case other      => PolyVRequiresTypeVarType(other)
-    }
+  case class PolyV(typeVar: TypeVar, e: Expr, env: ValueEnv) extends Value {
+    override val typ: Type = PolyType(typeVar, e.typeCheck(envToTypeEnv(env) + (typeVar.v.toBind -> TypeContainer(typeVar))))
 
     override def toText: ConvertableText = MultiElement(
       LambdaSymbol(capital = true),

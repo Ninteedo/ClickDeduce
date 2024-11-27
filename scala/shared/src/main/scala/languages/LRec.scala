@@ -24,7 +24,7 @@ class LRec extends LLam {
         v, {
           val properInType = inType.typeCheck(tEnv)
           val properOutType = outType.typeCheck(tEnv)
-          val extendedTEnv = tEnv + (f -> Func(inType, outType)) + (v -> inType)
+          val extendedTEnv = tEnv + (f -> Func(properInType, properOutType)) + (v -> properInType)
           val determinedOutType = e.typeCheck(extendedTEnv).typeCheck(extendedTEnv)
           if (properOutType == determinedOutType) Func(properInType, determinedOutType)
           else RecursiveFunctionExpressionOutTypeMismatch(properOutType, determinedOutType)
@@ -49,11 +49,11 @@ class LRec extends LLam {
     override def toText: ConvertableText = MultiElement(
       TextElement("rec "),
       f.toText,
-      BracketedElement(MultiElement(v.toText, TextElement(": "), TypeElement(inType.toTextBracketed))),
-      SpaceAfter(MathElement.colon),
-      TypeElement(outType.toTextBracketed),
-      SpaceAfter(MathElement.period),
-      e.toTextBracketed
+      BracketedElement(v.toText),
+//      SpaceAfter(MathElement.colon),
+//      TypeElement(outType.toTextBracketed),
+//      SpaceAfter(MathElement.period),
+//      e.toTextBracketed
     )
   }
 
@@ -90,8 +90,8 @@ class LRec extends LLam {
 
     override def toText: ConvertableText = MultiElement(
       TextElement("rec "),
-      f.toText
-//      BracketedElement(MultiElement(v.toText, SpaceAfter(MathElement.colon), in_typ.toTextBracketed)),
+      f.toText,
+      BracketedElement(v.toText),
 //      SpaceAfter(MathElement.colon),
 //      TypeElement(out_typ.toTextBracketed),
 //      SpaceAfter(MathElement.period),

@@ -156,6 +156,23 @@ class LPolyTest extends TestTemplate[Expr, Value, Type] {
       LambdaV("x", IntType(), Var("x"), Env("X" -> TypeValueContainer(IntType())))
   }
 
+  property("Abstracting away function call") {
+    val applyFuncAB = Lambda("f", Func(TypeVar("A"), TypeVar("B")), Lambda("x", TypeVar("A"), Apply(Var("f"), Var("x"))))
+    val applyFuncABWithPoly = Poly("A", Poly("B", applyFuncAB))
+    val equalsTwo = Lambda("x", IntType(), Equal(Var("x"), Num(2)))
+    val fullExpr = Apply(ApplyType(ApplyType(applyFuncABWithPoly, IntType()), BoolType()), equalsTwo)
+
+    applyFuncAB.typeCheck(Env("A" -> TypeContainer(IntType()), "B" -> TypeContainer(BoolType()))) shouldEqual
+      Func(Func(IntType(), BoolType()), Func(IntType(), BoolType()))
+    applyFuncABWithPoly.typeCheck() shouldEqual
+      PolyType(TypeVar("A"), PolyType(TypeVar("B"), Func(Func(TypeVar("A"), TypeVar("B")), Func(TypeVar("A"), TypeVar("B")))))
+    ApplyType(applyFuncABWithPoly, IntType()).typeCheck() shouldEqual
+      PolyType(TypeVar("B"), Func(Func(IntType(), TypeVar("B")), Func(IntType(), TypeVar("B"))))
+    ApplyType(ApplyType(applyFuncABWithPoly, IntType()), BoolType()).typeCheck() shouldEqual
+      Func(Func(IntType(), BoolType()), Func(IntType(), BoolType()))
+    fullExpr.typeCheck() shouldEqual Func(IntType(), BoolType())
+  }
+
   property("CreatePolyFunctionTask is checked correctly") {
     CreatePolyFunctionTask.checkFulfilled(Poly("T", Lambda("x", TypeVar("T"), Var("x")))) shouldBe true
     CreatePolyFunctionTask.checkFulfilled(Poly("T", Lambda("x", TypeVar("T"), IfThenElse(Var("x"), BlankExprDropDown(), BlankExprDropDown())))) shouldBe false
