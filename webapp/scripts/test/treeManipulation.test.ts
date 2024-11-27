@@ -2,8 +2,10 @@ import {beforeEach, describe, expect, test} from "vitest";
 import {initialise} from "../initialise";
 import {doStartNodeBlank} from "../actions";
 import {
+    basicMocks,
     changeLanguage,
     contextMenuSelect,
+    doBooleanLiteralEdit,
     doLiteralEdit,
     getDropdownAt,
     getLeftmostExprDropdown,
@@ -22,6 +24,7 @@ const indexHtml = loadHtmlTemplate('index');
 
 beforeEach(() => {
     document.body.innerHTML = indexHtml;
+    basicMocks();
     initialise(true);
 });
 
@@ -238,22 +241,22 @@ describe("node string can be queried correctly", () => {
         changeLanguage(1);  // LIf
         doStartNodeBlank();
         selectExprOption(getLeftmostExprDropdown(), "Plus");
-        selectExprOption(getDropdownAt("0"), "Times");
-        selectExprOption(getDropdownAt("0-0"), "Bool");
-        doLiteralEdit(getLiteralInputAt("0-0-0"), "test\"()\\(\\)\\\")");
-        selectExprOption(getDropdownAt("0-1"), "Num");
-        selectExprOption(getDropdownAt("1"), "IfThenElse");
-        selectExprOption(getDropdownAt("1-0"), "Bool");
-        doLiteralEdit(getLiteralInputAt("1-0-0"), "eg");
+        selectExprOption(getDropdownAt("0")!, "Times");
+        selectExprOption(getDropdownAt("0-0")!, "Bool");
+        doBooleanLiteralEdit(getLiteralInputAt("0-0-0"), true);
+        selectExprOption(getDropdownAt("0-1")!, "Num");
+        selectExprOption(getDropdownAt("1")!, "IfThenElse");
+        selectExprOption(getDropdownAt("1-0")!, "Bool");
+        doBooleanLiteralEdit(getLiteralInputAt("1-0-0"), false);
     });
 
     test("node string can be queried correctly", () => {
         expect(getNodeStringFromPath("")).toEqual(NS.NODE_STRING_PATH_TEST_EXAMPLE);
-        expect(getNodeStringFromPath("0")).toEqual(`VariableNode("Times", List(SubExprNode(VariableNode("Bool", List(LiteralNode("test\\"()\\\\(\\\\)\\\\\\")")))), SubExprNode(VariableNode("Num", List(LiteralNode(""))))))`);
-        expect(getNodeStringFromPath("1")).toEqual(`VariableNode("IfThenElse", List(SubExprNode(VariableNode("Bool", List(LiteralNode("eg")))), SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode())))`);
-        expect(getNodeStringFromPath("0-0")).toEqual(`VariableNode("Bool", List(LiteralNode("test\\"()\\\\(\\\\)\\\\\\")")))`);
-        expect(getNodeStringFromPath("0-1")).toEqual(`VariableNode("Num", List(LiteralNode("")))`);
-        expect(getNodeStringFromPath("1-0")).toEqual(`VariableNode("Bool", List(LiteralNode("eg")))`);
+        expect(getNodeStringFromPath("0")).toEqual(`VariableNode("Times", List(SubExprNode(VariableNode("Bool", List(LiteralNode(LiteralBool(true))))), SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(0)))))))`);
+        expect(getNodeStringFromPath("1")).toEqual(`VariableNode("IfThenElse", List(SubExprNode(VariableNode("Bool", List(LiteralNode(LiteralBool(false))))), SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode())))`);
+        expect(getNodeStringFromPath("0-0")).toEqual(`VariableNode("Bool", List(LiteralNode(LiteralBool(true))))`);
+        expect(getNodeStringFromPath("0-1")).toEqual(`VariableNode("Num", List(LiteralNode(LiteralInt(0))))`);
+        expect(getNodeStringFromPath("1-0")).toEqual(`VariableNode("Bool", List(LiteralNode(LiteralBool(false))))`);
         expect(getNodeStringFromPath("1-1")).toEqual(`ExprChoiceNode()`);
         expect(getNodeStringFromPath("1-2")).toEqual(`ExprChoiceNode()`);
     });

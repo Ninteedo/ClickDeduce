@@ -35,6 +35,10 @@ export class CustomExprSelector extends BaseDropdownSelector {
     protected override postSelectOption(value: string) {
         handleExprSelectorChoice(this.container, value);
     }
+
+    isTypeSelector(): boolean {
+        return this.container.getAttribute('data-kind') === 'type';
+    }
 }
 
 

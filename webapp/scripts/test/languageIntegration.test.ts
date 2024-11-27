@@ -1,6 +1,7 @@
 import {beforeEach, describe, expect, test} from "vitest";
 import {initialise} from "../initialise";
 import {
+    basicMocks,
     changeLanguage,
     doLiteralEdit,
     getExprDropdownOptions,
@@ -14,12 +15,15 @@ import {
     slightDelay
 } from "./helper";
 import {getCopyButton, getPasteButton} from "../interface";
+import {CustomExprSelector} from "../components/customExprSelector";
+import {getExprSelectors} from "../treeManipulation";
 
 const indexHtml = loadIndexHtmlTemplate();
 
 beforeEach(() => {
     document.body.innerHTML = indexHtml;
     initialise(true);
+    basicMocks();
 });
 
 describe('lang selector is correctly initialised on load', () => {
@@ -113,7 +117,7 @@ describe('selecting an option from the expression choice dropdown has the correc
 
         expect(node.querySelectorAll('input')).toHaveLength(1);
         const input = node.querySelector('input') as HTMLInputElement;
-        expect(input.value).toBe('');
+        expect(input.value).toBe('0');
         expect(input.getAttribute('data-tree-path')).toBe('0');
     });
 
@@ -175,7 +179,7 @@ describe('behaviour of changing the selected language is correct', () => {
 
         for (let i = 1; i < getLangSelector().options.length; i++) {
             changeLanguage(i);
-            expect(getLeftmostExprDropdown().outerHTML).not.toBe(prevSelect.outerHTML);
+            expect(getLeftmostExprDropdown()).not.toBe(prevSelect);
             expect(getExprDropdownOptions(getLeftmostExprDropdown()).length).toBeGreaterThan(getExprDropdownOptions(prevSelect).length);
         }
     });
@@ -191,7 +195,7 @@ describe('behaviour of changing the selected language is correct', () => {
 
         for (let i = 2; i < getLangSelector().options.length; i++) {
             changeLanguage(i);
-            expect(getLeftmostExprDropdown().outerHTML).not.toBe(prevSelect.outerHTML);
+            expect(getLeftmostExprDropdown()).not.toBe(prevSelect);
             expect(getExprDropdownOptions(getLeftmostExprDropdown()).length).toBeGreaterThan(getExprDropdownOptions(prevSelect).length);
         }
     });
@@ -268,11 +272,11 @@ describe('behaviour of editing literals is correct', () => {
     });
 });
 
-function getLeftmostTypeDropdown(): HTMLDivElement {
-    return document.querySelector('.expr-selector-container[data-kind="type"]') as HTMLDivElement;
+function getLeftmostTypeDropdown(): CustomExprSelector {
+    return getExprSelectors().find(selector => selector.isTypeSelector())!;
 }
 
-function selectTypeOption(selector: HTMLDivElement, typeName: string): void {
+function selectTypeOption(selector: CustomExprSelector, typeName: string): void {
     selectExprOption(selector, typeName);
 }
 

@@ -246,6 +246,14 @@ export function getActiveInputs(): AbstractTreeInput[] {
     return activeInputs;
 }
 
+export function getLiteralInputs(): LiteralInput[] {
+    return literalInputs;
+}
+
+export function getExprSelectors(): CustomExprSelector[] {
+    return exprSelectors;
+}
+
 /**
  * Undoes the last change to the tree.
  */

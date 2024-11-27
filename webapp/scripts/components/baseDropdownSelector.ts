@@ -6,7 +6,7 @@ export class BaseDropdownSelector implements AbstractTreeInput {
     protected readonly container: HTMLDivElement;
     protected readonly input: HTMLInputElement;
     protected readonly dropdown: HTMLDivElement;
-    protected readonly options: DropdownOption[];
+    readonly options: DropdownOption[];
 
     protected readonly SELECTOR_FOCUS_CLASS = 'focused';
     protected readonly DROPDOWN_VISIBLE_CLASS = 'show';
@@ -77,6 +77,14 @@ export class BaseDropdownSelector implements AbstractTreeInput {
         this.hideDropdown();
         this.input.dispatchEvent(new Event('change'));
         this.postSelectOption(option.getValue());
+    }
+
+    enterValue(value: string): void {
+        this.input.value = value;
+        this.updateDropdown();
+        this.hideDropdown();
+        // this.input.dispatchEvent(new Event('change'));
+        this.postSelectOption(value);
     }
 
     protected postSelectOption(_value: string): void {}
@@ -189,7 +197,7 @@ export class BaseDropdownSelector implements AbstractTreeInput {
     }
 }
 
-class DropdownOption {
+export class DropdownOption {
     public readonly element: HTMLLIElement;
 
     protected readonly OPTION_HIDDEN_CLASS = 'hidden';
@@ -226,7 +234,7 @@ class DropdownOption {
     }
 
     public getFilterText(): string {
-        return this.element.getAttribute('data-filter') ?? this.element.innerText;
+        return this.element.getAttribute('data-filter') ?? this.element.getAttribute('data-value') ?? this.element.innerText ?? this.element.innerHTML;
     }
 
     public getAliases(): string[] {

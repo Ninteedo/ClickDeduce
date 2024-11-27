@@ -1,6 +1,7 @@
 import {beforeEach, describe, expect, test} from "vitest";
 import {initialise} from "../initialise";
 import {
+    basicMocks,
     contextMenuSelect,
     doLiteralEdit,
     getDropdownAt,
@@ -20,6 +21,7 @@ import {
     getStartNodeBlankHistory
 } from "../serverRequest";
 import {getCopyButton, getDeleteButton, getPasteButton} from "../interface";
+import {getExprSelectors, getLiteralInputs} from "../treeManipulation";
 
 const indexHtml = loadIndexHtmlTemplate();
 
@@ -28,6 +30,7 @@ beforeEach(() => {
     clearStartNodeBlankHistory();
     document.body.innerHTML = indexHtml;
     initialise(true);
+    basicMocks();
 });
 
 const langSelectorLanguages = ["LArith", "LIf", "LLet"];
@@ -137,7 +140,7 @@ describe("selecting an option from a non-root expr dropdown behaves correctly", 
         test("selecting the left " + exprName + " option makes the correct request to the server", () => {
             expect.assertions(1);
 
-            const leftDropdown = document.querySelectorAll('.expr-selector-container:not([readonly])').item(0) as HTMLDivElement;
+            const leftDropdown = getLeftmostExprDropdown();
             console.log(exprName)
             selectExprOption(leftDropdown, exprName);
 
@@ -148,7 +151,7 @@ describe("selecting an option from a non-root expr dropdown behaves correctly", 
         test("selecting the right " + exprName + " option makes the correct request to the server", () => {
             expect.assertions(1);
 
-            const rightSelector = document.querySelectorAll('.expr-selector-container:not([readonly])').item(1) as HTMLDivElement;
+            const rightSelector = getExprSelectors()[1];
             selectExprOption(rightSelector, exprName);
 
             checkActionExecuted(langSelectorLanguages[0], "edit", "SelectExprAction",
@@ -162,8 +165,8 @@ describe("selecting an option from a non-root expr dropdown behaves correctly", 
 });
 
 describe("entering text into a literal input behaves correctly", () => {
-    const dummyNodeString: string = 'VariableNode("Num", List(LiteralNode("")))';
-    const foo = "foo";
+    const dummyNodeString: string = 'VariableNode("Num", List(LiteralNode(LiteralInt(0))))';
+    const foo = "12345";
 
     beforeEach(() => {
         doStartNodeBlank();
@@ -172,64 +175,61 @@ describe("entering text into a literal input behaves correctly", () => {
 
     test("input is available", () => {
         expect.assertions(1);
-
-        const input = document.querySelector('input[type="text"]');
-        expect(input).toBeInstanceOf(HTMLInputElement);
+        expect(getLiteralInputs()[0]).toBeTruthy();
     });
 
     test("entering text makes the correct request to the server", () => {
         expect.assertions(1);
 
-        const input = document.querySelector('input.literal[type="text"]') as HTMLInputElement;
-        input.value = "foo";
-        input.dispatchEvent(new Event('change'));
+        const input = getLiteralInputs()[0];
+        input.setValue("50");
+        input.blur();
 
         checkActionExecuted(langSelectorLanguages[0], "edit", "EditLiteralAction",
-            dummyNodeString, "0", ["foo"]);
+            dummyNodeString, "0", ["50"]);
     });
 
     test("entering text multiple times makes the correct requests to the server", () => {
         expect.assertions(3);
 
-        const bar = "bar";
+        const bar = "5754";
 
-        let input = document.querySelector('input.literal[type="text"]') as HTMLInputElement;
-        input.value = foo;
-        input.dispatchEvent(new Event('change'));
+        let input = getLiteralInputs()[0];
+        input.setValue(foo);
+        input.blur();
 
         checkActionExecuted(langSelectorLanguages[0], "edit", "EditLiteralAction",
             dummyNodeString, "0", [foo]);
 
 
-        input = document.querySelector('input.literal[type="text"]') as HTMLInputElement;
+        input = getLiteralInputs()[0];
 
-        expect(input.value).toEqual(foo);
+        expect(input.getValue()).toEqual(foo);
 
-        input.value = bar;
-        input.dispatchEvent(new Event('change'));
+        input.setValue(bar);
+        input.blur();
 
         checkActionExecuted(langSelectorLanguages[0], "edit", "EditLiteralAction",
-            `VariableNode("Num", List(LiteralNode("${foo}")))`, "0", [bar]);
+            `VariableNode("Num", List(LiteralNode(LiteralInt(${foo}))))`, "0", [bar]);
     });
 
-    test("if the input text is the same as it was before (blank), no server request is made", () => {
+    test("if the input text is the same as it was before (0), no server request is made", () => {
         expect.assertions(2);
 
-        const input = document.querySelector('input[type="text"]') as HTMLInputElement;
-        input.value = "";
-        input.dispatchEvent(new Event('change'));
+        const input = getLiteralInputs()[0];
+        input.setValue("0");
+        input.blur();
 
         const initialRequestsReceived = getActionHistory().length;
 
-        input.dispatchEvent(new Event('change'));
+        input.focus();
+        input.blur();
 
         expect(getActionHistory()).toHaveLength(initialRequestsReceived);
 
-        input.value = "foo";
-        input.dispatchEvent(new Event('input'));
-        input.value = "";
-
-        input.dispatchEvent(new Event('change'));
+        input.setValue(foo);
+        input.setValue("0");
+        input.blur();
 
         expect(getActionHistory()).toHaveLength(initialRequestsReceived);
     });
@@ -237,21 +237,21 @@ describe("entering text into a literal input behaves correctly", () => {
     test("if the input text is the same as it was before (not blank), no server request is made", () => {
         expect.assertions(2);
 
-        const input = document.querySelector('input.literal[type="text"]') as HTMLInputElement;
-        input.value = foo;
-        input.dispatchEvent(new Event('change'));
+        let input = getLiteralInputs()[0];
+        input.setValue(foo);
+        input.blur();
 
         const initialRequestsReceived = getActionHistory().length;
 
-        input.dispatchEvent(new Event('change'));
+        input = getLiteralInputs()[0];
+        input.focus();
+        input.blur();
 
         expect(getActionHistory()).toHaveLength(initialRequestsReceived);
 
-        input.value = "bar";
-        input.dispatchEvent(new Event('input'));
-        input.value = foo;
-
-        input.dispatchEvent(new Event('change'));
+        input.setValue("72838236872");
+        input.setValue(foo);
+        input.blur();
 
         expect(getActionHistory()).toHaveLength(initialRequestsReceived);
     });
@@ -304,7 +304,7 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         contextMenuSelect(element);
         getPasteButton().click();
         checkActionExecuted(langSelectorLanguages[0], "edit", "PasteAction",
-            NS.TIMES_LEFT_FILLED_NUM_RIGHT_EMPTY, "0", ["VariableNode(\"Num\", List(LiteralNode(\"4\")))"]);
+            NS.TIMES_LEFT_FILLED_NUM_RIGHT_EMPTY, "0", ["VariableNode(\"Num\", List(LiteralNode(LiteralInt(4))))"]);
     });
 
     test("clicking paste on another element after copying one makes the correct request to the server", () => {
@@ -319,7 +319,7 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         getPasteButton().click();
 
         checkActionExecuted(langSelectorLanguages[0], "edit", "PasteAction",
-            NS.TIMES_LEFT_FILLED_NUM_RIGHT_EMPTY, "1", ["VariableNode(\"Num\", List(LiteralNode(\"4\")))"]);
+            NS.TIMES_LEFT_FILLED_NUM_RIGHT_EMPTY, "1", ["VariableNode(\"Num\", List(LiteralNode(LiteralInt(4))))"]);
     });
 
     test("clicking paste after changing tree state makes the correct request to the server", () => {
@@ -332,7 +332,7 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         getPasteButton().click();
 
         checkActionExecuted(langSelectorLanguages[0], "edit", "PasteAction",
-            NS.TIMES_LEFT_NUM_RIGHT_EMPTY, "", ["VariableNode(\"Num\", List(LiteralNode(\"4\")))"]);
+            NS.TIMES_LEFT_NUM_RIGHT_EMPTY, "", ["VariableNode(\"Num\", List(LiteralNode(LiteralInt(4))))"]);
     });
 });
 

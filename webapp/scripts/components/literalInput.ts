@@ -26,10 +26,12 @@ export class LiteralInput implements AbstractTreeInput {
     focus(): void {
         this.input.focus();
         this.input.select();
+        this.onFocused();
     }
 
     blur(): void {
         this.input.blur();
+        this.onBlurred();
     }
 
     disable() {

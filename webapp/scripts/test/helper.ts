@@ -1,7 +1,11 @@
 import fs from "fs";
 import path from "path";
-import {doStartNodeBlank, handleExprSelectorChoice, handleLiteralChanged} from "../actions";
+import {doStartNodeBlank, handleLiteralChanged} from "../actions";
 import {getTreePathOfElement} from "../interface";
+import {CustomExprSelector} from "../components/customExprSelector";
+import {getExprSelectors} from "../treeManipulation";
+import {vitest} from "vitest";
+import {DropdownOption} from "../components/baseDropdownSelector";
 
 export function slightDelay(delay: number = 10): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, delay));
@@ -41,34 +45,36 @@ export function changeLanguage(langIndex: number): void {
     langSelector.dispatchEvent(new Event('change'));
 }
 
-export function getLeftmostExprDropdown(): HTMLDivElement {
-    return document.querySelector('.expr-selector-container[data-kind="expr"]') as HTMLDivElement;
+export function getLeftmostExprDropdown(): CustomExprSelector {
+    return getExprSelectors()[0];
 }
 
-export function getDropdownAt(treePath: string): HTMLDivElement {
-    return document.querySelector(`.expr-selector-container[data-tree-path="${treePath}"]`) as HTMLDivElement;
+export function getDropdownAt(treePath: string): CustomExprSelector | undefined {
+    return getExprSelectors().find(selector => selector.getTreePath() === treePath);
 }
 
 export function getLiteralInputAt(treePath: string): HTMLInputElement {
     return document.querySelector(`input[data-tree-path="${treePath}"]`) as HTMLInputElement;
 }
 
-export function getExprDropdownOptions(selector: HTMLDivElement) {
-    const dropdown = selector.querySelector('.expr-selector-dropdown') as HTMLDivElement;
-    return Array.from(dropdown.querySelectorAll('ul > li'));
+export function getExprDropdownOptions(selector: CustomExprSelector): DropdownOption[] {
+    return selector.options;
 }
 
-export function selectExprOption(selector: HTMLDivElement, exprName: string): void {
-    const input = selector.querySelector('.expr-selector-input') as HTMLInputElement;
-    input.focus();
-    input.value = exprName;
-    handleExprSelectorChoice(selector, exprName);
+export function selectExprOption(selector: CustomExprSelector | undefined, exprName: string): void {
+    if (!selector) throw new Error('Selector is undefined');
+    selector.enterValue(exprName);
     // input.dispatchEvent(new Event('input'));
     // input.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter'}));
 }
 
 export function doLiteralEdit(input: HTMLInputElement, newValue: string): void {
     input.value = newValue;
+    handleLiteralChanged(input);
+}
+
+export function doBooleanLiteralEdit(input: HTMLInputElement, newValue: boolean): void {
+    input.checked = newValue;
     handleLiteralChanged(input);
 }
 
@@ -135,4 +141,8 @@ export function getErrorDiv(): HTMLElement {
     const errorDiv = document.getElementById('error-message');
     if (!errorDiv) throw new Error('Could not find error message div');
     return errorDiv;
+}
+
+export function basicMocks(): void {
+    Element.prototype.scrollIntoView = vitest.fn();
 }
