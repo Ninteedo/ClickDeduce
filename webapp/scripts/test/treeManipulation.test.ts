@@ -10,15 +10,14 @@ import {
     getDropdownAt,
     getLeftmostExprDropdown,
     getLiteralInputAt,
-    getRedoButton,
     getTree,
-    getUndoButton,
     loadHtmlTemplate,
     selectExprOption,
     slightDelay
 } from "./helper";
 import * as NS from "../../test_resources/node_strings";
 import {getNodeStringFromPath} from "../treeManipulation";
+import {getRedoButton, getUndoButton} from "../interface";
 
 const indexHtml = loadHtmlTemplate('index');
 

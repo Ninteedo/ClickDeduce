@@ -115,14 +115,6 @@ export function removeWhitespace(str: string): string {
     return str.replace(/^\s+|\s+$/g, '');
 }
 
-export function getUndoButton(): HTMLButtonElement {
-    return document.getElementById('undoButton') as HTMLButtonElement;
-}
-
-export function getRedoButton(): HTMLButtonElement {
-    return document.getElementById('redoButton') as HTMLButtonElement;
-}
-
 export function getTabbableElements(allowSelect: boolean = false): HTMLElement[] {
     let selector = 'input[data-tree-path]:not([disabled])';
     if (allowSelect) {

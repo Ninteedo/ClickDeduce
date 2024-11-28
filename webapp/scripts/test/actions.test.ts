@@ -7,7 +7,6 @@ import {
     getDropdownAt,
     getLeftmostExprDropdown,
     getLiteralInputAt,
-    getUndoButton,
     loadIndexHtmlTemplate,
     pressStartNodeButton,
     selectExprOption
@@ -20,7 +19,7 @@ import {
     getActionHistory,
     getStartNodeBlankHistory
 } from "../serverRequest";
-import {getCopyButton, getDeleteButton, getPasteButton} from "../interface";
+import {getCopyButton, getDeleteButton, getPasteButton, getUndoButton} from "../interface";
 import {getExprSelectors, getLiteralInputs} from "../treeManipulation";
 
 const indexHtml = loadIndexHtmlTemplate();

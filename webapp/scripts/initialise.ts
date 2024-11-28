@@ -22,7 +22,9 @@ import {
     getExportLatexButton,
     getLoadButton,
     getPasteButton,
+    getRedoButton,
     getSaveButton,
+    getUndoButton,
     getZoomToFitButton,
     handleTabPressed,
     resetInterfaceGlobals,
@@ -32,7 +34,6 @@ import {
 import panzoom, {PanZoom} from "panzoom";
 import {loadImages} from "./imageLoading";
 import {setupExampleSelector} from "./components/customExprSelector";
-import {getRedoButton, getUndoButton} from "./test/helper";
 import {loadTree, saveTree} from "./saveLoad";
 
 export let panzoomInstance: PanZoom;

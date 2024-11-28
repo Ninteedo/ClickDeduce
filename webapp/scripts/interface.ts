@@ -385,3 +385,11 @@ export function getTreePathOfElement(element: HTMLElement | null): string {
 export function setPanZoomInstance(instance: PanZoom): void {
     panzoomInstance = instance;
 }
+
+export function getUndoButton(): HTMLButtonElement {
+    return document.getElementById('undoButton') as HTMLButtonElement;
+}
+
+export function getRedoButton(): HTMLButtonElement {
+    return document.getElementById('redoButton') as HTMLButtonElement;
+}

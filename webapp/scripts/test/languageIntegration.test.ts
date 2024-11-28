@@ -8,13 +8,12 @@ import {
     getLangSelector,
     getLeftmostExprDropdown,
     getTree,
-    getUndoButton,
     loadIndexHtmlTemplate,
     pressStartNodeButton,
     selectExprOption,
     slightDelay
 } from "./helper";
-import {getCopyButton, getPasteButton} from "../interface";
+import {getCopyButton, getPasteButton, getUndoButton} from "../interface";
 import {CustomExprSelector} from "../components/customExprSelector";
 import {getExprSelectors} from "../treeManipulation";
 
