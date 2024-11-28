@@ -5,7 +5,6 @@ import {
     changeLanguage,
     doLiteralEdit,
     getExprDropdownOptions,
-    getLangSelector,
     getLeftmostExprDropdown,
     getTree,
     loadIndexHtmlTemplate,
@@ -13,7 +12,7 @@ import {
     selectExprOption,
     slightDelay
 } from "./helper";
-import {getCopyButton, getPasteButton, getUndoButton} from "../interface";
+import {getCopyButton, getLangSelector, getPasteButton, getUndoButton} from "../interface";
 import {CustomExprSelector} from "../components/customExprSelector";
 import {getExprSelectors} from "../treeManipulation";
 

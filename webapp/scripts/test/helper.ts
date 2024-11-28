@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import {doStartNodeBlank, handleLiteralChanged} from "../actions";
-import {getTreePathOfElement} from "../interface";
+import {getLangSelector, getTreePathOfElement} from "../interface";
 import {CustomExprSelector} from "../components/customExprSelector";
 import {getExprSelectors} from "../treeManipulation";
 import {vitest} from "vitest";
@@ -33,10 +33,6 @@ export function getStartNodeButton() {
 
 export function pressStartNodeButton() {
     doStartNodeBlank(new Event(""));
-}
-
-export function getLangSelector() {
-    return document.getElementById('lang-selector') as HTMLSelectElement;
 }
 
 export function changeLanguage(langIndex: number): void {

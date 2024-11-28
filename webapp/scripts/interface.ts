@@ -393,3 +393,7 @@ export function getUndoButton(): HTMLButtonElement {
 export function getRedoButton(): HTMLButtonElement {
     return document.getElementById('redoButton') as HTMLButtonElement;
 }
+
+export function getLangSelector() {
+    return document.getElementById('lang-selector') as HTMLSelectElement;
+}

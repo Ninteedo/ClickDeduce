@@ -1,0 +1,13 @@
+.attention {
+  @keyframes glow {
+    0%, 100% {
+      box-shadow: 0 0 1px 0.1rem $semi-background;
+    }
+
+    50% {
+      box-shadow: 0 0 1px 0.1rem $foreground;
+    }
+  }
+
+  animation: glow 3s infinite ease-in-out;
+}

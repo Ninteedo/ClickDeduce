@@ -7,6 +7,7 @@ import {updateTaskList} from "./tasks";
 import {createLiteralInputs, LiteralInput} from "./components/literalInput";
 import {setupFileDragAndDrop, setupFileInput} from "./saveLoad";
 import {AbstractTreeInput} from "./components/abstractTreeInput";
+import {markHasUsedLangSelector} from "./attention";
 
 let treeHistory: { mode: string; html: string; nodeString: string; lang: string }[] = [];
 export let treeHistoryIndex: number = 0;
@@ -59,6 +60,7 @@ function loadLangSelector(): void {
     const langSelector: HTMLElement | null = document.getElementById('lang-selector');
     if (!langSelector) throw new Error('Language selector not found');
     langSelector.addEventListener('change', () => {
+        markHasUsedLangSelector();
         runAction("IdentityAction", "", []);
     })
 }

@@ -1,4 +1,6 @@
 import {checkTaskFulfilled, getTasksList} from "./serverRequest";
+import {getLangSelector} from "./interface";
+import {markHasCompletedFirstLangTasks} from "./attention";
 
 let fulfilledTasks: string[] = [];
 
@@ -11,7 +13,8 @@ export interface Task {
 let taskList: Task[] = [];
 
 export function updateTaskList(lang: string, nodeString: string): void {
-    const tasks = getTasksList(lang);
+    const tasks: Task[] = getTasksList(lang);
+    let allFulfilled = true;
     taskList = [];
     for (const task of tasks) {
         taskList.push(task);
@@ -24,9 +27,15 @@ export function updateTaskList(lang: string, nodeString: string): void {
         const fulfilled = checkTaskFulfilled(lang, name, nodeString);
         if (fulfilled) {
             fulfilledTasks.push(name);
+        } else {
+            allFulfilled = false;
         }
     }
     updateTasksDiv();
+
+    if (getLangSelector().selectedIndex === 0 && allFulfilled) {
+        markHasCompletedFirstLangTasks();
+    }
 }
 
 function createTaskElement({name, description, difficulty}: Task): HTMLDivElement {
