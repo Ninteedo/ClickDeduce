@@ -227,9 +227,9 @@ class LArith extends ClickDeduceLanguage {
   }
 
   private object BasicArithmeticTask extends Task {
-    override val name: String = "Basic arithmetic"
+    override val name: String = "Plus and Times to 42"
     override val description: String = "Create an expression that results in 42, involving both addition and " +
-      "multiplication, but no zeroes."
+      "multiplication, but no zeroes. You can right-click on a tree element to open the option to delete it."
     override val difficulty: Int = 2
 
     override def checkFulfilled(expr: Expr): Boolean = {
