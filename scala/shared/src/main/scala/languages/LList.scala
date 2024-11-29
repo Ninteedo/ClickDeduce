@@ -180,24 +180,36 @@ class LList extends LPoly {
   }
 
   // values
-  case class NilV(elTyp: Type) extends Value {
-    override def toText: ConvertableText = TextElement("Nil")
+  trait ListValue extends Value {
+    def elems: List[Value]
+  }
+
+  case class NilV(elTyp: Type) extends ListValue {
+    override def toText: ConvertableText = TextElement("[]")
 
     override val typ: Type = ListType(elTyp)
 
     override val needsBrackets: Boolean = false
 
     override val isError: Boolean = elTyp.isError
+
+    override val elems: List[Value] = List()
   }
 
   object NilV extends ValueCompanion {}
 
-  case class ConsV(head: Value, tail: Value) extends Value {
-    override def toText: ConvertableText = MultiElement(head.toTextBracketed, TextElement(" :: "), tail.toText)
+  case class ConsV(head: Value, tail: Value) extends ListValue {
+    //    override def toText: ConvertableText = MultiElement(head.toTextBracketed, TextElement(" :: "), tail.toText)
+    override def toText: ConvertableText = ListElement(elems.map(_.toText))
 
     override val typ: Type = ListType(head.typ)
 
     override val isError: Boolean = head.isError || tail.isError
+
+    override def elems: List[Value] = tail match {
+      case l: ListValue => head +: l.elems
+      case _            => List(head)
+    }
   }
 
   object ConsV extends ValueCompanion {}
