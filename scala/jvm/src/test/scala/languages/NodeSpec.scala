@@ -397,42 +397,6 @@ class NodeSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChecks 
     }
   }
 
-  "LiteralNode" should {
-    def testLiteralNodeStringConversion(literalStrings: List[Literal]): Unit = {
-      def checkMatch(literal: Literal): Unit = {
-        val outerVersion = VariableNode("Num", List(LiteralNode(literal)))
-        Node.read(outerVersion.toString) shouldBe Some(outerVersion)
-      }
-
-      forAll(Table("literalString", literalStrings: _*)) { literal =>
-        checkMatch(literal)
-      }
-    }
-
-    "correctly convert to and from a string without escapes" in {
-      val literals = List("", "foo", "bar", "861", "-65", "1.56")
-
-      testLiteralNodeStringConversion(literals.map(Literal.fromString))
-    }
-
-    "correctly convert to and from a string with escapes" in {
-      val literals = List(
-        "\\",
-        "\\\\",
-        "\"",
-        "\\\"",
-        "\\\\\"",
-        "\"test\"",
-        "\\\"test\\\"",
-        "\"Hello\"!, \"World\"!",
-        "1\\\"'.--';\\\"\\\\\\4 \\t \\\\",
-        "1\\\"'.--';\\\"\\\\\\4 \\t \\\\"
-      )
-
-      testLiteralNodeStringConversion(literals.map(Literal.fromString))
-    }
-  }
-
   "Tree paths" should {
     "return the correct child" in {
       val node =

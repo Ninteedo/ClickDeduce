@@ -398,9 +398,8 @@ trait AbstractLanguage {
       */
     def valueTextShowType: Boolean = true
 
-    /**
-     * Whether to show variables with this value when displaying a list of bound variables.
-     */
+    /** Whether to show variables with this value when displaying a list of bound variables.
+      */
     val showInValueLookupList: Boolean = true
   }
 
@@ -610,34 +609,6 @@ trait AbstractLanguage {
   /** Companion object for [[Literal]].
     */
   object Literal {
-
-    /** Create an appropriate literal from a string.
-      *
-      * The string is checked for the following types, in order of priority:
-      *   - [[LiteralBool]]: `true` or `false` (case-insensitive)
-      *   - [[LiteralString]]: Enclosed in double quotes
-      *   - [[LiteralInt]]: A sequence of digits, optionally preceded by a minus sign
-      *   - [[LiteralIdentifierLookup]]: A sequence of letters, digits, and underscores, starting with a letter or
-      *     underscore (non-empty)
-      *   - [[LiteralAny]]: Anything else
-      *
-      * @param s
-      *   The string to convert.
-      * @return
-      *   The literal.
-      */
-    def fromString(s: String): Literal = if (List("true", "false").contains(s.toLowerCase)) {
-      LiteralBool(s.toBoolean)
-    } else if (s.startsWith("\"") && s.endsWith("\"") && s.length > 1) {
-      LiteralString(s.substring(1, s.length - 1))
-    } else if ("-?\\d+".r.matches(s)) {
-      LiteralInt.fromString(s)
-    } else if (LiteralIdentifierLookup.identifierRegex.matches(s)) {
-      LiteralIdentifierLookup(s)
-    } else {
-      LiteralAny(s)
-    }
-
     def fromStringOfType(s: String, l: Class[_ <: Literal]): Literal = l match {
       case c if c == classOf[LiteralBool]             => LiteralBool(s.toBoolean)
       case c if c == classOf[LiteralString]           => LiteralString(s)
@@ -736,27 +707,34 @@ trait AbstractLanguage {
   }
 
   trait LiteralIdentifier extends Literal {
-    def validIdentifier: Boolean
+
+    /** Whether the identifier is valid.
+      */
+    def validIdentifier: Boolean = identifierRegex.matches(getIdentifier)
 
     protected val identifierRegex: Regex = "[A-Za-z_$][\\w_$]*".r
 
     def getIdentifier: String = getValue
+
+    def identEquals(other: Any): Boolean = other match {
+      case LiteralIdentifierBind(s)   => s == getIdentifier
+      case LiteralIdentifierLookup(s) => s == getIdentifier
+      case _                          => false
+    }
   }
 
-  case class LiteralIdentifierBind(value: String) extends Literal, LiteralIdentifier {
+  /** A literal identifier used for binding a variable.
+    * @param value
+    *   The identifier value.
+    */
+  case class LiteralIdentifierBind(value: String) extends LiteralIdentifier {
     override lazy val toString: String = s"LiteralIdentifierBind(${UtilityFunctions.quote(value)})"
 
     override def toText: ConvertableText = TextElement(getValue)
 
-    override def validIdentifier: Boolean = identifierRegex.matches(value)
-
+    /** Convert this to a [[LiteralIdentifierLookup]] with the same identifier.
+      */
     def toLookup: LiteralIdentifierLookup = LiteralIdentifierLookup(value)
-
-    def identEquals(other: Any): Boolean = other match {
-      case LiteralIdentifierBind(s)   => s == value
-      case LiteralIdentifierLookup(s) => s == value
-      case _                          => false
-    }
   }
 
   object LiteralIdentifierBind {
@@ -767,11 +745,19 @@ trait AbstractLanguage {
     * @param value
     *   The identifier value.
     */
-  case class LiteralIdentifierLookup(value: String) extends Literal, LiteralIdentifier {
+  case class LiteralIdentifierLookup(value: String) extends LiteralIdentifier {
     override lazy val toString: String = s"LiteralIdentifierLookup(${UtilityFunctions.quote(value)})"
 
     override def toText: ConvertableText = ItalicsElement(TextElement(getValue))
 
+    /** Create an input for this literal identifier, with a dropdown showing bound variables in the environment.
+      * @param treePath
+      *   The path to this literal in the tree.
+      * @param env
+      *   The environment.
+      * @return
+      *   The HTML input.
+      */
     override def toHtmlInput(treePath: String, env: ValueEnv | TypeEnv): TypedTag[String] = {
       div(
         cls := "literal-identifier-container",
@@ -781,7 +767,10 @@ trait AbstractLanguage {
           ul(
             cls := "identifier-suggestions",
             env.toMap
-              .filter((k, v) => !v.isInstanceOf[Value] || v.asInstanceOf[Value].showInValueLookupList)
+              .filter({
+                case (_, v: Value) => v.showInValueLookupList
+                case _             => true
+              })
               .map((k, v) => li(data("value") := k, data("filter") := k, span(k, ": ", v.toHtml)))
               .toSeq
           )
@@ -789,15 +778,9 @@ trait AbstractLanguage {
       )
     }
 
-    override def validIdentifier: Boolean = identifierRegex.matches(value)
-
+    /** Convert this to a [[LiteralIdentifierBind]] with the same identifier.
+      */
     def toBind: LiteralIdentifierBind = LiteralIdentifierBind(value)
-
-    def identEquals(other: Any): Boolean = other match {
-      case LiteralIdentifierBind(s)   => s == value
-      case LiteralIdentifierLookup(s) => s == value
-      case _                          => false
-    }
   }
 
   object LiteralIdentifierLookup {
@@ -902,7 +885,7 @@ trait AbstractLanguage {
         val res = builder.apply(args)
         if (res.isEmpty) throw TermBuilderFailed(name, args)
         res.get
-      case None          => throw UnknownTermBuilder(name)
+      case None => throw UnknownTermBuilder(name)
     }
 
     /** Get the names of all builders.
@@ -1032,13 +1015,10 @@ trait AbstractLanguage {
 
   private case class UnknownTermBuilder(name: String) extends ClickDeduceException(s"Unknown term builder: $name")
 
-  private case class TermBuilderFailed(name: String, args: BuilderArgs) extends ClickDeduceException(s"Failed to build $name with args $args")
+  private case class TermBuilderFailed(name: String, args: BuilderArgs)
+      extends ClickDeduceException(s"Failed to build $name with args $args")
 
   registerTerms("AbstractLanguage", List(UnknownType, TypeContainer))
 
   // </editor-fold>
-
-  /** The default literal, contains the empty string.
-    */
-  val defaultLiteral: Literal = Literal.fromString("")
 }

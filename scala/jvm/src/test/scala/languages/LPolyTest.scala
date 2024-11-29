@@ -134,8 +134,8 @@ class LPolyTest extends TestTemplate[Expr, Value, Type] {
       testExpressionTableHeading,
       (
         ApplyType(Poly("T", Var("T")), IntType()),
-        VariableOnlyEvalError(Literal.fromString("T")),
-        VariableOnlyTypeError(Literal.fromString("T"))
+        VariableOnlyEvalError(LiteralIdentifierLookup("T")),
+        VariableOnlyTypeError(LiteralIdentifierLookup("T"))
       )
     )
   )
