@@ -47,17 +47,17 @@ class LNat extends LData {
     }
   }
 
-  case class CaseSuc(e: Expr, zeroCase: Expr, x: Literal, sucCase: Expr) extends Expr {
+  case class CaseSuc(e: Expr, zeroCase: Expr, x: LiteralIdentifierBind, sucCase: Expr) extends Expr {
     override protected def evalInner(env: ValueEnv): Value = e.eval(env) match {
       case NatV(0) => zeroCase.eval(env)
-      case NatV(n) => sucCase.eval(env + (x.toString -> NatV(n - 1)))
+      case NatV(n) => sucCase.eval(env + (x -> NatV(n - 1)))
       case v       => CaseSucNonNatError(v)
     }
 
     override protected def typeCheckInner(tEnv: TypeEnv): Type = e.typeCheck(tEnv) match {
       case NatType() =>
         val t1 = zeroCase.typeCheck(tEnv)
-        val t2 = sucCase.typeCheck(tEnv + (x.toString -> NatType()))
+        val t2 = sucCase.typeCheck(tEnv + (x -> NatType()))
         if (t1 == t2) t1
         else TypeMismatchType(t1, t2)
       case t => CaseSucNonNatTypeError(t)
@@ -72,15 +72,15 @@ class LNat extends LData {
           case _ => HiddenValue(UnknownType())
         }
       }
-      List((e, env), (zeroCase, env), (sucCase, env + (x.toString -> xVal)))
+      List((e, env), (zeroCase, env), (sucCase, env + (x -> xVal)))
     }
 
     override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] =
-      List((e, tEnv), (zeroCase, tEnv), (sucCase, tEnv + (x.toString -> NatType())))
+      List((e, tEnv), (zeroCase, tEnv), (sucCase, tEnv + (x -> NatType())))
 
     override def getChildrenEval(env: ValueEnv): List[(Term, ValueEnv)] = e.eval(env) match {
       case NatV(0) => List((e, env), (zeroCase, env))
-      case NatV(n) => List((e, env), (sucCase, env + (x.toString -> NatV(n - 1))))
+      case NatV(n) => List((e, env), (sucCase, env + (x -> NatV(n - 1))))
       case other   => List((e, env))
     }
 
@@ -100,8 +100,8 @@ class LNat extends LData {
 
   object CaseSuc extends ExprCompanion {
     override def create(args: BuilderArgs): Option[Expr] = args match {
-      case List(e: Expr, zeroCase: Expr, x: Literal, sucCase: Expr) => Some(CaseSuc(e, zeroCase, x, sucCase))
-      case Nil => Some(CaseSuc(defaultExpr, defaultExpr, defaultLiteral, defaultExpr))
+      case List(e: Expr, zeroCase: Expr, x: LiteralIdentifierBind, sucCase: Expr) => Some(CaseSuc(e, zeroCase, x, sucCase))
+      case Nil => Some(CaseSuc(defaultExpr, defaultExpr, LiteralIdentifierBind.default, defaultExpr))
       case _ => None
     }
   }
