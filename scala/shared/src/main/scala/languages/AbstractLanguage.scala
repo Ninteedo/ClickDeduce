@@ -66,6 +66,8 @@ trait AbstractLanguage {
     def mapToEnv[U](f: ((Variable, T)) => (Variable, U)): Env[U] = new Env(env.map(f))
 
     def keys: Iterable[Variable] = env.keys
+
+    def toMap: Map[Variable, T] = env
   }
 
   /** Companion object for [[Env]].
@@ -395,6 +397,11 @@ trait AbstractLanguage {
       * Default is true, should be overridden for values that should not show their type.
       */
     def valueTextShowType: Boolean = true
+
+    /**
+     * Whether to show variables with this value when displaying a list of bound variables.
+     */
+    val showInValueLookupList: Boolean = true
   }
 
   /** A placeholder for text in a value.
@@ -493,6 +500,8 @@ trait AbstractLanguage {
     override def valueTextShowType: Boolean = false
 
     override def toText: ConvertableText = typ.toText
+
+    override val showInValueLookupList: Boolean = false
   }
 
   // </editor-fold>
@@ -771,13 +780,9 @@ trait AbstractLanguage {
           cls := "dropdown",
           ul(
             cls := "identifier-suggestions",
-            env.keys
-              .map(k => {
-                li(data("value") := k, data("filter") := k, env.get(k) match {
-                  case Some(t: Term) => span(k, ": ", t.toHtml)
-                  case _             => k
-                })
-              })
+            env.toMap
+              .filter((k, v) => !v.isInstanceOf[Value] || v.asInstanceOf[Value].showInValueLookupList)
+              .map((k, v) => li(data("value") := k, data("filter") := k, span(k, ": ", v.toHtml)))
               .toSeq
           )
         )
