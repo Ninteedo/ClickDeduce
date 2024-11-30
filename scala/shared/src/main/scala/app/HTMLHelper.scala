@@ -46,4 +46,7 @@ object HTMLHelper {
       case l: List[String] => l
     })).mkString(" ")
   }
+  
+  def tooltip(main: TypedTag[String], tooltip: TypedTag[String]): TypedTag[String] =
+    span(cls := ClassDict.TOOLTIP, main, span(cls := ClassDict.TOOLTIP_TEXT, tooltip))
 }

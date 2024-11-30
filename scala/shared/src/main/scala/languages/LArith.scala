@@ -31,8 +31,7 @@ class LArith extends ClickDeduceLanguage {
 
     override def create(args: BuilderArgs): Option[Expr] = args match {
       case List(l: LiteralInt) => Some(Num(l))
-      case defaultArgs      => Some(Num(LiteralInt(0)))
-      case _                => None
+      case _                   => Some(Num(LiteralInt(0)))
     }
 
     override val aliases: List[String] = List("Number", "Integer")
@@ -67,8 +66,7 @@ class LArith extends ClickDeduceLanguage {
   object Plus extends ExprCompanion {
     override def create(args: BuilderArgs): Option[Expr] = args match {
       case List(e1: Expr, e2: Expr) => Some(Plus(e1, e2))
-      case defaultArgs              => Some(Plus(defaultExpr, defaultExpr))
-      case _                        => None
+      case _                        => Some(Plus(defaultExpr, defaultExpr))
     }
 
     override val aliases: List[String] = List("Addition", "+")
@@ -103,8 +101,7 @@ class LArith extends ClickDeduceLanguage {
   object Times extends ExprCompanion {
     override def create(args: BuilderArgs): Option[Expr] = args match {
       case List(e1: Expr, e2: Expr) => Some(Times(e1, e2))
-      case defaultArgs              => Some(Times(defaultExpr, defaultExpr))
-      case _                        => None
+      case _                        => Some(Times(defaultExpr, defaultExpr))
     }
 
     override val aliases: List[String] = List("Multiplication", "Multiply", "*")
@@ -153,8 +150,7 @@ class LArith extends ClickDeduceLanguage {
     override def toText: ConvertableText = MathElement(x.toString)
   }
 
-  object NumV extends ValueCompanion {
-  }
+  object NumV extends ValueCompanion {}
 
   /** An error that occurs due to an incorrect argument type.
     *
@@ -178,10 +174,7 @@ class LArith extends ClickDeduceLanguage {
   }
 
   object IntType extends TypeCompanion {
-    override def create(args: BuilderArgs): Option[Type] = args match {
-      case defaultArgs => Some(IntType())
-      case _           => None
-    }
+    override def create(args: BuilderArgs): Option[Type] = Some(IntType())
 
     override val aliases: List[Variable] = List("Number", "Integer")
   }
@@ -203,22 +196,20 @@ class LArith extends ClickDeduceLanguage {
       "or by typing the expression's name into the text box and pressing Enter."
     override val difficulty: Int = 1
 
-    override def checkFulfilled(expr: Expr): Boolean = expr match {
-      case BlankExprDropDown() => false
-      case _                   => true
-    }
+    override def checkFulfilled(expr: Expr): Boolean = expr != BlankExprDropDown()
   }
 
   private object EnterANumberTask extends Task {
-    override val name: String = "Enter a number"
-    override val description: String = "Select a Num expression and enter a number into its text box."
+    override val name: String = "Enter a positive integer"
+    override val description: String = "Select a Num expression and enter a positive integer into its text box."
     override val difficulty: Int = 1
 
     override def checkFulfilled(expr: Expr): Boolean = {
       def checkNum(expr: Expr): Boolean = checkCondition(
-        expr, cond = {
-          case Num(LiteralInt(_)) => true
-          case _ => false
+        expr,
+        cond = {
+          case Num(LiteralInt(n)) => n > 0
+          case _                  => false
         }
       )
 
@@ -234,9 +225,10 @@ class LArith extends ClickDeduceLanguage {
 
     override def checkFulfilled(expr: Expr): Boolean = {
       def checkNoZeroes(expr: Expr): Boolean = !checkCondition(
-        expr, cond = {
+        expr,
+        cond = {
           case Num(LiteralInt(0)) => true
-          case _ => false
+          case _                  => false
         }
       )
 

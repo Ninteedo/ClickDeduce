@@ -223,17 +223,13 @@ trait AbstractLanguage {
     * [[addExprBuilder]].
     */
   abstract class Expr extends Term {
-    def getExprFields: List[Expr] = {
-      this match {
-        case e0: Product =>
-          val values = e0.productIterator.toList
-          values.collect({ case e: Expr => e })
-        case _ => Nil
-      }
+    def getExprFields: List[Expr] = this match {
+      case e0: Product => e0.productIterator.toList.collect({ case e: Expr => e })
+      case _           => Nil
     }
 
     private def defaultChildren[EnvContents](env: Env[EnvContents]): List[(Term, Env[EnvContents])] =
-      getExprFields.zip(LazyList.continually(env))
+      getExprFields.map(e => (e, env))
 
     /** Children of this expression in [[DisplayMode.Edit]] mode.
       * @param env
@@ -269,12 +265,10 @@ trait AbstractLanguage {
       * @return
       *   The `Value` resulting from evaluating this.
       */
-    final def eval(env: ValueEnv): Value = {
-      try {
-        evalInner(env)
-      } catch {
-        case e: StackOverflowError => stackOverflowEvalError
-      }
+    final def eval(env: ValueEnv): Value = try {
+      evalInner(env)
+    } catch {
+      case e: StackOverflowError => stackOverflowEvalError
     }
 
     /** Function to perform evaluation on this `Expr` in the given environment.
@@ -297,12 +291,10 @@ trait AbstractLanguage {
       * @return
       *   The `Type` of this expression after type-checking.
       */
-    final def typeCheck(tEnv: TypeEnv): Type = {
-      try {
-        typeCheckInner(tEnv)
-      } catch {
-        case e: StackOverflowError => stackOverflowTypeError
-      }
+    final def typeCheck(tEnv: TypeEnv): Type = try {
+      typeCheckInner(tEnv)
+    } catch {
+      case e: StackOverflowError => stackOverflowTypeError
     }
 
     /** Function to perform type checking on this `Expr` in the given type environment.
@@ -373,8 +365,7 @@ trait AbstractLanguage {
     * Also has a corresponding [[Type]].
     */
   abstract class Value extends Term {
-    override lazy val toHtml: TypedTag[String] =
-      span(cls := ClassDict.TOOLTIP, valueText, div(cls := ClassDict.TOOLTIP_TEXT, tooltipText))
+    override lazy val toHtml: TypedTag[String] = HTMLHelper.tooltip(valueText, span(tooltipText))
 
     lazy val tooltipText: String = toString + ": " + typ.toString
 
@@ -435,8 +426,7 @@ trait AbstractLanguage {
   /** The type of a value. Can also appear in expressions.
     */
   abstract class Type extends Term {
-    override lazy val toHtml: TypedTag[String] =
-      span(cls := ClassDict.TOOLTIP, valueText, div(cls := ClassDict.TOOLTIP_TEXT, tooltipText))
+    override lazy val toHtml: TypedTag[String] = HTMLHelper.tooltip(valueText, span(tooltipText))
 
     lazy val tooltipText: String = toString
 
@@ -451,7 +441,7 @@ trait AbstractLanguage {
       case _           => Nil
     }
 
-    private def defaultChildren(env: TypeEnv): List[(Term, TypeEnv)] = getTypeFields.zip(LazyList.continually(env))
+    private def defaultChildren(env: TypeEnv): List[(Term, TypeEnv)] = getTypeFields.map(t => (t, env))
 
     override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] = defaultChildren(tEnv)
   }
@@ -881,11 +871,8 @@ trait AbstractLanguage {
       *   If the builder is not found.
       */
     def build(name: String, args: BuilderArgs): T = getBuilder(name) match {
-      case Some(builder) =>
-        val res = builder.apply(args)
-        if (res.isEmpty) throw TermBuilderFailed(name, args)
-        res.get
-      case None => throw UnknownTermBuilder(name)
+      case Some(builder) => builder.apply(args).getOrElse(throw TermBuilderFailed(name, args))
+      case None          => throw UnknownTermBuilder(name)
     }
 
     /** Get the names of all builders.
