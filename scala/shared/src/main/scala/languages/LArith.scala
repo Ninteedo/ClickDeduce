@@ -1,6 +1,14 @@
 package languages
 
 import convertors.*
+import languages.env.*
+import languages.terms.*
+import languages.terms.builders.*
+import languages.terms.errors.*
+import languages.terms.exprs.Expr
+import languages.terms.literals.*
+import languages.terms.types.Type
+import languages.terms.values.Value
 
 import scala.annotation.targetName
 
@@ -15,26 +23,26 @@ class LArith extends ClickDeduceLanguage {
     *   The integer value of the number.
     */
   case class Num(x: LiteralInt) extends Expr {
+    override val needsBrackets: Boolean = false
+
     override def evalInner(env: ValueEnv): Value = NumV(x.value)
 
     override def typeCheckInner(tEnv: TypeEnv): Type = IntType()
 
     override def toText: ConvertableText = x.toText
-
-    override val needsBrackets: Boolean = false
   }
 
   object Num extends ExprCompanion {
+    override val aliases: List[String] = List("Number", "Integer")
+
     def apply(x: BigInt): Num = new Num(LiteralInt(x))
 
     def apply(x: Int): Num = new Num(LiteralInt(BigInt(x)))
 
     override def create(args: BuilderArgs): Option[Expr] = args match {
       case List(l: LiteralInt) => Some(Num(l))
-      case _                   => Some(Num(LiteralInt(0)))
+      case _ => Some(Num(LiteralInt(0)))
     }
-
-    override val aliases: List[String] = List("Number", "Integer")
   }
 
   /** A plus expression. Both subexpressions must evaluate to `NumV`.
@@ -64,12 +72,12 @@ class LArith extends ClickDeduceLanguage {
   }
 
   object Plus extends ExprCompanion {
+    override val aliases: List[String] = List("Addition", "+")
+
     override def create(args: BuilderArgs): Option[Expr] = args match {
       case List(e1: Expr, e2: Expr) => Some(Plus(e1, e2))
-      case _                        => Some(Plus(defaultExpr, defaultExpr))
+      case _ => Some(Plus(defaultExpr, defaultExpr))
     }
-
-    override val aliases: List[String] = List("Addition", "+")
   }
 
   /** A times expression. Both subexpressions must evaluate to `NumV`.
@@ -99,26 +107,15 @@ class LArith extends ClickDeduceLanguage {
   }
 
   object Times extends ExprCompanion {
+    override val aliases: List[String] = List("Multiplication", "Multiply", "*")
+
     override def create(args: BuilderArgs): Option[Expr] = args match {
       case List(e1: Expr, e2: Expr) => Some(Times(e1, e2))
-      case _                        => Some(Times(defaultExpr, defaultExpr))
+      case _ => Some(Times(defaultExpr, defaultExpr))
     }
-
-    override val aliases: List[String] = List("Multiplication", "Multiply", "*")
   }
 
   // values
-
-  trait OrdinalValue extends Value {
-    def compare(that: OrdinalValue): Int
-  }
-
-  trait NumericValue extends OrdinalValue {
-    @targetName("plus")
-    def +(that: NumericValue): NumericValue
-    @targetName("times")
-    def *(that: NumericValue): NumericValue
-  }
 
   /** A numeric value. Can be any integer.
     *
@@ -150,23 +147,26 @@ class LArith extends ClickDeduceLanguage {
     override def toText: ConvertableText = MathElement(x.toString)
   }
 
-  object NumV extends ValueCompanion {}
-
-  /** An error that occurs due to an incorrect argument type.
-    *
-    * @param message
-    *   The error message.
-    */
-  case class UnexpectedArgValue(override val message: String) extends EvalError {
-    override val typ: Type = UnexpectedArgType(message)
+  trait OrdinalValue extends Value {
+    def compare(that: OrdinalValue): Int
   }
 
-  // types
+  trait NumericValue extends OrdinalValue {
+    @targetName("plus")
+    def +(that: NumericValue): NumericValue
+
+    @targetName("times")
+    def *(that: NumericValue): NumericValue
+  }
 
   trait OrdinalType extends Type
 
+  object NumV extends ValueCompanion {}
+
+  // types
+
   /** Type for integers.
-    */
+   */
   case class IntType() extends OrdinalType {
     override val needsBrackets: Boolean = false
 
@@ -174,16 +174,25 @@ class LArith extends ClickDeduceLanguage {
   }
 
   object IntType extends TypeCompanion {
-    override def create(args: BuilderArgs): Option[Type] = Some(IntType())
-
     override val aliases: List[Variable] = List("Number", "Integer")
+
+    override def create(args: BuilderArgs): Option[Type] = Some(IntType())
   }
 
   /** An error that occurs due to an incorrect argument type.
-    *
-    * @param message
-    *   The error message.
-    */
+   *
+   * @param message
+   * The error message.
+   */
+  case class UnexpectedArgValue(override val message: String) extends EvalError {
+    override val typ: Type = UnexpectedArgType(message)
+  }
+
+  /** An error that occurs due to an incorrect argument type.
+   *
+   * @param message
+   * The error message.
+   */
   case class UnexpectedArgType(override val message: String) extends TypeError
 
   // tasks

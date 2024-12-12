@@ -1,6 +1,14 @@
 package languages
 
 import convertors.*
+import languages.env.*
+import languages.terms.*
+import languages.terms.builders.*
+import languages.terms.errors.*
+import languages.terms.exprs.Expr
+import languages.terms.literals.*
+import languages.terms.types.Type
+import languages.terms.values.Value
 import scalatags.Text
 import scalatags.Text.all.*
 
@@ -14,7 +22,7 @@ class LRec extends LLam {
       f,
       guardValidIdentifierEval(
         v,
-        RecV(f, v, inType.typeCheck(envToTypeEnv(env)), outType.typeCheck(envToTypeEnv(env)), e, env)
+        RecV(f, v, inType.typeCheck(TypeEnv.fromValueEnv(env)), outType.typeCheck(TypeEnv.fromValueEnv(env)), e, env)
       )
     )
 

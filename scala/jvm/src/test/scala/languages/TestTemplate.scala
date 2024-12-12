@@ -1,5 +1,13 @@
 package languages
 
+import languages.env.*
+import languages.terms.*
+import languages.terms.builders.*
+import languages.terms.errors.*
+import languages.terms.exprs.Expr
+import languages.terms.literals.*
+import languages.terms.types.Type
+import languages.terms.values.Value
 import org.scalatest.GivenWhenThen
 import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor1, TableFor3}
@@ -7,7 +15,7 @@ import org.scalatest.propspec.AnyPropSpec
 
 import scala.util.Random
 
-trait TestTemplate[E <: ClickDeduceLanguage#Expr, V <: ClickDeduceLanguage#Value, T <: ClickDeduceLanguage#Type]
+trait TestTemplate
     extends AnyPropSpec
     with TableDrivenPropertyChecks
     with GivenWhenThen {
@@ -20,7 +28,7 @@ trait TestTemplate[E <: ClickDeduceLanguage#Expr, V <: ClickDeduceLanguage#Value
     * @param expressionName
     *   the name of the expression to display in the test name
     */
-  def testExpression(expressionName: String, table: TableFor3[E, V, T]): Unit = {
+  def testExpression(expressionName: String, table: TableFor3[Expr, Value, Type]): Unit = {
     property(s"$expressionName type-checks correctly") {
       forAll(table)((expr, _, typ) => {
         expr.typeCheck() shouldBe typ
@@ -38,15 +46,15 @@ trait TestTemplate[E <: ClickDeduceLanguage#Expr, V <: ClickDeduceLanguage#Value
 
   /** Create a table of expressions, their correct evaluation results, and their correct types.
     */
-  def createExprTable(expressions: Iterable[E], results: Iterable[V], types: Iterable[T]): TableFor3[E, V, T] = {
+  def createExprTable(expressions: Iterable[Expr], results: Iterable[Value], types: Iterable[Type]): TableFor3[Expr, Value, Type] = {
     val zipped = List(expressions, results, types).transpose.map {
-      case List(a: E, b: V, c: T) => (a, b, c)
+      case List(a: Expr, b: Value, c: Type) => (a, b, c)
       case v                      => throw new Exception(s"Unexpected value in createExprTable: $v")
     }
     Table(("expressions", "results", "types"), zipped: _*)
   }
 
-  def createExprTable(tuples: (E, V, T)*): TableFor3[E, V, T] = {
+  def createExprTable(tuples: (Expr, Value, Type)*): TableFor3[Expr, Value, Type] = {
     Table(("expressions", "results", "types"), tuples.toSeq: _*)
   }
 

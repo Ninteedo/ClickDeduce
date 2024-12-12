@@ -2,6 +2,11 @@ package languages
 
 import convertors.{DisplayMode, HTMLConvertor}
 import languages.LRec.*
+import languages.env.*
+import languages.terms.*
+import languages.terms.builders.*
+import languages.terms.errors.*
+import languages.terms.literals.*
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor1}
 import org.scalatest.wordspec.AnyWordSpec

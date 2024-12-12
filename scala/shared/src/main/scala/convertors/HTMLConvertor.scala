@@ -1,5 +1,9 @@
 package convertors
 
+import languages.env.{TypeEnv, ValueEnv, Variable}
+import languages.terms.Term
+import languages.terms.types.Type
+import languages.terms.values.Value
 import languages.{AbstractNodeLanguage, ClickDeduceLanguage}
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
@@ -59,19 +63,19 @@ class HTMLConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConve
 
   private def envDiv(node: OuterNode, envIndex: Int, typeMode: Boolean): HTML = {
     def parseEnv(
-      env: Iterable[(lang.Variable, lang.Term)],
+      env: Iterable[(Variable, Term)],
       valueTooltips: Boolean
-    ): Iterable[(lang.Variable, TypedTag[String])] =
+    ): Iterable[(Variable, TypedTag[String])] =
       env.map((k, v) =>
         v match {
-          case value: lang.Value => k -> (if valueTooltips then value.toHtml else value.valueText)
-          case typ: lang.Type    => k -> (if valueTooltips then typ.toHtml else typ.valueText)
+          case value: Value => k -> (if valueTooltips then value.toHtml else value.valueText)
+          case typ: Type    => k -> (if valueTooltips then typ.toHtml else typ.valueText)
         }
       )
 
     val envMode = if (typeMode) DisplayMode.TypeCheck else mode
 
-    def getNodeEnv(node: OuterNode): lang.ValueEnv | lang.TypeEnv = node match {
+    def getNodeEnv(node: OuterNode): ValueEnv | TypeEnv = node match {
       case n: ExprNode => n.getEnv(envMode)
       case n: TypeNode => n.getEnv(envMode)
     }
@@ -79,7 +83,7 @@ class HTMLConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConve
     val parentNode = node.getParent
     val parentEnv = {
       val res = parentNode.map(getNodeEnv)
-      if (typeMode && parentNode.exists(_.isInstanceOf[lang.ExprNode])) res.map(lang.typeVariableEnv) else res
+      if (typeMode && parentNode.exists(_.isInstanceOf[lang.ExprNode])) res.map(TypeEnv.typeVariableEnv) else res
     }
     val filteredEnv = getNodeEnv(node)
       .map((k, v) => {
@@ -101,7 +105,7 @@ class HTMLConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConve
     else span()
   }
 
-  private def formatEnv(env: Iterable[(lang.Variable, TypedTag[String])]): TypedTag[String] = {
+  private def formatEnv(env: Iterable[(Variable, TypedTag[String])]): TypedTag[String] = {
     val variablesHtml: Option[HTML] =
       if (env.isEmpty) None
       else Some(div(raw(env.map((k, v) => s"$k &rarr; $v").mkString("[", ", ", "]"))))
@@ -119,7 +123,7 @@ class HTMLConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConve
       val typeCheckResult = node.getType
       if (typeCheckResult.isError) List(typeCheckTurnstileSpan, typeCheckResultDiv(node))
       else {
-        val evalResult: lang.Value = node.getEditValueResult
+        val evalResult: Value = node.getEditValueResult
         if (!evalResult.isError && !evalResult.isPlaceholder) List(evalArrowSpan, editEvalResultDiv(node))
         else List(typeCheckTurnstileSpan, typeCheckResultDiv(node))
       }

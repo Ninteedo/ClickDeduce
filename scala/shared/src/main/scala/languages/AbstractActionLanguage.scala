@@ -1,6 +1,7 @@
 package languages
 
 import app.ClickDeduceException
+import languages.terms.literals.Literal
 
 trait AbstractActionLanguage extends AbstractNodeLanguage {
   private def actionArgCount(actionName: String): Int = actionName match {

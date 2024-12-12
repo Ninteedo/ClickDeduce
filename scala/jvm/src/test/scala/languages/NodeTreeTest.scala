@@ -1,6 +1,8 @@
 package languages
 
 import languages.LArith.*
+import languages.terms.*
+import languages.terms.literals.*
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers.*
 
@@ -251,14 +253,14 @@ class NodeTreeTest extends AnyFunSuite {
     val tree = LLam.VariableNode(
       "Lambda",
       List(
-        LLam.LiteralNode(LLam.LiteralIdentifierLookup("x")),
+        LLam.LiteralNode(LiteralIdentifierLookup("x")),
         LLam.SubTypeNode(
           LLam.TypeNode(
             "Func",
             List(LLam.SubTypeNode(LLam.TypeNode("IntType", Nil)), LLam.SubTypeNode(LLam.TypeNode("BoolType", Nil)))
           )
         ),
-        LLam.SubExprNode(LLam.VariableNode("Var", List(LLam.LiteralNode(LLam.LiteralIdentifierLookup("x")))))
+        LLam.SubExprNode(LLam.VariableNode("Var", List(LLam.LiteralNode(LiteralIdentifierLookup("x")))))
       )
     )
 

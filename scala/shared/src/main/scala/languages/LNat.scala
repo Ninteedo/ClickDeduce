@@ -1,5 +1,14 @@
 package languages
+
 import convertors.*
+import languages.env.*
+import languages.terms.*
+import languages.terms.builders.*
+import languages.terms.errors.*
+import languages.terms.exprs.Expr
+import languages.terms.literals.*
+import languages.terms.types.{Type, UnknownType}
+import languages.terms.values.Value
 
 class LNat extends LData {
   registerTerms("LNat", List(Zero, Suc, CaseSuc, NatType, NatV))
@@ -67,7 +76,7 @@ class LNat extends LData {
       val xVal: Value = e.eval(env) match {
         case NatV(0) => HiddenValue(NatType())
         case NatV(n) => NatV(n - 1)
-        case _ => e.typeCheck(envToTypeEnv(env)) match {
+        case _ => e.typeCheck(TypeEnv.fromValueEnv(env)) match {
           case NatType() => HiddenValue(NatType())
           case _ => HiddenValue(UnknownType())
         }

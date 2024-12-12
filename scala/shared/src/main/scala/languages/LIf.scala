@@ -1,6 +1,14 @@
 package languages
 
 import convertors.*
+import languages.env.*
+import languages.terms.*
+import languages.terms.builders.*
+import languages.terms.errors.*
+import languages.terms.exprs.Expr
+import languages.terms.literals.*
+import languages.terms.types.Type
+import languages.terms.values.Value
 
 class LIf extends LArith {
   registerTerms("LIf", List(Bool, Equal, LessThan, IfThenElse, BoolType, BoolV))

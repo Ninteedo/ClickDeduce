@@ -2,13 +2,21 @@ package languages
 
 import convertors.{DisplayMode, HTMLConvertor}
 import languages.LArith.*
+import languages.env.*
+import languages.terms.*
+import languages.terms.builders.*
+import languages.terms.errors.*
+import languages.terms.exprs.Expr
+import languages.terms.literals.*
+import languages.terms.types.Type
+import languages.terms.values.Value
 import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.prop.TableFor3
 import org.scalatest.propspec.AnyPropSpec
 
 import scala.util.Random
 
-class LArithTest extends TestTemplate[Expr, Value, Type] {
+class LArithTest extends TestTemplate {
   def genRandInt(): BigInt = {
     Random.nextInt(200) - 100
   }

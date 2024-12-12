@@ -2,13 +2,19 @@ package languages
 
 import convertors.DisplayMode
 import languages.LLet.*
+import languages.env.*
+import languages.terms.*
+import languages.terms.builders.*
+import languages.terms.errors.*
+import languages.terms.literals.*
+import languages.terms.values.Value
 import org.scalatest.matchers.should.Matchers.{a, an, shouldBe, shouldEqual}
 import org.scalatest.prop.TableFor1
 import org.scalatest.propspec.AnyPropSpec
 
 import scala.util.Random
 
-class LLetTest extends TestTemplate[Expr, Value, Type] {
+class LLetTest extends TestTemplate {
   val assortedValues: TableFor1[Value] = Table("value", intValues.map(NumV.apply) ++ bools.map(BoolV.apply): _*)
 
   def randomElement[A](l: List[A]): A = l(Random.nextInt(l.length))
@@ -156,7 +162,7 @@ class LLetTest extends TestTemplate[Expr, Value, Type] {
 
   property("Invalid variable names result in an error") {
     val env: ValueEnv = Env("x" -> NumV(1), "y" -> NumV(2), "z" -> NumV(3))
-    val tEnv = envToTypeEnv(env)
+    val tEnv = TypeEnv.fromValueEnv(env)
     forAll(Table("name", invalidVariableNames: _*)) { name =>
       val expr1 = Var(name)
       expr1.eval(env + (name -> NumV(1))) shouldBe an[InvalidIdentifierEvalError]

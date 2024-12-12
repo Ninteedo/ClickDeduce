@@ -2,11 +2,18 @@ package languages
 
 import convertors.{DisplayMode, HTMLConvertor}
 import languages.LLam.*
+import languages.env.*
+import languages.terms.*
+import languages.terms.builders.*
+import languages.terms.errors.*
+import languages.terms.exprs.Expr
+import languages.terms.literals.*
+import languages.terms.types.Type
 import org.scalatest.matchers.should.Matchers.{an, shouldBe, shouldEqual}
 import org.scalatest.prop.TableFor1
 import org.scalatest.propspec.AnyPropSpec
 
-class LLamTest extends TestTemplate[Expr, Value, Type] {
+class LLamTest extends TestTemplate {
   val incrementFunction: Lambda = Lambda("x", IntType(), Plus(Var("x"), Num(1)))
   val twiceFunction: Lambda =
     Lambda("f", Func(IntType(), IntType()), Lambda("x", IntType(), Apply(Var("f"), Apply(Var("f"), Var("x")))))

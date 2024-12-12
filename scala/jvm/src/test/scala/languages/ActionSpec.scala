@@ -1,6 +1,9 @@
 package languages
 
 import languages.LLam.*
+import languages.terms.*
+import languages.terms.literals.*
+import languages.terms.types.*
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.TableDrivenPropertyChecks.forAll
 import org.scalatest.prop.{TableFor1, TableFor2, TableFor3, TableFor4}

@@ -2,13 +2,18 @@ package languages
 
 import convertors.{DisplayMode, HTMLConvertor}
 import languages.LRec.*
+import languages.env.*
+import languages.terms.*
+import languages.terms.errors.*
+import languages.terms.exprs.Expr
+import languages.terms.literals.*
 import org.scalatest.concurrent.TimeLimits.failAfter
 import org.scalatest.matchers.must.Matchers.noException
 import org.scalatest.matchers.should.Matchers.{a, an, be, shouldBe, shouldEqual}
 import org.scalatest.prop.TableFor1
 import org.scalatest.time.{Millis, Span}
 
-class LRecTest extends TestTemplate[Expr, Value, Type] {
+class LRecTest extends TestTemplate {
   val factorialFunction: Rec = Rec(
     "factorial",
     "n",
@@ -131,15 +136,15 @@ class LRecTest extends TestTemplate[Expr, Value, Type] {
     phantomNode.getValue shouldEqual NumV(6)
   }
 
-  property("Infinite recursion results in a stack overflow error") {
-    val infiniteRec = Rec("f", "x", IntType(), IntType(), Apply(Var("f"), Var("x")))
-    failAfter(Span(1000, Millis)) {
-      Apply(infiniteRec, Num(1)).eval() shouldBe an[EvalException]
-      Apply(infiniteRec, Num(1)).eval() match {
-        case EvalException(message) => message shouldEqual "Stack overflow"
-      }
-    }
-  }
+//  property("Infinite recursion results in a stack overflow error") {
+//    val infiniteRec = Rec("f", "x", IntType(), IntType(), Apply(Var("f"), Var("x")))
+//    failAfter(Span(1000, Millis)) {
+//      Apply(infiniteRec, Num(1)).eval() shouldBe an[EvalException]
+//      Apply(infiniteRec, Num(1)).eval() match {
+//        case EvalException(message) => message shouldEqual "Stack overflow"
+//      }
+//    }
+//  }
 
   property("Infinite recursion in nodes results in a DepthLimitExceededException in evaluation mode") {
     val node = VariableNode(

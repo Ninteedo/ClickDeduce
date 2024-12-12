@@ -1,6 +1,6 @@
 package convertors
 
-import languages.LIf.Literal
+import languages.terms.literals.Literal
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
@@ -127,7 +127,7 @@ case class ListElement(
   override def asHtml: TypedTag[String] = span(start.asHtml, intersperse(items.map(_.asHtml), delimiter.asHtml).toSeq, end.asHtml)
   override def asHtmlReadOnly: TypedTag[String] = span(start.asHtmlReadOnly, intersperse(items.map(_.asHtmlReadOnly), delimiter.asHtmlReadOnly).toSeq, end.asHtmlReadOnly)
   override def asLaTeX: String = items.map(_.asLaTeX).mkString(start.asLaTeX, delimiter.asLaTeX, end.asLaTeX)
-  
+
   private def intersperse[T](items: List[T], sep: T): List[T] = items match {
     case Nil => Nil
     case x :: Nil => List(x)

@@ -1,6 +1,14 @@
 package languages
 
 import convertors.*
+import languages.env.*
+import languages.terms.*
+import languages.terms.builders.*
+import languages.terms.errors.*
+import languages.terms.exprs.Expr
+import languages.terms.literals.*
+import languages.terms.types.*
+import languages.terms.values.Value
 
 class LData extends LRec {
   registerTerms(
@@ -247,7 +255,7 @@ class LData extends LRec {
         case LeftV(v, rTyp)  => (v, HiddenValue(rTyp))
         case RightV(lTyp, v) => (HiddenValue(lTyp), v)
         case _ =>
-          e.typeCheck(envToTypeEnv(env)) match {
+          e.typeCheck(TypeEnv.fromValueEnv(env)) match {
             case UnionType(l, r) => (HiddenValue(l), HiddenValue(r))
             case _               => (HiddenValue(UnknownType()), HiddenValue(UnknownType()))
           }
@@ -431,7 +439,7 @@ class LData extends LRec {
     override def checkFulfilled(expr: Expr): Boolean = !expr.typeCheck().isError && checkCondition(
       expr,
       (e, env) => {
-        val tEnv = envToTypeEnv(env)
+        val tEnv = TypeEnv.fromValueEnv(env)
         e match {
           case Pair(e1, e2) => e1.typeCheck(tEnv) != e2.typeCheck(tEnv)
           case _            => false
@@ -480,7 +488,7 @@ class LData extends LRec {
         (e, env) =>
           e match {
             case Lambda(v, t, e) =>
-              val tEnv = envToTypeEnv(env) + (v -> t)
+              val tEnv = TypeEnv.fromValueEnv(env) + (v -> t)
               t == UnionType(IntType(), Func(IntType(), IntType())) &&
               e.typeCheck(tEnv) == IntType() &&
               cases.forall((input, expected) => Apply(Lambda(v, t, e), input).eval(env) == expected)

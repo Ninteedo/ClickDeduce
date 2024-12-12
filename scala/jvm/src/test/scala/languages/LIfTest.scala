@@ -2,13 +2,19 @@ package languages
 
 import convertors.{DisplayMode, HTMLConvertor}
 import languages.LIf.*
+import languages.env.*
+import languages.terms.*
+import languages.terms.builders.*
+import languages.terms.errors.*
+import languages.terms.exprs.Expr
+import languages.terms.literals.*
 import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.prop.{TableFor1, TableFor2}
 import org.scalatest.propspec.AnyPropSpec
 
 import scala.util.Random
 
-class LIfTest extends TestTemplate[Expr, Value, Type] {
+class LIfTest extends TestTemplate {
   def genRandBool(): Boolean = Random.nextBoolean()
 
   def genRandInt(): BigInt = Random.nextInt(200) - 100

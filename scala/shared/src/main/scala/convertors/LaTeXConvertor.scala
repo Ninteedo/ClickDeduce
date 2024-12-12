@@ -1,5 +1,6 @@
 package convertors
 
+import languages.env.{TypeEnv, ValueEnv}
 import languages.{AbstractNodeLanguage, ClickDeduceLanguage}
 
 class LaTeXConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConvertor(lang, mode) {
@@ -51,7 +52,7 @@ class LaTeXConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConv
   private def fullExprBottomDiv(node: ExprNode): LaTeX =
     s"${envDiv(node.getEnv(mode))} ${exprDiv(node)} ${resultDiv(node)}".strip()
 
-  private def envDiv(env: lang.ValueEnv | lang.TypeEnv): LaTeX = {
+  private def envDiv(env: ValueEnv | TypeEnv): LaTeX = {
     val variables: Option[LaTeX] =
       if (env.isEmpty) None
       else

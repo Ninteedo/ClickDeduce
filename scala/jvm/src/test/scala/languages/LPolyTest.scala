@@ -1,9 +1,16 @@
 package languages
 
 import languages.LPoly.*
+import languages.env.*
+import languages.terms.*
+import languages.terms.builders.*
+import languages.terms.errors.*
+import languages.terms.literals.*
+import languages.terms.types.*
+import languages.terms.values.*
 import org.scalatest.matchers.should.Matchers.*
 
-class LPolyTest extends TestTemplate[Expr, Value, Type] {
+class LPolyTest extends TestTemplate {
   property("Example identity function expressions") {
     val literalT = LiteralIdentifierBind("T")
     val identityFunction = Poly(literalT, Lambda("x", TypeVar(literalT), Var("x")))

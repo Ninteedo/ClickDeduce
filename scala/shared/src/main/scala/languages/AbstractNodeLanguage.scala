@@ -2,6 +2,14 @@ package languages
 
 import app.{ClickDeduceException, UtilityFunctions}
 import convertors.*
+import languages.env.*
+import languages.terms.*
+import languages.terms.builders.*
+import languages.terms.errors.*
+import languages.terms.exprs.*
+import languages.terms.literals.*
+import languages.terms.types.*
+import languages.terms.values.Value
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
@@ -876,7 +884,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       HtmlElement(toHtmlLineReadOnly(mode), getLiteral.toText)
 
     override def getPlaceholder(mode: DisplayMode, readOnly: Boolean = true): Literal =
-      placeholderOfLiteral(literal, (if (readOnly) toHtmlLineReadOnly(mode) else toHtmlLine(mode)).toString)
+      Literal.placeholderOf(literal, (if (readOnly) toHtmlLineReadOnly(mode) else toHtmlLine(mode)).toString)
 
     override val children: List[OuterNode] = Nil
 
@@ -919,7 +927,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
       *   The type variable environment.
       */
     def getEnv(mode: DisplayMode): TypeEnv = getParent match {
-      case Some(n: ExprNode)       => typeVariableEnv(n.getEnv(mode))
+      case Some(n: ExprNode)       => TypeEnv.typeVariableEnv(n.getEnv(mode))
       case Some(n: TypeNodeParent) => n.getEnv(mode)
       case _                       => Env()
     }
@@ -962,7 +970,7 @@ trait AbstractNodeLanguage extends AbstractLanguage {
 
     override def toTextReadOnly(mode: DisplayMode): ConvertableText = {
       val arguments = args.map {
-        case n: LiteralNode => placeholderOfLiteral(n.literal, n.toHtmlLineReadOnly(mode).toString)
+        case n: LiteralNode => Literal.placeholderOf(n.literal, n.toHtmlLineReadOnly(mode).toString)
         case n: SubTypeNode => TypePlaceholder(n.node.toTextReadOnly(mode), n.node.getType.needsBrackets)
       }
       buildType(typeName, arguments).toText

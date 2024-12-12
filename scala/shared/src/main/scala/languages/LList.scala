@@ -1,6 +1,14 @@
 package languages
 
 import convertors.*
+import languages.env.*
+import languages.terms.*
+import languages.terms.builders.*
+import languages.terms.errors.*
+import languages.terms.exprs.Expr
+import languages.terms.literals.*
+import languages.terms.types.Type
+import languages.terms.values.Value
 
 class LList extends LPoly {
   registerTerms("LList", List(ListNil, Cons, CaseList, ListType, NilV, ConsV))
@@ -23,7 +31,7 @@ class LList extends LPoly {
       case _                 => None
     }
 
-    override protected val aliases: List[String] = List("ListNil")
+    override val aliases: List[String] = List("ListNil")
   }
 
   case class Cons(head: Expr, tail: Expr) extends Expr {
@@ -50,7 +58,7 @@ class LList extends LPoly {
       case _                            => None
     }
 
-    override protected val aliases: List[String] = List("ListCons", "::")
+    override val aliases: List[String] = List("ListCons", "::")
   }
 
   case class CaseList(
@@ -109,7 +117,7 @@ class LList extends LPoly {
         list.eval(env) match {
           case ConsV(head, tail) => consEnv(env, head, tail)
           case _ =>
-            list.typeCheck(envToTypeEnv(env)) match {
+            list.typeCheck(TypeEnv.fromValueEnv(env)) match {
               case ListType(elTyp) => consEnv(env, HiddenValue(elTyp), HiddenValue(ListType(elTyp)))
               case _               => env
             }
@@ -156,7 +164,7 @@ class LList extends LPoly {
       case _ => None
     }
 
-    override protected val aliases: List[String] = List("ListCase")
+    override val aliases: List[String] = List("ListCase")
   }
 
   // types

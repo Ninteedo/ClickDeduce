@@ -1,9 +1,15 @@
 package languages
 
 import languages.LRec.*
+import languages.env.*
+import languages.terms.*
+import languages.terms.builders.*
+import languages.terms.errors.*
+import languages.terms.exprs.Expr
+import languages.terms.literals.*
 import org.scalatest.matchers.should.Matchers.shouldBe
 
-class ComplexExpressionsTest extends TestTemplate[LRec#Expr, LRec#Value, LRec#Type] {
+class ComplexExpressionsTest extends TestTemplate {
   val ifNotEqualToZeroThenFunction: Expr = Lambda(
     "f",
     Func(IntType(), IntType()),

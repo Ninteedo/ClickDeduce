@@ -1,6 +1,14 @@
 package languages
 
 import convertors.*
+import languages.env.*
+import languages.terms.*
+import languages.terms.builders.*
+import languages.terms.errors.*
+import languages.terms.exprs.Expr
+import languages.terms.literals.*
+import languages.terms.types.Type
+import languages.terms.values.Value
 import scalatags.Text
 import scalatags.Text.all.*
 
@@ -41,7 +49,7 @@ class LLam extends LLet {
   case class Lambda(v: LiteralIdentifierBind, typ: Type, e: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = guardValidIdentifierEval(
       v, {
-        LambdaV(v.value, typ.typeCheck(envToTypeEnv(env)), e, env)
+        LambdaV(v.value, typ.typeCheck(TypeEnv.fromValueEnv(env)), e, env)
       }
     )
 
@@ -125,9 +133,9 @@ class LLam extends LLet {
   }
 
   case class LambdaV(v: Variable, inputType: Type, e: Expr, env: ValueEnv) extends FunctionValue {
-    private val properInputType: Type = inputType.typeCheck(envToTypeEnv(env))
+    private val properInputType: Type = inputType.typeCheck(TypeEnv.fromValueEnv(env))
 
-    override val typ: Type = Func(inputType, e.typeCheck(envToTypeEnv(env) + (v -> properInputType)))
+    override val typ: Type = Func(inputType, e.typeCheck(TypeEnv.fromValueEnv(env) + (v -> properInputType)))
 
     override def getFunctionEvaluation(applyValue: Value): (Expr, ValueEnv) = (e, env + (v -> applyValue))
 

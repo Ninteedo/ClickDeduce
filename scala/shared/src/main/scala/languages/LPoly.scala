@@ -1,6 +1,14 @@
 package languages
 
 import convertors.*
+import languages.env.*
+import languages.terms.*
+import languages.terms.builders.*
+import languages.terms.errors.*
+import languages.terms.exprs.Expr
+import languages.terms.literals.*
+import languages.terms.types.*
+import languages.terms.values.*
 import scalatags.Text.all.*
 
 class LPoly extends LData {
@@ -120,13 +128,13 @@ class LPoly extends LData {
       case _                       => None
     }
 
-    override protected val isHidden: Boolean = true
+    override val isHidden: Boolean = true
   }
 
   // values
 
   case class PolyV(typeVar: TypeVar, e: Expr, env: ValueEnv) extends Value {
-    override val typ: Type = PolyType(typeVar, e.typeCheck(envToTypeEnv(env) + (typeVar.v.toBind -> TypeContainer(typeVar))))
+    override val typ: Type = PolyType(typeVar, e.typeCheck(TypeEnv.fromValueEnv(env) + (typeVar.v.toBind -> TypeContainer(typeVar))))
 
     override def toText: ConvertableText = MultiElement(
       LambdaSymbol(capital = true),
@@ -192,7 +200,7 @@ class LPoly extends LData {
                           case TypeVar(v) => v.identEquals(typVar)
                           case _          => false
                         },
-                      envToTypeEnv(env)
+                      TypeEnv.fromValueEnv(env)
                     ) && checkCondition(
                       e,
                       (e, env) =>

@@ -1,9 +1,14 @@
 package languages
 
 import languages.LData.*
+import languages.env.*
+import languages.terms.*
+import languages.terms.builders.*
+import languages.terms.errors.*
+import languages.terms.literals.*
 import org.scalatest.matchers.should.Matchers.{a, be, should, shouldBe, shouldEqual}
 
-class LDataTest extends TestTemplate[Expr, Value, Type] {
+class LDataTest extends TestTemplate {
   testExpression(
     "Pair",
     Table(

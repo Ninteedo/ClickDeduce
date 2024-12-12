@@ -1,5 +1,9 @@
 package languages
 
+import languages.env.{TypeEnv, ValueEnv}
+import languages.terms.exprs.Expr
+import languages.terms.types.Type
+
 /** Adds the ability to define tasks for the user to solve.
   */
 trait AbstractTaskLanguage extends AbstractActionLanguage {
