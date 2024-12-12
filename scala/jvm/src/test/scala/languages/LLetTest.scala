@@ -4,6 +4,7 @@ import actions.{EditLiteralAction, SelectExprAction}
 import convertors.DisplayMode
 import languages.LLet.*
 import languages.env.*
+import languages.env.Env.Variable
 import languages.terms.*
 import languages.terms.builders.*
 import languages.terms.errors.*
@@ -238,7 +239,7 @@ class LLetTest extends TestTemplate {
   }
 
   property("Let with unselected expression has correct children") {
-    val letNode = ExprNode(LLet, 
+    val letNode = ExprNode(LLet,
       "Let",
       List(LiteralNode(LiteralIdentifierBind("x")), SubExprNode(ExprNode(LLet, "Num", List(LiteralNode(LiteralInt(1))))), SubExprNode(ExprChoiceNode(LLet)))
     )

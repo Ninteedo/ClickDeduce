@@ -2,6 +2,7 @@ package languages
 
 import convertors.*
 import languages.env.*
+import languages.env.Env.Variable
 import languages.terms.*
 import languages.terms.builders.*
 import languages.terms.errors.*

@@ -26,8 +26,9 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
     treePath: List[Int],
     extraArgs: List[String]
   ): Action = {
-    if (actionArgCount(actionName) != extraArgs.length)
+    if (actionArgCount(actionName) != extraArgs.length) {
       throw new ActionInvocationException(s"Expected ${actionArgCount(actionName)} extra args, got ${extraArgs.length}")
+    }
 
     actionName match {
       case "SelectExprAction"  => SelectExprAction(node, treePath, lang, extraArgs.head)

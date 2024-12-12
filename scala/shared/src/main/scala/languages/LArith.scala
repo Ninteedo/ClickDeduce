@@ -175,7 +175,7 @@ class LArith extends ClickDeduceLanguage {
   }
 
   object IntType extends TypeCompanion {
-    override val aliases: List[Variable] = List("Number", "Integer")
+    override val aliases: List[String] = List("Number", "Integer")
 
     override def create(args: BuilderArgs): Option[Type] = Some(IntType())
   }

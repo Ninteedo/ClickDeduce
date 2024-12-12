@@ -1,10 +1,9 @@
 package languages.env
 
+import languages.env.Env.Variable
 import languages.terms.literals.{LiteralIdentifier, LiteralIdentifierBind, LiteralIdentifierLookup}
 
 import scala.annotation.targetName
-
-type Variable = String
 
 /** The evaluation environment at a particular point.
  *
@@ -43,6 +42,8 @@ case class Env[T](env: Map[Variable, T] = Map()) {
   def map[U](f: ((Variable, T)) => U): Iterable[U] = env.map(f)
 
   def mapToEnv[U](f: ((Variable, T)) => (Variable, U)): Env[U] = new Env(env.map(f))
+  
+  def filterToEnv(f: ((Variable, T)) => Boolean): Env[T] = new Env(env.filter(f))
 
   def keys: Iterable[Variable] = env.keys
 
@@ -52,6 +53,7 @@ case class Env[T](env: Map[Variable, T] = Map()) {
 /** Companion object for [[Env]].
  */
 object Env {
+  type Variable = String
 
   /** Create an environment from a list of key-value pairs.
    * @param items
