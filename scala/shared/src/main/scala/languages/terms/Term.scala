@@ -6,7 +6,6 @@ import languages.terms.exprs.Expr
 import languages.terms.types.Type
 import languages.terms.values.Value
 import scalatags.Text.TypedTag
-import scalatags.Text.all.s
 
 /** A term in the language.
  *

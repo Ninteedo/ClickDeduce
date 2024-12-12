@@ -2,8 +2,11 @@ package languages
 
 import languages.LLam.*
 import languages.terms.*
+import languages.terms.blanks.{BlankExprDropDown, BlankTypeDropDown}
 import languages.terms.literals.*
 import languages.terms.types.*
+import nodes.*
+import nodes.exceptions.{InvalidTreePathStringException, NodeStringParseException}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.TableDrivenPropertyChecks.forAll
 import org.scalatest.prop.{TableFor1, TableFor2, TableFor3, TableFor4}
@@ -13,13 +16,13 @@ class ActionSpec extends AnyWordSpec with Matchers {
   "Can create Actions using createAction" should {
     val trees = TableFor1(
       "node",
-      VariableNode.fromExpr(Plus(Num(1), Times(Num(2), Num(3)))),
-      VariableNode.fromExpr(IfThenElse(Bool(true), Num(1), Num(2))),
-      VariableNode.fromExpr(Let("score", Num(1), Times(Var("score"), Num(10))))
+      ExprNode.fromExpr(LLam, Plus(Num(1), Times(Num(2), Num(3)))),
+      ExprNode.fromExpr(LLam, IfThenElse(Bool(true), Num(1), Num(2))),
+      ExprNode.fromExpr(LLam, Let("score", Num(1), Times(Var("score"), Num(10))))
     )
 
     "create a SelectExprAction" in {
-      val tree = ExprChoiceNode()
+      val tree = ExprChoiceNode(LLam)
       val action = createAction("SelectExprAction", tree.toString, "", List("Equal"))
       action shouldBe a[SelectExprAction]
       action.originalTree shouldBe tree
@@ -28,7 +31,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
     }
 
     "create a SelectTypeAction" in {
-      val tree = VariableNode.fromExpr(Lambda("x", UnknownType(), Plus(Var("x"), Num(1))))
+      val tree = ExprNode.fromExpr(LLam, Lambda("x", UnknownType(), Plus(Var("x"), Num(1))))
       val action = createAction("SelectTypeAction", tree.toString, "1", List("IntType"))
       action shouldBe a[SelectTypeAction]
       action.originalTree shouldBe tree
@@ -37,7 +40,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
     }
 
     "create an EditLiteralAction" in {
-      val tree = VariableNode.fromExpr(Num(1))
+      val tree = ExprNode.fromExpr(LLam, Num(1))
       val action = createAction("EditLiteralAction", tree.toString, "0", List("hello"))
       action shouldBe an[EditLiteralAction]
       action.originalTree shouldBe tree
@@ -46,7 +49,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
     }
 
     "create a DeleteAction" in {
-      val tree = VariableNode.fromExpr(Plus(Num(1), Num(2)))
+      val tree = ExprNode.fromExpr(LLam, Plus(Num(1), Num(2)))
       val action = createAction("DeleteAction", tree.toString, "0", List())
       action shouldBe a[DeleteAction]
       action.originalTree shouldBe tree
@@ -54,8 +57,8 @@ class ActionSpec extends AnyWordSpec with Matchers {
     }
 
     "create a PasteAction" in {
-      val tree = VariableNode.fromExpr(Plus(Num(5), Times(Num(1), Num(0))))
-      val pasteTree = VariableNode.fromExpr(Num(2))
+      val tree = ExprNode.fromExpr(LLam, Plus(Num(5), Times(Num(1), Num(0))))
+      val pasteTree = ExprNode.fromExpr(LLam, Num(2))
       val action = createAction("PasteAction", tree.toString, "1-1", List(pasteTree.toString))
       action shouldBe a[PasteAction]
       action.originalTree shouldBe tree
@@ -78,54 +81,54 @@ class ActionSpec extends AnyWordSpec with Matchers {
       val selectOptions =
         TableFor1("exprChoiceName", "Num", "Plus", "Times", "IfThenElse", "Equal", "Bool", "Let", "Var", "Lambda")
 
-      val tree = ExprChoiceNode()
+      val tree = ExprChoiceNode(LLam)
       forAll(selectOptions) { exprChoiceName =>
         val action = SelectExprAction(tree, List(), exprChoiceName)
-        action.newTree shouldBe a[VariableNode]
-        action.newTree.asInstanceOf[VariableNode].exprName shouldBe exprChoiceName
-        action.newTree shouldEqual VariableNode.createFromExprName(exprChoiceName).get
+        action.newTree shouldBe a[ExprNode]
+        action.newTree.asInstanceOf[ExprNode].exprName shouldBe exprChoiceName
+        action.newTree shouldEqual ExprNode.createFromExprName(LLam, exprChoiceName).get
       }
     }
 
     "replace a nested ExprChoiceNode with selection" in {
-      val trees: TableFor4[ExprNode, List[Int], String, ExprNode] = TableFor4(
+      val trees: TableFor4[ExprNodeParent, List[Int], String, ExprNodeParent] = TableFor4(
         ("tree", "treePath", "exprChoiceName", "result"),
         (
-          VariableNode.fromExpr(Plus(BlankExprDropDown(), Num(1))),
+          ExprNode.fromExpr(LLam, Plus(BlankExprDropDown(LLam), Num(1))),
           List(0),
           "Num",
-          VariableNode.fromExpr(Plus(Num(LiteralInt(0)), Num(1)))
+          ExprNode.fromExpr(LLam, Plus(Num(LiteralInt(0)), Num(1)))
         ),
         (
-          VariableNode.fromExpr(Plus(Num(1), BlankExprDropDown())),
+          ExprNode.fromExpr(LLam, Plus(Num(1), BlankExprDropDown(LLam))),
           List(1),
           "Bool",
-          VariableNode.fromExpr(Plus(Num(1), Bool(LiteralBool(false))))
+          ExprNode.fromExpr(LLam, Plus(Num(1), Bool(LiteralBool(false))))
         ),
         (
-          VariableNode.fromExpr(IfThenElse(Plus(Num(1), BlankExprDropDown()), Num(6), BlankExprDropDown())),
+          ExprNode.fromExpr(LLam, IfThenElse(Plus(Num(1), BlankExprDropDown(LLam)), Num(6), BlankExprDropDown(LLam))),
           List(0, 1),
           "Lambda",
-          VariableNode
-            .fromExpr(IfThenElse(Plus(Num(1), BlankExprDropDown()), Num(6), BlankExprDropDown()))
-            .replace(List(0, 1), VariableNode.createFromExprName("Lambda").get)
+          ExprNode
+            .fromExpr(LLam, IfThenElse(Plus(Num(1), BlankExprDropDown(LLam)), Num(6), BlankExprDropDown(LLam)))
+            .replace(List(0, 1), ExprNode.createFromExprName(LLam, "Lambda").get)
             .asInstanceOf[ExprNode]
         )
       )
 
       forAll(trees) { (tree, treePath, exprChoiceName, result) =>
         val action = SelectExprAction(tree, treePath, exprChoiceName)
-        action.newTree shouldBe a[VariableNode]
+        action.newTree shouldBe a[ExprNode]
         action.newTree shouldEqual result
       }
     }
 
     "throw an error when attempting to replace something other than an ExprChoiceNode" in {
-      val trees: TableFor3[ExprNode, List[Int], String] = TableFor3(
+      val trees: TableFor3[ExprNodeParent, List[Int], String] = TableFor3(
         ("tree", "treePath", "exprChoiceName"),
-        (VariableNode.fromExpr(Num(1)), List(), "Plus"),
-        (VariableNode.fromExpr(Plus(Bool(true), Num(-4))), List(0), "Num"),
-        (VariableNode.fromExpr(IfThenElse(Bool(true), BlankExprDropDown(), BlankExprDropDown())), List(0), "Equal")
+        (ExprNode.fromExpr(LLam, Num(1)), List(), "Plus"),
+        (ExprNode.fromExpr(LLam, Plus(Bool(true), Num(-4))), List(0), "Num"),
+        (ExprNode.fromExpr(LLam, IfThenElse(Bool(true), BlankExprDropDown(LLam), BlankExprDropDown(LLam))), List(0), "Equal")
       )
       forAll(trees) { (tree, treePath, exprChoiceName) =>
         an[InvalidSelectTargetException] should be thrownBy SelectExprAction(tree, treePath, exprChoiceName).newTree
@@ -148,7 +151,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
 
       forAll(cases) { (lang, exprName) =>
         an[InvalidSelectValueNameException] should be thrownBy lang
-          .SelectExprAction(lang.ExprChoiceNode(), List(), exprName)
+          .SelectExprAction(ExprChoiceNode(lang), List(), exprName)
           .newTree
       }
     }
@@ -158,7 +161,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
     "replace a root TypeChoiceNode with selection" in {
       val selectOptions = TableFor1("typeChoiceName", "IntType", "BoolType", "UnknownType", "Func")
 
-      val tree = TypeChoiceNode()
+      val tree = TypeChoiceNode(LLam)
       forAll(selectOptions) { typeChoiceName =>
         val action = SelectTypeAction(tree, List(), typeChoiceName)
         action.newTree shouldBe a[TypeNode]
@@ -166,37 +169,38 @@ class ActionSpec extends AnyWordSpec with Matchers {
         typeChoiceName match {
           case "Func" =>
             action.newTree shouldEqual TypeNode(
+              LLam,
               typeChoiceName,
-              List(SubTypeNode(TypeChoiceNode()), SubTypeNode(TypeChoiceNode()))
+              List(SubTypeNode(TypeChoiceNode(LLam)), SubTypeNode(TypeChoiceNode(LLam)))
             )
-          case _ => action.newTree shouldEqual TypeNode(typeChoiceName, List())
+          case _ => action.newTree shouldEqual TypeNode(LLam, typeChoiceName, List())
         }
       }
     }
 
     "replace a nested TypeChoiceNode with selection" in {
-      val trees: TableFor4[ExprNode, List[Int], String, ExprNode] = TableFor4(
+      val trees: TableFor4[ExprNodeParent, List[Int], String, ExprNodeParent] = TableFor4(
         ("tree", "treePath", "typeChoiceName", "result"),
         (
-          VariableNode.fromExpr(Lambda("x", BlankTypeDropDown(), Var("x"))),
+          ExprNode.fromExpr(LLam, Lambda("x", BlankTypeDropDown(LLam), Var("x"))),
           List(1),
           "IntType",
-          VariableNode.fromExpr(Lambda("x", IntType(), Var("x")))
+          ExprNode.fromExpr(LLam, Lambda("x", IntType(), Var("x")))
         ),
         (
-          VariableNode.fromExpr(
+          ExprNode.fromExpr(LLam,
             IfThenElse(
               Bool(false),
-              Lambda("foo2", BlankTypeDropDown(), Num(3)),
-              Lambda("foo2", Func(IntType(), BlankTypeDropDown()), Var("foo2"))
+              Lambda("foo2", BlankTypeDropDown(LLam), Num(3)),
+              Lambda("foo2", Func(IntType(), BlankTypeDropDown(LLam)), Var("foo2"))
             )
           ),
           List(2, 1, 1),
           "BoolType",
-          VariableNode.fromExpr(
+          ExprNode.fromExpr(LLam,
             IfThenElse(
               Bool(false),
-              Lambda("foo2", BlankTypeDropDown(), Num(3)),
+              Lambda("foo2", BlankTypeDropDown(LLam), Num(3)),
               Lambda("foo2", Func(IntType(), BoolType()), Var("foo2"))
             )
           )
@@ -205,21 +209,21 @@ class ActionSpec extends AnyWordSpec with Matchers {
 
       forAll(trees) { (tree, treePath, typeChoiceName, result) =>
         val action = SelectTypeAction(tree, treePath, typeChoiceName)
-        action.newTree shouldBe a[VariableNode]
+        action.newTree shouldBe a[ExprNode]
         action.newTree shouldEqual result
       }
     }
 
     "throw an error when attempting to replace something other than a TypeChoiceNode" in {
-      val trees: TableFor3[ExprNode, List[Int], String] = TableFor3(
+      val trees: TableFor3[ExprNodeParent, List[Int], String] = TableFor3(
         ("tree", "treePath", "typeChoiceName"),
-        (VariableNode.fromExpr(Num(1)), List(), "IntType"),
-        (VariableNode.fromExpr(Lambda("x", IntType(), Num(1))), List(0), "BoolType"),
+        (ExprNode.fromExpr(LLam, Num(1)), List(), "IntType"),
+        (ExprNode.fromExpr(LLam, Lambda("x", IntType(), Num(1))), List(0), "BoolType"),
         (
-          VariableNode.fromExpr(
+          ExprNode.fromExpr(LLam,
             IfThenElse(
               Bool(false),
-              Lambda("foo2", BlankTypeDropDown(), Num(3)),
+              Lambda("foo2", BlankTypeDropDown(LLam), Num(3)),
               Lambda("foo2", Func(IntType(), BoolType()), Var("foo2"))
             )
           ),
@@ -239,7 +243,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
 
       forAll(cases) { typeName =>
         an[InvalidSelectValueNameException] should be thrownBy SelectTypeAction(
-          VariableNode.fromExpr(Lambda("x", BlankTypeDropDown(), BlankExprDropDown())),
+          ExprNode.fromExpr(LLam, Lambda("x", BlankTypeDropDown(LLam), BlankExprDropDown(LLam))),
           List(1),
           typeName
         ).newTree
@@ -249,47 +253,47 @@ class ActionSpec extends AnyWordSpec with Matchers {
 
   "EditLiteralAction" should {
     "replace the contents of a nested LiteralNode" in {
-      val trees: TableFor4[ExprNode, List[Int], String, ExprNode] = TableFor4(
+      val trees: TableFor4[ExprNodeParent, List[Int], String, ExprNodeParent] = TableFor4(
         ("tree", "treePath", "newLiteralText", "result"),
-        (VariableNode.fromExpr(Plus(Num(1), Num(2))), List(0, 0), "3", VariableNode.fromExpr(Plus(Num(3), Num(2)))),
+        (ExprNode.fromExpr(LLam, Plus(Num(1), Num(2))), List(0, 0), "3", ExprNode.fromExpr(LLam, Plus(Num(3), Num(2)))),
         (
-          VariableNode.fromExpr(
+          ExprNode.fromExpr(LLam,
             Times(Num(61), IfThenElse(Equal(Num(5), Bool(LiteralBool(false))), Num(1), Num(-62)))
           ),
           List(1, 0, 1, 0),
           "true",
-          VariableNode.fromExpr(
+          ExprNode.fromExpr(LLam,
             Times(Num(61), IfThenElse(Equal(Num(5), Bool(LiteralBool(true))), Num(1), Num(-62)))
           )
         ),
         (
-          VariableNode.fromExpr(Lambda("", IntType(), Plus(Var("eg"), Num(1)))),
+          ExprNode.fromExpr(LLam, Lambda("", IntType(), Plus(Var("eg"), Num(1)))),
           List(0),
           "be123",
-          VariableNode.fromExpr(Lambda("be123", IntType(), Plus(Var("eg"), Num(1))))
+          ExprNode.fromExpr(LLam, Lambda("be123", IntType(), Plus(Var("eg"), Num(1))))
         ),
         (
-          VariableNode.fromExpr(Lambda("be123", IntType(), Plus(Var("eg"), Num(1)))),
+          ExprNode.fromExpr(LLam, Lambda("be123", IntType(), Plus(Var("eg"), Num(1)))),
           List(2, 0, 0),
           "",
-          VariableNode.fromExpr(Lambda("be123", IntType(), Plus(Var(""), Num(1))))
+          ExprNode.fromExpr(LLam, Lambda("be123", IntType(), Plus(Var(""), Num(1))))
         )
       )
 
       forAll(trees) { (tree, treePath, newLiteralText, result) =>
         val action = EditLiteralAction(tree, treePath, newLiteralText)
-        action.newTree shouldBe a[VariableNode]
+        action.newTree shouldBe a[ExprNode]
         action.newTree shouldEqual result
       }
     }
 
     "throw an error when attempting to replace something other than a LiteralNode" in {
-      val trees: TableFor3[ExprNode, List[Int], String] = TableFor3(
+      val trees: TableFor3[ExprNodeParent, List[Int], String] = TableFor3(
         ("tree", "treePath", "newLiteralText"),
-        (VariableNode.fromExpr(Num(1)), List(), "st"),
-        (VariableNode.fromExpr(Plus(Num(1), Num(2))), List(0), "tj461"),
+        (ExprNode.fromExpr(LLam, Num(1)), List(), "st"),
+        (ExprNode.fromExpr(LLam, Plus(Num(1), Num(2))), List(0), "tj461"),
         (
-          VariableNode.fromExpr(IfThenElse(Bool(true), Lambda("z", IntType(), Bool(LiteralBool(true))), Num(2))),
+          ExprNode.fromExpr(LLam, IfThenElse(Bool(true), Lambda("z", IntType(), Bool(LiteralBool(true))), Num(2))),
           List(1, 2),
           "err"
         )
@@ -303,33 +307,33 @@ class ActionSpec extends AnyWordSpec with Matchers {
 
   "DeleteAction" should {
     "delete an expr node from a tree" in {
-      val trees: TableFor3[ExprNode, List[Int], ExprNode] = TableFor3(
+      val trees: TableFor3[ExprNodeParent, List[Int], ExprNodeParent] = TableFor3(
         ("tree", "treePath", "result"),
-        (VariableNode.fromExpr(Num(1)), List(), ExprChoiceNode()),
+        (ExprNode.fromExpr(LLam, Num(1)), List(), ExprChoiceNode(LLam)),
         (
-          VariableNode.fromExpr(Let("x", Plus(Num(54), Num(-1)), Var("x"))),
+          ExprNode.fromExpr(LLam, Let("x", Plus(Num(54), Num(-1)), Var("x"))),
           List(1, 0),
-          VariableNode.fromExpr(Let("x", Plus(BlankExprDropDown(), Num(-1)), Var("x")))
+          ExprNode.fromExpr(LLam, Let("x", Plus(BlankExprDropDown(LLam), Num(-1)), Var("x")))
         ),
         (
-          VariableNode.fromExpr(Let("x", Plus(Num(54), Num(-1)), Var("x"))),
+          ExprNode.fromExpr(LLam, Let("x", Plus(Num(54), Num(-1)), Var("x"))),
           List(1),
-          VariableNode.fromExpr(Let("x", BlankExprDropDown(), Var("x")))
+          ExprNode.fromExpr(LLam, Let("x", BlankExprDropDown(LLam), Var("x")))
         ),
         (
-          VariableNode.fromExpr(Let("x", Plus(Num(54), Num(-1)), Var("x"))),
+          ExprNode.fromExpr(LLam, Let("x", Plus(Num(54), Num(-1)), Var("x"))),
           List(2),
-          VariableNode.fromExpr(Let("x", Plus(Num(54), Num(-1)), BlankExprDropDown()))
+          ExprNode.fromExpr(LLam, Let("x", Plus(Num(54), Num(-1)), BlankExprDropDown(LLam)))
         ),
         (
-          VariableNode.fromExpr(Apply(Lambda("x", IntType(), Plus(Var("x"), Num(1))), Num(65))),
+          ExprNode.fromExpr(LLam, Apply(Lambda("x", IntType(), Plus(Var("x"), Num(1))), Num(65))),
           List(0, 2),
-          VariableNode.fromExpr(Apply(Lambda("x", IntType(), BlankExprDropDown()), Num(65)))
+          ExprNode.fromExpr(LLam, Apply(Lambda("x", IntType(), BlankExprDropDown(LLam)), Num(65)))
         ),
         (
-          VariableNode.fromExpr(Apply(Lambda("x", IntType(), Plus(Var("x"), Num(1))), Num(65))),
+          ExprNode.fromExpr(LLam, Apply(Lambda("x", IntType(), Plus(Var("x"), Num(1))), Num(65))),
           List(1),
-          VariableNode.fromExpr(Apply(Lambda("x", IntType(), Plus(Var("x"), Num(1))), BlankExprDropDown()))
+          ExprNode.fromExpr(LLam, Apply(Lambda("x", IntType(), Plus(Var("x"), Num(1))), BlankExprDropDown(LLam)))
         )
       )
 
@@ -342,32 +346,32 @@ class ActionSpec extends AnyWordSpec with Matchers {
     "delete a type node from a tree" in {
       val equalsZeroFunction = Lambda("value", Func(IntType(), BoolType()), Equal(Var("value"), Num(0)))
 
-      val trees: TableFor3[ExprNode, List[Int], ExprNode] = TableFor3(
+      val trees: TableFor3[ExprNodeParent, List[Int], ExprNodeParent] = TableFor3(
         ("tree", "treePath", "result"),
         (
-          VariableNode.fromExpr(Lambda("x", IntType(), Plus(Var("x"), Num(1)))),
+          ExprNode.fromExpr(LLam, Lambda("x", IntType(), Plus(Var("x"), Num(1)))),
           List(1),
-          VariableNode.fromExpr(Lambda("x", BlankTypeDropDown(), Plus(Var("x"), Num(1))))
+          ExprNode.fromExpr(LLam, Lambda("x", BlankTypeDropDown(LLam), Plus(Var("x"), Num(1))))
         ),
         (
-          VariableNode.fromExpr(Apply(Lambda("x", IntType(), Plus(Var("x"), Num(1))), Num(65))),
+          ExprNode.fromExpr(LLam, Apply(Lambda("x", IntType(), Plus(Var("x"), Num(1))), Num(65))),
           List(0, 1),
-          VariableNode.fromExpr(Apply(Lambda("x", BlankTypeDropDown(), Plus(Var("x"), Num(1))), Num(65)))
+          ExprNode.fromExpr(LLam, Apply(Lambda("x", BlankTypeDropDown(LLam), Plus(Var("x"), Num(1))), Num(65)))
         ),
         (
-          VariableNode.fromExpr(equalsZeroFunction),
+          ExprNode.fromExpr(LLam, equalsZeroFunction),
           List(1),
-          VariableNode.fromExpr(Lambda("value", BlankTypeDropDown(), Equal(Var("value"), Num(0))))
+          ExprNode.fromExpr(LLam, Lambda("value", BlankTypeDropDown(LLam), Equal(Var("value"), Num(0))))
         ),
         (
-          VariableNode.fromExpr(equalsZeroFunction),
+          ExprNode.fromExpr(LLam, equalsZeroFunction),
           List(1, 0),
-          VariableNode.fromExpr(Lambda("value", Func(BlankTypeDropDown(), BoolType()), Equal(Var("value"), Num(0))))
+          ExprNode.fromExpr(LLam, Lambda("value", Func(BlankTypeDropDown(LLam), BoolType()), Equal(Var("value"), Num(0))))
         ),
         (
-          VariableNode.fromExpr(equalsZeroFunction),
+          ExprNode.fromExpr(LLam, equalsZeroFunction),
           List(1, 1),
-          VariableNode.fromExpr(Lambda("value", Func(IntType(), BlankTypeDropDown()), Equal(Var("value"), Num(0))))
+          ExprNode.fromExpr(LLam, Lambda("value", Func(IntType(), BlankTypeDropDown(LLam)), Equal(Var("value"), Num(0))))
         )
       )
 
@@ -380,12 +384,12 @@ class ActionSpec extends AnyWordSpec with Matchers {
     "throws an error when attempting to delete a literal node" in {
       val f = Lambda("x", IntType(), Plus(Var("x"), Num(1)))
 
-      val trees: TableFor2[ExprNode, List[Int]] = TableFor2(
+      val trees: TableFor2[ExprNodeParent, List[Int]] = TableFor2(
         ("tree", "treePath"),
-        (VariableNode.fromExpr(Num(1)), List(0)),
-        (VariableNode.fromExpr(f), List(0)),
-        (VariableNode.fromExpr(f), List(2, 0, 0)),
-        (VariableNode.fromExpr(f), List(2, 1, 0))
+        (ExprNode.fromExpr(LLam, Num(1)), List(0)),
+        (ExprNode.fromExpr(LLam, f), List(0)),
+        (ExprNode.fromExpr(LLam, f), List(2, 0, 0)),
+        (ExprNode.fromExpr(LLam, f), List(2, 1, 0))
       )
 
       forAll(trees) { (tree, treePath) =>
@@ -396,32 +400,32 @@ class ActionSpec extends AnyWordSpec with Matchers {
 
   "PasteAction" should {
     "correctly paste an expr node string into a tree" in {
-      val trees: TableFor4[ExprNode, List[Int], String, ExprNode] = TableFor4(
+      val trees: TableFor4[ExprNodeParent, List[Int], String, ExprNodeParent] = TableFor4(
         ("tree", "treePath", "pasteNodeString", "result"),
-        (ExprChoiceNode(), List(), VariableNode.fromExpr(Num(1)).toString, VariableNode.fromExpr(Num(1))),
+        (ExprChoiceNode(LLam), List(), ExprNode.fromExpr(LLam, Num(1)).toString, ExprNode.fromExpr(LLam, Num(1))),
         (
-          VariableNode.fromExpr(Plus(Num(1), Num(2))),
+          ExprNode.fromExpr(LLam, Plus(Num(1), Num(2))),
           List(0),
-          VariableNode.fromExpr(IfThenElse(Bool(true), Num(-1), Num(2))).toString,
-          VariableNode.fromExpr(Plus(IfThenElse(Bool(true), Num(-1), Num(2)), Num(2)))
+          ExprNode.fromExpr(LLam, IfThenElse(Bool(true), Num(-1), Num(2))).toString,
+          ExprNode.fromExpr(LLam, Plus(IfThenElse(Bool(true), Num(-1), Num(2)), Num(2)))
         ),
         (
-          VariableNode.fromExpr(Plus(Num(1), IfThenElse(Bool(true), BlankExprDropDown(), Bool(false)))),
+          ExprNode.fromExpr(LLam, Plus(Num(1), IfThenElse(Bool(true), BlankExprDropDown(LLam), Bool(false)))),
           List(1, 1),
-          VariableNode.fromExpr(Var("hello")).toString,
-          VariableNode.fromExpr(Plus(Num(1), IfThenElse(Bool(true), Var("hello"), Bool(false))))
+          ExprNode.fromExpr(LLam, Var("hello")).toString,
+          ExprNode.fromExpr(LLam, Plus(Num(1), IfThenElse(Bool(true), Var("hello"), Bool(false))))
         ),
         (
-          VariableNode.fromExpr(Plus(Num(1), Num(2))),
+          ExprNode.fromExpr(LLam, Plus(Num(1), Num(2))),
           List(1),
-          VariableNode.fromExpr(Let("x", Num(1), Num(2))).toString,
-          VariableNode.fromExpr(Plus(Num(1), Let("x", Num(1), Num(2))))
+          ExprNode.fromExpr(LLam, Let("x", Num(1), Num(2))).toString,
+          ExprNode.fromExpr(LLam, Plus(Num(1), Let("x", Num(1), Num(2))))
         ),
         (
-          VariableNode.fromExpr(Let("x", Let("y", Num(6), Num(0)), Var("x"))),
+          ExprNode.fromExpr(LLam, Let("x", Let("y", Num(6), Num(0)), Var("x"))),
           List(1, 2),
-          VariableNode.fromExpr(Plus(Var("y"), Num(1))).toString,
-          VariableNode.fromExpr(Let("x", Let("y", Num(6), Plus(Var("y"), Num(1))), Var("x")))
+          ExprNode.fromExpr(LLam, Plus(Var("y"), Num(1))).toString,
+          ExprNode.fromExpr(LLam, Let("x", Let("y", Num(6), Plus(Var("y"), Num(1))), Var("x")))
         )
       )
 
@@ -432,25 +436,25 @@ class ActionSpec extends AnyWordSpec with Matchers {
     }
 
     "correctly paste a type node string into a tree" in {
-      val trees: TableFor4[ExprNode, List[Int], String, ExprNode] = TableFor4(
+      val trees: TableFor4[ExprNodeParent, List[Int], String, ExprNodeParent] = TableFor4(
         ("tree", "treePath", "pasteNodeString", "result"),
         (
-          VariableNode.fromExpr(Lambda("x", IntType(), Plus(Var("x"), Num(1)))),
+          ExprNode.fromExpr(LLam, Lambda("x", IntType(), Plus(Var("x"), Num(1)))),
           List(1),
-          TypeNode.fromType(BoolType()).toString,
-          VariableNode.fromExpr(Lambda("x", BoolType(), Plus(Var("x"), Num(1))))
+          TypeNode.fromType(LLam, BoolType()).toString,
+          ExprNode.fromExpr(LLam, Lambda("x", BoolType(), Plus(Var("x"), Num(1))))
         ),
         (
-          VariableNode.fromExpr(Lambda("x", Func(BlankTypeDropDown(), IntType()), Plus(Var("x"), Num(1)))),
+          ExprNode.fromExpr(LLam, Lambda("x", Func(BlankTypeDropDown(LLam), IntType()), Plus(Var("x"), Num(1)))),
           List(1, 1),
-          TypeNode.fromType(BlankTypeDropDown()).toString,
-          VariableNode.fromExpr(Lambda("x", Func(BlankTypeDropDown(), BlankTypeDropDown()), Plus(Var("x"), Num(1))))
+          TypeNode.fromType(LLam, BlankTypeDropDown(LLam)).toString,
+          ExprNode.fromExpr(LLam, Lambda("x", Func(BlankTypeDropDown(LLam), BlankTypeDropDown(LLam)), Plus(Var("x"), Num(1))))
         ),
         (
-          VariableNode.fromExpr(Lambda("x", Func(BlankTypeDropDown(), IntType()), Plus(Var("x"), Num(1)))),
+          ExprNode.fromExpr(LLam, Lambda("x", Func(BlankTypeDropDown(LLam), IntType()), Plus(Var("x"), Num(1)))),
           List(1),
-          TypeNode.fromType(Func(Func(BoolType(), BoolType()), IntType())).toString,
-          VariableNode.fromExpr(Lambda("x", Func(Func(BoolType(), BoolType()), IntType()), Plus(Var("x"), Num(1))))
+          TypeNode.fromType(LLam, Func(Func(BoolType(), BoolType()), IntType())).toString,
+          ExprNode.fromExpr(LLam, Lambda("x", Func(Func(BoolType(), BoolType()), IntType()), Plus(Var("x"), Num(1))))
         )
       )
 
@@ -461,16 +465,16 @@ class ActionSpec extends AnyWordSpec with Matchers {
     }
 
     "throws an error when attempting to paste a type node into an expr node" in {
-      val trees: TableFor3[ExprNode, List[Int], String] = TableFor3(
+      val trees: TableFor3[ExprNodeParent, List[Int], String] = TableFor3(
         ("tree", "treePath", "pasteNodeString"),
-        (VariableNode.fromExpr(Num(1)), List(), TypeNode.fromType(IntType()).toString),
-        (VariableNode.fromExpr(Plus(Num(1), Num(2))), List(0), TypeNode.fromType(BoolType()).toString),
+        (ExprNode.fromExpr(LLam, Num(1)), List(), TypeNode.fromType(LLam, IntType()).toString),
+        (ExprNode.fromExpr(LLam, Plus(Num(1), Num(2))), List(0), TypeNode.fromType(LLam, BoolType()).toString),
         (
-          VariableNode.fromExpr(Lambda("x", IntType(), Plus(Var("x"), Num(1)))),
+          ExprNode.fromExpr(LLam, Lambda("x", IntType(), Plus(Var("x"), Num(1)))),
           List(2),
-          TypeNode.fromType(BoolType()).toString
+          TypeNode.fromType(LLam, BoolType()).toString
         ),
-        (VariableNode.fromExpr(Num(1)), List(), TypeNode.fromType(BlankTypeDropDown()).toString)
+        (ExprNode.fromExpr(LLam, Num(1)), List(), TypeNode.fromType(LLam, BlankTypeDropDown(LLam)).toString)
       )
 
       forAll(trees) { (tree, treePath, pasteNodeString) =>
@@ -479,22 +483,22 @@ class ActionSpec extends AnyWordSpec with Matchers {
     }
 
     "throws an error when attempting to paste an expr node into a type node" in {
-      val trees: TableFor3[ExprNode, List[Int], String] = TableFor3(
+      val trees: TableFor3[ExprNodeParent, List[Int], String] = TableFor3(
         ("tree", "treePath", "pasteNodeString"),
         (
-          VariableNode.fromExpr(Lambda("x", IntType(), Plus(Var("x"), Num(1)))),
+          ExprNode.fromExpr(LLam, Lambda("x", IntType(), Plus(Var("x"), Num(1)))),
           List(1),
-          VariableNode.fromExpr(Num(1)).toString
+          ExprNode.fromExpr(LLam, Num(1)).toString
         ),
         (
-          VariableNode.fromExpr(Lambda("gee", Func(BoolType(), IntType()), Num(73))),
+          ExprNode.fromExpr(LLam, Lambda("gee", Func(BoolType(), IntType()), Num(73))),
           List(1, 1),
-          VariableNode.fromExpr(Bool(true)).toString
+          ExprNode.fromExpr(LLam, Bool(true)).toString
         ),
         (
-          VariableNode.fromExpr(Lambda("gee", Func(BoolType(), IntType()), Num(73))),
+          ExprNode.fromExpr(LLam, Lambda("gee", Func(BoolType(), IntType()), Num(73))),
           List(1, 0),
-          VariableNode.fromExpr(BlankExprDropDown()).toString
+          ExprNode.fromExpr(LLam, BlankExprDropDown(LLam)).toString
         )
       )
 
@@ -504,19 +508,19 @@ class ActionSpec extends AnyWordSpec with Matchers {
     }
 
     "throws an error when attempting to paste into a literal node" in {
-      val trees: TableFor3[ExprNode, List[Int], String] = TableFor3(
+      val trees: TableFor3[ExprNodeParent, List[Int], String] = TableFor3(
         ("tree", "treePath", "pasteNodeString"),
-        (VariableNode.fromExpr(Num(1)), List(0), VariableNode.fromExpr(Num(1)).toString),
-        (VariableNode.fromExpr(Plus(Num(1), Num(2))), List(0, 0), VariableNode.fromExpr(Num(1)).toString),
+        (ExprNode.fromExpr(LLam, Num(1)), List(0), ExprNode.fromExpr(LLam, Num(1)).toString),
+        (ExprNode.fromExpr(LLam, Plus(Num(1), Num(2))), List(0, 0), ExprNode.fromExpr(LLam, Num(1)).toString),
         (
-          VariableNode.fromExpr(Lambda("x", IntType(), Plus(Var("x"), Num(1)))),
+          ExprNode.fromExpr(LLam, Lambda("x", IntType(), Plus(Var("x"), Num(1)))),
           List(0),
-          VariableNode.fromExpr(Num(1)).toString
+          ExprNode.fromExpr(LLam, Num(1)).toString
         ),
         (
-          VariableNode.fromExpr(Lambda("x", IntType(), Plus(Var("x"), Num(1)))),
+          ExprNode.fromExpr(LLam, Lambda("x", IntType(), Plus(Var("x"), Num(1)))),
           List(2, 0, 0),
-          TypeNode.fromType(IntType()).toString
+          TypeNode.fromType(LLam, IntType()).toString
         )
       )
 
@@ -526,16 +530,16 @@ class ActionSpec extends AnyWordSpec with Matchers {
     }
 
     "throws an error when attempting to paste an invalid node string" in {
-      val trees: TableFor3[ExprNode, List[Int], String] = TableFor3(
+      val trees: TableFor3[ExprNodeParent, List[Int], String] = TableFor3(
         ("tree", "treePath", "pasteNodeString"),
-        (VariableNode.fromExpr(Num(1)), List(0), "Num(5)"),
-        (VariableNode.fromExpr(Plus(Num(1), Num(2))), List(0, 0), "VariableNode()"),
+        (ExprNode.fromExpr(LLam, Num(1)), List(0), "Num(5)"),
+        (ExprNode.fromExpr(LLam, Plus(Num(1), Num(2))), List(0, 0), "ExprNode()"),
         (
-          VariableNode.fromExpr(Lambda("x", IntType(), Plus(Var("x"), Num(1)))),
+          ExprNode.fromExpr(LLam, Lambda("x", IntType(), Plus(Var("x"), Num(1)))),
           List(0),
-          "VariableNode(\"Num\", List())"
+          "ExprNode(\"Num\", List())"
         ),
-        (VariableNode.fromExpr(Lambda("x", IntType(), Plus(Var("x"), Num(1)))), List(1), "TypeNode(BoolType(), List())")
+        (ExprNode.fromExpr(LLam, Lambda("x", IntType(), Plus(Var("x"), Num(1)))), List(1), "TypeNode(BoolType(), List())")
       )
 
       forAll(trees) { (tree, treePath, pasteNodeString) =>
@@ -581,11 +585,11 @@ class ActionSpec extends AnyWordSpec with Matchers {
         "nodeString",
         "ExprChoiceNode",
         "TypeChoiceNode",
-        "VariableNode",
-        "SubExprNode(ExprChoiceNode())",
+        "ExprNode",
+        "SubExprNode(ExprChoiceNode(LLam))",
         "SubTypeNode(TypeChoiceNode())",
-        "VariableNode()",
-        "VariableNode('Num', List())",
+        "ExprNode()",
+        "ExprNode('Num', List())",
         "NotARealNode(\"Num\")",
         "LiteralNode(\"x\")"
       )
@@ -633,7 +637,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
         ("SelectExprAction", List("Equal", "foo")),
         ("SelectTypeAction", List("IntType", "foo")),
         ("EditLiteralAction", List("foo", "bar")),
-        ("PasteAction", List(VariableNode.fromExpr(Num(1)).toString, "foo")),
+        ("PasteAction", List(ExprNode.fromExpr(LLam, Num(1)).toString, "foo")),
         ("PasteAction", List("foo", "bar", "baz")),
         ("DeleteAction", List("foo")),
         ("IdentityAction", List("foo"))

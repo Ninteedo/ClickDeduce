@@ -7,6 +7,8 @@ import languages.terms.*
 import languages.terms.errors.*
 import languages.terms.exprs.Expr
 import languages.terms.literals.*
+import nodes.*
+import nodes.exceptions.DepthLimitExceededException
 import org.scalatest.concurrent.TimeLimits.failAfter
 import org.scalatest.matchers.must.Matchers.noException
 import org.scalatest.matchers.should.Matchers.{a, an, be, shouldBe, shouldEqual}
@@ -101,7 +103,10 @@ class LRecTest extends TestTemplate {
     Apply(factorialFunction, Num(5)).typeCheck() shouldEqual IntType()
     Apply(factorialFunction, Num(5))
       .typeCheck(Env("factorial" -> Func(IntType(), IntType()), "n" -> IntType())) shouldEqual IntType()
-    Apply(Rec("f", "x", IntType(), Func(IntType(), BoolType()), Lambda("y", IntType(), Equal(Var("y"), Num(0)))), Num(5))
+    Apply(
+      Rec("f", "x", IntType(), Func(IntType(), BoolType()), Lambda("y", IntType(), Equal(Var("y"), Num(0)))),
+      Num(5)
+    )
       .typeCheck() shouldEqual Func(IntType(), BoolType())
     Apply(nestedOverridingRecFunction1, Num(5)).typeCheck() shouldEqual IntType()
   }
@@ -119,18 +124,18 @@ class LRecTest extends TestTemplate {
 
   property("Applying with Rec correctly shows a phantom tree") {
     val factorialExpr = Apply(factorialFunction, Num(3))
-    val factorialTree = VariableNode.fromExpr(factorialExpr)
+    val factorialTree = ExprNode.fromExpr(LRec, factorialExpr)
 
     val children = factorialTree.getVisibleChildren(DisplayMode.Evaluation)
     children.length shouldEqual 3
 
-    children.head shouldBe a[VariableNode]
-    children.head.asInstanceOf[VariableNode].exprName shouldEqual "Rec"
+    children.head shouldBe a[ExprNode]
+    children.head.asInstanceOf[ExprNode].exprName shouldEqual "Rec"
 
-    children(1) shouldEqual VariableNode("Num", List(LiteralNode(LiteralInt(3))))
+    children(1) shouldEqual ExprNode(LRec, "Num", List(LiteralNode(LiteralInt(3))))
 
-    children(2) shouldBe a[VariableNode]
-    val phantomNode = children(2).asInstanceOf[VariableNode]
+    children(2) shouldBe a[ExprNode]
+    val phantomNode = children(2).asInstanceOf[ExprNode]
     phantomNode.isPhantom shouldEqual true
     phantomNode.getEvalEnv shouldEqual Env("factorial" -> factorialFunction.eval(), "n" -> NumV(3))
     phantomNode.getValue shouldEqual NumV(6)
@@ -147,30 +152,33 @@ class LRecTest extends TestTemplate {
 //  }
 
   property("Infinite recursion in nodes results in a DepthLimitExceededException in evaluation mode") {
-    val node = VariableNode(
+    val node = ExprNode(
+      LRec,
       "Apply",
       List(
         SubExprNode(
-          VariableNode(
+          ExprNode(
+            LRec,
             "Rec",
             List(
               LiteralNode(LiteralIdentifierBind("f")),
               LiteralNode(LiteralIdentifierBind("x")),
-              SubTypeNode(TypeNode("IntType", Nil)),
-              SubTypeNode(TypeNode("IntType", Nil)),
+              SubTypeNode(TypeNode(LRec, "IntType", Nil)),
+              SubTypeNode(TypeNode(LRec, "IntType", Nil)),
               SubExprNode(
-                VariableNode(
+                ExprNode(
+                  LRec,
                   "Apply",
                   List(
-                    SubExprNode(VariableNode("Var", List(LiteralNode(LiteralIdentifierLookup("f"))))),
-                    SubExprNode(VariableNode("Var", List(LiteralNode(LiteralIdentifierLookup("x")))))
+                    SubExprNode(ExprNode(LRec, "Var", List(LiteralNode(LiteralIdentifierLookup("f"))))),
+                    SubExprNode(ExprNode(LRec, "Var", List(LiteralNode(LiteralIdentifierLookup("x")))))
                   )
                 )
               )
             )
           )
         ),
-        SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(1)))))
+        SubExprNode(ExprNode(LRec, "Num", List(LiteralNode(LiteralInt(1)))))
       )
     )
 

@@ -4,12 +4,14 @@ import convertors.{DisplayMode, HTMLConvertor}
 import languages.LArith.*
 import languages.env.*
 import languages.terms.*
+import languages.terms.blanks.BlankExprDropDown
 import languages.terms.builders.*
 import languages.terms.errors.*
 import languages.terms.exprs.Expr
 import languages.terms.literals.*
 import languages.terms.types.Type
 import languages.terms.values.Value
+import nodes.*
 import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.prop.TableFor3
 import org.scalatest.propspec.AnyPropSpec
@@ -213,18 +215,18 @@ class LArithTest extends TestTemplate {
 //  }
 
   property("Attempting to evaluate an expression not defined in LArith results in an error") {
-    BlankExprDropDown().eval() shouldBe an[UnexpectedExpr]
-    BlankExprDropDown().typeCheck() shouldBe an[UnexpectedExprType]
+    BlankExprDropDown(LArith).eval() shouldBe an[UnexpectedExpr]
+    BlankExprDropDown(LArith).typeCheck() shouldBe an[UnexpectedExprType]
 
-    Plus(BlankExprDropDown(), Num(5)).eval() shouldBe an[UnexpectedExpr]
-    Plus(BlankExprDropDown(), Num(5)).typeCheck() shouldBe an[UnexpectedExprType]
-    Plus(Num(5), BlankExprDropDown()).eval() shouldBe an[UnexpectedExpr]
-    Plus(Num(5), BlankExprDropDown()).typeCheck() shouldBe an[UnexpectedExprType]
+    Plus(BlankExprDropDown(LArith), Num(5)).eval() shouldBe an[UnexpectedExpr]
+    Plus(BlankExprDropDown(LArith), Num(5)).typeCheck() shouldBe an[UnexpectedExprType]
+    Plus(Num(5), BlankExprDropDown(LArith)).eval() shouldBe an[UnexpectedExpr]
+    Plus(Num(5), BlankExprDropDown(LArith)).typeCheck() shouldBe an[UnexpectedExprType]
 
-    Times(BlankExprDropDown(), Num(5)).eval() shouldBe an[UnexpectedExpr]
-    Times(BlankExprDropDown(), Num(5)).typeCheck() shouldBe an[UnexpectedExprType]
-    Times(Num(5), BlankExprDropDown()).eval() shouldBe an[UnexpectedExpr]
-    Times(Num(5), BlankExprDropDown()).typeCheck() shouldBe an[UnexpectedExprType]
+    Times(BlankExprDropDown(LArith), Num(5)).eval() shouldBe an[UnexpectedExpr]
+    Times(BlankExprDropDown(LArith), Num(5)).typeCheck() shouldBe an[UnexpectedExprType]
+    Times(Num(5), BlankExprDropDown(LArith)).eval() shouldBe an[UnexpectedExpr]
+    Times(Num(5), BlankExprDropDown(LArith)).typeCheck() shouldBe an[UnexpectedExprType]
   }
 
   property("Num should pretty print correctly") {
@@ -273,9 +275,10 @@ class LArithTest extends TestTemplate {
   property("Num literal input is disabled in parent expressions") {
     val l = LArith
     val convertor = HTMLConvertor(l, DisplayMode.Edit)
-    val tree = l.VariableNode(
+    val tree = ExprNode(
+      LArith,
       "Plus",
-      List(l.SubExprNode(l.VariableNode("Num", List(l.LiteralNode(LiteralInt(6))))), l.SubExprNode(l.ExprChoiceNode()))
+      List(SubExprNode(ExprNode(LArith, "Num", List(LiteralNode(LiteralInt(6))))), SubExprNode(ExprChoiceNode(LArith)))
     )
     val html = convertor.convert(tree)
     val regex = """<input [\w\s-=":;]+/>""".r

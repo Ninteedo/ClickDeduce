@@ -61,4 +61,13 @@ object UtilityFunctions {
 
     res.toString
   }
+
+
+  def cacheQuery[A, B](cache: collection.mutable.Map[A, B], key: A, value: => B): B = cache.get(key) match {
+    case Some(value) => value
+    case None =>
+      val result = value
+      cache += (key -> result)
+      result
+  }
 }

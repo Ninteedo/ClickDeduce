@@ -3,6 +3,7 @@ package languages
 import languages.LPoly.*
 import languages.env.*
 import languages.terms.*
+import languages.terms.blanks.BlankExprDropDown
 import languages.terms.builders.*
 import languages.terms.errors.*
 import languages.terms.literals.*
@@ -182,6 +183,6 @@ class LPolyTest extends TestTemplate {
 
   property("CreatePolyFunctionTask is checked correctly") {
     CreatePolyFunctionTask.checkFulfilled(Poly("T", Lambda("x", TypeVar("T"), Var("x")))) shouldBe true
-    CreatePolyFunctionTask.checkFulfilled(Poly("T", Lambda("x", TypeVar("T"), IfThenElse(Var("x"), BlankExprDropDown(), BlankExprDropDown())))) shouldBe false
+    CreatePolyFunctionTask.checkFulfilled(Poly("T", Lambda("x", TypeVar("T"), IfThenElse(Var("x"), BlankExprDropDown(LPoly), BlankExprDropDown(LPoly))))) shouldBe false
   }
 }

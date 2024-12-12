@@ -5,33 +5,30 @@ import languages.terms.Term
 import languages.terms.types.Type
 import languages.terms.values.Value
 import languages.{AbstractNodeLanguage, ClickDeduceLanguage}
+import nodes.*
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
 class HTMLConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConvertor(lang, mode) {
-  private type OuterNode = lang.OuterNode
   private type HTML = TypedTag[String]
-  private type ExprNode = lang.ExprNode
-  private type TypeNode = lang.TypeNodeParent
 
-  def convert(node: AbstractNodeLanguage#OuterNode): Output = {
-    val fixedNode = node.asInstanceOf[OuterNode]
+  def convert(node: OuterNode): Output = {
     if (mode == DisplayMode.Evaluation) {
-      fixedNode match {
+      node match {
         case n: ExprNode => n.checkDepthLimitWillBeExceeded()
         case _           =>
       }
     }
     envCounter = -1
-    outerNodeToHTML(fixedNode, 0).toString
+    outerNodeToHTML(node, 0).toString
   }
 
   private def outerNodeToHTML(node: OuterNode, envIndex: Int): HTML = node match {
-    case n: ExprNode => exprNode(n, envIndex)
-    case n: TypeNode => typeNode(n, envIndex)
+    case n: ExprNodeParent => exprNode(n, envIndex)
+    case n: TypeNodeParent => typeNode(n, envIndex)
   }
 
-  private def exprNode(node: ExprNode, envIndex: Int): HTML = {
+  private def exprNode(node: ExprNodeParent, envIndex: Int): HTML = {
     val isAxiom = node.getVisibleChildren(mode).isEmpty
 
     val newEnvIndex = if (node.hasUpdatedEnv(mode)) {
@@ -56,7 +53,7 @@ class HTMLConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConve
     )
   }
 
-  private def fullExprBottomDiv(node: ExprNode, envIndex: Int): HTML =
+  private def fullExprBottomDiv(node: ExprNodeParent, envIndex: Int): HTML =
     div(cls := ClassDict.NODE, envDiv(node, envIndex, typeMode = false), exprDiv(node), resultDiv(node))
 
   private var envCounter: Int = 0
@@ -76,14 +73,14 @@ class HTMLConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConve
     val envMode = if (typeMode) DisplayMode.TypeCheck else mode
 
     def getNodeEnv(node: OuterNode): ValueEnv | TypeEnv = node match {
-      case n: ExprNode => n.getEnv(envMode)
-      case n: TypeNode => n.getEnv(envMode)
+      case n: ExprNodeParent => n.getEnv(envMode)
+      case n: TypeNodeParent => n.getEnv(envMode)
     }
 
     val parentNode = node.getParent
     val parentEnv = {
       val res = parentNode.map(getNodeEnv)
-      if (typeMode && parentNode.exists(_.isInstanceOf[lang.ExprNode])) res.map(TypeEnv.typeVariableEnv) else res
+      if (typeMode && parentNode.exists(_.isInstanceOf[ExprNode])) res.map(TypeEnv.typeVariableEnv) else res
     }
     val filteredEnv = getNodeEnv(node)
       .map((k, v) => {
@@ -112,13 +109,13 @@ class HTMLConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConve
     div(cls := ClassDict.SCOPED_VARIABLES, variablesHtml)
   }
 
-  private def exprDiv(node: ExprNode): HTML = div(if (node.isPhantom) {
+  private def exprDiv(node: ExprNodeParent): HTML = div(if (node.isPhantom) {
     node.toTextReadOnly(mode).asHtml
   } else {
     node.toText(mode).asHtml
   })(cls := ClassDict.EXPR)
 
-  private def resultDiv(node: ExprNode): Seq[HTML] = mode match {
+  private def resultDiv(node: ExprNodeParent): Seq[HTML] = mode match {
     case DisplayMode.Edit =>
       val typeCheckResult = node.getType
       if (typeCheckResult.isError) List(typeCheckTurnstileSpan, typeCheckResultDiv(node))
@@ -131,7 +128,7 @@ class HTMLConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConve
     case DisplayMode.Evaluation => List(evalArrowSpan, evalResultDiv(node))
   }
 
-  private def typeNode(node: TypeNode, envIndex: Int): HTML = {
+  private def typeNode(node: TypeNodeParent, envIndex: Int): HTML = {
     val isAxiom = node.getVisibleChildren(mode).isEmpty
     div(
       cls := List(
@@ -153,20 +150,20 @@ class HTMLConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConve
     )
   }
 
-  private def fullTypeBottomDiv(node: TypeNode, envIndex: Int): HTML =
+  private def fullTypeBottomDiv(node: TypeNodeParent, envIndex: Int): HTML =
     div(cls := ClassDict.NODE, envDiv(node, envIndex, typeMode = true), typeDiv(node), typeResultDiv(node))
 
-  private def typeDiv(node: TypeNode): HTML = node.toText(mode).asHtml(cls := ClassDict.TYPE)
+  private def typeDiv(node: TypeNodeParent): HTML = node.toText(mode).asHtml(cls := ClassDict.TYPE)
 
-  private def typeResultDiv(node: TypeNode): HTML =
+  private def typeResultDiv(node: TypeNodeParent): HTML =
     div(cls := ClassDict.TYPE_CHECK_RESULT, typeCheckTurnstileSpan, node.getTypeCheckResult(mode).toHtml)
 
   private val typeCheckTurnstileSpan: HTML = span(paddingLeft := "0.5ch", paddingRight := "0.5ch", raw(":"))
-  private def typeCheckResultDiv(node: ExprNode): HTML =
+  private def typeCheckResultDiv(node: ExprNodeParent): HTML =
     div(cls := ClassDict.TYPE_CHECK_RESULT, node.getType.toHtml)
   private val evalArrowSpan: HTML = span(paddingLeft := "1ch", paddingRight := "1ch", raw("&DoubleDownArrow;"))
-  private def evalResultDiv(node: ExprNode): HTML = div(cls := ClassDict.EVAL_RESULT, node.getValue.toHtml)
-  private def editEvalResultDiv(node: ExprNode): HTML =
+  private def evalResultDiv(node: ExprNodeParent): HTML = div(cls := ClassDict.EVAL_RESULT, node.getValue.toHtml)
+  private def editEvalResultDiv(node: ExprNodeParent): HTML =
     div(cls := ClassDict.EVAL_RESULT, node.getEditValueResult.toHtml)
 
   private def phantomClassName(node: OuterNode): String = if (node.isPhantom) ClassDict.PHANTOM else ""

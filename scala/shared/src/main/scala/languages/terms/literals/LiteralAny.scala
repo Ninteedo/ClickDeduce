@@ -2,7 +2,6 @@ package languages.terms.literals
 
 import app.UtilityFunctions
 import convertors.{ConvertableText, TextElement}
-import scalatags.Text.all.s
 
 /** A literal with no restrictions.
   *

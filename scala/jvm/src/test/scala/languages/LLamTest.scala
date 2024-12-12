@@ -4,11 +4,13 @@ import convertors.{DisplayMode, HTMLConvertor}
 import languages.LLam.*
 import languages.env.*
 import languages.terms.*
+import languages.terms.blanks.{BlankExprDropDown, BlankTypeDropDown}
 import languages.terms.builders.*
 import languages.terms.errors.*
 import languages.terms.exprs.Expr
 import languages.terms.literals.*
 import languages.terms.types.Type
+import nodes.*
 import org.scalatest.matchers.should.Matchers.{an, shouldBe, shouldEqual}
 import org.scalatest.prop.TableFor1
 import org.scalatest.propspec.AnyPropSpec
@@ -105,15 +107,15 @@ class LLamTest extends TestTemplate {
   }
 
   property("Lambda node behaves appropriately with simple argument type") {
-    val initialTree = VariableNode.createFromExprName("Lambda").get
-    initialTree.args shouldEqual List(LiteralNode(LiteralIdentifierBind("")), SubTypeNode(TypeChoiceNode()), SubExprNode(ExprChoiceNode()))
+    val initialTree = ExprNode.createFromExprName(LLam, "Lambda").get
+    initialTree.args shouldEqual List(LiteralNode(LiteralIdentifierBind("")), SubTypeNode(TypeChoiceNode(LLam)), SubExprNode(ExprChoiceNode(LLam)))
 
     val argName: String = "foo"
     val editVarNameAction = EditLiteralAction(initialTree, List(0), argName)
     editVarNameAction.newTree.args shouldEqual List(
       LiteralNode(LiteralIdentifierBind(argName)),
-      SubTypeNode(TypeChoiceNode()),
-      SubExprNode(ExprChoiceNode())
+      SubTypeNode(TypeChoiceNode(LLam)),
+      SubExprNode(ExprChoiceNode(LLam))
     )
 
     val argType: Type = IntType()
@@ -121,73 +123,73 @@ class LLamTest extends TestTemplate {
     val setArgTypeAction = SelectTypeAction(editVarNameAction.newTree, List(1), argTypeName)
     setArgTypeAction.newTree.args shouldEqual List(
       LiteralNode(LiteralIdentifierBind(argName)),
-      SubTypeNode(TypeNode(argTypeName, Nil)),
-      SubExprNode(ExprChoiceNode())
+      SubTypeNode(TypeNode(LLam, argTypeName, Nil)),
+      SubExprNode(ExprChoiceNode(LLam))
     )
 
     val setExprKindAction = SelectExprAction(setArgTypeAction.newTree, List(2), "Var")
     setExprKindAction.newTree.args shouldEqual List(
       LiteralNode(LiteralIdentifierBind(argName)),
-      SubTypeNode(TypeNode(argTypeName, Nil)),
-      SubExprNode(VariableNode("Var", List(LiteralNode(LiteralIdentifierLookup("")))))
+      SubTypeNode(TypeNode(LLam, argTypeName, Nil)),
+      SubExprNode(ExprNode(LLam, "Var", List(LiteralNode(LiteralIdentifierLookup("")))))
     )
 
     val setVarExprLiteral = EditLiteralAction(setExprKindAction.newTree, List(2, 0), argName)
     setVarExprLiteral.newTree.args shouldEqual List(
       LiteralNode(LiteralIdentifierBind(argName)),
-      SubTypeNode(TypeNode(argTypeName, Nil)),
-      SubExprNode(VariableNode("Var", List(LiteralNode(LiteralIdentifierLookup(argName)))))
+      SubTypeNode(TypeNode(LLam, argTypeName, Nil)),
+      SubExprNode(ExprNode(LLam, "Var", List(LiteralNode(LiteralIdentifierLookup(argName)))))
     )
   }
 
   property("Lambda node behaves appropriately with complex argument type") {
-    val initialTree = VariableNode.createFromExprName("Lambda").get
-    initialTree.args shouldEqual List(LiteralNode(LiteralIdentifierBind("")), SubTypeNode(TypeChoiceNode()), SubExprNode(ExprChoiceNode()))
+    val initialTree = ExprNode.createFromExprName(LLam, "Lambda").get
+    initialTree.args shouldEqual List(LiteralNode(LiteralIdentifierBind("")), SubTypeNode(TypeChoiceNode(LLam)), SubExprNode(ExprChoiceNode(LLam)))
 
     val argName: String = "bar"
     val editVarNameAction = EditLiteralAction(initialTree, List(0), argName)
     editVarNameAction.newTree.args shouldEqual List(
       LiteralNode(LiteralIdentifierBind(argName)),
-      SubTypeNode(TypeChoiceNode()),
-      SubExprNode(ExprChoiceNode())
+      SubTypeNode(TypeChoiceNode(LLam)),
+      SubExprNode(ExprChoiceNode(LLam))
     )
 
     val completeTypeNode =
-      SubTypeNode(TypeNode("Func", List(SubTypeNode(TypeNode("IntType", Nil)), SubTypeNode(TypeNode("IntType", Nil)))))
+      SubTypeNode(TypeNode(LLam, "Func", List(SubTypeNode(TypeNode(LLam, "IntType", Nil)), SubTypeNode(TypeNode(LLam, "IntType", Nil)))))
 
     val setArgFuncTypeAction = SelectTypeAction(editVarNameAction.newTree, List(1), "Func")
     setArgFuncTypeAction.newTree.args shouldEqual List(
       LiteralNode(LiteralIdentifierBind(argName)),
-      SubTypeNode(TypeNode("Func", List(SubTypeNode(TypeChoiceNode()), SubTypeNode(TypeChoiceNode())))),
-      SubExprNode(ExprChoiceNode())
+      SubTypeNode(TypeNode(LLam, "Func", List(SubTypeNode(TypeChoiceNode(LLam)), SubTypeNode(TypeChoiceNode(LLam))))),
+      SubExprNode(ExprChoiceNode(LLam))
     )
 
     val setArgFuncInTypeAction = SelectTypeAction(setArgFuncTypeAction.newTree, List(1, 0), "IntType")
     setArgFuncInTypeAction.newTree.args shouldEqual List(
       LiteralNode(LiteralIdentifierBind(argName)),
-      SubTypeNode(TypeNode("Func", List(SubTypeNode(TypeNode("IntType", Nil)), SubTypeNode(TypeChoiceNode())))),
-      SubExprNode(ExprChoiceNode())
+      SubTypeNode(TypeNode(LLam, "Func", List(SubTypeNode(TypeNode(LLam, "IntType", Nil)), SubTypeNode(TypeChoiceNode(LLam))))),
+      SubExprNode(ExprChoiceNode(LLam))
     )
 
     val setArgFuncOutTypeAction = SelectTypeAction(setArgFuncInTypeAction.newTree, List(1, 1), "IntType")
     setArgFuncOutTypeAction.newTree.args shouldEqual List(
       LiteralNode(LiteralIdentifierBind(argName)),
-      SubTypeNode(TypeNode("Func", List(SubTypeNode(TypeNode("IntType", Nil)), SubTypeNode(TypeNode("IntType", Nil))))),
-      SubExprNode(ExprChoiceNode())
+      SubTypeNode(TypeNode(LLam, "Func", List(SubTypeNode(TypeNode(LLam, "IntType", Nil)), SubTypeNode(TypeNode(LLam, "IntType", Nil))))),
+      SubExprNode(ExprChoiceNode(LLam))
     )
 
     val setExprKindAction = SelectExprAction(setArgFuncOutTypeAction.newTree, List(2), "Var")
     setExprKindAction.newTree.args shouldEqual List(
       LiteralNode(LiteralIdentifierBind(argName)),
       completeTypeNode,
-      SubExprNode(VariableNode("Var", List(LiteralNode(LiteralIdentifierLookup("")))))
+      SubExprNode(ExprNode(LLam, "Var", List(LiteralNode(LiteralIdentifierLookup("")))))
     )
 
     val setVarExprLiteral = EditLiteralAction(setExprKindAction.newTree, List(2, 0), argName)
     setVarExprLiteral.newTree.args shouldEqual List(
       LiteralNode(LiteralIdentifierBind(argName)),
       completeTypeNode,
-      SubExprNode(VariableNode("Var", List(LiteralNode(LiteralIdentifierLookup(argName)))))
+      SubExprNode(ExprNode(LLam, "Var", List(LiteralNode(LiteralIdentifierLookup(argName)))))
     )
   }
 
@@ -201,41 +203,41 @@ class LLamTest extends TestTemplate {
   }
 
   property("Lambda is converted to HTML without error") {
-    val node1 = VariableNode(
+    val node1 = ExprNode(LLam,
       "Apply",
       List(
         SubExprNode(
-          VariableNode(
+          ExprNode(LLam,
             "Lambda",
             List(
               LiteralNode(LiteralIdentifierBind("x")),
-              SubTypeNode(TypeNode("IntType", Nil)),
+              SubTypeNode(TypeNode(LLam, "IntType", Nil)),
               SubExprNode(
-                VariableNode(
+                ExprNode(LLam,
                   "Plus",
                   List(
-                    SubExprNode(VariableNode("Var", List(LiteralNode(LiteralIdentifierLookup("x"))))),
-                    SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(1)))))
+                    SubExprNode(ExprNode(LLam, "Var", List(LiteralNode(LiteralIdentifierLookup("x"))))),
+                    SubExprNode(ExprNode(LLam, "Num", List(LiteralNode(LiteralInt(1)))))
                   )
                 )
               )
             )
           )
         ),
-        SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(3)))))
+        SubExprNode(ExprNode(LLam, "Num", List(LiteralNode(LiteralInt(3)))))
       )
     )
 
-    val node2 = VariableNode(
+    val node2 = ExprNode(LLam,
       "Lambda",
       List(
         LiteralNode(LiteralIdentifierBind("")),
-        SubTypeNode(TypeChoiceNode()),
-        SubExprNode(VariableNode("Var", List(LiteralNode(LiteralIdentifierLookup("bar")))))
+        SubTypeNode(TypeChoiceNode(LLam)),
+        SubExprNode(ExprNode(LLam, "Var", List(LiteralNode(LiteralIdentifierLookup("bar")))))
       )
     )
 
-    val nodes: TableFor1[VariableNode] = Table("node", node1, node2)
+    val nodes: TableFor1[ExprNode] = Table("node", node1, node2)
     val modes: TableFor1[DisplayMode] = Table("mode", DisplayMode.values: _*)
 
     modes.forEvery({ mode =>
@@ -246,42 +248,42 @@ class LLamTest extends TestTemplate {
   }
 
   property("Lambda node createAction behaves appropriately with complex argument type") {
-    val initialTree = VariableNode.createFromExprName("Lambda").get
-    initialTree.args shouldEqual List(LiteralNode(LiteralIdentifierBind("")), SubTypeNode(TypeChoiceNode()), SubExprNode(ExprChoiceNode()))
+    val initialTree = ExprNode.createFromExprName(LLam, "Lambda").get
+    initialTree.args shouldEqual List(LiteralNode(LiteralIdentifierBind("")), SubTypeNode(TypeChoiceNode(LLam)), SubExprNode(ExprChoiceNode(LLam)))
 
     val argName: String = "super1984"
     val editVarNameAction = createAction("EditLiteralAction", initialTree.toString, "0", List(argName))
     editVarNameAction.newTree.args shouldEqual List(
       LiteralNode(LiteralIdentifierBind(argName)),
-      SubTypeNode(TypeChoiceNode()),
-      SubExprNode(ExprChoiceNode())
+      SubTypeNode(TypeChoiceNode(LLam)),
+      SubExprNode(ExprChoiceNode(LLam))
     )
 
     val completeTypeNode =
-      SubTypeNode(TypeNode("Func", List(SubTypeNode(TypeNode("IntType", Nil)), SubTypeNode(TypeNode("IntType", Nil)))))
+      SubTypeNode(TypeNode(LLam, "Func", List(SubTypeNode(TypeNode(LLam, "IntType", Nil)), SubTypeNode(TypeNode(LLam, "IntType", Nil)))))
 
     val setArgFuncTypeAction =
       createAction("SelectTypeAction", editVarNameAction.newTree.toString, "1", List("Func"))
     setArgFuncTypeAction.newTree.args shouldEqual List(
       LiteralNode(LiteralIdentifierBind(argName)),
-      SubTypeNode(TypeNode("Func", List(SubTypeNode(TypeChoiceNode()), SubTypeNode(TypeChoiceNode())))),
-      SubExprNode(ExprChoiceNode())
+      SubTypeNode(TypeNode(LLam, "Func", List(SubTypeNode(TypeChoiceNode(LLam)), SubTypeNode(TypeChoiceNode(LLam))))),
+      SubExprNode(ExprChoiceNode(LLam))
     )
 
     val setArgFuncInTypeAction =
       createAction("SelectTypeAction", setArgFuncTypeAction.newTree.toString, "1-0", List("IntType"))
     setArgFuncInTypeAction.newTree.args shouldEqual List(
       LiteralNode(LiteralIdentifierBind(argName)),
-      SubTypeNode(TypeNode("Func", List(SubTypeNode(TypeNode("IntType", Nil)), SubTypeNode(TypeChoiceNode())))),
-      SubExprNode(ExprChoiceNode())
+      SubTypeNode(TypeNode(LLam, "Func", List(SubTypeNode(TypeNode(LLam, "IntType", Nil)), SubTypeNode(TypeChoiceNode(LLam))))),
+      SubExprNode(ExprChoiceNode(LLam))
     )
 
     val setArgFuncOutTypeAction =
       createAction("SelectTypeAction", setArgFuncInTypeAction.newTree.toString, "1-1", List("IntType"))
     setArgFuncOutTypeAction.newTree.args shouldEqual List(
       LiteralNode(LiteralIdentifierBind(argName)),
-      SubTypeNode(TypeNode("Func", List(SubTypeNode(TypeNode("IntType", Nil)), SubTypeNode(TypeNode("IntType", Nil))))),
-      SubExprNode(ExprChoiceNode())
+      SubTypeNode(TypeNode(LLam, "Func", List(SubTypeNode(TypeNode(LLam, "IntType", Nil)), SubTypeNode(TypeNode(LLam, "IntType", Nil))))),
+      SubExprNode(ExprChoiceNode(LLam))
     )
 
     val setExprKindAction =
@@ -289,7 +291,7 @@ class LLamTest extends TestTemplate {
     setExprKindAction.newTree.args shouldEqual List(
       LiteralNode(LiteralIdentifierBind(argName)),
       completeTypeNode,
-      SubExprNode(VariableNode("Var", List(LiteralNode(LiteralIdentifierLookup("")))))
+      SubExprNode(ExprNode(LLam, "Var", List(LiteralNode(LiteralIdentifierLookup("")))))
     )
 
     val setVarExprLiteral =
@@ -297,13 +299,13 @@ class LLamTest extends TestTemplate {
     setVarExprLiteral.newTree.args shouldEqual List(
       LiteralNode(LiteralIdentifierBind(argName)),
       completeTypeNode,
-      SubExprNode(VariableNode("Var", List(LiteralNode(LiteralIdentifierLookup(argName)))))
+      SubExprNode(ExprNode(LLam, "Var", List(LiteralNode(LiteralIdentifierLookup(argName)))))
     )
   }
 
   property("Apply node has a third tree shown") {
     val expr = Apply(incrementFunction, Num(8))
-    val tree = VariableNode.fromExpr(expr)
+    val tree = ExprNode.fromExpr(LLam, expr)
 
     tree.getExpr shouldEqual expr
 
@@ -311,7 +313,7 @@ class LLamTest extends TestTemplate {
     tree.getVisibleChildren(DisplayMode.TypeCheck) shouldEqual tree.children
 
     tree.getVisibleChildren(DisplayMode.Evaluation) shouldEqual
-      tree.children :+ VariableNode.fromExpr(Plus(Var("x"), Num(1)))
+      tree.children :+ ExprNode.fromExpr(LLam, Plus(Var("x"), Num(1)))
 
     val phantomTree = tree.getVisibleChildren(DisplayMode.Evaluation).last.asInstanceOf[ExprNode]
     phantomTree.getExpr shouldEqual Plus(Var("x"), Num(1))
@@ -319,10 +321,10 @@ class LLamTest extends TestTemplate {
     phantomTree.getValue shouldEqual NumV(9)
 
     val exprChoicePhantomExpr =
-      Apply(Lambda(LiteralIdentifierBind("x"), BlankTypeDropDown(), BlankExprDropDown()), BlankExprDropDown())
-    val exprChoicePhantomTree = VariableNode.fromExpr(exprChoicePhantomExpr)
+      Apply(Lambda(LiteralIdentifierBind("x"), BlankTypeDropDown(LLam), BlankExprDropDown(LLam)), BlankExprDropDown(LLam))
+    val exprChoicePhantomTree = ExprNode.fromExpr(LLam, exprChoicePhantomExpr)
     exprChoicePhantomTree.getVisibleChildren(DisplayMode.Evaluation) shouldEqual
-      exprChoicePhantomTree.children :+ ExprChoiceNode()
+      exprChoicePhantomTree.children :+ ExprChoiceNode(LLam)
     exprChoicePhantomTree.getVisibleChildren(DisplayMode.Evaluation).last.isPhantom shouldEqual true
   }
 
@@ -337,24 +339,24 @@ class LLamTest extends TestTemplate {
 
   property("Lambda expression has correct environment when editing subexpression") {
     val expr = incrementFunction
-    val tree = VariableNode(
+    val tree = ExprNode(LLam,
       "Lambda",
       List(
         LiteralNode(LiteralIdentifierBind("x")),
-        SubTypeNode(TypeNode("IntType", Nil)),
+        SubTypeNode(TypeNode(LLam, "IntType", Nil)),
         SubExprNode(
-          VariableNode(
+          ExprNode(LLam,
             "Plus",
             List(
-              SubExprNode(VariableNode("Var", List(LiteralNode(LiteralIdentifierLookup("x"))))),
-              SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(1)))))
+              SubExprNode(ExprNode(LLam, "Var", List(LiteralNode(LiteralIdentifierLookup("x"))))),
+              SubExprNode(ExprNode(LLam, "Num", List(LiteralNode(LiteralInt(1)))))
             )
           )
         )
       )
     )
 
-    val subExprNode = tree.children.last.asInstanceOf[VariableNode]
+    val subExprNode = tree.children.last.asInstanceOf[ExprNode]
     subExprNode.getEditEnv shouldEqual Env("x" -> HiddenValue(IntType()))
     subExprNode.getTypeEnv shouldEqual Env("x" -> IntType())
     subExprNode.getType shouldEqual IntType()
@@ -387,7 +389,7 @@ class LLamTest extends TestTemplate {
   property("Lambda node type selects are not both editable") {
     val l = LLam
     val convertor = HTMLConvertor(l, DisplayMode.Edit)
-    val tree = l.VariableNode.createFromExprName("Lambda").get
+    val tree = ExprNode.createFromExprName(LLam, "Lambda").get
     val res: String = convertor.convert(tree)
     val regex = """<select class="type-dropdown[\s\w"-=]+>""".r
     val typeSelects = regex.findAllIn(res).toList

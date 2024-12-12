@@ -3,6 +3,7 @@ package languages
 import convertors.*
 import languages.env.*
 import languages.terms.*
+import languages.terms.blanks.BlankExprDropDown
 import languages.terms.builders.*
 import languages.terms.errors.*
 import languages.terms.exprs.Expr
@@ -117,6 +118,18 @@ class LArith extends ClickDeduceLanguage {
 
   // values
 
+  trait OrdinalValue extends Value {
+    def compare(that: OrdinalValue): Int
+  }
+
+  trait NumericValue extends OrdinalValue {
+    @targetName("plus")
+    def +(that: NumericValue): NumericValue
+
+    @targetName("times")
+    def *(that: NumericValue): NumericValue
+  }
+
   /** A numeric value. Can be any integer.
     *
     * @param x
@@ -147,23 +160,11 @@ class LArith extends ClickDeduceLanguage {
     override def toText: ConvertableText = MathElement(x.toString)
   }
 
-  trait OrdinalValue extends Value {
-    def compare(that: OrdinalValue): Int
-  }
-
-  trait NumericValue extends OrdinalValue {
-    @targetName("plus")
-    def +(that: NumericValue): NumericValue
-
-    @targetName("times")
-    def *(that: NumericValue): NumericValue
-  }
-
-  trait OrdinalType extends Type
-
-  object NumV extends ValueCompanion {}
+  object NumV extends ValueCompanion
 
   // types
+
+  trait OrdinalType extends Type
 
   /** Type for integers.
    */
@@ -205,7 +206,7 @@ class LArith extends ClickDeduceLanguage {
       "or by typing the expression's name into the text box and pressing Enter."
     override val difficulty: Int = 1
 
-    override def checkFulfilled(expr: Expr): Boolean = expr != BlankExprDropDown()
+    override def checkFulfilled(expr: Expr): Boolean = !expr.isInstanceOf[BlankExprDropDown]
   }
 
   private object EnterANumberTask extends Task {

@@ -70,7 +70,7 @@ class BuilderManager[T <: Term] {
    *   The list of builder names.
    */
   def builderNames: List[BuilderName] = builderNamesList
-  
+
   def register(c: BuilderCompanion[T], langName: String): Unit = {
     addBuilder(c.name, c.create, langName, c.isHidden, c.aliases)
   }

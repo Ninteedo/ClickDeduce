@@ -4,9 +4,12 @@ import convertors.{DisplayMode, HTMLConvertor}
 import languages.LRec.*
 import languages.env.*
 import languages.terms.*
+import languages.terms.blanks.{BlankExprDropDown, BlankTypeDropDown}
 import languages.terms.builders.*
 import languages.terms.errors.*
 import languages.terms.literals.*
+import nodes.*
+import nodes.exceptions.*
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor1}
 import org.scalatest.wordspec.AnyWordSpec
@@ -15,33 +18,33 @@ class NodeSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChecks 
   "Node parent" should {
     val nodes: TableFor1[OuterNode] = TableFor1(
       "node",
-      VariableNode("Test", Nil),
-      VariableNode("Test", List(SubExprNode(VariableNode("Test", Nil)), SubExprNode(VariableNode("Test", Nil)))),
-      VariableNode("Test", List(LiteralNode(LiteralAny("foo")), SubExprNode(ExprChoiceNode()))),
-      VariableNode(
+      ExprNode(LRec, "Test", Nil),
+      ExprNode(LRec, "Test", List(SubExprNode(ExprNode(LRec, "Test", Nil)), SubExprNode(ExprNode(LRec, "Test", Nil)))),
+      ExprNode(LRec, "Test", List(LiteralNode(LiteralAny("foo")), SubExprNode(ExprChoiceNode(LRec)))),
+      ExprNode(LRec,
         "Root",
         List(
           SubExprNode(
-            VariableNode(
+            ExprNode(LRec,
               "Level1",
-              List(SubExprNode(VariableNode("Level2", Nil)), SubExprNode(VariableNode("Level2", Nil)))
+              List(SubExprNode(ExprNode(LRec, "Level2", Nil)), SubExprNode(ExprNode(LRec, "Level2", Nil)))
             )
           )
         )
       ),
-      VariableNode.fromExpr(Plus(Times(Num(5), Var("a")), IfThenElse(Bool(true), Num(5), Num(6)))),
-      VariableNode.fromExpr(Let("x", Plus(Var("y"), Num(-1)), Plus(Var("x"), Var("y")))),
-      VariableNode.fromExpr(
+      ExprNode.fromExpr(LRec, Plus(Times(Num(5), Var("a")), IfThenElse(Bool(true), Num(5), Num(6)))),
+      ExprNode.fromExpr(LRec, Let("x", Plus(Var("y"), Num(-1)), Plus(Var("x"), Var("y")))),
+      ExprNode.fromExpr(LRec,
         Lambda("foo", Func(Func(IntType(), IntType()), BoolType()), Equal(Apply(Var("foo"), Num(1)), Num(0)))
       ),
-      VariableNode.fromExpr(BlankExprDropDown()),
-      VariableNode.fromExpr(Plus(BlankExprDropDown(), BlankExprDropDown())),
-      TypeNode.fromType(IntType()),
-      TypeNode.fromType(Func(IntType(), BoolType())),
-      TypeNode.fromType(Func(Func(IntType(), IntType()), BoolType())),
-      TypeNode.fromType(Func(Func(Func(IntType(), IntType()), Func(IntType(), BoolType())), BoolType())),
-      TypeNode.fromType(BlankTypeDropDown()),
-      TypeNode.fromType(Func(BlankTypeDropDown(), BlankTypeDropDown()))
+      ExprNode.fromExpr(LRec, BlankExprDropDown(LRec)),
+      ExprNode.fromExpr(LRec, Plus(BlankExprDropDown(LRec), BlankExprDropDown(LRec))),
+      TypeNode.fromType(LRec, IntType()),
+      TypeNode.fromType(LRec, Func(IntType(), BoolType())),
+      TypeNode.fromType(LRec, Func(Func(IntType(), IntType()), BoolType())),
+      TypeNode.fromType(LRec, Func(Func(Func(IntType(), IntType()), Func(IntType(), BoolType())), BoolType())),
+      TypeNode.fromType(LRec, BlankTypeDropDown(LRec)),
+      TypeNode.fromType(LRec, Func(BlankTypeDropDown(LRec), BlankTypeDropDown(LRec)))
     )
 
     "be none for root node" in {
@@ -79,123 +82,123 @@ class NodeSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChecks 
     "create a new node from an expression name" in {
       val cases = Table(
         ("name", "node"),
-        ("Num", VariableNode("Num", List(LiteralNode(LiteralInt(0))))),
-        ("Plus", VariableNode("Plus", List(SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode())))),
-        ("Times", VariableNode("Times", List(SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode())))),
-        ("Bool", VariableNode("Bool", List(LiteralNode(LiteralBool(false))))),
-        ("Var", VariableNode("Var", List(LiteralNode(LiteralIdentifierLookup(""))))),
-        ("Equal", VariableNode("Equal", List(SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode())))),
+        ("Num", ExprNode(LRec, "Num", List(LiteralNode(LiteralInt(0))))),
+        ("Plus", ExprNode(LRec, "Plus", List(SubExprNode(ExprChoiceNode(LRec)), SubExprNode(ExprChoiceNode(LRec))))),
+        ("Times", ExprNode(LRec, "Times", List(SubExprNode(ExprChoiceNode(LRec)), SubExprNode(ExprChoiceNode(LRec))))),
+        ("Bool", ExprNode(LRec, "Bool", List(LiteralNode(LiteralBool(false))))),
+        ("Var", ExprNode(LRec, "Var", List(LiteralNode(LiteralIdentifierLookup(""))))),
+        ("Equal", ExprNode(LRec, "Equal", List(SubExprNode(ExprChoiceNode(LRec)), SubExprNode(ExprChoiceNode(LRec))))),
         (
           "IfThenElse",
-          VariableNode(
+          ExprNode(LRec,
             "IfThenElse",
-            List(SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode()))
+            List(SubExprNode(ExprChoiceNode(LRec)), SubExprNode(ExprChoiceNode(LRec)), SubExprNode(ExprChoiceNode(LRec)))
           )
         ),
         (
           "Let",
-          VariableNode("Let", List(LiteralNode(LiteralIdentifierBind("")), SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode())))
+          ExprNode(LRec, "Let", List(LiteralNode(LiteralIdentifierBind("")), SubExprNode(ExprChoiceNode(LRec)), SubExprNode(ExprChoiceNode(LRec))))
         ),
         (
           "Lambda",
-          VariableNode(
+          ExprNode(LRec,
             "Lambda",
-            List(LiteralNode(LiteralIdentifierBind("")), SubTypeNode(TypeNode.fromType(BlankTypeDropDown())), SubExprNode(ExprChoiceNode()))
+            List(LiteralNode(LiteralIdentifierBind("")), SubTypeNode(TypeNode.fromType(LRec, BlankTypeDropDown(LRec))), SubExprNode(ExprChoiceNode(LRec)))
           )
         ),
         (
           "Rec",
-          VariableNode(
+          ExprNode(LRec,
             "Rec",
             List(
               LiteralNode(LiteralIdentifierBind("")),
               LiteralNode(LiteralIdentifierBind("")),
-              SubTypeNode(TypeNode.fromType(BlankTypeDropDown())),
-              SubTypeNode(TypeNode.fromType(BlankTypeDropDown())),
-              SubExprNode(ExprChoiceNode())
+              SubTypeNode(TypeNode.fromType(LRec, BlankTypeDropDown(LRec))),
+              SubTypeNode(TypeNode.fromType(LRec, BlankTypeDropDown(LRec))),
+              SubExprNode(ExprChoiceNode(LRec))
             )
           )
         ),
-        ("Apply", VariableNode("Apply", List(SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode()))))
+        ("Apply", ExprNode(LRec, "Apply", List(SubExprNode(ExprChoiceNode(LRec)), SubExprNode(ExprChoiceNode(LRec)))))
       )
 
       forAll(cases) { (name, node) =>
-        VariableNode.createFromExprName(name) shouldBe Some(node)
+        ExprNode.createFromExprName(LRec, name) shouldBe Some(node)
       }
     }
 
     "correctly convert from an expression (without types)" in {
       val cases = Table(
         ("expr", "node"),
-        (Num(5), VariableNode("Num", List(LiteralNode(LiteralInt(5))))),
-        (Var("x"), VariableNode("Var", List(LiteralNode(LiteralIdentifierLookup("x"))))),
+        (Num(5), ExprNode(LRec, "Num", List(LiteralNode(LiteralInt(5))))),
+        (Var("x"), ExprNode(LRec, "Var", List(LiteralNode(LiteralIdentifierLookup("x"))))),
         (
           Plus(Num(5), Num(6)),
-          VariableNode(
+          ExprNode(LRec,
             "Plus",
             List(
-              SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(5))))),
-              SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(6)))))
+              SubExprNode(ExprNode(LRec, "Num", List(LiteralNode(LiteralInt(5))))),
+              SubExprNode(ExprNode(LRec, "Num", List(LiteralNode(LiteralInt(6)))))
             )
           )
         ),
         (
           Plus(Times(Num(1), Num(2)), Num(53)),
-          VariableNode(
+          ExprNode(LRec,
             "Plus",
             List(
               SubExprNode(
-                VariableNode(
+                ExprNode(LRec,
                   "Times",
                   List(
-                    SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(1))))),
-                    SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(2)))))
+                    SubExprNode(ExprNode(LRec, "Num", List(LiteralNode(LiteralInt(1))))),
+                    SubExprNode(ExprNode(LRec, "Num", List(LiteralNode(LiteralInt(2)))))
                   )
                 )
               ),
-              SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(53)))))
+              SubExprNode(ExprNode(LRec, "Num", List(LiteralNode(LiteralInt(53)))))
             )
           )
         ),
-        (BlankExprDropDown(), ExprChoiceNode()),
+        (BlankExprDropDown(LRec), ExprChoiceNode(LRec)),
         (
-          Plus(BlankExprDropDown(), BlankExprDropDown()),
-          VariableNode("Plus", List(SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode())))
+          Plus(BlankExprDropDown(LRec), BlankExprDropDown(LRec)),
+          ExprNode(LRec, "Plus", List(SubExprNode(ExprChoiceNode(LRec)), SubExprNode(ExprChoiceNode(LRec))))
         ),
         (
           IfThenElse(Equal(Num(65), Num(0)), Num(1), Num(0)),
-          VariableNode(
+          ExprNode(LRec,
             "IfThenElse",
             List(
               SubExprNode(
-                VariableNode(
+                ExprNode(LRec,
                   "Equal",
                   List(
-                    SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(65))))),
-                    SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(0)))))
+                    SubExprNode(ExprNode(LRec, "Num", List(LiteralNode(LiteralInt(65))))),
+                    SubExprNode(ExprNode(LRec, "Num", List(LiteralNode(LiteralInt(0)))))
                   )
                 )
               ),
-              SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(1))))),
-              SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(0)))))
+              SubExprNode(ExprNode(LRec, "Num", List(LiteralNode(LiteralInt(1))))),
+              SubExprNode(ExprNode(LRec, "Num", List(LiteralNode(LiteralInt(0)))))
             )
           )
         ),
         (
           Let(LiteralIdentifierBind("5"), Num(5), Bool(false)),
-          VariableNode(
+          ExprNode(LRec,
             "Let",
             List(
               LiteralNode(LiteralIdentifierBind("5")),
-              SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(5))))),
-              SubExprNode(VariableNode("Bool", List(LiteralNode(LiteralBool(false)))))
+              SubExprNode(ExprNode(LRec, "Num", List(LiteralNode(LiteralInt(5))))),
+              SubExprNode(ExprNode(LRec, "Bool", List(LiteralNode(LiteralBool(false)))))
             )
           )
         )
       )
 
       forAll(cases) { (expr, node) =>
-        VariableNode.fromExpr(expr) shouldBe node
+        ExprNode.fromExpr(LRec, expr) shouldBe node
       }
     }
 
@@ -204,28 +207,28 @@ class NodeSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChecks 
         ("expr", "node"),
         (
           Lambda("x", IntType(), Var("x")),
-          VariableNode(
+          ExprNode(LRec,
             "Lambda",
             List(
               LiteralNode(LiteralIdentifierBind("x")),
-              SubTypeNode(TypeNode.fromType(IntType())),
-              SubExprNode(VariableNode("Var", List(LiteralNode(LiteralIdentifierLookup("x")))))
+              SubTypeNode(TypeNode.fromType(LRec, IntType())),
+              SubExprNode(ExprNode(LRec, "Var", List(LiteralNode(LiteralIdentifierLookup("x")))))
             )
           )
         ),
         (
           Lambda("int", Func(IntType(), IntType()), Apply(Var("int"), Num(5))),
-          VariableNode(
+          ExprNode(LRec,
             "Lambda",
             List(
               LiteralNode(LiteralIdentifierBind("int")),
-              SubTypeNode(TypeNode.fromType(Func(IntType(), IntType()))),
+              SubTypeNode(TypeNode.fromType(LRec, Func(IntType(), IntType()))),
               SubExprNode(
-                VariableNode(
+                ExprNode(LRec,
                   "Apply",
                   List(
-                    SubExprNode(VariableNode("Var", List(LiteralNode(LiteralIdentifierLookup("int"))))),
-                    SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(5)))))
+                    SubExprNode(ExprNode(LRec, "Var", List(LiteralNode(LiteralIdentifierLookup("int"))))),
+                    SubExprNode(ExprNode(LRec, "Num", List(LiteralNode(LiteralInt(5)))))
                   )
                 )
               )
@@ -234,78 +237,78 @@ class NodeSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChecks 
         ),
         (
           Rec("rec", "x", Func(IntType(), IntType()), IntType(), Var("x")),
-          VariableNode(
+          ExprNode(LRec,
             "Rec",
             List(
               LiteralNode(LiteralIdentifierBind("rec")),
               LiteralNode(LiteralIdentifierBind("x")),
-              SubTypeNode(TypeNode.fromType(Func(IntType(), IntType()))),
-              SubTypeNode(TypeNode.fromType(IntType())),
-              SubExprNode(VariableNode("Var", List(LiteralNode(LiteralIdentifierLookup("x")))))
+              SubTypeNode(TypeNode.fromType(LRec, Func(IntType(), IntType()))),
+              SubTypeNode(TypeNode.fromType(LRec, IntType())),
+              SubExprNode(ExprNode(LRec, "Var", List(LiteralNode(LiteralIdentifierLookup("x")))))
             )
           )
         )
       )
 
       forAll(cases) { (expr, node) =>
-        VariableNode.fromExpr(expr) shouldBe node
+        ExprNode.fromExpr(LRec, expr) shouldBe node
       }
     }
 
     "correctly return its expression" in {
       val cases = Table(
         ("node", "expr"),
-        (VariableNode("Num", List(LiteralNode(LiteralInt(5)))), Num(5)),
-        (VariableNode("Var", List(LiteralNode(LiteralIdentifierLookup("x")))), Var("x")),
+        (ExprNode(LRec, "Num", List(LiteralNode(LiteralInt(5)))), Num(5)),
+        (ExprNode(LRec, "Var", List(LiteralNode(LiteralIdentifierLookup("x")))), Var("x")),
         (
-          VariableNode(
+          ExprNode(LRec,
             "Plus",
             List(
-              SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(5))))),
-              SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(6)))))
+              SubExprNode(ExprNode(LRec, "Num", List(LiteralNode(LiteralInt(5))))),
+              SubExprNode(ExprNode(LRec, "Num", List(LiteralNode(LiteralInt(6)))))
             )
           ),
           Plus(Num(5), Num(6))
         ),
         (
-          VariableNode(
+          ExprNode(LRec,
             "Plus",
             List(
               SubExprNode(
-                VariableNode(
+                ExprNode(LRec,
                   "Times",
                   List(
-                    SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(1))))),
-                    SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(2)))))
+                    SubExprNode(ExprNode(LRec, "Num", List(LiteralNode(LiteralInt(1))))),
+                    SubExprNode(ExprNode(LRec, "Num", List(LiteralNode(LiteralInt(2)))))
                   )
                 )
               ),
-              SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(53)))))
+              SubExprNode(ExprNode(LRec, "Num", List(LiteralNode(LiteralInt(53)))))
             )
           ),
           Plus(Times(Num(1), Num(2)), Num(53))
         ),
         (
-          VariableNode(
+          ExprNode(LRec,
             "Lambda",
             List(
               LiteralNode(LiteralIdentifierBind("z")),
-              SubTypeNode(TypeNode.fromType(IntType())),
-              SubExprNode(VariableNode("Var", List(LiteralNode(LiteralIdentifierLookup("z")))))
+              SubTypeNode(TypeNode.fromType(LRec, IntType())),
+              SubExprNode(ExprNode(LRec, "Var", List(LiteralNode(LiteralIdentifierLookup("z")))))
             )
           ),
           Lambda("z", IntType(), Var("z"))
         ),
         (
-          VariableNode(
+          ExprNode(LRec,
             "IfThenElse",
             List(
-              SubExprNode(ExprChoiceNode()),
-              SubExprNode(VariableNode("Var", List(LiteralNode(LiteralIdentifierLookup("bar"))))),
-              SubExprNode(VariableNode("Bool", List(LiteralNode(LiteralBool(true)))))
+              SubExprNode(ExprChoiceNode(LRec)),
+              SubExprNode(ExprNode(LRec, "Var", List(LiteralNode(LiteralIdentifierLookup("bar"))))),
+              SubExprNode(ExprNode(LRec, "Bool", List(LiteralNode(LiteralBool(true)))))
             )
           ),
-          IfThenElse(BlankExprDropDown(), Var("bar"), Bool(true))
+          IfThenElse(BlankExprDropDown(LRec), Var("bar"), Bool(true))
         )
       )
 
@@ -317,9 +320,9 @@ class NodeSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChecks 
 
   "SubExprNode" should {
     "correctly return its parent" in {
-      val node = VariableNode(
+      val node = ExprNode(LRec,
         "Plus",
-        List(SubExprNode(ExprChoiceNode()), SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(5))))))
+        List(SubExprNode(ExprChoiceNode(LRec)), SubExprNode(ExprNode(LRec, "Num", List(LiteralNode(LiteralInt(5))))))
       )
       node.args.head.getParent shouldBe Some(node)
       node.args(1).getParent shouldBe Some(node)
@@ -327,21 +330,21 @@ class NodeSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChecks 
 
     "not be able to have a TypeNode as a parent" in {
       a[NodeParentWrongTypeException] should be thrownBy
-        SubExprNode(ExprChoiceNode()).setParent(Some(TypeNode.fromType(IntType())))
+        SubExprNode(ExprChoiceNode(LRec)).setParent(Some(TypeNode.fromType(LRec, IntType())))
 
       a[NodeParentWrongTypeException] should be thrownBy
-        TypeNode("Func", List(SubTypeNode(TypeNode("Int", Nil)), SubExprNode(ExprChoiceNode())))
+        TypeNode(LRec, "Func", List(SubTypeNode(TypeNode(LRec, "Int", Nil)), SubExprNode(ExprChoiceNode(LRec))))
     }
 
     "cannot be a root node" in {
-      a[InnerNodeCannotBeRootException] should be thrownBy SubExprNode(ExprChoiceNode()).setParent(None)
+      a[InnerNodeCannotBeRootException] should be thrownBy SubExprNode(ExprChoiceNode(LRec)).setParent(None)
     }
   }
 
   "TypeNode" should {
     "convert to HTML without error with multiple levels" in {
       forAll(Table("mode", DisplayMode.values: _*)) { mode =>
-        val node = TypeNode.fromType(Func(Func(Func(IntType(), IntType()), Func(IntType(), BoolType())), BoolType()))
+        val node = TypeNode.fromType(LRec, Func(Func(Func(IntType(), IntType()), Func(IntType(), BoolType())), BoolType()))
         noException should be thrownBy HTMLConvertor(LRec, mode).convert(node)
       }
     }
@@ -351,7 +354,7 @@ class NodeSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChecks 
         Table("type", IntType(), BoolType(), Func(IntType(), IntType()), Func(Func(IntType(), IntType()), BoolType()))
 
       forAll(types) { t =>
-        TypeNode.fromType(t).getType shouldBe t
+        TypeNode.fromType(LRec, t).getType shouldBe t
         readType(t.toString) shouldBe Some(t)
       }
     }
@@ -359,45 +362,45 @@ class NodeSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChecks 
     "correctly convert from a type" in {
       val cases = Table(
         ("type", "node"),
-        (IntType(), TypeNode("IntType", List())),
-        (BoolType(), TypeNode("BoolType", List())),
+        (IntType(), TypeNode(LRec, "IntType", List())),
+        (BoolType(), TypeNode(LRec, "BoolType", List())),
         (
           Func(IntType(), BoolType()),
-          TypeNode("Func", List(SubTypeNode(TypeNode("IntType", List())), SubTypeNode(TypeNode("BoolType", List()))))
+          TypeNode(LRec, "Func", List(SubTypeNode(TypeNode(LRec, "IntType", List())), SubTypeNode(TypeNode(LRec, "BoolType", List()))))
         ),
         (
           Func(Func(IntType(), IntType()), BoolType()),
-          TypeNode(
+          TypeNode(LRec,
             "Func",
             List(
               SubTypeNode(
-                TypeNode(
+                TypeNode(LRec,
                   "Func",
-                  List(SubTypeNode(TypeNode("IntType", List())), SubTypeNode(TypeNode("IntType", List())))
+                  List(SubTypeNode(TypeNode(LRec, "IntType", List())), SubTypeNode(TypeNode(LRec, "IntType", List())))
                 )
               ),
-              SubTypeNode(TypeNode("BoolType", List()))
+              SubTypeNode(TypeNode(LRec, "BoolType", List()))
             )
           )
         )
       )
 
       forAll(cases) { (t, node) =>
-        TypeNode.fromType(t) shouldBe node
+        TypeNode.fromType(LRec, t) shouldBe node
       }
     }
 
     "correctly convert to and from a string" in {
       val cases = Table(
         "node",
-        TypeNode.fromType(IntType()),
-        TypeNode.fromType(BoolType()),
-        TypeNode.fromType(Func(IntType(), BoolType())),
-        TypeNode.fromType(Func(Func(IntType(), IntType()), BoolType()))
+        TypeNode.fromType(LRec, IntType()),
+        TypeNode.fromType(LRec, BoolType()),
+        TypeNode.fromType(LRec, Func(IntType(), BoolType())),
+        TypeNode.fromType(LRec, Func(Func(IntType(), IntType()), BoolType()))
       )
 
       forAll(cases) { node =>
-        Node.read(node.toString) shouldBe Some(node)
+        Node.read(LRec, node.toString) shouldBe Some(node)
       }
     }
   }
@@ -405,27 +408,27 @@ class NodeSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChecks 
   "Tree paths" should {
     "return the correct child" in {
       val node =
-        VariableNode.fromExpr(
+        ExprNode.fromExpr(LRec,
           Apply(Lambda("x", IntType(), IfThenElse(Equal(Var("x"), Num(0)), Num(1), Num(0))), Num(5))
         )
       node.findChild(List()) shouldBe Some(node)
       node.findChild(List(0)) shouldBe Some(
-        VariableNode.fromExpr(Lambda("x", IntType(), IfThenElse(Equal(Var("x"), Num(0)), Num(1), Num(0))))
+        ExprNode.fromExpr(LRec, Lambda("x", IntType(), IfThenElse(Equal(Var("x"), Num(0)), Num(1), Num(0))))
       )
-      node.findChild(List(1)) shouldBe Some(VariableNode.fromExpr(Num(5)))
+      node.findChild(List(1)) shouldBe Some(ExprNode.fromExpr(LRec, Num(5)))
       node.findChild(List(0, 0)) shouldBe Some(LiteralNode(LiteralIdentifierBind("x")))
-      node.findChild(List(0, 1)) shouldBe Some(TypeNode.fromType(IntType()))
+      node.findChild(List(0, 1)) shouldBe Some(TypeNode.fromType(LRec, IntType()))
       node.findChild(List(0, 2)) shouldBe Some(
-        VariableNode.fromExpr(IfThenElse(Equal(Var("x"), Num(0)), Num(1), Num(0)))
+        ExprNode.fromExpr(LRec, IfThenElse(Equal(Var("x"), Num(0)), Num(1), Num(0)))
       )
-      node.findChild(List(0, 2, 0)) shouldBe Some(VariableNode.fromExpr(Equal(Var("x"), Num(0))))
-      node.findChild(List(0, 2, 1)) shouldBe Some(VariableNode.fromExpr(Num(1)))
-      node.findChild(List(0, 2, 2)) shouldBe Some(VariableNode.fromExpr(Num(0)))
+      node.findChild(List(0, 2, 0)) shouldBe Some(ExprNode.fromExpr(LRec, Equal(Var("x"), Num(0))))
+      node.findChild(List(0, 2, 1)) shouldBe Some(ExprNode.fromExpr(LRec, Num(1)))
+      node.findChild(List(0, 2, 2)) shouldBe Some(ExprNode.fromExpr(LRec, Num(0)))
     }
 
     "error on invalid paths" in {
       val node =
-        VariableNode.fromExpr(
+        ExprNode.fromExpr(LRec,
           Apply(Lambda("x", IntType(), IfThenElse(Equal(Var("x"), Num(0)), Num(1), Num(0))), Num(5))
         )
 

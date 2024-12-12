@@ -2,6 +2,9 @@ package app
 
 import convertors.{DisplayMode, HTMLConvertor, LaTeXConvertor}
 import languages.*
+import languages.terms.blanks.BlankExprDropDown
+import nodes.exceptions.NodeStringParseException
+import nodes.{ExprChoiceNode, ExprNode, Node, OuterNode}
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
@@ -36,7 +39,7 @@ object ScalaJsEntry {
   def startNodeBlank(langName: String): js.Tuple2[String, String] = {
     val lang = getLanguage(langName)
     val convertor = HTMLConvertor(lang, DisplayMode.Edit)
-    val tree = lang.ExprChoiceNode()
+    val tree = ExprChoiceNode(lang)
     (tree.toString, convertor.convert(tree))
   }
 
@@ -101,8 +104,8 @@ object ScalaJsEntry {
     val originalLang = getLanguage(langName)
     val displayMode = DisplayMode.fromString(modeName)
     val convertor = LaTeXConvertor(originalLang, displayMode)
-    originalLang.Node.read(nodeString) match {
-      case Some(tree: originalLang.OuterNode) => convertor.convert(tree)
+    Node.read(originalLang, nodeString) match {
+      case Some(tree: OuterNode) => convertor.convert(tree)
       case _ => throw new ClickDeduceException(s"Failed to parse node string: $nodeString")
     }
   }
@@ -120,14 +123,14 @@ object ScalaJsEntry {
   @JSExportTopLevel("checkTask")
   def checkTask(langName: String, taskName: String, nodeString: String): Boolean = {
     val lang = getLanguage(langName)
-    val node = lang.Node.read(nodeString) match {
-      case Some(n: lang.OuterNode) => n
+    val node = Node.read(lang, nodeString) match {
+      case Some(n: OuterNode) => n
       case Some(n) => throw new lang.ActionInvocationException(s"Expected OuterNode, got $n")
-      case _ => throw new lang.NodeStringParseException(nodeString)
+      case _ => throw NodeStringParseException(nodeString)
     }
     val expr = node match {
-      case n: lang.VariableNode => n.getExpr
-      case _ => lang.BlankExprDropDown()
+      case n: ExprNode => n.getExpr
+      case _ => BlankExprDropDown(lang)
     }
     lang.getTasks.get(taskName) match {
       case Some(task) => task.checkFulfilled(expr)

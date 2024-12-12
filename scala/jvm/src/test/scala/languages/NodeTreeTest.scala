@@ -3,17 +3,18 @@ package languages
 import languages.LArith.*
 import languages.terms.*
 import languages.terms.literals.*
+import nodes.*
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers.*
 
 class NodeTreeTest extends AnyFunSuite {
   test("Can correctly represent a complete simple addition tree") {
     val expr = Plus(Num(1), Num(2))
-    val tree = VariableNode.fromExpr(expr)
+    val tree = ExprNode.fromExpr(LArith, expr)
     tree.exprName shouldEqual "Plus"
     tree.children.zipWithIndex.foreach { (child, i) =>
-      child shouldBe a[VariableNode]
-      child.asInstanceOf[VariableNode].exprName shouldEqual "Num"
+      child shouldBe a[ExprNode]
+      child.asInstanceOf[ExprNode].exprName shouldEqual "Num"
       child.treePath shouldEqual List(i)
     }
     tree.treePath shouldEqual List()
@@ -21,11 +22,11 @@ class NodeTreeTest extends AnyFunSuite {
 
   test("Can correctly represent a simple arithmetic tree with a literal field open") {
     val expr = Times(Num(-3), Num(5))
-    val concreteChild = SubExprNode(VariableNode(Num(-3).toString))
-    val variableChildInner = VariableNode("Num", List(LiteralNode(LiteralInt(5))))
+    val concreteChild = SubExprNode(ExprNode(LArith, Num(-3).toString))
+    val variableChildInner = ExprNode(LArith, "Num", List(LiteralNode(LiteralInt(5))))
     val variableChild = SubExprNode(variableChildInner)
     val children = List(concreteChild, variableChild)
-    val tree = VariableNode("Times", children)
+    val tree = ExprNode(LArith, "Times", children)
     children.foreach(_.node.setParent(Some(tree)))
     tree.exprName shouldEqual "Times"
     children(0).node.treePath shouldEqual List(0)
@@ -37,12 +38,12 @@ class NodeTreeTest extends AnyFunSuite {
 
   test("Can correctly represent an arithmetic tree with an unselected sub-expression") {
     // Unselected + (Times(Num(2), Unselected))
-    val tree = VariableNode(
+    val tree = ExprNode(LArith,
       "Plus",
       List(
-        SubExprNode(ExprChoiceNode()),
+        SubExprNode(ExprChoiceNode(LArith)),
         SubExprNode(
-          VariableNode("Times", List(SubExprNode(VariableNode(Num(2).toString)), SubExprNode(ExprChoiceNode())))
+          ExprNode(LArith, "Times", List(SubExprNode(ExprNode(LArith, Num(2).toString)), SubExprNode(ExprChoiceNode(LArith))))
         )
       )
     )
@@ -50,44 +51,44 @@ class NodeTreeTest extends AnyFunSuite {
 
   def correctNodeRead(node: Node): Unit = {
     val nodeString = node.toString
-    val nodeRead = Node.read(nodeString).get
+    val nodeRead = Node.read(LArith, nodeString).get
     nodeRead shouldEqual node
   }
 
-  test("Can correctly read a VariableNode with 2 VariableNode children from a String") {
+  test("Can correctly read a ExprNode with 2 ExprNode children from a String") {
     val tree =
-      VariableNode("Plus", List(SubExprNode(VariableNode(Num(1).toString)), SubExprNode(VariableNode(Num(2).toString))))
+      ExprNode(LArith, "Plus", List(SubExprNode(ExprNode(LArith, Num(1).toString)), SubExprNode(ExprNode(LArith, Num(2).toString))))
     correctNodeRead(tree)
   }
 
   test(
-    "Can correctly read a VariableNode with a VariableNode and a VariableNode with a ExprChoiceNode child from a String"
+    "Can correctly read a ExprNode with a ExprNode and a ExprNode with a ExprChoiceNode child from a String"
   ) {
-    val tree = VariableNode(
+    val tree = ExprNode(LArith,
       "Plus",
       List(
-        SubExprNode(VariableNode(Num(1).toString)),
-        SubExprNode(VariableNode("Times", List(SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode()))))
+        SubExprNode(ExprNode(LArith, Num(1).toString)),
+        SubExprNode(ExprNode(LArith, "Times", List(SubExprNode(ExprChoiceNode(LArith)), SubExprNode(ExprChoiceNode(LArith)))))
       )
     )
     correctNodeRead(tree)
   }
 
-  test("Can correctly read a VariableNode with a ExprChoiceNode") {
-    val tree = VariableNode("Plus", List(SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode())))
+  test("Can correctly read a ExprNode with a ExprChoiceNode") {
+    val tree = ExprNode(LArith, "Plus", List(SubExprNode(ExprChoiceNode(LArith)), SubExprNode(ExprChoiceNode(LArith))))
     correctNodeRead(tree)
   }
 
-  test("Can correctly read a VariableNode with a LiteralNode") {
-    val tree1 = VariableNode("Num", List(LiteralNode(LiteralInt(0))))
+  test("Can correctly read a ExprNode with a LiteralNode") {
+    val tree1 = ExprNode(LArith, "Num", List(LiteralNode(LiteralInt(0))))
     correctNodeRead(tree1)
-    val tree2 = VariableNode("Num", List(LiteralNode(LiteralInt(1))))
+    val tree2 = ExprNode(LArith, "Num", List(LiteralNode(LiteralInt(1))))
     correctNodeRead(tree2)
   }
 
   def correctReadParentsCheck(node: Node): Unit = {
     val nodeString = node.toString
-    val nodeRead = Node.read(nodeString).get
+    val nodeRead = Node.read(LArith, nodeString).get
     nodeRead shouldEqual node
 
     def checkParents(original: Node, read: Node, isRoot: Boolean): Unit = {
@@ -111,30 +112,30 @@ class NodeTreeTest extends AnyFunSuite {
   }
 
   test("Created Node trees have correct parents") {
-    val tree = VariableNode(
+    val tree = ExprNode(LArith,
       "Plus",
       List(
-        SubExprNode(VariableNode(Num(1).toString)),
-        SubExprNode(VariableNode("Times", List(SubExprNode(ExprChoiceNode()), SubExprNode(ExprChoiceNode()))))
+        SubExprNode(ExprNode(LArith, Num(1).toString)),
+        SubExprNode(ExprNode(LArith, "Times", List(SubExprNode(ExprChoiceNode(LArith)), SubExprNode(ExprChoiceNode(LArith)))))
       )
     )
     checkAllChildrenHaveCorrectParent(tree)
   }
 
   test("Can correctly read the parents of a Node tree") {
-    val tree = VariableNode(
+    val tree = ExprNode(LArith,
       "Plus",
       List(
-        SubExprNode(VariableNode(Num(1).toString)),
+        SubExprNode(ExprNode(LArith, Num(1).toString)),
         SubExprNode(
-          VariableNode(
+          ExprNode(LArith,
             "Times",
             List(
-              SubExprNode(ExprChoiceNode()),
+              SubExprNode(ExprChoiceNode(LArith)),
               SubExprNode(
-                VariableNode(
+                ExprNode(LArith,
                   "Plus",
-                  List(SubExprNode(ExprChoiceNode()), SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(2))))))
+                  List(SubExprNode(ExprChoiceNode(LArith)), SubExprNode(ExprNode(LArith, "Num", List(LiteralNode(LiteralInt(2))))))
                 )
               )
             )
@@ -146,19 +147,19 @@ class NodeTreeTest extends AnyFunSuite {
   }
 
   test("Can correctly replace a ExprChoiceNode") {
-    val originalTree = VariableNode(
+    val originalTree = ExprNode(LArith,
       "Plus",
       List(
-        SubExprNode(VariableNode(Num(1).toString)),
+        SubExprNode(ExprNode(LArith, Num(1).toString)),
         SubExprNode(
-          VariableNode(
+          ExprNode(LArith,
             "Times",
             List(
-              SubExprNode(ExprChoiceNode()),
+              SubExprNode(ExprChoiceNode(LArith)),
               SubExprNode(
-                VariableNode(
+                ExprNode(LArith,
                   "Plus",
-                  List(SubExprNode(ExprChoiceNode()), SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(2))))))
+                  List(SubExprNode(ExprChoiceNode(LArith)), SubExprNode(ExprNode(LArith, "Num", List(LiteralNode(LiteralInt(2))))))
                 )
               )
             )
@@ -166,22 +167,22 @@ class NodeTreeTest extends AnyFunSuite {
         )
       )
     )
-    val updated = originalTree.replace(List(1, 1, 0), VariableNode.createFromExprName("Num").get)
-    updated shouldEqual VariableNode(
+    val updated = originalTree.replace(List(1, 1, 0), ExprNode.createFromExprName(LArith, "Num").get)
+    updated shouldEqual ExprNode(LArith,
       "Plus",
       List(
-        SubExprNode(VariableNode(Num(1).toString)),
+        SubExprNode(ExprNode(LArith, Num(1).toString)),
         SubExprNode(
-          VariableNode(
+          ExprNode(LArith,
             "Times",
             List(
-              SubExprNode(ExprChoiceNode()),
+              SubExprNode(ExprChoiceNode(LArith)),
               SubExprNode(
-                VariableNode(
+                ExprNode(LArith,
                   "Plus",
                   List(
-                    SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(0))))),
-                    SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(2)))))
+                    SubExprNode(ExprNode(LArith, "Num", List(LiteralNode(LiteralInt(0))))),
+                    SubExprNode(ExprNode(LArith, "Num", List(LiteralNode(LiteralInt(2)))))
                   )
                 )
               )
@@ -194,22 +195,22 @@ class NodeTreeTest extends AnyFunSuite {
 
   // TODO: test that a tree with a string literal works
 
-  test("Correctly read expression from VariableNode with all children completed") {
-    val tree1 = VariableNode(
+  test("Correctly read expression from ExprNode with all children completed") {
+    val tree1 = ExprNode(LArith,
       "Plus",
       List(
-        SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(75))))),
+        SubExprNode(ExprNode(LArith, "Num", List(LiteralNode(LiteralInt(75))))),
         SubExprNode(
-          VariableNode(
+          ExprNode(LArith,
             "Times",
             List(
-              SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(3))))),
+              SubExprNode(ExprNode(LArith, "Num", List(LiteralNode(LiteralInt(3))))),
               SubExprNode(
-                VariableNode(
+                ExprNode(LArith,
                   "Plus",
                   List(
-                    SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(2))))),
-                    SubExprNode(VariableNode("Num", List(LiteralNode(LiteralInt(3)))))
+                    SubExprNode(ExprNode(LArith, "Num", List(LiteralNode(LiteralInt(2))))),
+                    SubExprNode(ExprNode(LArith, "Num", List(LiteralNode(LiteralInt(3)))))
                   )
                 )
               )
@@ -221,26 +222,26 @@ class NodeTreeTest extends AnyFunSuite {
     tree1.getExpr shouldEqual Plus(Num(75), Times(Num(3), Plus(Num(2), Num(3))))
   }
 
-//  test("Correctly read expression from VariableNode with incomplete or incorrect literal values") {
-//    val tree1 = VariableNode(
+//  test("Correctly read expression from ExprNode with incomplete or incorrect literal values") {
+//    val tree1 = ExprNode(LArith,
 //      "Plus",
 //      List(
-//        SubExprNode(VariableNode("Num", List(LiteralNode("")))),
-//        SubExprNode(VariableNode("Num", List(LiteralNode("\"Hello!\""))))
+//        SubExprNode(ExprNode(LArith, "Num", List(LiteralNode("")))),
+//        SubExprNode(ExprNode(LArith, "Num", List(LiteralNode("\"Hello!\""))))
 //      )
 //    )
 //    tree1.getExpr shouldEqual Plus(Num(LiteralAny("")), Num(LiteralString("Hello!")))
 //
-//    val tree2 = VariableNode(
+//    val tree2 = ExprNode(LArith,
 //      "Times",
 //      List(
-//        SubExprNode(VariableNode("Num", List(LiteralNode("true")))),
+//        SubExprNode(ExprNode(LArith, "Num", List(LiteralNode("true")))),
 //        SubExprNode(
-//          VariableNode(
+//          ExprNode(LArith,
 //            "Plus",
 //            List(
-//              SubExprNode(VariableNode("Num", List(LiteralNode("2")))),
-//              SubExprNode(VariableNode("Num", List(LiteralNode("\"3\""))))
+//              SubExprNode(ExprNode(LArith, "Num", List(LiteralNode("2")))),
+//              SubExprNode(ExprNode(LArith, "Num", List(LiteralNode("\"3\""))))
 //            )
 //          )
 //        )
@@ -250,31 +251,33 @@ class NodeTreeTest extends AnyFunSuite {
 //  }
 
   test("Nested TypeNodes have correct tree paths") {
-    val tree = LLam.VariableNode(
+    val tree = ExprNode(LLam,
       "Lambda",
       List(
-        LLam.LiteralNode(LiteralIdentifierLookup("x")),
-        LLam.SubTypeNode(
-          LLam.TypeNode(
+        LiteralNode(LiteralIdentifierLookup("x")),
+        SubTypeNode(
+          TypeNode(
+            LLam,
             "Func",
-            List(LLam.SubTypeNode(LLam.TypeNode("IntType", Nil)), LLam.SubTypeNode(LLam.TypeNode("BoolType", Nil)))
+            List(SubTypeNode(TypeNode(LLam, "IntType", Nil)), SubTypeNode(TypeNode(LLam, "BoolType", Nil)))
           )
         ),
-        LLam.SubExprNode(LLam.VariableNode("Var", List(LLam.LiteralNode(LiteralIdentifierLookup("x")))))
+        SubExprNode(ExprNode(LLam, "Var", List(LiteralNode(LiteralIdentifierLookup("x")))))
       )
     )
 
     tree.findChild(List(1)) shouldEqual Some(
-      LLam.TypeNode(
+      TypeNode(
+        LLam,
         "Func",
-        List(LLam.SubTypeNode(LLam.TypeNode("IntType", Nil)), LLam.SubTypeNode(LLam.TypeNode("BoolType", Nil)))
+        List(SubTypeNode(TypeNode(LLam, "IntType", Nil)), SubTypeNode(TypeNode(LLam, "BoolType", Nil)))
       )
     )
     tree.findChild(List(1)).get.treePath shouldEqual List(1)
 
-    tree.findChild(List(1, 0)) shouldEqual Some(LLam.TypeNode("IntType", Nil))
+    tree.findChild(List(1, 0)) shouldEqual Some(TypeNode(LLam, "IntType", Nil))
     tree.findChild(List(1, 0)).get.treePath shouldEqual List(1, 0)
-    tree.findChild(List(1, 1)) shouldEqual Some(LLam.TypeNode("BoolType", Nil))
+    tree.findChild(List(1, 1)) shouldEqual Some(TypeNode(LLam, "BoolType", Nil))
     tree.findChild(List(1, 0)).get.treePath shouldEqual List(1, 0)
   }
 }

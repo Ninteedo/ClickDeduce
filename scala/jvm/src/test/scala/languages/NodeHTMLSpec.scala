@@ -6,6 +6,7 @@ import net.ruippeixotog.scalascraper.browser.JsoupBrowser
 import net.ruippeixotog.scalascraper.dsl.DSL.*
 import net.ruippeixotog.scalascraper.dsl.DSL.Extract.*
 import net.ruippeixotog.scalascraper.model.*
+import nodes.*
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor1}
 import org.scalatest.wordspec.AnyWordSpec
@@ -30,7 +31,7 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
   def classesOf(el: Element): Set[String] = el.attr("class").split(" ").toSet
 
   "be correct with single node tree" should {
-    val tree = VariableNode.fromExpr(Num(5))
+    val tree = ExprNode.fromExpr(LLam, Num(5))
 
     "root should have subtree and axiom classes" in {
       checkHtmlDocAllModes(tree) { doc =>
@@ -131,7 +132,7 @@ class NodeHTMLSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChe
   }
 
   "be correct with a complex node tree" should {
-    val tree = VariableNode.fromExpr(Apply(Lambda("x", IntType(), Plus(Var("x"), Num(1))), Num(-4)))
+    val tree = ExprNode.fromExpr(LLam, Apply(Lambda("x", IntType(), Plus(Var("x"), Num(1))), Num(-4)))
 
     "root" should {
       "have '.subtree' class, but no '.axiom' class" in {

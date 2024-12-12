@@ -2,30 +2,29 @@ package convertors
 
 import languages.env.{TypeEnv, ValueEnv}
 import languages.{AbstractNodeLanguage, ClickDeduceLanguage}
+import nodes.*
 
 class LaTeXConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConvertor(lang, mode) {
   private type LaTeX = String
-  private type ExprNode = lang.ExprNode
-  private type TypeNode = lang.TypeNodeParent
 
-  override def convert(node: AbstractNodeLanguage#OuterNode): Output = {
-    asProofTree(removeBlankLines(outerNodeToLaTeX(node.asInstanceOf[lang.OuterNode])))
+  override def convert(node: OuterNode): Output = {
+    asProofTree(removeBlankLines(outerNodeToLaTeX(node.asInstanceOf[OuterNode])))
   }
 
   private def removeBlankLines(s: String): String = s.split("\n").filter(_.nonEmpty).mkString("\n")
 
   private def asProofTree(s: String): String = s"\\begin{prooftree}\n$s\n\\end{prooftree}"
 
-  private def outerNodeToLaTeX(node: lang.OuterNode): LaTeX = node match {
-    case node: ExprNode => exprNodeToLaTeX(node)
-    case node: TypeNode => typeNodeToLaTeX(node)
+  private def outerNodeToLaTeX(node: OuterNode): LaTeX = node match {
+    case node: ExprNodeParent => exprNodeToLaTeX(node)
+    case node: TypeNodeParent => typeNodeToLaTeX(node)
   }
 
-  private def exprNodeToLaTeX(node: ExprNode): LaTeX = {
+  private def exprNodeToLaTeX(node: ExprNodeParent): LaTeX = {
     createTree(fullExprBottomDiv(node), node.exprName, node.getVisibleChildren(mode).map(outerNodeToLaTeX))
   }
 
-  private def typeNodeToLaTeX(node: TypeNode): LaTeX = {
+  private def typeNodeToLaTeX(node: TypeNodeParent): LaTeX = {
     createTree(fullTypeBottomDiv(node), node.getTypeName, node.getVisibleChildren(mode).map(outerNodeToLaTeX))
   }
 
@@ -49,7 +48,7 @@ class LaTeXConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConv
     s"""${children.mkString("\n")}\n\\$ruleKind{$dollar$below$dollar}""".stripMargin
   }
 
-  private def fullExprBottomDiv(node: ExprNode): LaTeX =
+  private def fullExprBottomDiv(node: ExprNodeParent): LaTeX =
     s"${envDiv(node.getEnv(mode))} ${exprDiv(node)} ${resultDiv(node)}".strip()
 
   private def envDiv(env: ValueEnv | TypeEnv): LaTeX = {
@@ -72,9 +71,9 @@ class LaTeXConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConv
     result
   }
 
-  private def exprDiv(node: ExprNode): LaTeX = node.getExpr.toText.asLaTeX
+  private def exprDiv(node: ExprNodeParent): LaTeX = node.getExpr.toText.asLaTeX
 
-  private def resultDiv(node: ExprNode): LaTeX = mode match {
+  private def resultDiv(node: ExprNodeParent): LaTeX = mode match {
     case DisplayMode.Edit =>
       val typeCheckResult = node.getType
       if (typeCheckResult.isError) s"$typeCheckColon ${typeCheckResultDiv(node)}"
@@ -87,21 +86,21 @@ class LaTeXConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConv
     case DisplayMode.Evaluation => s"$evalArrowSpan ${evalResultDiv(node)}"
   }
 
-  private def fullTypeBottomDiv(node: TypeNode): LaTeX = s"${envDiv(node.getEnv(mode))} ${typeDiv(node)} ${typeResultDiv(node)}"
+  private def fullTypeBottomDiv(node: TypeNodeParent): LaTeX = s"${envDiv(node.getEnv(mode))} ${typeDiv(node)} ${typeResultDiv(node)}"
 
-  private def typeDiv(node: TypeNode): LaTeX = node.getType.toText.asLaTeX
+  private def typeDiv(node: TypeNodeParent): LaTeX = node.getType.toText.asLaTeX
 
-  private def typeResultDiv(node: TypeNode): LaTeX = s"$typeCheckColon ${node.getTypeCheckResult(mode).toText.asLaTeX}"
+  private def typeResultDiv(node: TypeNodeParent): LaTeX = s"$typeCheckColon ${node.getTypeCheckResult(mode).toText.asLaTeX}"
 
   private val typeCheckTurnstileSpan: LaTeX = "\\vdash"
 
   private val typeCheckColon: LaTeX = ":"
 
-  private def typeCheckResultDiv(node: ExprNode): LaTeX = node.getType.toText.asLaTeX
+  private def typeCheckResultDiv(node: ExprNodeParent): LaTeX = node.getType.toText.asLaTeX
 
   private val evalArrowSpan: LaTeX = "\\Downarrow"
 
-  private def evalResultDiv(node: ExprNode): LaTeX = node.getValue.toText.asLaTeX
+  private def evalResultDiv(node: ExprNodeParent): LaTeX = node.getValue.toText.asLaTeX
 
-  private def editEvalResultDiv(node: ExprNode): LaTeX = node.getEditValueResult.toText.asLaTeX
+  private def editEvalResultDiv(node: ExprNodeParent): LaTeX = node.getEditValueResult.toText.asLaTeX
 }

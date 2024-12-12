@@ -2,8 +2,12 @@ package languages
 
 import app.ClickDeduceException
 import languages.terms.literals.Literal
+import nodes.*
+import nodes.exceptions.NodeStringParseException
 
 trait AbstractActionLanguage extends AbstractNodeLanguage {
+  lang =>
+
   private def actionArgCount(actionName: String): Int = actionName match {
     case "SelectExprAction"  => 1
     case "SelectTypeAction"  => 1
@@ -41,10 +45,10 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
     extraArgs: List[String],
     modeName: String = "edit"
   ): Action = {
-    val node = Node.read(nodeString) match {
+    val node = Node.read(lang, nodeString) match {
       case Some(n: OuterNode) => n
       case Some(n)            => throw new ActionInvocationException(s"Expected OuterNode, got $n")
-      case _                  => throw new NodeStringParseException(nodeString)
+      case _                  => throw NodeStringParseException(nodeString)
     }
     val treePath = Node.readPathString(treePathString)
     instantiateAction(actionName, node, treePath, extraArgs)
@@ -62,7 +66,7 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
     override lazy val newTree: OuterNode = {
       if (getExprBuilder(exprChoiceName).isEmpty) throw new InvalidSelectValueNameException(exprChoiceName)
 
-      val exprNode = VariableNode.createFromExprName(exprChoiceName)
+      val exprNode = ExprNode.createFromExprName(lang, exprChoiceName)
       if (exprNode.isEmpty) throw new InvalidSelectValueNameException(exprChoiceName)
       originalTree.findChild(treePath) match {
         case Some(exprChoiceNode: ExprChoiceNode) =>
@@ -78,7 +82,7 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
     typeChoiceName: String
   ) extends Action(originalTree, treePath) {
     override lazy val newTree: OuterNode = {
-      val typeNode = TypeNode.fromTypeName(typeChoiceName)
+      val typeNode = TypeNode.fromTypeName(lang, typeChoiceName)
       if (typeNode.isEmpty) throw new InvalidSelectValueNameException(typeChoiceName)
       originalTree.findChild(treePath) match {
         case Some(typeChoiceNode: TypeChoiceNode) =>
@@ -102,8 +106,8 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
   case class DeleteAction(override val originalTree: OuterNode, override val treePath: List[Int])
       extends Action(originalTree, treePath) {
     override lazy val newTree: OuterNode = originalTree.findChild(treePath) match {
-      case Some(_: ExprNode)       => originalTree.replace(treePath, ExprChoiceNode())
-      case Some(_: TypeNodeParent) => originalTree.replace(treePath, TypeChoiceNode())
+      case Some(_: ExprNode)       => originalTree.replace(treePath, ExprChoiceNode(lang))
+      case Some(_: TypeNodeParent) => originalTree.replace(treePath, TypeChoiceNode(lang))
       case other                   => throw new InvalidDeleteTargetException(other)
     }
   }
@@ -113,12 +117,12 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
     override val treePath: List[Int],
     pasteNodeString: String
   ) extends Action(originalTree, treePath) {
-    private val pasteNode: Node = Node.read(pasteNodeString).get
+    private val pasteNode: Node = Node.read(lang, pasteNodeString).get
 
     override lazy val newTree: OuterNode = originalTree.findChild(treePath) match {
-      case Some(_: ExprNode) =>
+      case Some(_: ExprNodeParent) =>
         pasteNode match {
-          case _: ExprNode => originalTree.replace(treePath, pasteNode)
+          case _: ExprNodeParent => originalTree.replace(treePath, pasteNode)
           case _           => throw new InvalidPasteTargetException(Some(pasteNode))
         }
       case Some(_: TypeNodeParent) =>
