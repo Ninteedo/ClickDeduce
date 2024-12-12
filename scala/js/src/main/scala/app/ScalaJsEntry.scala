@@ -1,5 +1,6 @@
 package app
 
+import actions.exceptions.ActionInvocationException
 import convertors.{DisplayMode, HTMLConvertor, LaTeXConvertor}
 import languages.*
 import languages.terms.blanks.BlankExprDropDown
@@ -125,7 +126,7 @@ object ScalaJsEntry {
     val lang = getLanguage(langName)
     val node = Node.read(lang, nodeString) match {
       case Some(n: OuterNode) => n
-      case Some(n) => throw new lang.ActionInvocationException(s"Expected OuterNode, got $n")
+      case Some(n) => throw new ActionInvocationException(s"Expected OuterNode, got $n")
       case _ => throw NodeStringParseException(nodeString)
     }
     val expr = node match {

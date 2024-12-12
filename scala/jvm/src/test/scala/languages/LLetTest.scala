@@ -1,5 +1,6 @@
 package languages
 
+import actions.{EditLiteralAction, SelectExprAction}
 import convertors.DisplayMode
 import languages.LLet.*
 import languages.env.*
@@ -117,14 +118,14 @@ class LLetTest extends TestTemplate {
     tree.args shouldEqual List(LiteralNode(LiteralIdentifierBind("")), SubExprNode(ExprChoiceNode(LLet)), SubExprNode(ExprChoiceNode(LLet)))
 
     val v: Variable = "x"
-    val setVarNameAction = EditLiteralAction(tree, List(0), v)
+    val setVarNameAction = EditLiteralAction(tree, List(0), LLet, v)
     setVarNameAction.newTree.args shouldEqual List(
       LiteralNode(LiteralIdentifierBind(v)),
       SubExprNode(ExprChoiceNode(LLet)),
       SubExprNode(ExprChoiceNode(LLet))
     )
 
-    val assignExprChoiceAction = SelectExprAction(setVarNameAction.newTree, List(1), "Num")
+    val assignExprChoiceAction = SelectExprAction(setVarNameAction.newTree, List(1), LLet, "Num")
     assignExprChoiceAction.newTree.args shouldEqual List(
       LiteralNode(LiteralIdentifierBind(v)),
       SubExprNode(ExprNode(LLet, "Num", List(LiteralNode(LiteralInt(0))))),
@@ -132,21 +133,21 @@ class LLetTest extends TestTemplate {
     )
 
     val assignValue: Int = 34
-    val assignExprValueAction = EditLiteralAction(assignExprChoiceAction.newTree, List(1, 0), assignValue.toString)
+    val assignExprValueAction = EditLiteralAction(assignExprChoiceAction.newTree, List(1, 0), LLet, assignValue.toString)
     assignExprValueAction.newTree.args shouldEqual List(
       LiteralNode(LiteralIdentifierBind(v)),
       SubExprNode(ExprNode(LLet, "Num", List(LiteralNode(LiteralInt(assignValue))))),
       SubExprNode(ExprChoiceNode(LLet))
     )
 
-    val boundExprChoiceAction = SelectExprAction(assignExprValueAction.newTree, List(2), "Var")
+    val boundExprChoiceAction = SelectExprAction(assignExprValueAction.newTree, List(2), LLet, "Var")
     boundExprChoiceAction.newTree.args shouldEqual List(
       LiteralNode(LiteralIdentifierBind(v)),
       SubExprNode(ExprNode(LLet, "Num", List(LiteralNode(LiteralInt(assignValue))))),
       SubExprNode(ExprNode(LLet, "Var", List(LiteralNode(LiteralIdentifierLookup("")))))
     )
 
-    val boundExprValueAction = EditLiteralAction(boundExprChoiceAction.newTree, List(2, 0), v)
+    val boundExprValueAction = EditLiteralAction(boundExprChoiceAction.newTree, List(2, 0), LLet, v)
     boundExprValueAction.newTree.args shouldEqual List(
       LiteralNode(LiteralIdentifierBind(v)),
       SubExprNode(ExprNode(LLet, "Num", List(LiteralNode(LiteralInt(assignValue))))),

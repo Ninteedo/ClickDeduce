@@ -1,5 +1,7 @@
 package languages
 
+import actions.*
+import actions.exceptions.*
 import languages.LLam.*
 import languages.terms.*
 import languages.terms.blanks.{BlankExprDropDown, BlankTypeDropDown}
@@ -83,7 +85,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
 
       val tree = ExprChoiceNode(LLam)
       forAll(selectOptions) { exprChoiceName =>
-        val action = SelectExprAction(tree, List(), exprChoiceName)
+        val action = SelectExprAction(tree, List(), LLam, exprChoiceName)
         action.newTree shouldBe a[ExprNode]
         action.newTree.asInstanceOf[ExprNode].exprName shouldBe exprChoiceName
         action.newTree shouldEqual ExprNode.createFromExprName(LLam, exprChoiceName).get
@@ -117,7 +119,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
       )
 
       forAll(trees) { (tree, treePath, exprChoiceName, result) =>
-        val action = SelectExprAction(tree, treePath, exprChoiceName)
+        val action = SelectExprAction(tree, treePath, LLam, exprChoiceName)
         action.newTree shouldBe a[ExprNode]
         action.newTree shouldEqual result
       }
@@ -131,7 +133,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
         (ExprNode.fromExpr(LLam, IfThenElse(Bool(true), BlankExprDropDown(LLam), BlankExprDropDown(LLam))), List(0), "Equal")
       )
       forAll(trees) { (tree, treePath, exprChoiceName) =>
-        an[InvalidSelectTargetException] should be thrownBy SelectExprAction(tree, treePath, exprChoiceName).newTree
+        an[InvalidSelectTargetException] should be thrownBy SelectExprAction(tree, treePath, LLam, exprChoiceName).newTree
       }
     }
 
@@ -150,9 +152,8 @@ class ActionSpec extends AnyWordSpec with Matchers {
       )
 
       forAll(cases) { (lang, exprName) =>
-        an[InvalidSelectValueNameException] should be thrownBy lang
-          .SelectExprAction(ExprChoiceNode(lang), List(), exprName)
-          .newTree
+        an[InvalidSelectValueNameException] should be thrownBy
+          SelectExprAction(ExprChoiceNode(lang), List(), lang, exprName).newTree
       }
     }
   }
@@ -163,7 +164,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
 
       val tree = TypeChoiceNode(LLam)
       forAll(selectOptions) { typeChoiceName =>
-        val action = SelectTypeAction(tree, List(), typeChoiceName)
+        val action = SelectTypeAction(tree, List(), LLam, typeChoiceName)
         action.newTree shouldBe a[TypeNode]
         action.newTree.asInstanceOf[TypeNode].typeName shouldBe typeChoiceName
         typeChoiceName match {
@@ -208,7 +209,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
       )
 
       forAll(trees) { (tree, treePath, typeChoiceName, result) =>
-        val action = SelectTypeAction(tree, treePath, typeChoiceName)
+        val action = SelectTypeAction(tree, treePath, LLam, typeChoiceName)
         action.newTree shouldBe a[ExprNode]
         action.newTree shouldEqual result
       }
@@ -233,7 +234,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
       )
 
       forAll(trees) { (tree, treePath, typeChoiceName) =>
-        an[InvalidSelectTargetException] should be thrownBy SelectTypeAction(tree, treePath, typeChoiceName).newTree
+        an[InvalidSelectTargetException] should be thrownBy SelectTypeAction(tree, treePath, LLam, typeChoiceName).newTree
       }
     }
 
@@ -245,6 +246,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
         an[InvalidSelectValueNameException] should be thrownBy SelectTypeAction(
           ExprNode.fromExpr(LLam, Lambda("x", BlankTypeDropDown(LLam), BlankExprDropDown(LLam))),
           List(1),
+          LLam,
           typeName
         ).newTree
       }
@@ -281,7 +283,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
       )
 
       forAll(trees) { (tree, treePath, newLiteralText, result) =>
-        val action = EditLiteralAction(tree, treePath, newLiteralText)
+        val action = EditLiteralAction(tree, treePath, LLam, newLiteralText)
         action.newTree shouldBe a[ExprNode]
         action.newTree shouldEqual result
       }
@@ -300,7 +302,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
       )
 
       forAll(trees) { (tree, treePath, newLiteralText) =>
-        an[InvalidEditTargetException] should be thrownBy EditLiteralAction(tree, treePath, newLiteralText).newTree
+        an[InvalidEditTargetException] should be thrownBy EditLiteralAction(tree, treePath, LLam, newLiteralText).newTree
       }
     }
   }
@@ -338,7 +340,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
       )
 
       forAll(trees) { (tree, treePath, result) =>
-        val action = DeleteAction(tree, treePath)
+        val action = DeleteAction(tree, treePath, LLam)
         action.newTree shouldEqual result
       }
     }
@@ -376,7 +378,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
       )
 
       forAll(trees) { (tree, treePath, result) =>
-        val action = DeleteAction(tree, treePath)
+        val action = DeleteAction(tree, treePath, LLam)
         action.newTree shouldEqual result
       }
     }
@@ -393,7 +395,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
       )
 
       forAll(trees) { (tree, treePath) =>
-        an[InvalidDeleteTargetException] should be thrownBy DeleteAction(tree, treePath).newTree
+        an[InvalidDeleteTargetException] should be thrownBy DeleteAction(tree, treePath, LLam).newTree
       }
     }
   }
@@ -430,7 +432,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
       )
 
       forAll(trees) { (tree, treePath, pasteNodeString, result) =>
-        val action = PasteAction(tree, treePath, pasteNodeString)
+        val action = PasteAction(tree, treePath, LLam, pasteNodeString)
         action.newTree shouldEqual result
       }
     }
@@ -459,7 +461,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
       )
 
       forAll(trees) { (tree, treePath, pasteNodeString, result) =>
-        val action = PasteAction(tree, treePath, pasteNodeString)
+        val action = PasteAction(tree, treePath, LLam, pasteNodeString)
         action.newTree shouldEqual result
       }
     }
@@ -478,7 +480,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
       )
 
       forAll(trees) { (tree, treePath, pasteNodeString) =>
-        an[InvalidPasteTargetException] should be thrownBy PasteAction(tree, treePath, pasteNodeString).newTree
+        an[InvalidPasteTargetException] should be thrownBy PasteAction(tree, treePath, LLam, pasteNodeString).newTree
       }
     }
 
@@ -503,7 +505,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
       )
 
       forAll(trees) { (tree, treePath, pasteNodeString) =>
-        an[InvalidPasteTargetException] should be thrownBy PasteAction(tree, treePath, pasteNodeString).newTree
+        an[InvalidPasteTargetException] should be thrownBy PasteAction(tree, treePath, LLam, pasteNodeString).newTree
       }
     }
 
@@ -525,7 +527,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
       )
 
       forAll(trees) { (tree, treePath, pasteNodeString) =>
-        an[InvalidPasteTargetException] should be thrownBy PasteAction(tree, treePath, pasteNodeString).newTree
+        an[InvalidPasteTargetException] should be thrownBy PasteAction(tree, treePath, LLam, pasteNodeString).newTree
       }
     }
 
@@ -543,7 +545,7 @@ class ActionSpec extends AnyWordSpec with Matchers {
       )
 
       forAll(trees) { (tree, treePath, pasteNodeString) =>
-        an[Exception] should be thrownBy PasteAction(tree, treePath, pasteNodeString).newTree
+        an[Exception] should be thrownBy PasteAction(tree, treePath, LLam, pasteNodeString).newTree
       }
     }
   }
