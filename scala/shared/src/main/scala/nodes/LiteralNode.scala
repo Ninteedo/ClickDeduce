@@ -3,6 +3,7 @@ package nodes
 import convertors.{ConvertableText, DisplayMode, HtmlElement}
 import languages.env.{Env, TypeEnv, ValueEnv}
 import languages.terms.literals.Literal
+import nodes.exceptions.NodeParentWrongTypeException
 import scalatags.Text.TypedTag
 
 /** An inner node that represents a literal field.
@@ -26,10 +27,12 @@ case class LiteralNode(literal: Literal) extends InnerNode {
 
   def toHtmlLine(mode: DisplayMode): TypedTag[String] = literal.toHtmlInput(treePathString, getEnv(mode))
 
-  def getEnv(mode: DisplayMode): ValueEnv | TypeEnv = getParent match
-    case Some(exprNode: ExprNodeParent)       => exprNode.getEnv(mode)
+  def getEnv(mode: DisplayMode): ValueEnv | TypeEnv = getParent match {
+    case Some(exprNode: ExprNodeParent) => exprNode.getEnv(mode)
     case Some(typeNode: TypeNodeParent) => typeNode.getEnv(mode)
-    case None                           => Env()
+    case None => Env()
+    case Some(parent) => throw NodeParentWrongTypeException("ExprNodeParent or TypeNodeParent", parent.name)
+  }
 
   def toHtmlLineReadOnly(mode: DisplayMode): TypedTag[String] = literal.toHtmlInputReadOnly(treePathString)
 }

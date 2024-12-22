@@ -50,11 +50,7 @@ class LPoly extends LData {
 
   case class ApplyType(e: Expr, typ: Type) extends Expr {
     override def evalInner(env: ValueEnv): Value = e.eval(env) match {
-      case PolyV(tv, e, env) =>
-        tv match {
-          case TypeVar(v) => e.eval(env + (v.toBind -> TypeValueContainer(typ)))
-          case other      => PolyVRequiresTypeVar(other)
-        }
+      case PolyV(tv, e, env) => e.eval(env + (tv.v.toBind -> TypeValueContainer(typ)))
       case other => CannotApplyTypeUnlessPolyV(other)
     }
 
