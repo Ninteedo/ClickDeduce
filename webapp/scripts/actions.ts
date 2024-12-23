@@ -1,14 +1,11 @@
 import {getSelectedLanguage, getSelectedMode} from "./utils";
 import {disableInputs, enableInputs, lastNodeString, reloadCurrentTree, updateTree} from "./treeManipulation";
-import {
-    contextMenuSelectedElement,
-    displayError,
-    getTreePathOfElement,
-    nextFocusElement,
-    setFocusElement
-} from "./interface";
+import {nextFocusElement, setFocusElement} from "./interface";
 import {postProcessActionNew, postStartNodeBlankNew} from "./serverRequest";
 import {getNodeStringFromPath} from "./utility/parseNodeString";
+import {getTreePathOfElement} from "./globals/elements";
+import {getContextMenuSelectedElement} from "./components/contextMenu";
+import {displayError} from "./components/displayError";
 
 let copyCache: string | null = null;
 
@@ -169,7 +166,7 @@ export function deleteTreeNode(treePath: string): void {
  */
 export function clearTreeNode(event: Event): void {
     event.preventDefault();
-    if (contextMenuSelectedElement) {
+    if (getContextMenuSelectedElement()) {
         deleteTreeNode(getContextMenuSelectedTreePath());
     }
 }
@@ -206,5 +203,5 @@ export function hasCopyCache(): boolean {
 }
 
 function getContextMenuSelectedTreePath(): string {
-    return getTreePathOfElement(contextMenuSelectedElement);
+    return getTreePathOfElement(getContextMenuSelectedElement());
 }

@@ -1,11 +1,11 @@
 import fs from "fs";
 import path from "path";
 import {doStartNodeBlank, handleLiteralChanged} from "../actions";
-import {getLangSelector, getTreePathOfElement} from "../interface";
 import {CustomExprSelector} from "../components/customExprSelector";
 import {getExprSelectors} from "../treeManipulation";
 import {vitest} from "vitest";
 import {DropdownOption} from "../components/baseDropdownSelector";
+import {getLangSelector, getTreePathOfElement} from "../globals/elements";
 
 export function slightDelay(delay: number = 10): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, delay));
@@ -123,12 +123,6 @@ export function getTabbableElements(allowSelect: boolean = false): HTMLElement[]
         return aPath.localeCompare(bPath, undefined, {numeric: true, sensitivity: 'base'});
     });
     return elements;
-}
-
-export function getErrorDiv(): HTMLElement {
-    const errorDiv = document.getElementById('error-message');
-    if (!errorDiv) throw new Error('Could not find error message div');
-    return errorDiv;
 }
 
 export function basicMocks(): void {

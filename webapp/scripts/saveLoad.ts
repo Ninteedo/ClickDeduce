@@ -1,4 +1,3 @@
-import {displayError} from "./interface";
 import {
     getCurrentLanguage,
     lastNodeString,
@@ -7,6 +6,7 @@ import {
     setSelectedMode
 } from "./treeManipulation";
 import {getSelectedMode} from "./utils";
+import {displayError} from "./components/displayError";
 
 const fileInput: HTMLInputElement = document.createElement('input');
 

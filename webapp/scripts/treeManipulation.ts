@@ -1,6 +1,6 @@
 import {hasClassOrParentHasClass} from "./utils";
 import {runAction} from "./actions";
-import {clearHighlight, contextMenuSelectedElement, isAutoZoomEnabled, zoomToFit} from "./interface";
+import {clearHighlight} from "./interface";
 import {getLangSelectorNew} from "./serverRequest";
 import {CustomExprSelector, replaceSelectInputs} from "./components/customExprSelector";
 import {updateTaskList} from "./tasks";
@@ -9,6 +9,9 @@ import {setupFileDragAndDrop, setupFileInput} from "./saveLoad";
 import {AbstractTreeInput} from "./components/abstractTreeInput";
 import {markHasUsedLangSelector} from "./attention";
 import TreeHistoryManager from "./components/TreeHistoryManager";
+import {getRedoButton, getUndoButton} from "./globals/elements";
+import {isAutoZoomEnabled, zoomToFit} from "./components/panzoom";
+import {getContextMenuSelectedElement} from "./components/contextMenu";
 
 let treeHistoryManager: TreeHistoryManager;
 
@@ -25,8 +28,8 @@ export let lastNodeString: string | null = null;
  * Resets the global variables used by the tree manipulation code.
  */
 export function resetTreeManipulation(): void {
-    const undoButton = document.getElementById('undoButton') as HTMLButtonElement;
-    const redoButton = document.getElementById('redoButton') as HTMLButtonElement;
+    const undoButton = getUndoButton();
+    const redoButton = getRedoButton();
     treeHistoryManager = new TreeHistoryManager(undoButton, redoButton);
     treeHistoryManager.updateButtons();
 
@@ -127,7 +130,7 @@ function addHoverListeners(): void {
             const target: EventTarget | null = event.currentTarget;
 
             // Remove the highlight from any other subtree elements
-            if (contextMenuSelectedElement === null) {
+            if (!getContextMenuSelectedElement()) {
                 document.querySelectorAll('.subtree').forEach(el => el.classList.remove('highlight'));
                 if (target instanceof HTMLElement) {
                     target.classList.add('highlight');  // Add the highlight to the subtree currently hovered over
@@ -136,7 +139,7 @@ function addHoverListeners(): void {
         });
         div.addEventListener('mouseout', (event) => {
             event.stopPropagation();  // Stop the event from bubbling up to parent subtree elements
-            if (contextMenuSelectedElement === null) {
+            if (!getContextMenuSelectedElement()) {
                 clearHighlight();  // Remove the highlight from currently hovered over subtree
             }
         });

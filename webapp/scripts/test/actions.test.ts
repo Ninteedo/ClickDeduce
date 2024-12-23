@@ -19,8 +19,8 @@ import {
     getActionHistory,
     getStartNodeBlankHistory
 } from "../serverRequest";
-import {getCopyButton, getDeleteButton, getPasteButton, getUndoButton} from "../interface";
 import {getExprSelectors, getLiteralInputs} from "../treeManipulation";
+import {getCopyButton, getDeleteButton, getPasteButton, getUndoButton} from "../globals/elements";
 
 const indexHtml = loadIndexHtmlTemplate();
 

@@ -1,6 +1,6 @@
 import {checkTaskFulfilled, getTasksList} from "./serverRequest";
-import {getLangSelector} from "./interface";
 import {markHasCompletedFirstLangTasks} from "./attention";
+import {getLangSelector} from "./globals/elements";
 
 let fulfilledTasks: string[] = [];
 

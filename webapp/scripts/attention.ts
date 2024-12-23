@@ -1,4 +1,4 @@
-import {getLangSelector} from "./interface";
+import {getLangSelector} from "./globals/elements";
 
 const ATTENTION_CLASS = 'attention';
 

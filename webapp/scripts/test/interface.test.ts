@@ -4,7 +4,6 @@ import {
     changeLanguage,
     contextMenuSelect,
     doLiteralEdit,
-    getErrorDiv,
     getLeftmostExprDropdown,
     getLiteralInputAt,
     getTabbableElements,
@@ -16,6 +15,7 @@ import {
 import {initialise} from "../initialise";
 import {doStartNodeBlank, startNodeBlank} from "../actions";
 import {ClickDeduceResponseError} from "../ClickDeduceResponseError";
+import {getErrorDiv} from "../globals/elements";
 
 const indexHtml = loadIndexHtmlTemplate();
 

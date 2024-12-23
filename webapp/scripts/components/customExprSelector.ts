@@ -1,8 +1,8 @@
 import {hasClassOrParentHasClass} from "../utils";
-import {getTreePathOfElement} from "../interface";
 import {getTree} from "../treeManipulation";
 import {handleExprSelectorChoice} from "../actions";
 import {BaseDropdownSelector} from "./baseDropdownSelector";
+import {getTreePathOfElement} from "../globals/elements";
 
 const UP_ARROW = '&#9650;';
 const DOWN_ARROW = '&#9660;';

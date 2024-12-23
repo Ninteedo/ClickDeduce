@@ -10,10 +10,12 @@ import {
     startNodeBlank
 } from "./actions";
 import {getTree, redo, resetTreeManipulation, undo, updateTextInputWidth} from "./treeManipulation";
+import {handleTabPressed, resetInterfaceGlobals} from "./interface";
+import panzoom, {PanZoom} from "panzoom";
+import {loadImages} from "./imageLoading";
+import {setupExampleSelector} from "./components/customExprSelector";
+import {loadTree, saveTree} from "./saveLoad";
 import {
-    closeExportOutput,
-    copyExportOutput,
-    exportLaTeX,
     getContextMenuZoomToFitButton,
     getCopyButton,
     getDeleteButton,
@@ -25,16 +27,10 @@ import {
     getRedoButton,
     getSaveButton,
     getUndoButton,
-    getZoomToFitButton,
-    handleTabPressed,
-    resetInterfaceGlobals,
-    setPanZoomInstance,
-    zoomToFit
-} from "./interface";
-import panzoom, {PanZoom} from "panzoom";
-import {loadImages} from "./imageLoading";
-import {setupExampleSelector} from "./components/customExprSelector";
-import {loadTree, saveTree} from "./saveLoad";
+    getZoomToFitButton
+} from "./globals/elements";
+import {setPanZoomInstance, zoomToFit} from "./components/panzoom";
+import {closeExportOutput, copyExportOutput, exportLaTeX} from "./components/latexOutput";
 
 export let panzoomInstance: PanZoom;
 

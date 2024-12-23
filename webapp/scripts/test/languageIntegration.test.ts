@@ -12,9 +12,9 @@ import {
     selectExprOption,
     slightDelay
 } from "./helper";
-import {getCopyButton, getLangSelector, getPasteButton, getUndoButton} from "../interface";
 import {CustomExprSelector} from "../components/customExprSelector";
 import {getExprSelectors} from "../treeManipulation";
+import {getCopyButton, getLangSelector, getPasteButton, getUndoButton} from "../globals/elements";
 
 const indexHtml = loadIndexHtmlTemplate();
 
