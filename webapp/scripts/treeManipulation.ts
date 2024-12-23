@@ -8,11 +8,9 @@ import {createLiteralInputs, LiteralInput} from "./components/literalInput";
 import {setupFileDragAndDrop, setupFileInput} from "./saveLoad";
 import {AbstractTreeInput} from "./components/abstractTreeInput";
 import {markHasUsedLangSelector} from "./attention";
+import TreeHistoryManager from "./components/TreeHistoryManager";
 
-let treeHistory: { mode: string; html: string; nodeString: string; lang: string }[] = [];
-export let treeHistoryIndex: number = 0;
-let undoButton: HTMLButtonElement
-let redoButton: HTMLButtonElement;
+let treeHistoryManager: TreeHistoryManager;
 
 let modeRadios: HTMLInputElement[];
 let langSelector: HTMLSelectElement;
@@ -27,14 +25,13 @@ export let lastNodeString: string | null = null;
  * Resets the global variables used by the tree manipulation code.
  */
 export function resetTreeManipulation(): void {
-    treeHistory = [];
-    treeHistoryIndex = 0;
-    undoButton = document.getElementById('undoButton') as HTMLButtonElement;
-    redoButton = document.getElementById('redoButton') as HTMLButtonElement;
+    const undoButton = document.getElementById('undoButton') as HTMLButtonElement;
+    const redoButton = document.getElementById('redoButton') as HTMLButtonElement;
+    treeHistoryManager = new TreeHistoryManager(undoButton, redoButton);
+    treeHistoryManager.updateButtons();
+
     activeInputs = [];
     lastNodeString = null;
-
-    updateUndoRedoButtons();
 
     modeRadios = Array.from(document.querySelectorAll('input[name="mode"]'));
     for (const radio of modeRadios) {
@@ -81,20 +78,15 @@ export function updateTree(newTreeHtml: string, newNodeString: string, modeName:
     getTree().innerHTML = newTreeHtml;
     lastNodeString = newNodeString;
     treeCleanup();
-    if (addToHistory && (treeHistory.length === 0 ||
-        (newTreeHtml !== treeHistory[treeHistoryIndex].html || newNodeString !== treeHistory[treeHistoryIndex].nodeString))) {
-        if (treeHistoryIndex < treeHistory.length - 1) {
-            treeHistory = treeHistory.slice(0, treeHistoryIndex + 1);
-        }
-        const newEntry = {
+    if (addToHistory) {
+        treeHistoryManager.addRecord({
             html: newTreeHtml,
             nodeString: newNodeString,
             mode: modeName,
             lang,
-        };
-        treeHistoryIndex = treeHistory.push(newEntry) - 1;
+        });
     }
-    updateUndoRedoButtons();
+    treeHistoryManager.updateButtons();
     literalInputs = createLiteralInputs();
     updateActiveInputsList();
     setSelectedMode(modeName);
@@ -119,24 +111,8 @@ function treeCleanup(): void {
     addClickListeners();
 }
 
-/**
- * Updates the tree to the state it was in at the given history index.
- * @param newHistoryIndex the index of the tree history entry to use
- */
-export function useTreeFromHistory(newHistoryIndex: number): void {
-    if (newHistoryIndex >= 0 && newHistoryIndex < treeHistory.length) {
-        treeHistoryIndex = newHistoryIndex;
-        const entry = treeHistory[newHistoryIndex];
-        updateTree(entry.html, entry.nodeString, entry.mode, entry.lang, false);
-    }
-}
-
-/**
- * Updates whether the undo/redo buttons are disabled.
- */
-export function updateUndoRedoButtons(): void {
-    undoButton.disabled = treeHistoryIndex <= 0;
-    redoButton.disabled = treeHistoryIndex >= treeHistory.length - 1;
+export function reloadCurrentTree(): void {
+    treeHistoryManager.reloadCurrentTree();
 }
 
 /**
@@ -260,18 +236,14 @@ export function getExprSelectors(): CustomExprSelector[] {
  * Undoes the last change to the tree.
  */
 export function undo(): void {
-    if (treeHistoryIndex >= 0 && treeHistoryIndex < treeHistory.length) {
-        useTreeFromHistory(treeHistoryIndex - 1);
-    }
+    treeHistoryManager.undo();
 }
 
 /**
  * Redoes an undone change to the tree.
  */
 export function redo(): void {
-    if (treeHistoryIndex >= 0 && treeHistoryIndex < treeHistory.length - 1) {
-        useTreeFromHistory(treeHistoryIndex + 1);
-    }
+    treeHistoryManager.redo();
 }
 
 /**
@@ -327,89 +299,6 @@ export function enableInputs(): void {
 export function loadTreeFromString(nodeString: string): void {
     lastNodeString = nodeString;
     runAction("IdentityAction", "", [])
-}
-
-/**
- * Finds the substring of the node string at the given path.
- * @param path the tree path to the node, integers separated by dashes
- */
-export function getNodeStringFromPath(path: string): string {
-    /**
-     * Parses the node string and returns the arguments of the given node.
-     * <p>
-     * The node string is the name followed by a comma-separated list of arguments in parentheses.
-     * The arguments can themselves be nodes, so a recursive approach is used.
-     * </p>
-     * <p>
-     * There can also be string literals in the arguments
-     * which can contain commas, and parentheses, and escape characters.
-     * </p>
-     * <p>
-     * For example, the node string <code>'Plus(Num("1"), Times(Num(""), Num("mess(\")\\")))'</code>
-     * would return <code>['Num("1")', 'Times(Num(""), Num("mess(\")\\"))']</code>.
-     * </p>
-     *
-     * @param node
-     */
-    function nodeArgs(node: string): string[] {
-        let current: string = '';
-        let nodes: string[] = [];
-        let depth: number = 0;
-        let escaped: boolean = false;
-        let inString: boolean = false;
-        for (let char of node) {
-            if (escaped) {
-                current += "\\" + char;
-                escaped = false;
-            } else if (char === '\\') {
-                escaped = true;
-            } else if (char === '(' && !inString) {
-                if (depth === 0) {
-                    current = '';
-                } else {
-                    current += char;
-                }
-                depth += 1;
-            } else if (char === ')' && !inString) {
-                depth -= 1;
-                if (depth === 0) {
-                    nodes.push(current);
-                } else {
-                    current += char;
-                }
-            } else if (char === ',' && depth === 1 && !inString) {
-                nodes.push(current);
-                current = '';
-            } else if (char === '"' && !escaped) {
-                inString = !inString;
-                current += char;
-            } else {
-                current += char;
-            }
-        }
-        return nodes;
-    }
-
-    function recurse(curr: string, remaining: number[]): string {
-        if (remaining.length === 0) {
-            return curr;
-        }
-
-        const next = remaining.shift();
-        if (next === undefined) {
-            throw new Error('Unexpected undefined value');
-        }
-
-        const nodeArgsList = nodeArgs(curr)[1];
-        const innerNode = nodeArgs(nodeArgsList)[next];
-        const nextNodeString = nodeArgs(innerNode)[0];
-        return recurse(nextNodeString, remaining);
-    }
-
-    if (!lastNodeString) {
-        throw new Error('No node string to get path from');
-    }
-    return recurse(lastNodeString, path.split('-').map(s => parseInt(s)).filter(n => !isNaN(n)));
 }
 
 export function getTree(): HTMLDivElement {

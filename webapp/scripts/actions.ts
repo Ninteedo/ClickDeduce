@@ -1,13 +1,5 @@
 import {getSelectedLanguage, getSelectedMode} from "./utils";
-import {
-    disableInputs,
-    enableInputs,
-    getNodeStringFromPath,
-    lastNodeString,
-    treeHistoryIndex,
-    updateTree,
-    useTreeFromHistory
-} from "./treeManipulation";
+import {disableInputs, enableInputs, lastNodeString, reloadCurrentTree, updateTree} from "./treeManipulation";
 import {
     contextMenuSelectedElement,
     displayError,
@@ -16,6 +8,7 @@ import {
     setFocusElement
 } from "./interface";
 import {postProcessActionNew, postStartNodeBlankNew} from "./serverRequest";
+import {getNodeStringFromPath} from "./utility/parseNodeString";
 
 let copyCache: string | null = null;
 
@@ -157,7 +150,7 @@ export function runAction(actionName: string, treePath: string, extraArgs: any[]
         updateTree(newHtml, newNodeString, modeName, langName, true);
     } catch (e) {
         displayError(e);
-        useTreeFromHistory(treeHistoryIndex);
+        reloadCurrentTree();
     }
     enableInputs();
 }

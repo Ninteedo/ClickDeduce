@@ -16,8 +16,8 @@ import {
     slightDelay
 } from "./helper";
 import * as NS from "../../test_resources/node_strings";
-import {getNodeStringFromPath} from "../treeManipulation";
 import {getRedoButton, getUndoButton} from "../interface";
+import {getNodeStringFromPath} from "../utility/parseNodeString";
 
 const indexHtml = loadHtmlTemplate('index');
 
