@@ -58,10 +58,10 @@ class LRec extends LLam {
       TextElement("rec "),
       f.toText,
       BracketedElement(v.toText),
-//      SpaceAfter(MathElement.colon),
-//      TypeElement(outType.toTextBracketed),
-//      SpaceAfter(MathElement.period),
-//      e.toTextBracketed
+      SpaceAfter(MathElement.colon),
+      TypeElement(outType.toTextBracketed),
+      SpaceAfter(MathElement.period),
+      e.toTextBracketed
     )
   }
 
