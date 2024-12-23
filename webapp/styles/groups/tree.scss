@@ -10,6 +10,8 @@
   min-height: 100px;
   overflow: clip;
 
+  z-index: 10;
+
   &.file-drag-highlight {
     border: 2px dashed #4CAF50;
     background-color: #49494d;

@@ -25,7 +25,6 @@ export function startNodeBlank(): void {
  * @param event the form submission event
  */
 export function doStartNodeBlank(event?: Event): void {
-    // prevent the form from submitting the old-fashioned way
     if (event) event.preventDefault();
 
     const [newNodeString, newHtml] = postStartNodeBlankNew(getSelectedLanguage());

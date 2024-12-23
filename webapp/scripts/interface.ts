@@ -2,7 +2,7 @@ import {copyTreeNode, deleteTreeNode, pasteTreeNode} from "./actions";
 import {getActiveInputs, redo, undo} from "./treeManipulation";
 import {compareTreePaths} from "./utils";
 import {AbstractTreeInput} from "./components/abstractTreeInput";
-import {getContextMenu, getTreePathOfElement} from "./globals/elements";
+import {getContextMenu, getControlsDiv, getToggleControlsButton, getTreePathOfElement} from "./globals/elements";
 import {
     clearContextMenuSelectedElement,
     closeContextMenu,
@@ -128,5 +128,21 @@ function toggleValueTypeColourHighlighting(newState: boolean): void {
         body.classList.add(className);
     } else {
         body.classList.remove(className);
+    }
+}
+
+export function toggleControls(): void {
+    const button = getToggleControlsButton();
+    const controls = getControlsDiv();
+
+    const hiddenClass = 'hidden';
+
+    if (controls.classList.contains(hiddenClass)) {
+        controls.classList.remove(hiddenClass);
+        button.innerHTML = '&#9650;';
+    } else {
+        controls.classList.add(hiddenClass);
+        // up arrow
+        button.innerHTML = '&#9660;';
     }
 }

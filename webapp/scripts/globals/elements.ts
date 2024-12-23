@@ -104,3 +104,11 @@ export function getLangSelector(): HTMLSelectElement {
 export function getErrorDiv(): HTMLDivElement {
     return document.getElementById('error-message') as HTMLDivElement;
 }
+
+export function getToggleControlsButton(): HTMLButtonElement {
+    return document.getElementById('toggle-controls-button') as HTMLButtonElement;
+}
+
+export function getControlsDiv(): HTMLDivElement {
+    return document.getElementById('controls') as HTMLDivElement;
+}

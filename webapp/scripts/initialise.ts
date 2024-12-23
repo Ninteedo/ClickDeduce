@@ -10,7 +10,7 @@ import {
     startNodeBlank
 } from "./actions";
 import {getTree, redo, resetTreeManipulation, undo, updateTextInputWidth} from "./treeManipulation";
-import {handleTabPressed, resetInterfaceGlobals} from "./interface";
+import {handleTabPressed, resetInterfaceGlobals, toggleControls} from "./interface";
 import panzoom, {PanZoom} from "panzoom";
 import {loadImages} from "./imageLoading";
 import {setupExampleSelector} from "./components/customExprSelector";
@@ -26,6 +26,7 @@ import {
     getPasteButton,
     getRedoButton,
     getSaveButton,
+    getToggleControlsButton,
     getUndoButton,
     getZoomToFitButton
 } from "./globals/elements";
@@ -79,6 +80,7 @@ function setupButtons() {
     getExportLatexButton().addEventListener('click', exportLaTeX);
     getExportCopyButton().addEventListener('click', copyExportOutput);
     getExportCloseButton().addEventListener('click', closeExportOutput);
+    getToggleControlsButton().addEventListener('click', toggleControls);
 }
 
 (window as any).initialise = initialise;

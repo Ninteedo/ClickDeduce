@@ -28,10 +28,7 @@ export let lastNodeString: string | null = null;
  * Resets the global variables used by the tree manipulation code.
  */
 export function resetTreeManipulation(): void {
-    const undoButton = getUndoButton();
-    const redoButton = getRedoButton();
-    treeHistoryManager = new TreeHistoryManager(undoButton, redoButton);
-    treeHistoryManager.updateButtons();
+    treeHistoryManager = new TreeHistoryManager(getUndoButton(), getRedoButton());
 
     activeInputs = [];
     lastNodeString = null;
