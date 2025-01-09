@@ -1,5 +1,5 @@
 // @ts-ignore
-import {checkTask, getLangSelector, getTasks, processAction, startNodeBlank} from "scalajs:main.js";
+import {checkTask, getExprRulePreview, getLangSelector, getTasks, processAction, startNodeBlank} from "scalajs:main.js";
 import {Task} from "./tasks";
 
 let actionHistory: {
@@ -70,4 +70,8 @@ export function getTasksList(langName: string): Task[] {
 
 export function checkTaskFulfilled(langName: string, taskName: string, nodeString: string): boolean {
     return checkTask(langName, taskName, nodeString);
+}
+
+export function getRulePreview(langName: string, exprName: string): string {
+    return getExprRulePreview(langName, exprName);
 }

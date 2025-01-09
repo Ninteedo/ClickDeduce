@@ -1,6 +1,5 @@
 package languages
 
-import app.{ClickDeduceException, UtilityFunctions}
 import convertors.*
 import languages.terms.Term
 import languages.terms.blanks.{BlankExprDropDown, BlankTypeDropDown}
@@ -8,7 +7,6 @@ import languages.terms.builders.BuilderName
 import languages.terms.exprs.Expr
 import languages.terms.literals.{Literal, LiteralParser}
 import languages.terms.types.Type
-import languages.terms.values.Value
 import nodes.exceptions.NodeStringParseException
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
@@ -29,10 +27,23 @@ trait AbstractNodeLanguage extends AbstractLanguage {
   lazy val exprClassListDropdownHtml: TypedTag[String] = {
     def createExprOption(exprBuilderName: BuilderName): TypedTag[String] = {
       val langName = exprBuilderName._1
+
+      def exprRulePreview(expr: Expr): TypedTag[String] = {
+        val preview = expr.getRulePreview
+        if (preview.isEmpty) div()
+        else preview.get.toHtml
+      }
+
       exprBuilderName._2 match {
         case name: String => option(data("value") := name, name)
         case (name: String, aliases: List[String]) =>
-          option(data("value") := name, name, data("aliases") := aliases.mkString(","), data("lang") := langName)
+          option(
+            data("value") := name,
+            data("aliases") := aliases.mkString(","),
+            data("lang") := langName,
+//            data("preview") := exprRulePreview(getExprBuilder(name).get.apply(Nil).get).toString,
+            name
+          )
       }
     }
 

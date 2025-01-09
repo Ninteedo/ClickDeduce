@@ -1,6 +1,8 @@
 import {handleTabPressed, setNextFocusElement} from "../interface";
 import {stripTooltip} from "../utils";
 import {AbstractTreeInput} from "./abstractTreeInput";
+import {getRulePreview} from "../serverRequest";
+import {getCurrentLanguage} from "../treeManipulation";
 
 export class BaseDropdownSelector implements AbstractTreeInput {
     protected readonly container: HTMLDivElement;
@@ -8,8 +10,11 @@ export class BaseDropdownSelector implements AbstractTreeInput {
     protected readonly dropdown: HTMLDivElement;
     readonly options: DropdownOption[];
 
+    protected rulePreview: HTMLDivElement | undefined = undefined;
+
     protected readonly SELECTOR_FOCUS_CLASS = 'focused';
     protected readonly DROPDOWN_VISIBLE_CLASS = 'show';
+    protected readonly RULE_PREVIEW_CLASS = 'rule-preview';
 
     constructor(container: HTMLDivElement, inputSelector: string, dropdownSelector: string, optionsSelector: string) {
         this.container = container;
@@ -137,6 +142,23 @@ export class BaseDropdownSelector implements AbstractTreeInput {
     protected hideDropdown(): void {
         this.dropdown.classList.remove(this.DROPDOWN_VISIBLE_CLASS);
         this.container.classList.remove(this.SELECTOR_FOCUS_CLASS);
+        this.hideRulePreview();
+    }
+
+    showRulePreview(value: string): void {
+        if (this.rulePreview === undefined) {
+            this.rulePreview = document.createElement('div');
+            this.rulePreview.classList.add(this.RULE_PREVIEW_CLASS);
+            this.container.appendChild(this.rulePreview);
+        }
+        this.rulePreview.innerHTML = getRulePreview(getCurrentLanguage(), value);
+    }
+
+    hideRulePreview(): void {
+        if (this.rulePreview !== undefined) {
+            this.rulePreview.remove();
+            this.rulePreview = undefined;
+        }
     }
 
     private isDropdownVisible() {
@@ -160,6 +182,7 @@ export class BaseDropdownSelector implements AbstractTreeInput {
         const option = options[index];
         if (option) {
             option.highlight();
+            this.showRulePreview(option.getValue());
         }
     }
 

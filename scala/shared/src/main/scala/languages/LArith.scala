@@ -31,6 +31,13 @@ class LArith extends ClickDeduceLanguage {
     override def typeCheckInner(tEnv: TypeEnv): Type = IntType()
 
     override def toText: ConvertableText = x.toText
+
+    override def getRulePreview: Option[RulePreview] = Some(
+      RulePreview(
+        InferenceRulePreview(Nil, TypeCheckRulePart(TextElement("n"), IntType().toText)),
+        InferenceRulePreview(Nil, EvaluationRulePart(TextElement("v"), TextElement("v")))
+      )
+    )
   }
 
   object Num extends ExprCompanion {
@@ -70,6 +77,25 @@ class LArith extends ClickDeduceLanguage {
 
     override def toText: ConvertableText =
       MultiElement(e1.toTextBracketed, SurroundSpaces(MathElement.plus), e2.toTextBracketed)
+
+    override def getRulePreview: Option[RulePreview] = Some(
+      RulePreview(
+        InferenceRulePreview(
+          List(
+            TypeCheckRulePart(TextElement("e1"), IntType().toText),
+            TypeCheckRulePart(TextElement("e2"), IntType().toText)
+          ),
+          TypeCheckRulePart(TextElement("e1 + e2"), IntType().toText)
+        ),
+        InferenceRulePreview(
+          List(
+            EvaluationRulePart(TextElement("e1"), TextElement("v1")),
+            EvaluationRulePart(TextElement("e2"), TextElement("v2"))
+          ),
+          EvaluationRulePart(TextElement("e1 + e2"), TextElement("v1 + v2"))
+        )
+      )
+    )
   }
 
   object Plus extends ExprCompanion {

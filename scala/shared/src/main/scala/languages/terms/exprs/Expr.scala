@@ -1,6 +1,6 @@
 package languages.terms.exprs
 
-import convertors.DisplayMode
+import languages.RulePreview
 import languages.env.{Env, TypeEnv, ValueEnv}
 import languages.terms.Term
 import languages.terms.errors.{EvalException, TypeException}
@@ -103,4 +103,6 @@ abstract class Expr extends Term {
    *   The `Type` of this expression after type checking.
    */
   protected def typeCheckInner(tEnv: TypeEnv): Type
+
+  def getRulePreview: Option[RulePreview] = None
 }

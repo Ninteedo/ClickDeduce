@@ -138,4 +138,16 @@ object ScalaJsEntry {
       case None => throw new IllegalArgumentException(s"Unknown task: $taskName")
     }
   }
+  
+  @JSExportTopLevel("getExprRulePreview")
+  def getExprRulePreview(langName: String, exprName: String): String = {
+    val lang = getLanguage(langName)
+    val expr = lang.getExprBuilder(exprName) match {
+      case Some(builder) => builder(Nil).get
+      case None => throw new IllegalArgumentException(s"Unknown expression: $exprName")
+    }
+    val preview = expr.getRulePreview
+    if (preview.isEmpty) ""
+    else preview.get.toHtml.toString
+  }
 }

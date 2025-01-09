@@ -1,0 +1,11 @@
+.rule-preview {
+  position: absolute;
+  z-index: 1000;
+  opacity: 80%;
+
+  left: 100%;
+
+  background-color: $semi-background;
+  border: 1px solid $input-outline;
+  border-radius: 0.1rem;
+}

@@ -12,6 +12,7 @@ object ClassDict {
   val LITERAL = "literal"
   val NODE = "node"
   val PHANTOM = "phantom"
+  val RULE_PREVIEW = "rule-preview"
   val SCOPED_VARIABLES = "scoped-variables"
   val SUBTREE = "subtree"
   val TOOLTIP = "tooltip"
