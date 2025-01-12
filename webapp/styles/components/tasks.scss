@@ -17,6 +17,8 @@ div#tasks.control-group {
     background-color: $tree-background;
     box-shadow: 0 0 0.3rem $input-outline;
 
+    overflow: hidden;
+
     h3 {
       font-size: 1.1rem;
       margin: 0;
@@ -25,16 +27,16 @@ div#tasks.control-group {
     p.description {
       margin: 0;
       font-size: 0.9rem;
+
+      transition: max-height 0.2s ease;
     }
 
     &.fulfilled {
       background-color: $success-background;
 
-      &:not(:hover) {
-        p.description {
-          display: none;
-        }
-      }
+      //p.description {
+      //  max-height: 0;
+      //}
     }
   }
 }
