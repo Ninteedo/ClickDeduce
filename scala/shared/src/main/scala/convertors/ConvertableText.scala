@@ -12,6 +12,9 @@ trait ConvertableText {
 
   def toReadOnly: ConvertableText = this
 
+  def spacesAround: ConvertableText = SurroundSpaces(this)
+  def spaceAfter: ConvertableText = SpaceAfter(this)
+
   override def toString: String = asPlainText
 }
 
@@ -64,6 +67,14 @@ case class SubscriptElement(elem: ConvertableText) extends ConvertableText {
   override def asHtml: TypedTag[String] = sub(elem.asHtml)
   override def asHtmlReadOnly: TypedTag[String] = sub(elem.asHtmlReadOnly)
   override def asLaTeX: String = s"_{${elem.asLaTeX}}"
+}
+
+object SubscriptElement {
+  def labelled(elem: String, label: String): MultiElement = labelled(TextElement(elem), TextElement(label))
+
+  def labelled(elem: ConvertableText, label: ConvertableText): MultiElement = MultiElement(
+    elem, SubscriptElement(label)
+  )
 }
 
 case class HtmlElement(html: TypedTag[String], nonHtml: ConvertableText) extends ConvertableText {
@@ -206,6 +217,11 @@ case class SpaceAfter(elem: ConvertableText) extends ConvertableText {
   override def asHtml: TypedTag[String] = span(elem.asHtml, raw(" "))
   override def asHtmlReadOnly: TypedTag[String] = span(elem.asHtmlReadOnly, raw(" "))
   override def asLaTeX: String = elem.asLaTeX
+}
+
+object TermCommons {
+  def e(n: Int): ConvertableText = SubscriptElement.labelled("e", n.toString)
+  def v(n: Int): ConvertableText = SubscriptElement.labelled("v", n.toString)
 }
 
 def escapeLaTeX(text: String): String = text

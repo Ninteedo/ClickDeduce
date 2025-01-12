@@ -1,11 +1,73 @@
 .rule-preview {
   position: absolute;
   z-index: 1000;
-  opacity: 80%;
+
+  opacity: 0.8;
+  transition: opacity 0.2s;
 
   left: 100%;
 
   background-color: $semi-background;
   border: 1px solid $input-outline;
   border-radius: 0.1rem;
+
+  pointer-events: none;
+
+  .assumptions {
+    display: flex;
+    flex-direction: column;
+    border-bottom: 2px solid $foreground;
+  }
+
+  .conclusion {
+    display: inline-block;
+    position: relative;
+
+    //&:before {
+    //  content: "";
+    //  height: 2px;
+    //  background-color: $foreground;
+    //  width: 100%;
+    //  position: absolute;
+    //  left: 50%;
+    //  transform: translate(-50%, -50%);
+    //}
+
+    //border-top: 2px solid $foreground;
+    margin: 0 auto;
+  }
+
+  &:not(.show) {
+    opacity: 0;
+  }
+
+  &:hover {
+    opacity: 1;
+  }
+
+  & > div {
+    display: flex !important;
+    flex-direction: row;
+  }
+
+  .rule-type {
+    margin-right: 1rem;
+  }
+
+  .rule-type, .rule-eval {
+    display: flex !important;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0.2rem;
+
+    & > div {
+      display: flex !important;
+      flex-direction: row;
+      justify-content: space-between;
+
+      & > *:not(:last-child) {
+        margin-right: 1rem;
+      }
+    }
+  }
 }

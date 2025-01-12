@@ -1,6 +1,7 @@
 package languages
 
 import convertors.*
+import languages.terms.types.Type
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
@@ -8,8 +9,12 @@ trait InferenceRulePart {
   def toText: ConvertableText
 }
 
-case class EvaluationRulePart(l: ConvertableText, r: ConvertableText) extends InferenceRulePart {
-  override def toText: ConvertableText = MultiElement(l, DoubleDownArrow(), r)
+case class EvalRulePart(l: ConvertableText, r: ConvertableText) extends InferenceRulePart {
+  override def toText: ConvertableText = MultiElement(l, DoubleDownArrow().spacesAround, r)
+}
+
+object EvalRulePart {
+  def eToV(n: Int): EvalRulePart = EvalRulePart(TermCommons.e(n), TermCommons.v(n))
 }
 
 case class EvaluationRulePartEnv(l: ConvertableText, r: ConvertableText, lookups: List[ConvertableText]) extends InferenceRulePart {
@@ -20,29 +25,49 @@ case class TypeCheckRulePart(l: ConvertableText, r: ConvertableText, binds: List
   override def toText: ConvertableText = MultiElement(
     GammaSymbol(),
     ListElement(binds, start = NullElement(), end = NullElement()),
-    Turnstile(),
+    Turnstile().spacesAround,
     l,
-    TextElement(":"),
+    TextElement(":").spaceAfter,
     r
   )
 }
 
-case class InferenceRulePreview(assumptions: List[InferenceRulePart], conclusion: InferenceRulePart) {
+object TypeCheckRulePart {
+  def apply(l: ConvertableText, r: Type): TypeCheckRulePart = TypeCheckRulePart(l, r.toText)
+
+  def eTo(n: Int, t: Type): TypeCheckRulePart = TypeCheckRulePart(TermCommons.e(n), t)
+}
+
+abstract class InferenceRulePreview {
+  val assumptions: List[InferenceRulePart]
+  val conclusion: InferenceRulePart
+
+  protected val divClass: String
+
   def toHtml: TypedTag[String] = div(
+    cls := divClass,
     div(
-      "Assumptions:",
-      ul(assumptions.map(a => li(a.toText.asHtml)))
+      cls := ClassDict.RULE_PREVIEW_ASSUMPTIONS,
+      assumptions.map(a => a.toText.asHtml)
     ),
     div(
-      "Conclusion:",
+      cls := ClassDict.RULE_PREVIEW_CONCLUSION,
       conclusion.toText.asHtml
     )
   )
 }
 
-case class RulePreview(typeCheckRule: InferenceRulePreview, evaluationRule: InferenceRulePreview) {
+case class EvalRulePreview(assumptions: List[InferenceRulePart], conclusion: InferenceRulePart) extends InferenceRulePreview {
+  override protected val divClass: String = ClassDict.RULE_EVAL
+}
+
+case class TypeCheckRulePreview(assumptions: List[InferenceRulePart], conclusion: InferenceRulePart) extends InferenceRulePreview {
+  override protected val divClass: String = ClassDict.RULE_TYPE
+}
+
+case class RulePreview(typeCheckRule: TypeCheckRulePreview, evaluationRule: EvalRulePreview) {
   def toHtml: TypedTag[String] = div(
-    cls := ClassDict.RULE_PREVIEW,
+//    cls := ClassDict.RULE_PREVIEW,
     typeCheckRule.toHtml,
     evaluationRule.toHtml
   )

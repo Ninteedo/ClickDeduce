@@ -73,6 +73,9 @@ export class BaseDropdownSelector implements AbstractTreeInput {
                 evt.preventDefault();
                 this.selectOption(option);
             });
+            option.element.addEventListener('mouseenter', () => {
+                this.showRulePreview(option.getValue());
+            });
         });
     }
 
@@ -124,7 +127,7 @@ export class BaseDropdownSelector implements AbstractTreeInput {
         });
     }
 
-    protected toggleDropdown() {
+    protected toggleDropdown(): void {
         if (this.isDropdownVisible()) {
             this.hideDropdown();
         } else {
@@ -152,12 +155,12 @@ export class BaseDropdownSelector implements AbstractTreeInput {
             this.container.appendChild(this.rulePreview);
         }
         this.rulePreview.innerHTML = getRulePreview(getCurrentLanguage(), value);
+        this.rulePreview.classList.add(this.DROPDOWN_VISIBLE_CLASS);
     }
 
     hideRulePreview(): void {
         if (this.rulePreview !== undefined) {
-            this.rulePreview.remove();
-            this.rulePreview = undefined;
+            this.rulePreview.classList.remove(this.DROPDOWN_VISIBLE_CLASS);
         }
     }
 

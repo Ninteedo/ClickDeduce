@@ -34,8 +34,8 @@ class LArith extends ClickDeduceLanguage {
 
     override def getRulePreview: Option[RulePreview] = Some(
       RulePreview(
-        InferenceRulePreview(Nil, TypeCheckRulePart(TextElement("n"), IntType().toText)),
-        InferenceRulePreview(Nil, EvaluationRulePart(TextElement("v"), TextElement("v")))
+        TypeCheckRulePreview(Nil, TypeCheckRulePart(TextElement("n"), IntType().toText)),
+        EvalRulePreview(Nil, EvalRulePart(TextElement("v"), TextElement("v")))
       )
     )
   }
@@ -80,19 +80,19 @@ class LArith extends ClickDeduceLanguage {
 
     override def getRulePreview: Option[RulePreview] = Some(
       RulePreview(
-        InferenceRulePreview(
-          List(
-            TypeCheckRulePart(TextElement("e1"), IntType().toText),
-            TypeCheckRulePart(TextElement("e2"), IntType().toText)
-          ),
-          TypeCheckRulePart(TextElement("e1 + e2"), IntType().toText)
+        TypeCheckRulePreview(
+          List(TypeCheckRulePart.eTo(1, IntType()), TypeCheckRulePart.eTo(2, IntType())),
+          TypeCheckRulePart(
+            MultiElement(TermCommons.e(1), MathElement.plus.spacesAround, TermCommons.e(2)),
+            IntType().toText
+          )
         ),
-        InferenceRulePreview(
-          List(
-            EvaluationRulePart(TextElement("e1"), TextElement("v1")),
-            EvaluationRulePart(TextElement("e2"), TextElement("v2"))
-          ),
-          EvaluationRulePart(TextElement("e1 + e2"), TextElement("v1 + v2"))
+        EvalRulePreview(
+          List(EvalRulePart.eToV(1), EvalRulePart.eToV(2)),
+          EvalRulePart(
+            MultiElement(TermCommons.e(1), MathElement.plus.spacesAround, TermCommons.e(2)),
+            MultiElement(TermCommons.v(1), SubscriptElement.labelled(MathElement.plus, TextElement("N")).spacesAround, TermCommons.v(2))
+          )
         )
       )
     )
@@ -131,6 +131,29 @@ class LArith extends ClickDeduceLanguage {
 
     override def toText: ConvertableText =
       MultiElement(e1.toTextBracketed, SurroundSpaces(TimesSymbol()), e2.toTextBracketed)
+
+    override def getRulePreview: Option[RulePreview] = Some(
+      RulePreview(
+        TypeCheckRulePreview(
+          List(TypeCheckRulePart.eTo(1, IntType()), TypeCheckRulePart.eTo(2, IntType())),
+          TypeCheckRulePart(
+            MultiElement(TermCommons.e(1), TimesSymbol().spacesAround, TermCommons.e(2)),
+            IntType().toText
+          )
+        ),
+        EvalRulePreview(
+          List(EvalRulePart.eToV(1), EvalRulePart.eToV(2)),
+          EvalRulePart(
+            MultiElement(TermCommons.e(1), TimesSymbol().spacesAround, TermCommons.e(2)),
+            MultiElement(
+              TermCommons.v(1), SubscriptElement.labelled(TimesSymbol(), TextElement("N")).spacesAround,
+              TermCommons.v(2)
+            )
+          )
+        )
+      )
+    )
+
   }
 
   object Times extends ExprCompanion {
