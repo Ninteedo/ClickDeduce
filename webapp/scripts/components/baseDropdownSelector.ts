@@ -155,7 +155,6 @@ export class BaseDropdownSelector implements AbstractTreeInput {
             this.container.appendChild(this.rulePreview);
         }
         this.rulePreview.innerHTML = getRulePreview(getCurrentLanguage(), value);
-        console.log(this.rulePreview.innerHTML);
         this.rulePreview.classList.add(this.DROPDOWN_VISIBLE_CLASS);
     }
 

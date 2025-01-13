@@ -23,6 +23,7 @@ object ScalaJsEntry {
     "LRec" -> LRec(),
     "LData" -> LData(),
     "LPoly" -> LPoly(),
+    "LList" -> LList(),
   )
 
   private def getLanguage(langName: String): ClickDeduceLanguage = knownLanguages.find(_._1 == langName) match {
@@ -138,7 +139,7 @@ object ScalaJsEntry {
       case None => throw new IllegalArgumentException(s"Unknown task: $taskName")
     }
   }
-  
+
   @JSExportTopLevel("getExprRulePreview")
   def getExprRulePreview(langName: String, exprName: String): String = {
     val lang = getLanguage(langName)

@@ -13,6 +13,10 @@ import languages.terms.values.Value
 class LList extends LPoly {
   registerTerms("LList", List(ListNil, Cons, CaseList, ListType, NilV, ConsV))
 
+  private val consSymbol = TextElement("::")
+
+  private def listTypeText(elTyp: ConvertableText): ConvertableText = MultiElement(TextElement("List"), SquareBracketedElement(elTyp))
+
   // expressions
   case class ListNil(elTyp: Type) extends Expr {
     override protected def evalInner(env: ValueEnv): Value = NilV(elTyp)
@@ -22,6 +26,21 @@ class LList extends LPoly {
     override def toText: ConvertableText = TextElement("Nil")
 
     override val needsBrackets: Boolean = false
+
+    override def getRulePreview: Option[RulePreview] = Some(
+      new RulePreviewBuilder()
+        .addTypeCheckRule(new TypeCheckRuleBuilder()
+          .setConclusion(TypeCheckRulePart(
+            TextElement("Nil"),
+            listTypeText(Symbols.tau)))
+          .build
+        )
+        .addEvaluationRule(new EvalRuleBuilder()
+          .setConclusion(EvalRulePart.reflexive(TextElement("Nil")))
+          .build
+        )
+        .build
+    )
   }
 
   object ListNil extends ExprCompanion {
@@ -48,7 +67,25 @@ class LList extends LPoly {
       case (headTyp, tailTyp)                           => ListTypeMismatchError(headTyp, tailTyp)
     }
 
-    override def toText: ConvertableText = MultiElement(head.toTextBracketed, TextElement(" :: "), tail.toText)
+    override def toText: ConvertableText = MultiElement(head.toTextBracketed, consSymbol.spacesAround, tail.toText)
+
+    override def getRulePreview: Option[RulePreview] = Some(
+      new RulePreviewBuilder()
+        .addTypeCheckRule(new TypeCheckRuleBuilder()
+          .setConclusion(TypeCheckRulePart(
+            MultiElement(TermCommons.e(1), consSymbol.spacesAround, TermCommons.e(2)),
+            listTypeText(Symbols.tau)
+          ))
+          .addAssumption(TypeCheckRulePart(TermCommons.e(1), Symbols.tau))
+          .addAssumption(TypeCheckRulePart(TermCommons.e(2), listTypeText(Symbols.tau)))
+          .build
+        )
+        .addEvaluationRule(EvalRuleBuilder()
+          .setConclusion(EvalRulePart.reflexive(MultiElement(TermCommons.v(1), consSymbol.spacesAround, TermCommons.v(2))))
+          .build
+        )
+        .build
+    )
   }
 
   object Cons extends ExprCompanion {
@@ -60,6 +97,25 @@ class LList extends LPoly {
 
     override val aliases: List[String] = List("ListCons", "::")
   }
+
+  private def caseListText(list: ConvertableText, nilCase: ConvertableText, headVar: ConvertableText, tailVar: ConvertableText, consCase: ConvertableText): ConvertableText =
+    MultiElement(
+      TextElement("case"),
+      SpaceAfter(SubscriptElement(TextElement("list"))),
+      list,
+      TextElement(" of { "),
+      TextElement("Nil"),
+      SurroundSpaces(Symbols.doubleRightArrow),
+      nilCase,
+      TextElement("; "),
+      headVar,
+      consSymbol.spacesAround,
+      tailVar,
+      SurroundSpaces(Symbols.doubleRightArrow),
+      consCase,
+      TextElement(" }")
+    )
+
 
   case class CaseList(
     list: Expr,
@@ -91,23 +147,6 @@ class LList extends LPoly {
       env + (headVar -> head) + (tailVar -> tail)
     private def consTEnv(tEnv: TypeEnv, elTyp: Type): TypeEnv =
       tEnv + (headVar -> elTyp) + (tailVar -> ListType(elTyp))
-
-    override def toText: ConvertableText = MultiElement(
-      TextElement("case"),
-      SpaceAfter(SubscriptElement(TextElement("list"))),
-      list.toTextBracketed,
-      TextElement(" of { "),
-      TextElement("Nil"),
-      SurroundSpaces(Symbols.doubleRightArrow),
-      nilCase.toTextBracketed,
-      TextElement("; "),
-      headVar.toText,
-      SurroundSpaces(TextElement("::")),
-      tailVar.toText,
-      SurroundSpaces(Symbols.doubleRightArrow),
-      consCase.toTextBracketed,
-      TextElement(" }")
-    )
 
     override def getChildrenBase(env: ValueEnv): List[(Term, ValueEnv)] = List(
       (list, env),
@@ -145,6 +184,54 @@ class LList extends LPoly {
         case _                 => (nilCase, env)
       }
     )
+
+    override def toText: ConvertableText = caseListText(list.toTextBracketed, nilCase.toTextBracketed, headVar.toText, tailVar.toText, consCase.toTextBracketed)
+
+    override def getRulePreview: Option[RulePreview] = Some(
+      RulePreviewBuilder()
+        .addTypeCheckRule(
+          TypeCheckRuleBuilder()
+            .setConclusion(TypeCheckRulePart(
+              caseListText(MathElement("e"), TermCommons.e(1), MathElement("x"), MathElement("y"), TermCommons.e(2)),
+              TermCommons.t(2)
+            ))
+            .addAssumption(TypeCheckRulePart(MathElement("e"), listTypeText(TermCommons.t(1))))
+            .addAssumption(TypeCheckRulePart(TermCommons.e(1), TermCommons.t(2)))
+            .addAssumption(
+              TypeCheckRulePart(TermCommons.e(2), TermCommons.t(2), List(
+                TypeCheckRuleBind(MathElement("x"), TermCommons.t(1)).toText,
+                TypeCheckRuleBind(MathElement("y"), listTypeText(TermCommons.t(1))).toText
+              )),
+            )
+            .build
+        )
+        .addEvaluationRule(
+          EvalRuleBuilder()
+            .setConclusion(EvalRulePart(
+              caseListText(MathElement("e"), TermCommons.e(1), MathElement("x"), MathElement("y"), TermCommons.e(2)),
+              TermCommons.v(1)
+            ))
+            .addAssumption(EvalRulePart(MathElement("e"), TextElement("Nil")))
+            .addAssumption(EvalRulePart(TermCommons.e(1), TermCommons.v(1)))
+            .build
+        )
+        .addEvaluationRule(
+          EvalRuleBuilder()
+            .setConclusion(EvalRulePart(
+              caseListText(MathElement("e"), TermCommons.e(1), MathElement("x"), MathElement("y"), TermCommons.e(2)),
+              TermCommons.v(2)
+            ))
+            .addAssumption(EvalRulePart(MathElement("e"), MultiElement(MathElement("h"), consSymbol.spacesAround, MathElement("t"))))
+            .addAssumption(EvalRulePart(
+              MultiElement(
+                TermCommons.e(2),
+                EvalMultiSubst(EvalSubst(MathElement("h"), MathElement("x")), EvalSubst(MathElement("t"), MathElement("y"))).toText,
+              TermCommons.v(2)))
+            )
+            .build
+        )
+        .build
+    )
   }
 
   object CaseList extends ExprCompanion {
@@ -171,8 +258,7 @@ class LList extends LPoly {
   case class ListType(elTyp: Type) extends Type {
     override def typeCheck(tEnv: TypeEnv): Type = ListType(elTyp.typeCheck(tEnv))
 
-    override def toText: ConvertableText =
-      MultiElement(TextElement("List"), TextElement("["), elTyp.toText, TextElement("]"))
+    override def toText: ConvertableText = MultiElement(TextElement("List"), SquareBracketedElement(elTyp.toText))
 
     override val needsBrackets: Boolean = false
 
@@ -207,7 +293,6 @@ class LList extends LPoly {
   object NilV extends ValueCompanion {}
 
   case class ConsV(head: Value, tail: Value) extends ListValue {
-    //    override def toText: ConvertableText = MultiElement(head.toTextBracketed, TextElement(" :: "), tail.toText)
     override def toText: ConvertableText = ListElement(elems.map(_.toText))
 
     override val typ: Type = ListType(head.typ)
