@@ -5,9 +5,10 @@
   justify-content: flex-start;
   align-items: flex-start;
 
-  margin-bottom: 10px;
+  //margin-bottom: 10px;
   width: 100%;
-  max-height: 11rem;
+  max-height: 12rem;
+  overflow-x: auto;
 
   z-index: 1;
 
@@ -29,19 +30,19 @@
 
   &.hidden {
     max-height: 0;
-    opacity: 0.2;
+    //opacity: 0.2;
     user-select: none;
     pointer-events: none;
   }
 }
 
 div.control-group {
-  margin: 0 0.2rem;
+  margin: 0 0.1rem;
   background-color: $semi-background;
-  border: 2px solid $input-outline;
-  border-radius: 2px;
+  border: 0.1rem solid $input-outline;
+  border-radius: 0.3rem;
   box-shadow: 0 0 0.3rem $input-outline;
-  padding: 2px 5px;
+  padding: 0.25rem;
   height: fit-content;
   width: max-content;
   flex-shrink: 0;
@@ -62,4 +63,13 @@ div.control-group {
 
 #toggle-controls-button {
   z-index: 10;
+  width: 100%;
+}
+
+#controls-container {
+  background-color: $controls-background;
+  //border: 2px solid $input-outline;
+  border-radius: 0.1rem;
+  box-shadow: 0 0 0.3rem $controls-background;
+  padding: 0.05rem 0.05rem 0 0.05rem;
 }

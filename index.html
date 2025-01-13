@@ -13,65 +13,73 @@
 </head>
 
 <body>
-<div id="controls">
-  <div class="control-group">
+<div id="controls-container">
+  <div id="controls">
     <div>
-      <h4>Language</h4>
-      <div id="lang-selector-div" style="display: inline;">
+      <div class="control-group">
+        <div>
+          <h4>Language</h4>
+          <div id="lang-selector-div" style="display: inline;">
+          </div>
+        </div>
+      </div>
+
+      <div id="mode-selector-div" class="control-group">
+        <h4>View Mode</h4>
+        <form>
+          <label for="edit-mode-radio" title="Mix of evaluation and type-checking rules to make editing easier">
+            <input type="radio" id="edit-mode-radio" name="mode" value="edit" checked="checked">
+            Edit
+          </label>
+          <label for="type-check-mode-radio" title="Examine the tree using type-checking rules">
+            <input type="radio" id="type-check-mode-radio" name="mode" value="type-check">
+            Type-Check
+          </label>
+          <label for="eval-mode-radio" title="Examine the tree using evaluation rules">
+            <input type="radio" id="eval-mode-radio" name="mode" value="eval">
+            Evaluate
+          </label>
+        </form>
       </div>
     </div>
-  </div>
 
-  <div id="mode-selector-div" class="control-group">
-    <h4>View Mode</h4>
-    <form>
-      <label for="edit-mode-radio" title="Mix of evaluation and type-checking rules to make editing easier">
-        <input type="radio" id="edit-mode-radio" name="mode" value="edit" checked="checked">
-        Edit
-      </label>
-      <label for="type-check-mode-radio" title="Examine the tree using type-checking rules">
-        <input type="radio" id="type-check-mode-radio" name="mode" value="type-check">
-        Type-Check
-      </label>
-      <label for="eval-mode-radio" title="Examine the tree using evaluation rules">
-        <input type="radio" id="eval-mode-radio" name="mode" value="eval">
-        Evaluate
-      </label>
-    </form>
-  </div>
-
-  <div class="control-group">
-    <h4>Actions</h4>
-    <div>
-      <button id="undoButton">Undo</button>
-      <button id="redoButton">Redo</button>
+    <div class="control-group">
+      <h4>Actions</h4>
+      <div>
+        <button id="undoButton">Undo</button>
+        <button id="redoButton">Redo</button>
+      </div>
+      <div>
+        <button id="saveButton">Save</button>
+        <button id="loadButton">Load</button>
+      </div>
+      <div>
+        <button id="exportLatexButton">Export LaTeX</button>
+      </div>
     </div>
+
     <div>
-      <button id="saveButton">Save</button>
-      <button id="loadButton">Load</button>
+      <div class="control-group">
+        <h4>Options</h4>
+        <form>
+          <label for="value-highlighting-toggle"><input type="checkbox" id="value-highlighting-toggle"/> Value Highlighting</label>
+          <label for="auto-zoom-toggle"><input type="checkbox" id="auto-zoom-toggle"/> Auto Zoom</label>
+        </form>
+      </div>
+
+      <div class="control-group">
+        <h4>Help</h4>
+        <a href="guide">Guide</a>
+        <br/>
+        <a href="https://github.com/Ninteedo/ClickDeduce">GitHub</a>
+      </div>
     </div>
-    <div>
-      <button id="exportLatexButton">Export LaTeX</button>
-    </div>
+
+    <div id="tasks" class="control-group"></div>
   </div>
 
-  <div class="control-group">
-    <h4>Options</h4>
-    <form>
-      <label for="value-highlighting-toggle"><input type="checkbox" id="value-highlighting-toggle"/> Value Highlighting</label>
-      <label for="auto-zoom-toggle"><input type="checkbox" id="auto-zoom-toggle"/> Auto Zoom</label>
-    </form>
-  </div>
-
-  <div class="control-group">
-    <h4>Help</h4>
-    <a href="guide">Guide</a>
-  </div>
-
-  <div id="tasks" class="control-group"></div>
+  <button id="toggle-controls-button" title="Toggle controls visibility">&#x25B2;</button>
 </div>
-
-<button id="toggle-controls-button" title="Toggle controls visibility">&#x25B2;</button>
 
 <div id="tree-container">
   <div id="tree-buttons">
