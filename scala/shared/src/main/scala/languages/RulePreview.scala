@@ -23,19 +23,22 @@ case class EvaluationRulePartEnv(l: ConvertableText, r: ConvertableText, lookups
   override def toText: ConvertableText = MultiElement(ListElement(lookups, start = Symbols.sigma, end = NullElement()))
 }
 
-case class TypeCheckRulePart(l: ConvertableText, r: ConvertableText, binds: List[ConvertableText] = Nil) extends InferenceRulePart {
-  override def toText: ConvertableText = MultiElement(
-    Symbols.gamma,
-    ListElement(binds, start = NullElement(), end = NullElement()),
-    Symbols.turnstile.spacesAround,
-    l,
-    TextElement(":").spaceAfter,
-    r
-  )
+case class TypeCheckRulePart(t: ConvertableText) extends InferenceRulePart {
+  override def toText: ConvertableText = t
 }
 
 object TypeCheckRulePart {
   def apply(l: ConvertableText, r: Type): TypeCheckRulePart = TypeCheckRulePart(l, r.toText)
+
+  def apply(l: ConvertableText, r: ConvertableText, binds: List[ConvertableText] = Nil): TypeCheckRulePart =
+    TypeCheckRulePart(MultiElement(
+      Symbols.gamma,
+      if binds.isEmpty then NullElement() else MultiElement(MathElement.comma.spaceAfter, ListElement(binds, start = NullElement(), end = NullElement())),
+      Symbols.turnstile.spacesAround,
+      l,
+      TextElement(":").spaceAfter,
+      r
+    ))
 
   def eTo(n: Int, t: Type): TypeCheckRulePart = TypeCheckRulePart(TermCommons.e(n), t)
 

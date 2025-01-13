@@ -28,5 +28,6 @@ object ClassDict {
   val VALUE = "value"
   val VALUE_TYPE = "value-type"
   val MATH_MODE = "math-mode"
+  val NUMBER_MODE = "number-mode"
   val TEXT_MODE = "text-mode"
 }

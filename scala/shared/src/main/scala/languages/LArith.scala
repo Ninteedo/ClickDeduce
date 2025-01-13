@@ -209,7 +209,7 @@ class LArith extends ClickDeduceLanguage {
       case other   => throw new IllegalArgumentException(s"Cannot multiply NumV by non-NumV ($other)")
     }
 
-    override def toText: ConvertableText = MathElement(x.toString)
+    override def toText: ConvertableText = NumberElement(x)
   }
 
   object NumV extends ValueCompanion

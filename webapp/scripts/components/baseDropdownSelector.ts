@@ -187,6 +187,8 @@ export class BaseDropdownSelector implements AbstractTreeInput {
         if (option) {
             option.highlight();
             this.showRulePreview(option.getValue());
+        } else {
+            this.hideRulePreview();
         }
     }
 

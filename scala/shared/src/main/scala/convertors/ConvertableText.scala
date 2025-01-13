@@ -25,6 +25,18 @@ case class TextElement(text: String) extends ConvertableText {
   override def asLaTeX: String = s"\\textrm{${escapeLaTeX(text)}}"
 }
 
+case class NumberElement(num: String) extends ConvertableText {
+  override def asPlainText: String = num
+  override def asHtml: TypedTag[String] = span(cls := ClassDict.NUMBER_MODE, raw(num))
+  override def asHtmlReadOnly: TypedTag[String] = asHtml
+  override def asLaTeX: String = num
+}
+
+object NumberElement {
+  def apply(num: Int): NumberElement = NumberElement(num.toString)
+  def apply(num: BigInt): NumberElement = NumberElement(num.toString)
+}
+
 case class MathElement(text: String) extends ConvertableText {
   override def asPlainText: String = text
   override def asHtml: TypedTag[String] = span(cls := ClassDict.MATH_MODE, raw(text))
@@ -33,14 +45,14 @@ case class MathElement(text: String) extends ConvertableText {
 }
 
 object MathElement {
-  val comma: MathElement = MathElement(",")
-  val equals: MathElement = MathElement("=")
-  val doubleEquals: MathElement = MathElement("==")
-  val notEquals: MathElement = MathElement("≠")
-  val plus: MathElement = MathElement("+")
-  val colon: MathElement = MathElement(":")
-  val period: MathElement = MathElement(".")
-  val lessThan: MathElement = MathElement("<")
+  val comma: ConvertableText = TextElement(",")
+  val equals: ConvertableText = MathElement("=")
+  val doubleEquals: ConvertableText = MathElement("==")
+  val notEquals: ConvertableText = MathElement("≠")
+  val plus: ConvertableText = MathElement("+")
+  val colon: ConvertableText = TextElement(":")
+  val period: ConvertableText = TextElement(".")
+  val lessThan: ConvertableText = MathElement("<")
 }
 
 case class MultiElement(elems: ConvertableText*) extends ConvertableText {
@@ -62,6 +74,13 @@ case class BracketedElement(elem: ConvertableText) extends ConvertableText {
   override def asHtml: TypedTag[String] = span(raw("("), elem.asHtml, raw(")"))
   override def asHtmlReadOnly: TypedTag[String] = span(raw("("), elem.asHtmlReadOnly, raw(")"))
   override def asLaTeX: String = s"(${elem.asLaTeX})"
+}
+
+case class SquareBracketedElement(elem: ConvertableText) extends ConvertableText {
+  override def asPlainText: String = s"[${elem.asPlainText}]"
+  override def asHtml: TypedTag[String] = span(raw("["), elem.asHtml, raw("]"))
+  override def asHtmlReadOnly: TypedTag[String] = span(raw("["), elem.asHtmlReadOnly, raw("]"))
+  override def asLaTeX: String = s"[${elem.asLaTeX}]"
 }
 
 case class SubscriptElement(elem: ConvertableText) extends ConvertableText {
@@ -142,11 +161,11 @@ object Symbols {
     override def asLaTeX: String = latex
   }
 
-  val times: ConvertableText = Symbol("×", "&times;", "\\times")
+  val times: ConvertableText = Symbol("×", "&times;", "\\times", mathMode = true)
   val gamma: ConvertableText = Symbol("Γ", "&Gamma;", "\\Gamma")
-  val lambdaLower: ConvertableText = Symbol("λ", "&lambda;", "\\lambda")
-  val lambdaUpper: ConvertableText = Symbol("Λ", "&Lambda;", "\\Lambda")
-  val sigma: ConvertableText = Symbol("σ", "&sigma;", "\\sigma")
+  val lambdaLower: ConvertableText = Symbol("λ", "&lambda;", "\\lambda", mathMode = true)
+  val lambdaUpper: ConvertableText = Symbol("Λ", "&Lambda;", "\\Lambda", mathMode = true)
+  val sigma: ConvertableText = Symbol("σ", "&sigma;", "\\sigma", mathMode = true)
   val tau: ConvertableText = Symbol("τ", "&tau;", "\\tau", mathMode = true)
   val forall: ConvertableText = Symbol("∀", "&forall;", "\\forall")
   val singleRightArrow: ConvertableText = Symbol("→", "&rarr;", "\\rightarrow")
@@ -154,6 +173,7 @@ object Symbols {
   val doubleDownArrow: ConvertableText = Symbol("⇓", "&dArr;", "\\Downarrow")
   val turnstile: ConvertableText = Symbol("⊢", "&vdash;", "\\vdash")
   val doubleStrokeN: ConvertableText = Symbol("ℕ", "&Nopf;", "\\mathbb{N}")
+  val forwardSlash: ConvertableText = Symbol("/", "/", "\\slash")
 }
 
 
@@ -174,6 +194,7 @@ case class SpaceAfter(elem: ConvertableText) extends ConvertableText {
 object TermCommons {
   def e(n: Int): ConvertableText = MultiElement(MathElement("e"), SubscriptElement(MathElement(n.toString)))
   def v(n: Int): ConvertableText = MultiElement(MathElement("v"), SubscriptElement(MathElement(n.toString)))
+  def t(n: Int): ConvertableText = MultiElement(Symbols.tau, SubscriptElement(MathElement(n.toString)))
 }
 
 def escapeLaTeX(text: String): String = text

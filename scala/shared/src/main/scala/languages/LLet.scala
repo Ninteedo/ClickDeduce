@@ -36,6 +36,16 @@ class LLet extends LIf {
     override val needsBrackets: Boolean = false
 
     override def toText: ConvertableText = v.toText
+
+    override def getRulePreview: Option[RulePreview] = Some(
+      RulePreview(
+        List(TypeCheckRulePreview(
+          TypeCheckRulePart(MathElement("x"), Symbols.tau),
+          TypeCheckRulePart(MultiElement(Symbols.gamma, BracketedElement(MathElement("x")), MathElement.equals.spacesAround, Symbols.tau)),
+        )),
+        List()  // TODO: does variable lookup need evaluation rule preview
+      )
+    )
   }
 
   object Var extends ExprCompanion {
@@ -79,6 +89,37 @@ class LLet extends LIf {
         TextElement(" in "),
         bound.toTextBracketed
       )
+
+    override def getRulePreview: Option[RulePreview] = {
+      val exprText = MultiElement(
+        TextElement("let").spaceAfter,
+        MathElement("x"),
+        MathElement.equals.spacesAround,
+        TermCommons.e(1),
+        TextElement("in").spacesAround,
+        TermCommons.e(2)
+      )
+      Some(
+        RulePreview(
+          TypeCheckRulePreview(
+            TypeCheckRulePart(exprText, TermCommons.t(2)),
+            TypeCheckRulePart(TermCommons.e(1), TermCommons.t(1)),
+            TypeCheckRulePart(TermCommons.e(2), TermCommons.t(2), List(MultiElement(MathElement("x"), MathElement.colon, TermCommons.t(1))))
+          ),
+          EvalRulePreview(
+            EvalRulePart(exprText, TermCommons.v(2)),
+            EvalRulePart(TermCommons.e(1), TermCommons.v(1)),
+            EvalRulePart(
+              MultiElement(
+                TermCommons.e(2),
+                SquareBracketedElement(MultiElement(TermCommons.v(1), Symbols.forwardSlash, MathElement("x")))
+              ),
+              TermCommons.v(2)
+            )
+          )
+        )
+      )
+    }
   }
 
   object Let extends ExprCompanion {

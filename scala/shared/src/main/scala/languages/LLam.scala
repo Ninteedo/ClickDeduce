@@ -37,6 +37,25 @@ class LLam extends LLet {
       }
 
     override def toText: ConvertableText = MultiElement(e1.toTextBracketed, TextElement(" "), e2.toTextBracketed)
+
+    override def getRulePreview: Option[RulePreview] = Some(
+      RulePreview(
+        TypeCheckRulePreview(
+          TypeCheckRulePart(MultiElement(TermCommons.e(1).spaceAfter, TermCommons.e(2)), TermCommons.t(2)),
+          TypeCheckRulePart(TermCommons.e(1), MultiElement(TermCommons.t(1), Symbols.singleRightArrow.spacesAround, TermCommons.t(2))),
+          TypeCheckRulePart(TermCommons.e(2), TermCommons.t(1))
+        ),
+        EvalRulePreview(
+          EvalRulePart(MultiElement(TermCommons.e(1).spaceAfter, TermCommons.e(2)), MathElement("v")),
+          EvalRulePart(TermCommons.e(1), MultiElement(Symbols.lambdaLower, MathElement("x.e"))),
+          EvalRulePart.eToV(2),
+          EvalRulePart(
+            MultiElement(MathElement("e"), SquareBracketedElement(MultiElement(TermCommons.v(2), Symbols.forwardSlash, MathElement("x")))),
+            MathElement("v")
+          )
+        )
+      )
+    )
   }
 
   object Apply extends ExprCompanion {
@@ -76,6 +95,45 @@ class LLam extends LLet {
       SpaceAfter(MathElement.period),
       e.toText
     )
+
+    override def getRulePreview: Option[RulePreview] = {
+      val evalExprText = MultiElement(
+        Symbols.lambdaLower,
+        MathElement("x"),
+        MathElement.period.spaceAfter,
+        MathElement("e")
+      )
+
+      Some(
+        RulePreview(
+          TypeCheckRulePreview(
+            TypeCheckRulePart(
+              MultiElement(
+                Symbols.lambdaLower,
+                MathElement("x"),
+                MathElement.colon,
+                TermCommons.t(1),
+                MathElement.period.spaceAfter,
+                MathElement("e")
+              ),
+              MultiElement(
+                TermCommons.t(1),
+                Symbols.singleRightArrow.spacesAround,
+                TermCommons.t(2)
+              )
+            ),
+            TypeCheckRulePart(
+              MathElement("e"),
+              TermCommons.t(2),
+              List(MultiElement(MathElement("x"), MathElement.colon, TermCommons.t(1)))
+            )
+          ),
+          EvalRulePreview(
+            EvalRulePart(evalExprText, evalExprText)
+          )
+        )
+      )
+    }
   }
 
   object Lambda extends ExprCompanion {
@@ -167,7 +225,7 @@ class LLam extends LLet {
 
     override val isError: Boolean = true
 
-    override def toText: ConvertableText = MathElement("?")
+    override def toText: ConvertableText = TextElement("?")
   }
 
   object HiddenValue extends ValueCompanion {}
