@@ -34,8 +34,8 @@ class LArith extends ClickDeduceLanguage {
 
     override def getRulePreview: Option[RulePreview] = Some(
       RulePreview(
-        TypeCheckRulePreview(Nil, TypeCheckRulePart(TextElement("n"), IntType().toText)),
-        EvalRulePreview(Nil, EvalRulePart(TextElement("v"), TextElement("v")))
+        TypeCheckRulePreview(TypeCheckRulePart(MathElement("n"), IntType().toText)),
+        EvalRulePreview(EvalRulePart(MathElement("v"), MathElement("v")))
       )
     )
   }
@@ -81,18 +81,21 @@ class LArith extends ClickDeduceLanguage {
     override def getRulePreview: Option[RulePreview] = Some(
       RulePreview(
         TypeCheckRulePreview(
-          List(TypeCheckRulePart.eTo(1, IntType()), TypeCheckRulePart.eTo(2, IntType())),
           TypeCheckRulePart(
             MultiElement(TermCommons.e(1), MathElement.plus.spacesAround, TermCommons.e(2)),
             IntType().toText
-          )
+          ),
+          TypeCheckRulePart.eTo(1, IntType()), TypeCheckRulePart.eTo(2, IntType())
         ),
         EvalRulePreview(
-          List(EvalRulePart.eToV(1), EvalRulePart.eToV(2)),
           EvalRulePart(
             MultiElement(TermCommons.e(1), MathElement.plus.spacesAround, TermCommons.e(2)),
-            MultiElement(TermCommons.v(1), SubscriptElement.labelled(MathElement.plus, TextElement("N")).spacesAround, TermCommons.v(2))
-          )
+            MultiElement(
+              TermCommons.v(1), SubscriptElement.labelled(MathElement.plus, Symbols.doubleStrokeN).spacesAround,
+              TermCommons.v(2)
+            )
+          ),
+          EvalRulePart.eToV(1), EvalRulePart.eToV(2)
         )
       )
     )
@@ -130,26 +133,26 @@ class LArith extends ClickDeduceLanguage {
     }
 
     override def toText: ConvertableText =
-      MultiElement(e1.toTextBracketed, SurroundSpaces(TimesSymbol()), e2.toTextBracketed)
+      MultiElement(e1.toTextBracketed, SurroundSpaces(Symbols.times), e2.toTextBracketed)
 
     override def getRulePreview: Option[RulePreview] = Some(
       RulePreview(
         TypeCheckRulePreview(
-          List(TypeCheckRulePart.eTo(1, IntType()), TypeCheckRulePart.eTo(2, IntType())),
           TypeCheckRulePart(
-            MultiElement(TermCommons.e(1), TimesSymbol().spacesAround, TermCommons.e(2)),
+            MultiElement(TermCommons.e(1), Symbols.times.spacesAround, TermCommons.e(2)),
             IntType().toText
-          )
+          ),
+          TypeCheckRulePart.eTo(1, IntType()), TypeCheckRulePart.eTo(2, IntType())
         ),
         EvalRulePreview(
-          List(EvalRulePart.eToV(1), EvalRulePart.eToV(2)),
           EvalRulePart(
-            MultiElement(TermCommons.e(1), TimesSymbol().spacesAround, TermCommons.e(2)),
+            MultiElement(TermCommons.e(1), Symbols.times.spacesAround, TermCommons.e(2)),
             MultiElement(
-              TermCommons.v(1), SubscriptElement.labelled(TimesSymbol(), TextElement("N")).spacesAround,
+              TermCommons.v(1), SubscriptElement.labelled(Symbols.times, Symbols.doubleStrokeN).spacesAround,
               TermCommons.v(2)
             )
-          )
+          ),
+          EvalRulePart.eToV(1), EvalRulePart.eToV(2)
         )
       )
     )

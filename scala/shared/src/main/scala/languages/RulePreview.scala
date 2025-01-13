@@ -9,23 +9,25 @@ trait InferenceRulePart {
   def toText: ConvertableText
 }
 
-case class EvalRulePart(l: ConvertableText, r: ConvertableText) extends InferenceRulePart {
-  override def toText: ConvertableText = MultiElement(l, DoubleDownArrow().spacesAround, r)
+case class EvalRulePart(t: ConvertableText) extends InferenceRulePart {
+  override def toText: ConvertableText = t
 }
 
 object EvalRulePart {
+  def apply(l: ConvertableText, r: ConvertableText): EvalRulePart = EvalRulePart(MultiElement(l, Symbols.doubleDownArrow.spacesAround, r))
+
   def eToV(n: Int): EvalRulePart = EvalRulePart(TermCommons.e(n), TermCommons.v(n))
 }
 
 case class EvaluationRulePartEnv(l: ConvertableText, r: ConvertableText, lookups: List[ConvertableText]) extends InferenceRulePart {
-  override def toText: ConvertableText = MultiElement(ListElement(lookups, start = SigmaSymbol(), end = NullElement()))
+  override def toText: ConvertableText = MultiElement(ListElement(lookups, start = Symbols.sigma, end = NullElement()))
 }
 
 case class TypeCheckRulePart(l: ConvertableText, r: ConvertableText, binds: List[ConvertableText] = Nil) extends InferenceRulePart {
   override def toText: ConvertableText = MultiElement(
-    GammaSymbol(),
+    Symbols.gamma,
     ListElement(binds, start = NullElement(), end = NullElement()),
-    Turnstile().spacesAround,
+    Symbols.turnstile.spacesAround,
     l,
     TextElement(":").spaceAfter,
     r
@@ -36,10 +38,12 @@ object TypeCheckRulePart {
   def apply(l: ConvertableText, r: Type): TypeCheckRulePart = TypeCheckRulePart(l, r.toText)
 
   def eTo(n: Int, t: Type): TypeCheckRulePart = TypeCheckRulePart(TermCommons.e(n), t)
+
+  def eTo(n: Int, t: ConvertableText): TypeCheckRulePart = TypeCheckRulePart(TermCommons.e(n), t)
 }
 
 abstract class InferenceRulePreview {
-  val assumptions: List[InferenceRulePart]
+  val assumptions: Seq[InferenceRulePart]
   val conclusion: InferenceRulePart
 
   protected val divClass: String
@@ -57,18 +61,24 @@ abstract class InferenceRulePreview {
   )
 }
 
-case class EvalRulePreview(assumptions: List[InferenceRulePart], conclusion: InferenceRulePart) extends InferenceRulePreview {
+case class EvalRulePreview(conclusion: InferenceRulePart, assumptions: InferenceRulePart*)
+  extends InferenceRulePreview {
   override protected val divClass: String = ClassDict.RULE_EVAL
 }
 
-case class TypeCheckRulePreview(assumptions: List[InferenceRulePart], conclusion: InferenceRulePart) extends InferenceRulePreview {
+case class TypeCheckRulePreview(conclusion: InferenceRulePart, assumptions: InferenceRulePart*)
+  extends InferenceRulePreview {
   override protected val divClass: String = ClassDict.RULE_TYPE
 }
 
-case class RulePreview(typeCheckRule: TypeCheckRulePreview, evaluationRule: EvalRulePreview) {
+case class RulePreview(typeCheckRule: Seq[TypeCheckRulePreview], evaluationRule: Seq[EvalRulePreview]) {
   def toHtml: TypedTag[String] = div(
-//    cls := ClassDict.RULE_PREVIEW,
-    typeCheckRule.toHtml,
-    evaluationRule.toHtml
+    div(typeCheckRule.map(_.toHtml)),
+    div(evaluationRule.map(_.toHtml))
   )
+}
+
+object RulePreview {
+  def apply(typeCheckRule: TypeCheckRulePreview, evaluationRule: EvalRulePreview): RulePreview =
+    RulePreview(List(typeCheckRule), List(evaluationRule))
 }

@@ -33,7 +33,7 @@ class LPoly extends LData {
       List((e, env + (v -> TypeValueContainer(TypeVar(v)))))
 
     override def toText: ConvertableText =
-      MultiElement(LambdaSymbol(capital = true), v.toText, MathElement.period, e.toTextBracketed)
+      MultiElement(Symbols.lambdaUpper, v.toText, MathElement.period, e.toTextBracketed)
   }
 
   object Poly extends ExprCompanion {
@@ -106,7 +106,7 @@ class LPoly extends LData {
   case class PolyType(typeVar: TypeVar, incompleteType: Type) extends Type {
     override def toText: ConvertableText =
       MultiElement(
-        ForAllSymbol(),
+        Symbols.forall,
         typeVar.toTextBracketed,
         SpaceAfter(MathElement.period),
         incompleteType.toTextBracketed
@@ -134,7 +134,7 @@ class LPoly extends LData {
     override val typ: Type = PolyType(typeVar, e.typeCheck(TypeEnv.fromValueEnv(env) + (typeVar.v.toBind -> TypeContainer(typeVar))))
 
     override def toText: ConvertableText = MultiElement(
-      LambdaSymbol(capital = true),
+      Symbols.lambdaUpper,
       typeVar.toTextBracketed,
       SpaceAfter(MathElement.period),
       e.toTextBracketed

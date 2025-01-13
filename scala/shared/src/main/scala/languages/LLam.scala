@@ -69,7 +69,7 @@ class LLam extends LLet {
     override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] = List((e, tEnv + (v -> typ)))
 
     override def toText: ConvertableText = MultiElement(
-      LambdaSymbol(),
+      Symbols.lambdaLower,
       v.toText,
       SpaceAfter(MathElement.colon),
       TypeElement(typ.toTextBracketed),
@@ -105,7 +105,7 @@ class LLam extends LLet {
     override def typeCheck(tEnv: TypeEnv): Type = Func(in.typeCheck(tEnv), out.typeCheck(tEnv))
 
     override def toText: ConvertableText =
-      MultiElement(in.toTextBracketed, SurroundSpaces(SingleRightArrow()), out.toTextBracketed)
+      MultiElement(in.toTextBracketed, SurroundSpaces(Symbols.singleRightArrow), out.toTextBracketed)
   }
 
   object Func extends TypeCompanion {
@@ -143,7 +143,7 @@ class LLam extends LLet {
     override def evalApply(value: Value): Value = e.eval(env + (v -> value))
 
     override def toText: ConvertableText = MultiElement(
-      LambdaSymbol(),
+      Symbols.lambdaLower,
       ItalicsElement(TextElement(v))
 //      SpaceAfter(MathElement.colon),
 //      TypeElement(properInputType.toTextBracketed),

@@ -27,4 +27,6 @@ object ClassDict {
   val TYPE_TREE = "type-tree"
   val VALUE = "value"
   val VALUE_TYPE = "value-type"
+  val MATH_MODE = "math-mode"
+  val TEXT_MODE = "text-mode"
 }

@@ -58,7 +58,7 @@ class LaTeXConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConv
         Some(
           env
             .map((k, v) =>
-              MultiElement(ItalicsElement(TextElement(k)), SurroundSpaces(SingleRightArrow()), v.toText).asLaTeX
+              MultiElement(ItalicsElement(TextElement(k)), SurroundSpaces(Symbols.singleRightArrow), v.toText).asLaTeX
             )
             .mkString("[", ", ", "]")
         )

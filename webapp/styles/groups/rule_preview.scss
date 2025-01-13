@@ -2,8 +2,8 @@
   position: absolute;
   z-index: 1000;
 
-  opacity: 0.8;
-  transition: opacity 0.2s;
+  opacity: 0.9;
+  //transition: opacity 0.2s ease;
 
   left: 100%;
 
@@ -38,20 +38,30 @@
   }
 
   &:not(.show) {
-    opacity: 0;
+    //opacity: 0;
   }
 
   &:hover {
     opacity: 1;
   }
 
-  & > div {
+  > div {
     display: flex !important;
-    flex-direction: row;
-  }
+    flex-direction: column;
 
-  .rule-type {
-    margin-right: 1rem;
+    > div {
+      display: flex !important;
+      flex-direction: row;
+
+      border: 1px solid $input-outline;
+
+      > * {
+        margin: 0 auto;
+        &:not(:last-child) {
+          margin-right: 1rem;
+        }
+      }
+    }
   }
 
   .rule-type, .rule-eval {
@@ -63,7 +73,7 @@
     & > div {
       display: flex !important;
       flex-direction: row;
-      justify-content: space-between;
+      justify-content: center;
 
       & > *:not(:last-child) {
         margin-right: 1rem;

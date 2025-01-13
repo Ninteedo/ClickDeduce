@@ -98,13 +98,13 @@ class LList extends LPoly {
       list.toTextBracketed,
       TextElement(" of { "),
       TextElement("Nil"),
-      SurroundSpaces(DoubleRightArrow()),
+      SurroundSpaces(Symbols.doubleRightArrow),
       nilCase.toTextBracketed,
       TextElement("; "),
       headVar.toText,
       SurroundSpaces(TextElement("::")),
       tailVar.toText,
-      SurroundSpaces(DoubleRightArrow()),
+      SurroundSpaces(Symbols.doubleRightArrow),
       consCase.toTextBracketed,
       TextElement(" }")
     )

@@ -97,11 +97,11 @@ class LNat extends LData {
       TextElement("case "),
       e.toTextBracketed,
       TextElement(" { zero"),
-      SurroundSpaces(DoubleRightArrow()),
+      SurroundSpaces(Symbols.doubleRightArrow),
       zeroCase.toTextBracketed,
       TextElement("; suc "),
       x.toText,
-      SurroundSpaces(DoubleRightArrow()),
+      SurroundSpaces(Symbols.doubleRightArrow),
       sucCase.toTextBracketed,
       TextElement(" }")
     )

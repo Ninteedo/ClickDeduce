@@ -22,6 +22,13 @@ class LIf extends LArith {
     override val needsBrackets: Boolean = false
 
     override def toText: ConvertableText = b.toText
+
+    override def getRulePreview: Option[RulePreview] = Some(
+      RulePreview(
+        TypeCheckRulePreview(TypeCheckRulePart(TextElement("b"), BoolType().toText)),
+        EvalRulePreview(EvalRulePart(TextElement("v"), TextElement("v")))
+      )
+    )
   }
 
   object Bool extends ExprCompanion {
@@ -67,6 +74,29 @@ class LIf extends LArith {
 
     override def toText: ConvertableText =
       MultiElement(e1.toTextBracketed, SurroundSpaces(MathElement.equals), e2.toTextBracketed)
+
+    override def getRulePreview: Option[RulePreview] = Some(
+      RulePreview(
+        List(TypeCheckRulePreview(
+          TypeCheckRulePart(MultiElement(TermCommons.e(1), MathElement.doubleEquals.spacesAround, TermCommons.e(2)), BoolType().toText),
+          TypeCheckRulePart.eTo(1, Symbols.tau),
+          TypeCheckRulePart.eTo(2, Symbols.tau))
+        ),
+        List(
+          EvalRulePreview(
+            EvalRulePart(MultiElement(TermCommons.e(1), MathElement.doubleEquals.spacesAround, TermCommons.e(2)), TextElement("true")),
+            EvalRulePart(TermCommons.e(1), MathElement("v")),
+            EvalRulePart(TermCommons.e(2), MathElement("v"))
+          ),
+          EvalRulePreview(
+            EvalRulePart(MultiElement(TermCommons.e(1), MathElement.doubleEquals.spacesAround, TermCommons.e(2)), TextElement("false")),
+            EvalRulePart(TermCommons.e(1), TermCommons.v(1)),
+            EvalRulePart(TermCommons.e(2), TermCommons.v(2)),
+            EvalRulePart(MultiElement(TermCommons.v(1), MathElement.notEquals.spacesAround, TermCommons.v(2)))
+          )
+        )
+      )
+    )
   }
 
   object Equal extends ExprCompanion {
@@ -135,6 +165,39 @@ class LIf extends LArith {
       TextElement(" else "),
       else_expr.toTextBracketed
     )
+
+    override def getRulePreview: Option[RulePreview] = {
+      val exprText = MultiElement(
+        TextElement("if "),
+        MathElement("e").spacesAround,
+        TextElement(" then "),
+        TermCommons.e(1).spacesAround,
+        TextElement(" else ").spaceAfter,
+        TermCommons.e(2)
+      )
+      Some(
+        RulePreview(
+          List(TypeCheckRulePreview(
+            TypeCheckRulePart(exprText, Symbols.tau),
+            TypeCheckRulePart(MathElement("e"), BoolType().toText),
+            TypeCheckRulePart.eTo(1, Symbols.tau),
+            TypeCheckRulePart.eTo(2, Symbols.tau)
+          )),
+          List(
+            EvalRulePreview(
+              EvalRulePart(exprText, TermCommons.v(1)),
+              EvalRulePart(MathElement("e"), TextElement("true")),
+              EvalRulePart.eToV(1)
+            ),
+            EvalRulePreview(
+              EvalRulePart(exprText, TermCommons.v(2)),
+              EvalRulePart(MathElement("e"), TextElement("false")),
+              EvalRulePart.eToV(2)
+            )
+          )
+        )
+      )
+    }
   }
 
   object IfThenElse extends ExprCompanion {

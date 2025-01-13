@@ -20,14 +20,14 @@ trait ConvertableText {
 
 case class TextElement(text: String) extends ConvertableText {
   override def asPlainText: String = text
-  override def asHtml: TypedTag[String] = span(raw(text))
+  override def asHtml: TypedTag[String] = span(cls := ClassDict.TEXT_MODE, raw(text))
   override def asHtmlReadOnly: TypedTag[String] = asHtml
   override def asLaTeX: String = s"\\textrm{${escapeLaTeX(text)}}"
 }
 
 case class MathElement(text: String) extends ConvertableText {
   override def asPlainText: String = text
-  override def asHtml: TypedTag[String] = span(raw(text))
+  override def asHtml: TypedTag[String] = span(cls := ClassDict.MATH_MODE, raw(text))
   override def asHtmlReadOnly: TypedTag[String] = asHtml
   override def asLaTeX: String = escapeLaTeX(text)
 }
@@ -35,6 +35,8 @@ case class MathElement(text: String) extends ConvertableText {
 object MathElement {
   val comma: MathElement = MathElement(",")
   val equals: MathElement = MathElement("=")
+  val doubleEquals: MathElement = MathElement("==")
+  val notEquals: MathElement = MathElement("≠")
   val plus: MathElement = MathElement("+")
   val colon: MathElement = MathElement(":")
   val period: MathElement = MathElement(".")
@@ -132,78 +134,28 @@ case class NullElement() extends ConvertableText {
   override def asLaTeX: String = ""
 }
 
-case class TimesSymbol() extends ConvertableText {
-  override def asPlainText: String = "×"
-  override def asHtml: TypedTag[String] = span(raw("&times;"))
-  override def asHtmlReadOnly: TypedTag[String] = asHtml
-  override def asLaTeX: String = "\\times"
+object Symbols {
+  private case class Symbol(plain: String, html: String, latex: String, mathMode: Boolean = false) extends ConvertableText {
+    override def asPlainText: String = plain
+    override def asHtml: TypedTag[String] = span(cls := (if mathMode then ClassDict.MATH_MODE else ClassDict.TEXT_MODE), raw(html))
+    override def asHtmlReadOnly: TypedTag[String] = asHtml
+    override def asLaTeX: String = latex
+  }
+
+  val times: ConvertableText = Symbol("×", "&times;", "\\times")
+  val gamma: ConvertableText = Symbol("Γ", "&Gamma;", "\\Gamma")
+  val lambdaLower: ConvertableText = Symbol("λ", "&lambda;", "\\lambda")
+  val lambdaUpper: ConvertableText = Symbol("Λ", "&Lambda;", "\\Lambda")
+  val sigma: ConvertableText = Symbol("σ", "&sigma;", "\\sigma")
+  val tau: ConvertableText = Symbol("τ", "&tau;", "\\tau", mathMode = true)
+  val forall: ConvertableText = Symbol("∀", "&forall;", "\\forall")
+  val singleRightArrow: ConvertableText = Symbol("→", "&rarr;", "\\rightarrow")
+  val doubleRightArrow: ConvertableText = Symbol("⇒", "&rArr;", "\\Rightarrow")
+  val doubleDownArrow: ConvertableText = Symbol("⇓", "&dArr;", "\\Downarrow")
+  val turnstile: ConvertableText = Symbol("⊢", "&vdash;", "\\vdash")
+  val doubleStrokeN: ConvertableText = Symbol("ℕ", "&Nopf;", "\\mathbb{N}")
 }
 
-case class LambdaSymbol(capital: Boolean = false) extends ConvertableText {
-  override def asPlainText: String = if (capital) "Λ" else "λ"
-  override def asHtml: TypedTag[String] = span(raw(if (capital) "&Lambda;" else "&lambda;"))
-  override def asHtmlReadOnly: TypedTag[String] = asHtml
-  override def asLaTeX: String = if (capital) "\\Lambda" else "\\lambda"
-}
-
-case class GammaSymbol() extends ConvertableText {
-  override def asPlainText: String = "Γ"
-  override def asHtml: TypedTag[String] = span(raw("&Gamma;"))
-  override def asHtmlReadOnly: TypedTag[String] = asHtml
-  override def asLaTeX: String = "\\Gamma"
-}
-
-case class SigmaSymbol() extends ConvertableText {
-  override def asPlainText: String = "σ"
-  override def asHtml: TypedTag[String] = span(raw("&sigma;"))
-  override def asHtmlReadOnly: TypedTag[String] = asHtml
-  override def asLaTeX: String = "\\sigma"
-}
-
-case class TauSymbol() extends ConvertableText {
-  override def asPlainText: String = "τ"
-  override def asHtml: TypedTag[String] = span(raw("&tau;"))
-  override def asHtmlReadOnly: TypedTag[String] = asHtml
-  override def asLaTeX: String = "\\tau"
-}
-
-case class ForAllSymbol() extends ConvertableText {
-  override def asPlainText: String = "∀"
-
-  override def asHtml: TypedTag[String] = span(raw("&forall;"))
-
-  override def asHtmlReadOnly: TypedTag[String] = asHtml
-
-  override def asLaTeX: String = "\\forall"
-}
-
-case class DoubleRightArrow() extends ConvertableText {
-  override def asPlainText: String = "⇒"
-  override def asHtml: TypedTag[String] = span(raw("&rArr;"))
-  override def asHtmlReadOnly: TypedTag[String] = asHtml
-  override def asLaTeX: String = "\\Rightarrow"
-}
-
-case class SingleRightArrow() extends ConvertableText {
-  override def asPlainText: String = "→"
-  override def asHtml: TypedTag[String] = span(raw("&rarr;"))
-  override def asHtmlReadOnly: TypedTag[String] = asHtml
-  override def asLaTeX: String = "\\rightarrow"
-}
-
-case class DoubleDownArrow() extends ConvertableText {
-  override def asPlainText: String = "⇓"
-  override def asHtml: TypedTag[String] = span(raw("&dArr;"))
-  override def asHtmlReadOnly: TypedTag[String] = asHtml
-  override def asLaTeX: String = "\\Downarrow"
-}
-
-case class Turnstile() extends ConvertableText {
-  override def asPlainText: String = "⊢"
-  override def asHtml: TypedTag[String] = span(raw("&vdash;"))
-  override def asHtmlReadOnly: TypedTag[String] = asHtml
-  override def asLaTeX: String = "\\vdash"
-}
 
 case class SurroundSpaces(elem: ConvertableText) extends ConvertableText {
   override def asPlainText: String = s" ${elem.asPlainText} "
@@ -220,8 +172,8 @@ case class SpaceAfter(elem: ConvertableText) extends ConvertableText {
 }
 
 object TermCommons {
-  def e(n: Int): ConvertableText = SubscriptElement.labelled("e", n.toString)
-  def v(n: Int): ConvertableText = SubscriptElement.labelled("v", n.toString)
+  def e(n: Int): ConvertableText = MultiElement(MathElement("e"), SubscriptElement(MathElement(n.toString)))
+  def v(n: Int): ConvertableText = MultiElement(MathElement("v"), SubscriptElement(MathElement(n.toString)))
 }
 
 def escapeLaTeX(text: String): String = text

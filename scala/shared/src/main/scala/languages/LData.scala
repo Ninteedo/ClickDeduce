@@ -242,11 +242,11 @@ class LData extends LRec {
       e.toText,
       TextElement(" of { left"),
       BracketedElement(l.toText),
-      SurroundSpaces(DoubleRightArrow()),
+      SurroundSpaces(Symbols.doubleRightArrow),
       lExpr.toTextBracketed,
       TextElement("; right"),
       BracketedElement(r.toText),
-      SurroundSpaces(DoubleRightArrow()),
+      SurroundSpaces(Symbols.doubleRightArrow),
       rExpr.toTextBracketed,
       TextElement(" }")
     )
@@ -297,7 +297,7 @@ class LData extends LRec {
     override def typeCheck(tEnv: TypeEnv): Type = PairType(l.typeCheck(tEnv), r.typeCheck(tEnv))
 
     override def toText: ConvertableText =
-      MultiElement(l.toTextBracketed, SurroundSpaces(TimesSymbol()), r.toTextBracketed)
+      MultiElement(l.toTextBracketed, SurroundSpaces(Symbols.times), r.toTextBracketed)
 
     override val isError: Boolean = l.isError || r.isError
   }

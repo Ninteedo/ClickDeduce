@@ -9,3 +9,13 @@ body {
 @mixin monospace {
   font-family: 'Roboto Mono', sans-serif;
 }
+
+.math-mode {
+  font-family: 'Times New Roman', serif;
+  font-style: italic;
+}
+
+.text-mode {
+  font-family: 'Roboto', sans-serif;
+  font-style: normal;
+}
