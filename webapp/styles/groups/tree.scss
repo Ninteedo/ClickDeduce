@@ -1,6 +1,3 @@
-@import "../abstracts/colours";
-@import "../base/typography";
-
 #tree-container {
   border: $input-outline solid 1px;
   background-color: $tree-background;
@@ -59,7 +56,7 @@
   }
 
   .annotation-axiom, .annotation-new {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: $comment;
 
     &.annotation-axiom {

@@ -1,5 +1,3 @@
-@import '../abstracts/colours';
-
 #export-output-container {
   flex-direction: column;
   width: 80%;
@@ -20,7 +18,7 @@
   }
 
   #export-output-title {
-    font-size: 30px;
+    font-size: 1.875rem;
   }
 
   #export-output-desc {
