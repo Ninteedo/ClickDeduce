@@ -17,7 +17,8 @@ jobs:
         with:
           java-version: '18'
           distribution: 'adopt'
-          cache: 'sbt'
+      - name: Set up SBT
+        uses: sbt/setup-sbt@v1
       - name: Run tests
         run: sbt test
 
@@ -36,7 +37,8 @@ jobs:
         with:
           java-version: '18'
           distribution: 'adopt'
-          cache: 'sbt'
+      - name: Set up SBT
+        uses: sbt/setup-sbt@v1
       - name: Update sbt
         run: sbt update
       - name: ScalaJS build
@@ -60,7 +62,8 @@ jobs:
         with:
           java-version: '18'
           distribution: 'adopt'
-          cache: 'sbt'
+      - name: Set up SBT
+        uses: sbt/setup-sbt@v1
       - name: NPM install
         run: npm install
       - name: ScalaJS build
