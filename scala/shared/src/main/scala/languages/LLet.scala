@@ -60,6 +60,9 @@ class LLet extends LIf {
     override val aliases: List[String] = List("Variable", "X")
   }
 
+  private def formatLet(v: ConvertableText, assign: ConvertableText, bound: ConvertableText): ConvertableText =
+    MultiElement(TextElement("let "), v, SurroundSpaces(MathElement.equals), assign, TextElement(" in "), bound)
+
   case class Let(v: LiteralIdentifierBind, assign: Expr, bound: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = guardValidIdentifierEval(v, {
       val assign_val: Value = assign.eval(env)
@@ -80,45 +83,24 @@ class LLet extends LIf {
     override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] =
       List((assign, tEnv), (bound, tEnv + (v -> assign.typeCheck(tEnv))))
 
-    override def toText: ConvertableText =
-      MultiElement(
-        TextElement("let "),
-        v.toText,
-        SurroundSpaces(MathElement.equals),
-        assign.toTextBracketed,
-        TextElement(" in "),
-        bound.toTextBracketed
-      )
+    override def toText: ConvertableText = formatLet(v.toText, assign.toTextBracketed, bound.toTextBracketed)
 
     override def getRulePreview: Option[RulePreview] = {
-      val exprText = MultiElement(
-        TextElement("let").spaceAfter,
-        MathElement("x"),
-        MathElement.equals.spacesAround,
-        TermCommons.e(1),
-        TextElement("in").spacesAround,
-        TermCommons.e(2)
-      )
-      Some(
-        RulePreview(
-          TypeCheckRulePreview(
-            TypeCheckRulePart(exprText, TermCommons.t(2)),
-            TypeCheckRulePart(TermCommons.e(1), TermCommons.t(1)),
-            TypeCheckRulePart(TermCommons.e(2), TermCommons.t(2), List(MultiElement(MathElement("x"), MathElement.colon, TermCommons.t(1))))
-          ),
-          EvalRulePreview(
-            EvalRulePart(exprText, TermCommons.v(2)),
-            EvalRulePart(TermCommons.e(1), TermCommons.v(1)),
-            EvalRulePart(
-              MultiElement(
-                TermCommons.e(2),
-                SquareBracketedElement(MultiElement(TermCommons.v(1), Symbols.forwardSlash, MathElement("x")))
-              ),
-              TermCommons.v(2)
-            )
-          )
+      val exprText = formatLet(TermCommons.x, TermCommons.e(1), TermCommons.e(2))
+      RulePreviewBuilder()
+        .addTypeCheckRule(
+          TypeCheckRuleBuilder()
+            .setConclusion(exprText, TermCommons.t(2))
+            .addAssumption(TermCommons.e(1), TermCommons.t(1))
+            .addAssumption(TermCommons.e(2), TermCommons.t(2), List(TypeCheckRuleBind(TermCommons.x, TermCommons.t(1))))
         )
-      )
+        .addEvaluationRule(
+          EvalRuleBuilder()
+            .setConclusion(exprText, TermCommons.v(2))
+            .addAssumption(TermCommons.e(1), TermCommons.v(1))
+            .addAssumption(MultiElement(TermCommons.e(2), EvalSubst(TermCommons.v(1), TermCommons.x)), TermCommons.v(2))
+        )
+        .buildOption
     }
   }
 

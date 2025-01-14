@@ -5,8 +5,13 @@ import languages.terms.types.Type
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
-trait InferenceRulePart {
+trait InferenceRulePart extends ConvertableText {
   def toText: ConvertableText
+
+  override def asPlainText: String = toText.asPlainText
+  override def asHtml: TypedTag[String] = toText.asHtml
+  override def asHtmlReadOnly: TypedTag[String] = toText.asHtmlReadOnly
+  override def asLaTeX: String = toText.asLaTeX
 }
 
 case class EvalRulePart(t: ConvertableText) extends InferenceRulePart {
@@ -31,7 +36,7 @@ case class EvalSubst(l: ConvertableText, r: ConvertableText) extends InferenceRu
 
 case class EvalMultiSubst(pairs: EvalSubst*) extends InferenceRulePart {
   override def toText: ConvertableText = SquareBracketedElement(
-    ListElement(pairs.map(p => MultiElement(p.l, Symbols.forwardSlash, p.r)), start = NullElement(), end = NullElement())
+    ListElement(pairs.map(p => MultiElement(p.l, Symbols.forwardSlash, p.r)), NullElement(), NullElement())
   )
 }
 
@@ -42,23 +47,28 @@ case class TypeCheckRulePart(t: ConvertableText) extends InferenceRulePart {
 object TypeCheckRulePart {
   def apply(l: ConvertableText, r: Type): TypeCheckRulePart = TypeCheckRulePart(l, r.toText)
 
-  def apply(l: ConvertableText, r: ConvertableText, binds: List[ConvertableText] = Nil): TypeCheckRulePart =
+  def apply(l: ConvertableText, r: ConvertableText, binds: List[ConvertableText] = Nil): TypeCheckRulePart = {
     TypeCheckRulePart(MultiElement(
       Symbols.gamma,
-      if binds.isEmpty then NullElement() else MultiElement(MathElement.comma.spaceAfter, ListElement(binds, start = NullElement(), end = NullElement())),
+      if binds.isEmpty
+      then NullElement()
+      else MultiElement(MathElement.comma.spaceAfter, ListElement(binds, NullElement(), NullElement())),
       Symbols.turnstile.spacesAround,
       l,
-      TextElement(":").spaceAfter,
+      MathElement.colon.spaceAfter,
       r
     ))
+  }
 
   def eTo(n: Int, t: Type): TypeCheckRulePart = TypeCheckRulePart(TermCommons.e(n), t)
 
   def eTo(n: Int, t: ConvertableText): TypeCheckRulePart = TypeCheckRulePart(TermCommons.e(n), t)
+
+  def eToT(n: Int): TypeCheckRulePart = TypeCheckRulePart(TermCommons.e(n), TermCommons.t(n))
 }
 
 case class TypeCheckRuleBind(l: ConvertableText, r: ConvertableText) extends InferenceRulePart {
-  override def toText: ConvertableText = MultiElement(l, MathElement(":"), r)
+  override def toText: ConvertableText = MultiElement(l, MathElement.colon, r)
 }
 
 abstract class InferenceRulePreview {
@@ -111,12 +121,22 @@ class RulePreviewBuilder {
     this
   }
 
+  def addTypeCheckRule(rule: TypeCheckRuleBuilder): RulePreviewBuilder = {
+    addTypeCheckRule(rule.build)
+  }
+
   def addEvaluationRule(rule: EvalRulePreview): RulePreviewBuilder = {
     evaluationRules = evaluationRules :+ rule
     this
   }
 
+  def addEvaluationRule(rule: EvalRuleBuilder): RulePreviewBuilder = {
+    addEvaluationRule(rule.build)
+  }
+
   def build: RulePreview = RulePreview(typeCheckRules, evaluationRules)
+
+  def buildOption: Option[RulePreview] = if typeCheckRules.isEmpty && evaluationRules.isEmpty then None else Some(build)
 }
 
 class EvalRuleBuilder {
@@ -128,9 +148,17 @@ class EvalRuleBuilder {
     this
   }
 
+  def addAssumption(l: ConvertableText, r: ConvertableText): EvalRuleBuilder = {
+    addAssumption(EvalRulePart(l, r))
+  }
+
   def setConclusion(conclusion: InferenceRulePart): EvalRuleBuilder = {
     this.conclusion = Some(conclusion)
     this
+  }
+
+  def setConclusion(l: ConvertableText, r: ConvertableText): EvalRuleBuilder = {
+    setConclusion(EvalRulePart(l, r))
   }
 
   def build: EvalRulePreview = EvalRulePreview(conclusion.get, assumptions: _*)
@@ -145,9 +173,17 @@ class TypeCheckRuleBuilder {
     this
   }
 
+  def addAssumption(l: ConvertableText, r: ConvertableText, binds: List[ConvertableText] = Nil): TypeCheckRuleBuilder = {
+    addAssumption(TypeCheckRulePart(l, r, binds))
+  }
+
   def setConclusion(conclusion: InferenceRulePart): TypeCheckRuleBuilder = {
     this.conclusion = Some(conclusion)
     this
+  }
+
+  def setConclusion(l: ConvertableText, r: ConvertableText): TypeCheckRuleBuilder = {
+    setConclusion(TypeCheckRulePart(l, r))
   }
 
   def build: TypeCheckRulePreview = TypeCheckRulePreview(conclusion.get, assumptions: _*)

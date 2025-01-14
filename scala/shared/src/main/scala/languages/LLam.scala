@@ -151,6 +151,9 @@ class LLam extends LLet {
     def typeOfApply(argType: Type): Type
   }
 
+  protected def formatFuncType(in: ConvertableText, out: ConvertableText): ConvertableText =
+    MultiElement(in, SurroundSpaces(Symbols.singleRightArrow), out)
+
   case class Func(in: Type, out: Type) extends FunctionType {
     override def typeOfApply(argType: Type): Type = if (argType == in) {
       out
@@ -162,8 +165,7 @@ class LLam extends LLet {
 
     override def typeCheck(tEnv: TypeEnv): Type = Func(in.typeCheck(tEnv), out.typeCheck(tEnv))
 
-    override def toText: ConvertableText =
-      MultiElement(in.toTextBracketed, SurroundSpaces(Symbols.singleRightArrow), out.toTextBracketed)
+    override def toText: ConvertableText = formatFuncType(in.toTextBracketed, out.toTextBracketed)
   }
 
   object Func extends TypeCompanion {

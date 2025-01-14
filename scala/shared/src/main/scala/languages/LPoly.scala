@@ -17,6 +17,9 @@ class LPoly extends LData {
 
   // expressions
 
+  private def formatPoly(v: ConvertableText, e: ConvertableText): ConvertableText =
+    MultiElement(Symbols.lambdaUpper, v, MathElement.period, e)
+
   case class Poly(v: LiteralIdentifierBind, e: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = PolyV(TypeVar(v), e, env)
 
@@ -32,8 +35,23 @@ class LPoly extends LData {
     override def getChildrenEval(env: ValueEnv): List[(Term, ValueEnv)] =
       List((e, env + (v -> TypeValueContainer(TypeVar(v)))))
 
-    override def toText: ConvertableText =
-      MultiElement(Symbols.lambdaUpper, v.toText, MathElement.period, e.toTextBracketed)
+    override def toText: ConvertableText = formatPoly(v.toText, e.toTextBracketed)
+
+    override def getRulePreview: Option[RulePreview] = RulePreviewBuilder()
+      .addTypeCheckRule(
+        TypeCheckRuleBuilder()
+          .setConclusion(
+            formatPoly(TermCommons.A, TermCommons.e),
+            formatPolyType(TermCommons.A, TermCommons.t)
+          )
+          .addAssumption(TermCommons.e, TermCommons.t)
+          .addAssumption(TypeCheckRulePart(MultiElement(TermCommons.A, MathElement("#").spacesAround, Symbols.gamma)))
+      )
+      .addEvaluationRule(
+        EvalRuleBuilder()
+          .setConclusion(EvalRulePart.reflexive(formatPoly(TermCommons.A, TermCommons.e)))
+      )
+      .buildOption
   }
 
   object Poly extends ExprCompanion {
@@ -48,6 +66,9 @@ class LPoly extends LData {
     override val aliases: List[String] = List("Polymorphic", "PolyType")
   }
 
+  private def formatApplyType(e: ConvertableText, t: ConvertableText): ConvertableText =
+    MultiElement(e, SquareBracketedElement(t))
+
   case class ApplyType(e: Expr, typ: Type) extends Expr {
     override def evalInner(env: ValueEnv): Value = e.eval(env) match {
       case PolyV(tv, e, env) => e.eval(env + (tv.v.toBind -> TypeValueContainer(typ)))
@@ -55,15 +76,28 @@ class LPoly extends LData {
     }
 
     override def typeCheckInner(tEnv: TypeEnv): Type = e.typeCheck(tEnv) match {
-      case PolyType(tv, incompleteType) =>
-        tv match {
-          case TypeVar(v) => incompleteType.typeCheck(tEnv + (v.toBind -> typ))
-        }
+      case PolyType(tv, incompleteType) => incompleteType.typeCheck(tEnv + (tv.v.toBind -> typ))
       case other => CannotApplyTypeUnlessPolyType(other)
     }
 
-    override def toText: ConvertableText =
-      MultiElement(e.toTextBracketed, TextElement("["), typ.toText, TextElement("]"))
+    override def toText: ConvertableText = formatApplyType(e.toTextBracketed, typ.toText)
+
+    override def getRulePreview: Option[RulePreview] = RulePreviewBuilder()
+      .addTypeCheckRule(
+        TypeCheckRuleBuilder()
+          .setConclusion(
+            formatApplyType(TermCommons.e, TermCommons.t(0)),
+            MultiElement(TermCommons.t, EvalSubst(TermCommons.t(0), TermCommons.A))
+          )
+          .addAssumption(TermCommons.e, formatPoly(TermCommons.A, TermCommons.t))
+      )
+      .addEvaluationRule(
+        EvalRuleBuilder()
+          .setConclusion(formatApplyType(TermCommons.e, TermCommons.t), TermCommons.v)
+          .addAssumption(TermCommons.e, formatPoly(TermCommons.A, TermCommons.e(0)))
+          .addAssumption(MultiElement(TermCommons.e(0), EvalSubst(TermCommons.t, TermCommons.A)), TermCommons.v)
+      )
+      .buildOption
   }
 
   object ApplyType extends ExprCompanion {
@@ -103,14 +137,11 @@ class LPoly extends LData {
     }
   }
 
+  private def formatPolyType(v: ConvertableText, e: ConvertableText): ConvertableText =
+    MultiElement(Symbols.forall, v, MathElement.period, e)
+
   case class PolyType(typeVar: TypeVar, incompleteType: Type) extends Type {
-    override def toText: ConvertableText =
-      MultiElement(
-        Symbols.forall,
-        typeVar.toTextBracketed,
-        SpaceAfter(MathElement.period),
-        incompleteType.toTextBracketed
-      )
+    override def toText: ConvertableText = formatPoly(typeVar.toTextBracketed, incompleteType.toTextBracketed)
 
     override def typeCheck(tEnv: TypeEnv): Type =
       PolyType(typeVar, incompleteType.typeCheck(tEnv + (typeVar.v.toBind -> TypeContainer(typeVar))))

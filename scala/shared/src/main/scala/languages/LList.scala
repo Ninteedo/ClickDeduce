@@ -13,6 +13,8 @@ import languages.terms.values.Value
 class LList extends LPoly {
   registerTerms("LList", List(ListNil, Cons, CaseList, ListType, NilV, ConsV))
 
+  private val nilSymbol = TextElement("Nil")
+
   private val consSymbol = TextElement("::")
 
   private def listTypeText(elTyp: ConvertableText): ConvertableText = MultiElement(TextElement("List"), SquareBracketedElement(elTyp))
@@ -23,24 +25,20 @@ class LList extends LPoly {
 
     override protected def typeCheckInner(tEnv: TypeEnv): Type = ListType(elTyp)
 
-    override def toText: ConvertableText = TextElement("Nil")
+    override def toText: ConvertableText = nilSymbol
 
     override val needsBrackets: Boolean = false
 
-    override def getRulePreview: Option[RulePreview] = Some(
-      new RulePreviewBuilder()
-        .addTypeCheckRule(new TypeCheckRuleBuilder()
-          .setConclusion(TypeCheckRulePart(
-            TextElement("Nil"),
-            listTypeText(Symbols.tau)))
-          .build
-        )
-        .addEvaluationRule(new EvalRuleBuilder()
-          .setConclusion(EvalRulePart.reflexive(TextElement("Nil")))
-          .build
-        )
-        .build
-    )
+    override def getRulePreview: Option[RulePreview] = RulePreviewBuilder()
+      .addTypeCheckRule(
+        TypeCheckRuleBuilder()
+          .setConclusion(TypeCheckRulePart(nilSymbol, listTypeText(Symbols.tau)))
+      )
+      .addEvaluationRule(
+        EvalRuleBuilder()
+          .setConclusion(EvalRulePart.reflexive(nilSymbol))
+      )
+      .buildOption
   }
 
   object ListNil extends ExprCompanion {
@@ -52,6 +50,9 @@ class LList extends LPoly {
 
     override val aliases: List[String] = List("ListNil")
   }
+
+  private def formatCons(head: ConvertableText, tail: ConvertableText): ConvertableText =
+    MultiElement(head, consSymbol.spacesAround, tail)
 
   case class Cons(head: Expr, tail: Expr) extends Expr {
     override protected def evalInner(env: ValueEnv): Value = (head.eval(env), tail.eval(env)) match {
@@ -67,25 +68,21 @@ class LList extends LPoly {
       case (headTyp, tailTyp)                           => ListTypeMismatchError(headTyp, tailTyp)
     }
 
-    override def toText: ConvertableText = MultiElement(head.toTextBracketed, consSymbol.spacesAround, tail.toText)
+    override def toText: ConvertableText = formatCons(head.toTextBracketed, tail.toTextBracketed)
 
-    override def getRulePreview: Option[RulePreview] = Some(
-      new RulePreviewBuilder()
-        .addTypeCheckRule(new TypeCheckRuleBuilder()
-          .setConclusion(TypeCheckRulePart(
-            MultiElement(TermCommons.e(1), consSymbol.spacesAround, TermCommons.e(2)),
-            listTypeText(Symbols.tau)
-          ))
-          .addAssumption(TypeCheckRulePart(TermCommons.e(1), Symbols.tau))
-          .addAssumption(TypeCheckRulePart(TermCommons.e(2), listTypeText(Symbols.tau)))
-          .build
-        )
-        .addEvaluationRule(EvalRuleBuilder()
-          .setConclusion(EvalRulePart.reflexive(MultiElement(TermCommons.v(1), consSymbol.spacesAround, TermCommons.v(2))))
-          .build
-        )
-        .build
-    )
+    override def getRulePreview: Option[RulePreview] = RulePreviewBuilder()
+      .addTypeCheckRule(TypeCheckRuleBuilder()
+        .setConclusion(TypeCheckRulePart(
+          formatCons(TermCommons.e(1), TermCommons.e(2)),
+          listTypeText(Symbols.tau)
+        ))
+        .addAssumption(TypeCheckRulePart(TermCommons.e(1), Symbols.tau))
+        .addAssumption(TypeCheckRulePart(TermCommons.e(2), listTypeText(Symbols.tau)))
+      )
+      .addEvaluationRule(EvalRuleBuilder()
+        .setConclusion(EvalRulePart.reflexive(formatCons(TermCommons.v(1), TermCommons.v(2))))
+      )
+      .buildOption
   }
 
   object Cons extends ExprCompanion {
@@ -98,13 +95,13 @@ class LList extends LPoly {
     override val aliases: List[String] = List("ListCons", "::")
   }
 
-  private def caseListText(list: ConvertableText, nilCase: ConvertableText, headVar: ConvertableText, tailVar: ConvertableText, consCase: ConvertableText): ConvertableText =
+  private def formatCaseList(list: ConvertableText, nilCase: ConvertableText, headVar: ConvertableText, tailVar: ConvertableText, consCase: ConvertableText): ConvertableText =
     MultiElement(
       TextElement("case"),
       SpaceAfter(SubscriptElement(TextElement("list"))),
       list,
       TextElement(" of { "),
-      TextElement("Nil"),
+      nilSymbol,
       SurroundSpaces(Symbols.doubleRightArrow),
       nilCase,
       TextElement("; "),
@@ -185,53 +182,48 @@ class LList extends LPoly {
       }
     )
 
-    override def toText: ConvertableText = caseListText(list.toTextBracketed, nilCase.toTextBracketed, headVar.toText, tailVar.toText, consCase.toTextBracketed)
+    override def toText: ConvertableText = formatCaseList(list.toTextBracketed, nilCase.toTextBracketed, headVar.toText, tailVar.toText, consCase.toTextBracketed)
 
-    override def getRulePreview: Option[RulePreview] = Some(
-      RulePreviewBuilder()
-        .addTypeCheckRule(
-          TypeCheckRuleBuilder()
-            .setConclusion(TypeCheckRulePart(
-              caseListText(MathElement("e"), TermCommons.e(1), MathElement("x"), MathElement("y"), TermCommons.e(2)),
-              TermCommons.t(2)
-            ))
-            .addAssumption(TypeCheckRulePart(MathElement("e"), listTypeText(TermCommons.t(1))))
-            .addAssumption(TypeCheckRulePart(TermCommons.e(1), TermCommons.t(2)))
-            .addAssumption(
-              TypeCheckRulePart(TermCommons.e(2), TermCommons.t(2), List(
-                TypeCheckRuleBind(MathElement("x"), TermCommons.t(1)).toText,
-                TypeCheckRuleBind(MathElement("y"), listTypeText(TermCommons.t(1))).toText
-              )),
-            )
-            .build
-        )
-        .addEvaluationRule(
-          EvalRuleBuilder()
-            .setConclusion(EvalRulePart(
-              caseListText(MathElement("e"), TermCommons.e(1), MathElement("x"), MathElement("y"), TermCommons.e(2)),
-              TermCommons.v(1)
-            ))
-            .addAssumption(EvalRulePart(MathElement("e"), TextElement("Nil")))
-            .addAssumption(EvalRulePart(TermCommons.e(1), TermCommons.v(1)))
-            .build
-        )
-        .addEvaluationRule(
-          EvalRuleBuilder()
-            .setConclusion(EvalRulePart(
-              caseListText(MathElement("e"), TermCommons.e(1), MathElement("x"), MathElement("y"), TermCommons.e(2)),
-              TermCommons.v(2)
-            ))
-            .addAssumption(EvalRulePart(MathElement("e"), MultiElement(MathElement("h"), consSymbol.spacesAround, MathElement("t"))))
-            .addAssumption(EvalRulePart(
-              MultiElement(
-                TermCommons.e(2),
-                EvalMultiSubst(EvalSubst(MathElement("h"), MathElement("x")), EvalSubst(MathElement("t"), MathElement("y"))).toText,
-              TermCommons.v(2)))
-            )
-            .build
-        )
-        .build
-    )
+    override def getRulePreview: Option[RulePreview] = RulePreviewBuilder()
+      .addTypeCheckRule(
+        TypeCheckRuleBuilder()
+          .setConclusion(TypeCheckRulePart(
+            formatCaseList(TermCommons.e, TermCommons.e(1), TermCommons.x, TermCommons.y, TermCommons.e(2)),
+            TermCommons.t(2)
+          ))
+          .addAssumption(TypeCheckRulePart(TermCommons.e, listTypeText(TermCommons.t(1))))
+          .addAssumption(TypeCheckRulePart(TermCommons.e(1), TermCommons.t(2)))
+          .addAssumption(
+            TypeCheckRulePart(TermCommons.e(2), TermCommons.t(2), List(
+              TypeCheckRuleBind(TermCommons.x, TermCommons.t(1)),
+              TypeCheckRuleBind(TermCommons.y, listTypeText(TermCommons.t(1)))
+            )),
+          )
+      )
+      .addEvaluationRule(
+        EvalRuleBuilder()
+          .setConclusion(EvalRulePart(
+            formatCaseList(TermCommons.e, TermCommons.e(1), TermCommons.x, TermCommons.y, TermCommons.e(2)),
+            TermCommons.v(1)
+          ))
+          .addAssumption(EvalRulePart(TermCommons.e, nilSymbol))
+          .addAssumption(EvalRulePart(TermCommons.e(1), TermCommons.v(1)))
+      )
+      .addEvaluationRule(
+        EvalRuleBuilder()
+          .setConclusion(EvalRulePart(
+            formatCaseList(TermCommons.e, TermCommons.e(1), TermCommons.x, TermCommons.y, TermCommons.e(2)),
+            TermCommons.v(2)
+          ))
+          .addAssumption(EvalRulePart(TermCommons.e, formatCons(TermCommons.v(1), TermCommons.v(2))))
+          .addAssumption(EvalRulePart(
+            MultiElement(
+              TermCommons.e(2),
+              EvalMultiSubst(EvalSubst(TermCommons.v(1), TermCommons.x), EvalSubst(TermCommons.v(2), TermCommons.y)),
+              TermCommons.v(2))
+          ))
+      )
+      .buildOption
   }
 
   object CaseList extends ExprCompanion {
@@ -321,6 +313,8 @@ class LList extends LPoly {
   case class ListCaseNotListTypeError(t: Type) extends TypeError {
     override val message: String = s"ListCase expected a list, but got $t"
   }
+
+  setTasks()
 }
 
 object LList extends LList {}

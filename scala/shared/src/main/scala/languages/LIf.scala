@@ -23,12 +23,16 @@ class LIf extends LArith {
 
     override def toText: ConvertableText = b.toText
 
-    override def getRulePreview: Option[RulePreview] = Some(
-      RulePreview(
-        TypeCheckRulePreview(TypeCheckRulePart(TextElement("b"), BoolType().toText)),
-        EvalRulePreview(EvalRulePart(TextElement("v"), TextElement("v")))
+    override def getRulePreview: Option[RulePreview] = RulePreviewBuilder()
+      .addTypeCheckRule(
+        TypeCheckRuleBuilder()
+          .setConclusion(MathElement("b"), BoolType().toText)
       )
-    )
+      .addEvaluationRule(
+        EvalRuleBuilder()
+          .setConclusion(EvalRulePart(TermCommons.v, TermCommons.v))
+      )
+      .buildOption
   }
 
   object Bool extends ExprCompanion {
@@ -42,6 +46,9 @@ class LIf extends LArith {
 
     override val aliases: List[String] = List("Boolean", "True", "False")
   }
+
+  private def formatEquals(e1: ConvertableText, e2: ConvertableText): ConvertableText =
+    MultiElement(e1, MathElement.doubleEquals.spacesAround, e2)
 
   case class Equal(e1: Expr, e2: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = {
@@ -72,31 +79,29 @@ class LIf extends LArith {
       }
     }
 
-    override def toText: ConvertableText =
-      MultiElement(e1.toTextBracketed, SurroundSpaces(MathElement.equals), e2.toTextBracketed)
+    override def toText: ConvertableText = formatEquals(e1.toTextBracketed, e2.toTextBracketed)
 
-    override def getRulePreview: Option[RulePreview] = Some(
-      RulePreview(
-        List(TypeCheckRulePreview(
-          TypeCheckRulePart(MultiElement(TermCommons.e(1), MathElement.doubleEquals.spacesAround, TermCommons.e(2)), BoolType().toText),
-          TypeCheckRulePart.eTo(1, Symbols.tau),
-          TypeCheckRulePart.eTo(2, Symbols.tau))
-        ),
-        List(
-          EvalRulePreview(
-            EvalRulePart(MultiElement(TermCommons.e(1), MathElement.doubleEquals.spacesAround, TermCommons.e(2)), TextElement("true")),
-            EvalRulePart(TermCommons.e(1), MathElement("v")),
-            EvalRulePart(TermCommons.e(2), MathElement("v"))
-          ),
-          EvalRulePreview(
-            EvalRulePart(MultiElement(TermCommons.e(1), MathElement.doubleEquals.spacesAround, TermCommons.e(2)), TextElement("false")),
-            EvalRulePart(TermCommons.e(1), TermCommons.v(1)),
-            EvalRulePart(TermCommons.e(2), TermCommons.v(2)),
-            EvalRulePart(MultiElement(TermCommons.v(1), MathElement.notEquals.spacesAround, TermCommons.v(2)))
-          )
-        )
+    override def getRulePreview: Option[RulePreview] = RulePreviewBuilder()
+      .addTypeCheckRule(
+        TypeCheckRuleBuilder()
+          .setConclusion(formatEquals(TermCommons.e(1), TermCommons.e(2)), BoolType().toText)
+          .addAssumption(TermCommons.e(1), Symbols.tau)
+          .addAssumption(TermCommons.e(2), Symbols.tau)
       )
-    )
+      .addEvaluationRule(
+        EvalRuleBuilder()
+          .setConclusion(formatEquals(TermCommons.e(1), TermCommons.e(2)), TextElement("true"))
+          .addAssumption(TermCommons.e(1), TermCommons.v)
+          .addAssumption(TermCommons.e(2), TermCommons.v)
+      )
+      .addEvaluationRule(
+        EvalRuleBuilder()
+          .setConclusion(formatEquals(TermCommons.e(1), TermCommons.e(2)), TextElement("false"))
+          .addAssumption(TermCommons.e(1), TermCommons.v(1))
+          .addAssumption(TermCommons.e(2), TermCommons.v(2))
+          .addAssumption(EvalRulePart(MultiElement(TermCommons.v(1), MathElement.notEquals.spacesAround, TermCommons.v(2))))
+      )
+      .buildOption
   }
 
   object Equal extends ExprCompanion {
@@ -134,6 +139,16 @@ class LIf extends LArith {
     }
   }
 
+  private def formatIfThenElse(cond: ConvertableText, thenExpr: ConvertableText, elseExpr: ConvertableText): ConvertableText =
+    MultiElement(
+      TextElement("if "),
+      cond,
+      TextElement(" then "),
+      thenExpr,
+      TextElement(" else "),
+      elseExpr
+    )
+
   case class IfThenElse(cond: Expr, then_expr: Expr, else_expr: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = cond.eval(env) match {
       case BoolV(true)    => then_expr.eval(env)
@@ -157,46 +172,32 @@ class LIf extends LArith {
       case _            => List((cond, env), (then_expr, env), (else_expr, env))
     }
 
-    override def toText: ConvertableText = MultiElement(
-      TextElement("if "),
-      cond.toTextBracketed,
-      TextElement(" then "),
-      then_expr.toTextBracketed,
-      TextElement(" else "),
-      else_expr.toTextBracketed
-    )
+    override def toText: ConvertableText =
+      formatIfThenElse(cond.toTextBracketed, then_expr.toTextBracketed, else_expr.toTextBracketed)
 
     override def getRulePreview: Option[RulePreview] = {
-      val exprText = MultiElement(
-        TextElement("if "),
-        MathElement("e").spacesAround,
-        TextElement(" then "),
-        TermCommons.e(1).spacesAround,
-        TextElement(" else ").spaceAfter,
-        TermCommons.e(2)
-      )
-      Some(
-        RulePreview(
-          List(TypeCheckRulePreview(
-            TypeCheckRulePart(exprText, Symbols.tau),
-            TypeCheckRulePart(MathElement("e"), BoolType().toText),
-            TypeCheckRulePart.eTo(1, Symbols.tau),
-            TypeCheckRulePart.eTo(2, Symbols.tau)
-          )),
-          List(
-            EvalRulePreview(
-              EvalRulePart(exprText, TermCommons.v(1)),
-              EvalRulePart(MathElement("e"), TextElement("true")),
-              EvalRulePart.eToV(1)
-            ),
-            EvalRulePreview(
-              EvalRulePart(exprText, TermCommons.v(2)),
-              EvalRulePart(MathElement("e"), TextElement("false")),
-              EvalRulePart.eToV(2)
-            )
-          )
+      val exprText = formatIfThenElse(TermCommons.e, TermCommons.e(1), TermCommons.e(2))
+      RulePreviewBuilder()
+        .addTypeCheckRule(
+          TypeCheckRuleBuilder()
+            .setConclusion(exprText, Symbols.tau)
+            .addAssumption(TermCommons.e, BoolType().toText)
+            .addAssumption(TermCommons.e(1), Symbols.tau)
+            .addAssumption(TermCommons.e(2), Symbols.tau)
         )
-      )
+        .addEvaluationRule(
+          EvalRuleBuilder()
+            .setConclusion(exprText, TermCommons.v(1))
+            .addAssumption(TermCommons.e, TextElement("true"))
+            .addAssumption(TermCommons.e(1), TermCommons.v(1))
+        )
+        .addEvaluationRule(
+          EvalRuleBuilder()
+            .setConclusion(exprText, TermCommons.v(2))
+            .addAssumption(TermCommons.e, TextElement("false"))
+            .addAssumption(TermCommons.e(2), TermCommons.v(2))
+        )
+        .buildOption
     }
   }
 

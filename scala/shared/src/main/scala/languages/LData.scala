@@ -35,15 +35,32 @@ class LData extends LRec {
 
   // expressions
 
+  private def formatPair(l: ConvertableText, r: ConvertableText): ConvertableText =
+    BracketedElement(MultiElement(l, SpaceAfter(MathElement.comma), r))
+
   case class Pair(e1: Expr, e2: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = PairV(e1.eval(env), e2.eval(env))
 
     override def typeCheckInner(tEnv: TypeEnv): Type = PairType(e1.typeCheck(tEnv), e2.typeCheck(tEnv))
 
-    override def toText: ConvertableText =
-      BracketedElement(MultiElement(e1.toText, SpaceAfter(MathElement.comma), e2.toText))
+    override def toText: ConvertableText = formatPair(e1.toText, e2.toText)
 
     override val needsBrackets: Boolean = false
+
+    override def getRulePreview: Option[RulePreview] = RulePreviewBuilder()
+      .addTypeCheckRule(
+        TypeCheckRuleBuilder()
+          .setConclusion(formatPair(TermCommons.e(1), TermCommons.e(2)), formatPairType(TermCommons.t(1), TermCommons.t(2)))
+          .addAssumption(TypeCheckRulePart.eToT(1))
+          .addAssumption(TypeCheckRulePart.eToT(2))
+      )
+      .addEvaluationRule(
+        EvalRuleBuilder()
+          .setConclusion(formatPair(TermCommons.e(1), TermCommons.e(2)), formatPair(TermCommons.v(1), TermCommons.v(2)))
+          .addAssumption(EvalRulePart.eToV(1))
+          .addAssumption(EvalRulePart.eToV(2))
+      )
+      .buildOption
   }
 
   object Pair extends ExprCompanion {
@@ -56,6 +73,8 @@ class LData extends LRec {
     override val aliases: List[String] = List("Tuple")
   }
 
+  private def formatFst(e: ConvertableText): ConvertableText = MultiElement(TextElement("fst").spaceAfter, e)
+
   case class Fst(e: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = e.eval(env) match {
       case PairV(v1, _) => v1
@@ -67,9 +86,22 @@ class LData extends LRec {
       case other          => TupleOperationOnNonTupleType(other)
     }
 
-    override def toText: ConvertableText = MultiElement(TextElement("fst"), BracketedElement(e.toText))
+    override def toText: ConvertableText = formatFst(e.toTextBracketed)
 
     override val needsBrackets: Boolean = false
+
+    override def getRulePreview: Option[RulePreview] = RulePreviewBuilder()
+      .addTypeCheckRule(
+        TypeCheckRuleBuilder()
+          .addAssumption(TermCommons.e, formatPairType(TermCommons.t(1), TermCommons.t(2)))
+          .setConclusion(formatFst(TermCommons.e), TermCommons.t(1))
+      )
+      .addEvaluationRule(
+        EvalRuleBuilder()
+          .addAssumption(TermCommons.e, formatPair(TermCommons.v(1), TermCommons.v(2)))
+          .setConclusion(formatFst(TermCommons.e), TermCommons.v(1))
+      )
+      .buildOption
   }
 
   object Fst extends ExprCompanion {
@@ -82,6 +114,8 @@ class LData extends LRec {
     override val aliases: List[String] = List("First", "1st")
   }
 
+  private def formatSnd(e: ConvertableText): ConvertableText = MultiElement(TextElement("snd").spaceAfter, e)
+
   case class Snd(e: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = e.eval(env) match {
       case PairV(_, v2) => v2
@@ -93,9 +127,22 @@ class LData extends LRec {
       case other          => TupleOperationOnNonTupleType(other)
     }
 
-    override def toText: ConvertableText = MultiElement(TextElement("snd"), BracketedElement(e.toText))
+    override def toText: ConvertableText = formatSnd(e.toTextBracketed)
 
     override val needsBrackets: Boolean = false
+
+    override def getRulePreview: Option[RulePreview] = RulePreviewBuilder()
+      .addTypeCheckRule(
+        TypeCheckRuleBuilder()
+          .addAssumption(TermCommons.e, formatPairType(TermCommons.t(1), TermCommons.t(2)))
+          .setConclusion(formatSnd(TermCommons.e), TermCommons.t(2))
+      )
+      .addEvaluationRule(
+        EvalRuleBuilder()
+          .addAssumption(TermCommons.e, formatPair(TermCommons.v(1), TermCommons.v(2)))
+          .setConclusion(formatSnd(TermCommons.e), TermCommons.v(2))
+      )
+      .buildOption
   }
 
   object Snd extends ExprCompanion {
@@ -107,6 +154,16 @@ class LData extends LRec {
 
     override val aliases: List[String] = List("Second", "2nd")
   }
+
+  private def formatLetPair(x: ConvertableText, y: ConvertableText, assign: ConvertableText, bound: ConvertableText): ConvertableText =
+    MultiElement(
+      SpaceAfter(TextElement("let pair")),
+      formatPair(x, y),
+      SurroundSpaces(MathElement.equals),
+      assign,
+      SurroundSpaces(TextElement("in")),
+      bound
+    )
 
   case class LetPair(x: LiteralIdentifierBind, y: LiteralIdentifierBind, assign: Expr, bound: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = verifyLiteralIdentifierEval(x, y) {
@@ -125,15 +182,6 @@ class LData extends LRec {
       }
     }
 
-    override def toText: ConvertableText = MultiElement(
-      TextElement("let pair "),
-      BracketedElement(MultiElement(x.toText, SpaceAfter(MathElement.comma), y.toText)),
-      SurroundSpaces(MathElement.equals),
-      assign.toTextBracketed,
-      TextElement(" in "),
-      bound.toTextBracketed
-    )
-
     override def getChildrenBase(env: ValueEnv): List[(Term, ValueEnv)] = List(
       (x, env),
       (y, env),
@@ -148,6 +196,32 @@ class LData extends LRec {
       (assign, tEnv),
       (bound, tEnv + (x -> Fst(assign).typeCheck(tEnv)) + (y -> Snd(assign).typeCheck(tEnv)))
     )
+
+    override def toText: ConvertableText = formatLetPair(x.toText, y.toText, assign.toTextBracketed, bound.toTextBracketed)
+
+    override def getRulePreview: Option[RulePreview] = RulePreviewBuilder()
+      .addTypeCheckRule(
+        TypeCheckRuleBuilder()
+          .setConclusion(formatLetPair(TermCommons.x, TermCommons.y, TermCommons.e(1), TermCommons.e(2)), TermCommons.t)
+          .addAssumption(TermCommons.e(1), formatPairType(TermCommons.t(1), TermCommons.t(2)))
+          .addAssumption(TermCommons.e(2), TermCommons.t, List(
+            TypeCheckRuleBind(TermCommons.x, TermCommons.t(1)),
+            TypeCheckRuleBind(TermCommons.y, TermCommons.t(2))
+          ))
+      )
+      .addEvaluationRule(
+        EvalRuleBuilder()
+          .setConclusion(formatLetPair(TermCommons.x, TermCommons.y, TermCommons.e(1), TermCommons.e(2)), TermCommons.v)
+          .addAssumption(TermCommons.e(1), formatPair(TermCommons.v(1), TermCommons.v(2)))
+          .addAssumption(
+            MultiElement(TermCommons.e(2), EvalMultiSubst(
+              EvalSubst(TermCommons.v(1), TermCommons.x),
+              EvalSubst(TermCommons.v(2), TermCommons.y))
+            ),
+            TermCommons.v
+          )
+      )
+      .buildOption
   }
 
   object LetPair extends ExprCompanion {
@@ -181,14 +255,29 @@ class LData extends LRec {
     }
   }
 
+  private def formatLeft(e: ConvertableText): ConvertableText = MultiElement(TextElement("left"), BracketedElement(e))
+
   case class Left(e: Expr, rightType: Type) extends Expr {
     override def evalInner(env: ValueEnv): Value = LeftV(e.eval(env), rightType)
 
     override def typeCheckInner(tEnv: TypeEnv): Type = UnionType(e.typeCheck(tEnv), rightType)
 
-    override def toText: ConvertableText = MultiElement(TextElement("left"), BracketedElement(e.toText))
+    override def toText: ConvertableText = formatLeft(e.toText)
 
     override val needsBrackets: Boolean = false
+
+    override def getRulePreview: Option[RulePreview] = RulePreviewBuilder()
+      .addTypeCheckRule(
+        TypeCheckRuleBuilder()
+          .addAssumption(TermCommons.e, TermCommons.t(1))
+          .setConclusion(formatLeft(TermCommons.e), formatUnionType(TermCommons.t(1), TermCommons.t(2)))
+      )
+      .addEvaluationRule(
+        EvalRuleBuilder()
+          .addAssumption(TermCommons.e, TermCommons.v)
+          .setConclusion(formatLeft(TermCommons.e), formatLeft(TermCommons.v))
+      )
+      .buildOption
   }
 
   object Left extends ExprCompanion {
@@ -199,14 +288,29 @@ class LData extends LRec {
     }
   }
 
+  private def formatRight(e: ConvertableText): ConvertableText = MultiElement(TextElement("right"), BracketedElement(e))
+
   case class Right(leftType: Type, e: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = RightV(leftType, e.eval(env))
 
     override def typeCheckInner(tEnv: TypeEnv): Type = UnionType(leftType, e.typeCheck(tEnv))
 
-    override def toText: ConvertableText = MultiElement(TextElement("right"), BracketedElement(e.toText))
+    override def toText: ConvertableText = formatRight(e.toText)
 
     override val needsBrackets: Boolean = false
+
+    override def getRulePreview: Option[RulePreview] = RulePreviewBuilder()
+      .addTypeCheckRule(
+        TypeCheckRuleBuilder()
+          .addAssumption(TermCommons.e, TermCommons.t(2))
+          .setConclusion(formatRight(TermCommons.e), formatUnionType(TermCommons.t(1), TermCommons.t(2)))
+        )
+      .addEvaluationRule(
+        EvalRuleBuilder()
+          .addAssumption(TermCommons.e, TermCommons.v)
+          .setConclusion(formatRight(TermCommons.e), formatRight(TermCommons.v))
+        )
+      .buildOption
   }
 
   object Right extends ExprCompanion {
@@ -216,6 +320,21 @@ class LData extends LRec {
       case _                             => None
     }
   }
+
+  private def formatCaseSwitch(e: ConvertableText, x: ConvertableText, y: ConvertableText, lExpr: ConvertableText, rExpr: ConvertableText): ConvertableText =
+    MultiElement(
+      TextElement("case "),
+      e,
+      TextElement(" of { left"),
+      BracketedElement(x),
+      SurroundSpaces(Symbols.doubleRightArrow),
+      lExpr,
+      TextElement("; right"),
+      BracketedElement(y),
+      SurroundSpaces(Symbols.doubleRightArrow),
+      rExpr,
+      TextElement(" }")
+    )
 
   case class CaseSwitch(e: Expr, l: LiteralIdentifierBind, r: LiteralIdentifierBind, lExpr: Expr, rExpr: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = verifyLiteralIdentifierEval(l, r) {
@@ -236,20 +355,6 @@ class LData extends LRec {
         case other => CaseSwitchOnNonUnionType(other)
       }
     }
-
-    override def toText: ConvertableText = MultiElement(
-      TextElement("case "),
-      e.toText,
-      TextElement(" of { left"),
-      BracketedElement(l.toText),
-      SurroundSpaces(Symbols.doubleRightArrow),
-      lExpr.toTextBracketed,
-      TextElement("; right"),
-      BracketedElement(r.toText),
-      SurroundSpaces(Symbols.doubleRightArrow),
-      rExpr.toTextBracketed,
-      TextElement(" }")
-    )
 
     override def getChildrenBase(env: ValueEnv): List[(Term, ValueEnv)] = {
       val (lVal, rVal): (Value, Value) = e.eval(env) match {
@@ -276,6 +381,41 @@ class LData extends LRec {
       case other =>
         List((e, tEnv), (lExpr, tEnv + (l -> UnknownType())), (rExpr, tEnv + (r -> UnknownType())))
     }
+
+    override def toText: ConvertableText = formatCaseSwitch(
+      e.toTextBracketed, l.toText, r.toText, lExpr.toTextBracketed, rExpr.toTextBracketed
+    )
+
+    override def getRulePreview: Option[RulePreview] = RulePreviewBuilder()
+      .addTypeCheckRule(
+        TypeCheckRuleBuilder()
+          .setConclusion(
+            formatCaseSwitch(TermCommons.e, TermCommons.x, TermCommons.y, TermCommons.e(1), TermCommons.e(2)),
+            TermCommons.t
+          )
+          .addAssumption(TermCommons.e, formatUnionType(TermCommons.t(1), TermCommons.t(2)))
+          .addAssumption(TermCommons.e(1), TermCommons.t, List(TypeCheckRuleBind(TermCommons.x, TermCommons.t(1))))
+          .addAssumption(TermCommons.e(2), TermCommons.t, List(TypeCheckRuleBind(TermCommons.y, TermCommons.t(2))))
+      )
+      .addEvaluationRule(
+        EvalRuleBuilder()
+          .setConclusion(
+            formatCaseSwitch(TermCommons.e, TermCommons.x, TermCommons.y, TermCommons.e(1), TermCommons.e(2)),
+            TermCommons.v
+          )
+          .addAssumption(TermCommons.e, formatLeft(TermCommons.v(1)))
+          .addAssumption(MultiElement(TermCommons.e(1), EvalSubst(TermCommons.v(1), TermCommons.x)), TermCommons.v)
+      )
+      .addEvaluationRule(
+        EvalRuleBuilder()
+          .setConclusion(
+            formatCaseSwitch(TermCommons.e, TermCommons.x, TermCommons.y, TermCommons.e(1), TermCommons.e(2)),
+            TermCommons.v
+          )
+          .addAssumption(TermCommons.e, formatRight(TermCommons.v(2)))
+          .addAssumption(MultiElement(TermCommons.e(2), EvalSubst(TermCommons.v(2), TermCommons.y)), TermCommons.v)
+      )
+      .buildOption
   }
 
   object CaseSwitch extends ExprCompanion {
@@ -293,11 +433,13 @@ class LData extends LRec {
 
   // types
 
+  private def formatPairType(l: ConvertableText, r: ConvertableText): ConvertableText =
+    MultiElement(l, SurroundSpaces(Symbols.times), r)
+
   case class PairType(l: Type, r: Type) extends Type {
     override def typeCheck(tEnv: TypeEnv): Type = PairType(l.typeCheck(tEnv), r.typeCheck(tEnv))
 
-    override def toText: ConvertableText =
-      MultiElement(l.toTextBracketed, SurroundSpaces(Symbols.times), r.toTextBracketed)
+    override def toText: ConvertableText = formatPairType(l.toTextBracketed, r.toTextBracketed)
 
     override val isError: Boolean = l.isError || r.isError
   }
@@ -312,11 +454,13 @@ class LData extends LRec {
     override val aliases: List[String] = List("TupleType")
   }
 
+  private def formatUnionType(l: ConvertableText, r: ConvertableText): ConvertableText =
+    MultiElement(l, SurroundSpaces(MathElement.plus), r)
+
   case class UnionType(l: Type, r: Type) extends Type {
     override def typeCheck(tEnv: TypeEnv): Type = UnionType(l.typeCheck(tEnv), r.typeCheck(tEnv))
 
-    override def toText: ConvertableText =
-      MultiElement(l.toTextBracketed, SurroundSpaces(MathElement("+")), r.toTextBracketed)
+    override def toText: ConvertableText = formatUnionType(l.toTextBracketed, r.toTextBracketed)
 
     override val isError: Boolean = l.isError || r.isError
   }

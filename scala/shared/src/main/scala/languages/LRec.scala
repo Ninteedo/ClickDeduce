@@ -15,6 +15,23 @@ import scalatags.Text.all.*
 class LRec extends LLam {
   registerTerms("LRec", List(Rec, RecV))
 
+  private def formatRec(
+    f: ConvertableText,
+    v: ConvertableText,
+    in: ConvertableText,
+    out: ConvertableText,
+    e: ConvertableText,
+    hideTypes: Boolean = false
+  ): ConvertableText =
+    MultiElement(
+      TextElement("rec "),
+      f,
+      BracketedElement(if hideTypes then v else MultiElement(v, MathElement.colon, in)),
+      if hideTypes then NullElement() else MultiElement(SpaceAfter(MathElement.colon), out),
+      SpaceAfter(MathElement.period),
+      e
+    )
+
   // expressions
   case class Rec(f: LiteralIdentifierBind, v: LiteralIdentifierBind, inType: Type, outType: Type, e: Expr)
       extends Expr {
@@ -54,15 +71,33 @@ class LRec extends LLam {
 
     override def getChildrenEval(env: ValueEnv): List[(Term, ValueEnv)] = Nil
 
-    override def toText: ConvertableText = MultiElement(
-      TextElement("rec "),
+    override def toText: ConvertableText = formatRec(
       f.toText,
-      BracketedElement(v.toText),
-      SpaceAfter(MathElement.colon),
+      v.toText,
+      TypeElement(inType.toTextBracketed),
       TypeElement(outType.toTextBracketed),
-      SpaceAfter(MathElement.period),
       e.toTextBracketed
     )
+
+    override def getRulePreview: Option[RulePreview] = RulePreviewBuilder()
+      .addTypeCheckRule(
+        TypeCheckRuleBuilder()
+          .setConclusion(
+            formatRec(TermCommons.f, TermCommons.x, TermCommons.t(1), TermCommons.t(2), TermCommons.e),
+            formatFuncType(TermCommons.t(1), TermCommons.t(2))
+          )
+          .addAssumption(TermCommons.e, TermCommons.t(2), List(
+            TypeCheckRuleBind(TermCommons.f, formatFuncType(TermCommons.t(1), TermCommons.t(2))),
+            TypeCheckRuleBind(TermCommons.x, TermCommons.t(1))
+          ))
+      )
+      .addEvaluationRule(
+        EvalRuleBuilder()
+          .setConclusion(EvalRulePart.reflexive(
+            formatRec(TermCommons.f, TermCommons.x, TermCommons.t(1), TermCommons.t(2), TermCommons.e, hideTypes = true)
+          ))
+      )
+      .buildOption
   }
 
   object Rec extends ExprCompanion {

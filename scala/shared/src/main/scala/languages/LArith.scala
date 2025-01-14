@@ -32,12 +32,10 @@ class LArith extends ClickDeduceLanguage {
 
     override def toText: ConvertableText = x.toText
 
-    override def getRulePreview: Option[RulePreview] = Some(
-      RulePreview(
-        TypeCheckRulePreview(TypeCheckRulePart(MathElement("n"), IntType().toText)),
-        EvalRulePreview(EvalRulePart(MathElement("v"), MathElement("v")))
-      )
-    )
+    override def getRulePreview: Option[RulePreview] = RulePreviewBuilder()
+      .addTypeCheckRule(TypeCheckRuleBuilder().setConclusion(MathElement("n"), IntType().toText))
+      .addEvaluationRule(EvalRuleBuilder().setConclusion(TermCommons.v, TermCommons.v))
+      .buildOption
   }
 
   object Num extends ExprCompanion {
@@ -52,6 +50,12 @@ class LArith extends ClickDeduceLanguage {
       case _ => Some(Num(LiteralInt(0)))
     }
   }
+
+  private def formatArithOperator(op: ConvertableText, toggle: Boolean): ConvertableText =
+    MultiElement(op, if toggle then SubscriptElement(Symbols.doubleStrokeN) else NullElement()).spacesAround
+
+  private def formatPlus(e1: ConvertableText, e2: ConvertableText, arith: Boolean = false): ConvertableText =
+    MultiElement(e1, formatArithOperator(MathElement.plus, arith), e2)
 
   /** A plus expression. Both subexpressions must evaluate to `NumV`.
     *
@@ -75,30 +79,22 @@ class LArith extends ClickDeduceLanguage {
       case (t1, t2)               => UnexpectedArgType(s"Plus cannot accept ($t1, $t2)")
     }
 
-    override def toText: ConvertableText =
-      MultiElement(e1.toTextBracketed, SurroundSpaces(MathElement.plus), e2.toTextBracketed)
+    override def toText: ConvertableText = formatPlus(e1.toTextBracketed, e2.toTextBracketed)
 
-    override def getRulePreview: Option[RulePreview] = Some(
-      RulePreview(
-        TypeCheckRulePreview(
-          TypeCheckRulePart(
-            MultiElement(TermCommons.e(1), MathElement.plus.spacesAround, TermCommons.e(2)),
-            IntType().toText
-          ),
-          TypeCheckRulePart.eTo(1, IntType()), TypeCheckRulePart.eTo(2, IntType())
-        ),
-        EvalRulePreview(
-          EvalRulePart(
-            MultiElement(TermCommons.e(1), MathElement.plus.spacesAround, TermCommons.e(2)),
-            MultiElement(
-              TermCommons.v(1), SubscriptElement.labelled(MathElement.plus, Symbols.doubleStrokeN).spacesAround,
-              TermCommons.v(2)
-            )
-          ),
-          EvalRulePart.eToV(1), EvalRulePart.eToV(2)
-        )
+    override def getRulePreview: Option[RulePreview] = RulePreviewBuilder()
+      .addTypeCheckRule(
+        TypeCheckRuleBuilder()
+          .setConclusion(formatPlus(TermCommons.e(1), TermCommons.e(2)), IntType().toText)
+          .addAssumption(TypeCheckRulePart.eTo(1, IntType()))
+          .addAssumption(TypeCheckRulePart.eTo(2, IntType()))
       )
-    )
+      .addEvaluationRule(
+        EvalRuleBuilder()
+          .setConclusion(formatPlus(TermCommons.e(1), TermCommons.e(2)), formatPlus(TermCommons.v(1), TermCommons.v(2), arith = true))
+          .addAssumption(EvalRulePart.eToV(1))
+          .addAssumption(EvalRulePart.eToV(2))
+      )
+      .buildOption
   }
 
   object Plus extends ExprCompanion {
@@ -110,7 +106,10 @@ class LArith extends ClickDeduceLanguage {
     }
   }
 
-  /** A times expression. Both subexpressions must evaluate to `NumV`.
+  private def formatTimes(e1: ConvertableText, e2: ConvertableText, arith: Boolean = false): ConvertableText =
+    MultiElement(e1, formatArithOperator(Symbols.times, arith), e2)
+
+  /** A multiplication expression. Both subexpressions must evaluate to `NumV`.
     *
     * @param e1
     *   The first expression to multiply.
@@ -133,30 +132,22 @@ class LArith extends ClickDeduceLanguage {
     }
 
     override def toText: ConvertableText =
-      MultiElement(e1.toTextBracketed, SurroundSpaces(Symbols.times), e2.toTextBracketed)
+      formatTimes(e1.toTextBracketed, e2.toTextBracketed)
 
-    override def getRulePreview: Option[RulePreview] = Some(
-      RulePreview(
-        TypeCheckRulePreview(
-          TypeCheckRulePart(
-            MultiElement(TermCommons.e(1), Symbols.times.spacesAround, TermCommons.e(2)),
-            IntType().toText
-          ),
-          TypeCheckRulePart.eTo(1, IntType()), TypeCheckRulePart.eTo(2, IntType())
-        ),
-        EvalRulePreview(
-          EvalRulePart(
-            MultiElement(TermCommons.e(1), Symbols.times.spacesAround, TermCommons.e(2)),
-            MultiElement(
-              TermCommons.v(1), SubscriptElement.labelled(Symbols.times, Symbols.doubleStrokeN).spacesAround,
-              TermCommons.v(2)
-            )
-          ),
-          EvalRulePart.eToV(1), EvalRulePart.eToV(2)
-        )
+    override def getRulePreview: Option[RulePreview] = RulePreviewBuilder()
+      .addTypeCheckRule(
+        TypeCheckRuleBuilder()
+          .setConclusion(formatTimes(TermCommons.e(1), TermCommons.e(2)), IntType().toText)
+          .addAssumption(TypeCheckRulePart.eTo(1, IntType()))
+          .addAssumption(TypeCheckRulePart.eTo(2, IntType()))
       )
-    )
-
+      .addEvaluationRule(
+        EvalRuleBuilder()
+          .setConclusion(formatTimes(TermCommons.e(1), TermCommons.e(2)), formatTimes(TermCommons.v(1), TermCommons.v(2), arith = true))
+          .addAssumption(EvalRulePart.eToV(1))
+          .addAssumption(EvalRulePart.eToV(2))
+      )
+      .buildOption
   }
 
   object Times extends ExprCompanion {
