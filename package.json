@@ -11,7 +11,7 @@
   "devDependencies": {
     "@babel/core": "~7.23.7",
     "@babel/preset-env": "~7.23.8",
-    "@panzoom/panzoom": "~4.5.1",
+    "@panzoom/panzoom": "~4.6.0",
     "@scala-js/vite-plugin-scalajs": "^1.0.0",
     "babel-loader": "~9.1.3",
     "copy-webpack-plugin": "~12.0.2",
@@ -30,6 +30,6 @@
     "vitest": "^1.6.0"
   },
   "dependencies": {
-    "panzoom": "~9.4.0"
+    "panzoom": "~9.4.3"
   }
 }

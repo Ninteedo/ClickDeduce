@@ -8,9 +8,9 @@ let panzoomInstance: PanZoom;
  */
 export async function zoomToFit(): Promise<void> {
     const container: HTMLElement = getTreeContainer();
-    const firstSubtree: HTMLDivElement = document.querySelector('.subtree[data-tree-path=""]') as HTMLDivElement;
+    const rootSubtree: HTMLDivElement = document.querySelector('.subtree[data-tree-path=""]') as HTMLDivElement;
 
-    const scaleWidth = container.clientWidth / firstSubtree.clientWidth;
+    const scaleWidth = container.clientWidth / rootSubtree.clientWidth;
 
     panzoomInstance.moveTo(0, 0);
     panzoomInstance.zoomAbs(0, 0, scaleWidth);
