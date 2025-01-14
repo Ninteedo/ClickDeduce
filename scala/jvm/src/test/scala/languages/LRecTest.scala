@@ -4,7 +4,6 @@ import convertors.{DisplayMode, HTMLConvertor}
 import languages.LRec.*
 import languages.env.*
 import languages.terms.*
-import languages.terms.errors.*
 import languages.terms.exprs.Expr
 import languages.terms.literals.*
 import nodes.*
@@ -227,7 +226,7 @@ class LRecTest extends TestTemplate {
   }
 
   property("Rec pretty prints correctly") {
-    val factorialPretty = "rec factorial(n): Int. (if (n = 0) then 1 else (n × (factorial (n + -1))))"
+    val factorialPretty = "rec factorial(n: Int): Int. (if (n == 0) then 1 else (n × (factorial (n + -1))))"
 
     factorialFunction.prettyPrint shouldEqual factorialPretty
 

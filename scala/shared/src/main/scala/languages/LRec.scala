@@ -26,8 +26,8 @@ class LRec extends LLam {
     MultiElement(
       TextElement("rec "),
       f,
-      BracketedElement(if hideTypes then v else MultiElement(v, MathElement.colon, in)),
-      if hideTypes then NullElement() else MultiElement(SpaceAfter(MathElement.colon), out),
+      BracketedElement(if hideTypes then v else MultiElement(v, MathElement.colon.spaceAfter, in)),
+      if hideTypes then NullElement() else MultiElement(MathElement.colon.spaceAfter, out),
       SpaceAfter(MathElement.period),
       e
     )

@@ -1,8 +1,6 @@
 import {handleTabPressed, setNextFocusElement} from "../interface";
 import {stripTooltip} from "../utils";
 import {AbstractTreeInput} from "./abstractTreeInput";
-import {getRulePreview} from "../serverRequest";
-import {getCurrentLanguage} from "../treeManipulation";
 
 export class BaseDropdownSelector implements AbstractTreeInput {
     protected readonly container: HTMLDivElement;
@@ -10,11 +8,8 @@ export class BaseDropdownSelector implements AbstractTreeInput {
     protected readonly dropdown: HTMLDivElement;
     readonly options: DropdownOption[];
 
-    protected rulePreview: HTMLDivElement | undefined = undefined;
-
     protected readonly SELECTOR_FOCUS_CLASS = 'focused';
     protected readonly DROPDOWN_VISIBLE_CLASS = 'show';
-    protected readonly RULE_PREVIEW_CLASS = 'rule-preview';
 
     constructor(container: HTMLDivElement, inputSelector: string, dropdownSelector: string, optionsSelector: string) {
         this.container = container;
@@ -68,14 +63,13 @@ export class BaseDropdownSelector implements AbstractTreeInput {
     }
 
     private setupOptionListeners(): void {
-        this.options.forEach(option => {
-            option.element.addEventListener('click', evt => {
-                evt.preventDefault();
-                this.selectOption(option);
-            });
-            option.element.addEventListener('mouseenter', () => {
-                this.showRulePreview(option.getValue());
-            });
+        this.options.forEach(this.setupOptionListener);
+    }
+
+    protected setupOptionListener(option: DropdownOption): void {
+        option.element.addEventListener('click', evt => {
+            evt.preventDefault();
+            this.selectOption(option);
         });
     }
 
@@ -145,37 +139,20 @@ export class BaseDropdownSelector implements AbstractTreeInput {
     protected hideDropdown(): void {
         this.dropdown.classList.remove(this.DROPDOWN_VISIBLE_CLASS);
         this.container.classList.remove(this.SELECTOR_FOCUS_CLASS);
-        this.hideRulePreview();
     }
 
-    showRulePreview(value: string): void {
-        if (this.rulePreview === undefined) {
-            this.rulePreview = document.createElement('div');
-            this.rulePreview.classList.add(this.RULE_PREVIEW_CLASS);
-            this.container.appendChild(this.rulePreview);
-        }
-        this.rulePreview.innerHTML = getRulePreview(getCurrentLanguage(), value);
-        this.rulePreview.classList.add(this.DROPDOWN_VISIBLE_CLASS);
-    }
-
-    hideRulePreview(): void {
-        if (this.rulePreview !== undefined) {
-            this.rulePreview.classList.remove(this.DROPDOWN_VISIBLE_CLASS);
-        }
-    }
-
-    private isDropdownVisible() {
+    private isDropdownVisible(): boolean {
         return this.dropdown.classList.contains(this.DROPDOWN_VISIBLE_CLASS);
     }
 
-    private moveHighlight(offset: number) {
+    private moveHighlight(offset: number): void {
         const options = this.getVisibleOptions();
         const currentIndex = this.getSelectedIndex();
         const newIndex = (currentIndex + offset + options.length) % options.length;
         this.highlightOption(newIndex);
     }
 
-    private highlightOption(index: number) {
+    private highlightOption(index: number): void {
         if (!this.isDropdownVisible()) {
             this.showDropdown();
         }
@@ -184,14 +161,19 @@ export class BaseDropdownSelector implements AbstractTreeInput {
         options.forEach(option => option.removeHighlight());
         const option = options[index];
         if (option) {
-            option.highlight();
-            this.showRulePreview(option.getValue());
+            this.setOptionHighlight(option);
         } else {
-            this.hideRulePreview();
+            this.clearOptionHighlight();
         }
     }
 
-    private selectHighlightedOption() {
+    protected setOptionHighlight(option: DropdownOption): void {
+        option.highlight();
+    }
+
+    protected clearOptionHighlight(): void {}
+
+    private selectHighlightedOption(): void {
         const highlighted = this.getSelectedOption();
         if (highlighted) {
             setNextFocusElement(this);
@@ -211,7 +193,7 @@ export class BaseDropdownSelector implements AbstractTreeInput {
         return this.getVisibleOptions().find(option => option.isHighlighted());
     }
 
-    private handleDropdownWheel(evt: WheelEvent) {
+    private handleDropdownWheel(evt: WheelEvent): void {
         if (!((this.dropdown.scrollTop === 0 && evt.deltaY < 0)
             || (this.dropdown.scrollTop === this.dropdown.scrollHeight - this.dropdown.clientHeight && evt.deltaY > 0))) {
             evt.stopPropagation();

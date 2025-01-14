@@ -1,8 +1,9 @@
 import {hasClassOrParentHasClass} from "../utils";
-import {getTree} from "../treeManipulation";
+import {getCurrentLanguage, getTree} from "../treeManipulation";
 import {handleExprSelectorChoice} from "../actions";
-import {BaseDropdownSelector} from "./baseDropdownSelector";
+import {BaseDropdownSelector, DropdownOption} from "./baseDropdownSelector";
 import {getTreePathOfElement} from "../globals/elements";
+import {getRulePreview} from "../serverRequest";
 
 const UP_ARROW = '&#9650;';
 const DOWN_ARROW = '&#9660;';
@@ -10,6 +11,9 @@ const DOWN_ARROW = '&#9660;';
 
 export class CustomExprSelector extends BaseDropdownSelector {
     private readonly button: HTMLButtonElement;
+
+    protected rulePreview: HTMLDivElement | undefined = undefined;
+    protected readonly RULE_PREVIEW_CLASS = 'rule-preview';
 
     constructor(container: HTMLDivElement) {
         super(container, '.expr-selector-input', '.expr-selector-dropdown', 'ul > li');
@@ -22,14 +26,50 @@ export class CustomExprSelector extends BaseDropdownSelector {
         this.button.addEventListener('click', () => this.toggleDropdown());
     }
 
-    protected override showDropdown() {
+    override setupOptionListener(option: DropdownOption): void {
+        super.setupOptionListener(option);
+        option.element.addEventListener('mouseenter', () => {
+            this.showRulePreview(option.getValue());
+        });
+    }
+
+    protected override showDropdown(): void {
         super.showDropdown();
         this.button.innerHTML = UP_ARROW;
     }
 
-    protected override hideDropdown() {
+    protected override hideDropdown(): void {
         super.hideDropdown();
         this.button.innerHTML = DOWN_ARROW;
+        this.hideRulePreview();
+    }
+
+    protected override setOptionHighlight(option: DropdownOption): void {
+        super.setOptionHighlight(option);
+        this.showRulePreview(option.getValue());
+    }
+
+    protected override clearOptionHighlight(): void {
+        super.clearOptionHighlight();
+        this.hideRulePreview();
+    }
+
+    showRulePreview(value: string): void {
+        if (this.isTypeSelector()) return;
+
+        if (this.rulePreview === undefined) {
+            this.rulePreview = document.createElement('div');
+            this.rulePreview.classList.add(this.RULE_PREVIEW_CLASS);
+            this.container.appendChild(this.rulePreview);
+        }
+        this.rulePreview.innerHTML = getRulePreview(getCurrentLanguage(), value);
+        this.rulePreview.classList.add(this.DROPDOWN_VISIBLE_CLASS);
+    }
+
+    hideRulePreview(): void {
+        if (this.rulePreview !== undefined) {
+            this.rulePreview.classList.remove(this.DROPDOWN_VISIBLE_CLASS);
+        }
     }
 
     protected override postSelectOption(value: string) {
