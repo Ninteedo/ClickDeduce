@@ -147,4 +147,13 @@ object ScalaJsEntry {
     if (preview.isEmpty) ""
     else preview.get.toHtml.toString
   }
+
+  @JSExportTopLevel("parseExpr")
+  def parseExpr(langName: String, exprText: String): String = {
+    val lang = getLanguage(langName)
+    lang.parseExpr(exprText) match {
+      case Some(expr) => expr.toString
+      case None => throw new IllegalArgumentException(s"Failed to parse expression: $exprText")
+    }
+  }
 }

@@ -3,7 +3,7 @@ import {getCurrentLanguage, getTree} from "../treeManipulation";
 import {handleExprSelectorChoice} from "../actions";
 import {BaseDropdownSelector, DropdownOption} from "./baseDropdownSelector";
 import {getTreePathOfElement} from "../globals/elements";
-import {getRulePreview} from "../serverRequest";
+import {getRulePreview, parseExprText} from "../serverRequest";
 
 const UP_ARROW = '&#9650;';
 const DOWN_ARROW = '&#9660;';
@@ -69,6 +69,13 @@ export class CustomExprSelector extends BaseDropdownSelector {
     hideRulePreview(): void {
         if (this.rulePreview !== undefined) {
             this.rulePreview.classList.remove(this.DROPDOWN_VISIBLE_CLASS);
+        }
+    }
+
+    protected override updateDropdown() {
+        super.updateDropdown();
+        if (!this.isTypeSelector()) {
+            console.log(parseExprText(getCurrentLanguage(), this.input.value));
         }
     }
 

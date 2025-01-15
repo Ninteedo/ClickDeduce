@@ -69,8 +69,10 @@ trait AbstractLanguage {
     *   The expression, or throw an [[UnknownTermBuilder]] exception if the builder is not found.
     */
   def buildExpr(name: String, args: BuilderArgs): Expr = exprBuilderManager.build(name, args)
-  
+
   def getExprRulePreview(name: String): Option[RulePreview] = exprBuilderManager.getRulePreview(name)
+
+  def parseExpr(exprText: String): Option[Expr]
 
   /** Get a type builder by name.
     * @param name

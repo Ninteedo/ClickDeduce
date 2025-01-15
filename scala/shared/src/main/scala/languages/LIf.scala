@@ -315,6 +315,28 @@ class LIf extends LArith {
       checkForValidIfStatement(expr) && !expr.typeCheck().isError
     }
   }
+
+  protected class LIfParser extends LArithParser {
+    protected def bool: Parser[Expr] = "(?i)true".r ^^^ Bool(true) | "(?i)false".r ^^^ Bool(false)
+
+    protected def ifThenElse: Parser[Expr] = "if" ~> expr ~ "then" ~ expr ~ "else" ~ expr ^^ {
+      case cond ~ _ ~ thenExpr ~ _ ~ elseExpr => IfThenElse(cond, thenExpr, elseExpr)
+    }
+
+    protected def level4: Parser[Expr] = chainl1(level5, "==" ^^^ {Equal(_, _)} | "<" ^^^ {LessThan(_, _)})
+
+    override protected def primitive: Parser[Expr] = bool | ifThenElse | super.primitive
+
+    override def expr: Parser[Expr] = level4
+  }
+
+  override def parseExpr(exprText: String): Option[Expr] = {
+    val parser = new LIfParser
+    parser.parseAll(parser.expr, exprText) match {
+      case parser.Success(result, _) => Some(result)
+      case _ => None
+    }
+  }
 }
 
 object LIf extends LIf {}

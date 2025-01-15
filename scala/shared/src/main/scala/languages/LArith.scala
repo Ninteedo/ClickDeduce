@@ -14,6 +14,7 @@ import languages.terms.types.Type
 import languages.terms.values.Value
 
 import scala.annotation.targetName
+import scala.util.parsing.combinator.JavaTokenParsers
 
 class LArith extends ClickDeduceLanguage {
   registerTerms("LArith", List(Num, Plus, Times, IntType, NumV))
@@ -296,6 +297,33 @@ class LArith extends ClickDeduceLanguage {
         case NumV(42) => checkNoZeroes(expr) && checkHasOp(expr, classOf[Plus]) && checkHasOp(expr, classOf[Times])
         case _        => false
       }
+    }
+  }
+
+  protected class LArithParser extends JavaTokenParsers {
+    protected def num: Parser[Num] = wholeNumber ^^ (n => Num(LiteralInt(BigInt(n))))
+
+    protected def chainl1(p: Parser[Expr], op: Parser[(Expr, Expr) => Expr]): Parser[Expr] = {
+      def rest(acc: Expr): Parser[Expr] =
+        ((op ~ p) ^^ { case f ~ x => f(acc, x) } flatMap rest) | success(acc)
+
+      p flatMap rest
+    }
+
+    protected def primitive: Parser[Expr] = num | "(" ~> expr <~ ")"
+
+    protected def level6: Parser[Expr] = chainl1(primitive, "*" ^^^ {Times(_, _)})
+
+    protected def level5: Parser[Expr] = chainl1(level6, "+" ^^^ {Plus(_, _)})
+
+    def expr: Parser[Expr] = level5
+  }
+
+  override def parseExpr(exprText: String): Option[Expr] = {
+    val LArithParser = new LArithParser
+    LArithParser.parseAll(LArithParser.expr, exprText) match {
+      case LArithParser.Success(result, _) => Some(result)
+      case _                               => None
     }
   }
 }
