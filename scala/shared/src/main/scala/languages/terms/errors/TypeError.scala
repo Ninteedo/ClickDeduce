@@ -1,6 +1,7 @@
 package languages.terms.errors
 
-import convertors.{ClassDict, ConvertableText, HtmlElement, TextElement}
+import convertors.ClassDict
+import convertors.text.{ConvertableText, HtmlElement, TextElement}
 import languages.terms.types.Type
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*

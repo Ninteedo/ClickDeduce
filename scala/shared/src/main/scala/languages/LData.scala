@@ -1,6 +1,6 @@
 package languages
 
-import convertors.*
+import convertors.text.*
 import languages.env.*
 import languages.env.Env.Variable
 import languages.terms.*

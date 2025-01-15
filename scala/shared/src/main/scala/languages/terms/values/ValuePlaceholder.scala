@@ -1,6 +1,6 @@
 package languages.terms.values
 
-import convertors.ConvertableText
+import convertors.text.ConvertableText
 import languages.terms.types.{Type, TypePlaceholder}
 
 /** A placeholder for text in a value.

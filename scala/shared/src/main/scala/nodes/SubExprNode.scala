@@ -1,6 +1,7 @@
 package nodes
 
-import convertors.{ConvertableText, DisplayMode}
+import convertors.DisplayMode
+import convertors.text.ConvertableText
 import languages.terms.exprs.ExprPlaceholder
 import nodes.exceptions.{InnerNodeCannotBeRootException, NodeParentWrongTypeException}
 

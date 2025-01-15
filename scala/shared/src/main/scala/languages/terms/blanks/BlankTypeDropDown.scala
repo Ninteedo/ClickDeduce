@@ -1,6 +1,6 @@
 package languages.terms.blanks
 
-import convertors.{ConvertableText, HtmlElement, TextElement}
+import convertors.text.{ConvertableText, HtmlElement, TextElement}
 import languages.AbstractNodeLanguage
 import languages.terms.types.Type
 import scalatags.Text.TypedTag

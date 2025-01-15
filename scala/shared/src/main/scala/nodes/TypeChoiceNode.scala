@@ -1,6 +1,7 @@
 package nodes
 
-import convertors.{ConvertableText, DisplayMode, HtmlElement}
+import convertors.DisplayMode
+import convertors.text.{ConvertableText, HtmlElement}
 import languages.AbstractNodeLanguage
 import languages.terms.blanks.BlankTypeDropDown
 import languages.terms.types.{Type, UnknownType}

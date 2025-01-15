@@ -1,6 +1,7 @@
 package languages.terms
 
-import convertors.{BracketedElement, ConvertableText, HTMLConvertor, LaTeXConvertor}
+import convertors.text.{BracketedElement, ConvertableText}
+import convertors.{HTMLConvertor, LaTeXConvertor}
 import languages.env.{TypeEnv, ValueEnv}
 import languages.terms.exprs.Expr
 import languages.terms.types.Type

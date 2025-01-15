@@ -1,6 +1,6 @@
 package languages.terms.types
 
-import convertors.{ConvertableText, TextElement}
+import convertors.text.{ConvertableText, TextElement}
 import languages.terms.builders.{BuilderArgs, TypeCompanion}
 
 case class UnknownType() extends Type {

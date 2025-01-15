@@ -1,6 +1,7 @@
 package languages
 
 import convertors.*
+import convertors.text.*
 import languages.terms.types.Type
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*

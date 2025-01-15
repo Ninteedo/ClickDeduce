@@ -1,6 +1,6 @@
 package languages.terms.exprs
 
-import convertors.{ConvertableText, TextElement}
+import convertors.text.{ConvertableText, TextElement}
 
 /** An expression that should not be used.
  *

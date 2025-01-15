@@ -1,7 +1,7 @@
 package languages.terms.literals
 
 import app.{HTMLHelper, UtilityFunctions}
-import convertors.{ConvertableText, ItalicsElement, TextElement}
+import convertors.text.{ConvertableText, ItalicsElement, TextElement}
 import languages.env.{TypeEnv, ValueEnv}
 import languages.terms.values.Value
 import scalatags.Text.TypedTag

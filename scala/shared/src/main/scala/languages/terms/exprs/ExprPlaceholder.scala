@@ -1,6 +1,6 @@
 package languages.terms.exprs
 
-import convertors.ConvertableText
+import convertors.text.ConvertableText
 
 /** A placeholder for text in an expression.
  *

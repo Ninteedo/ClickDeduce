@@ -1,7 +1,8 @@
 package convertors
 
+import convertors.text.*
+import languages.ClickDeduceLanguage
 import languages.env.{TypeEnv, ValueEnv}
-import languages.{AbstractNodeLanguage, ClickDeduceLanguage}
 import nodes.*
 
 class LaTeXConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConvertor(lang, mode) {

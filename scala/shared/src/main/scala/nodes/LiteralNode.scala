@@ -1,6 +1,7 @@
 package nodes
 
-import convertors.{ConvertableText, DisplayMode, HtmlElement}
+import convertors.DisplayMode
+import convertors.text.{ConvertableText, HtmlElement}
 import languages.env.{Env, TypeEnv, ValueEnv}
 import languages.terms.literals.Literal
 import nodes.exceptions.NodeParentWrongTypeException

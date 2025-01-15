@@ -1,7 +1,8 @@
 package nodes
 
 import app.UtilityFunctions
-import convertors.{ConvertableText, DisplayMode}
+import convertors.DisplayMode
+import convertors.text.ConvertableText
 import languages.terms.exprs.Expr
 import languages.terms.literals.{Literal, LiteralParser}
 import languages.terms.types.Type

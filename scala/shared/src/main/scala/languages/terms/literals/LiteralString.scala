@@ -1,7 +1,7 @@
 package languages.terms.literals
 
 import app.UtilityFunctions
-import convertors.{ConvertableText, TextElement}
+import convertors.text.{ConvertableText, TextElement}
 
 /** A literal string.
     *

@@ -1,6 +1,6 @@
 package languages.terms.types
 
-import convertors.ConvertableText
+import convertors.text.ConvertableText
 
 case class TypePlaceholder(content: ConvertableText, override val needsBrackets: Boolean = true) extends Type {
   override def toText: ConvertableText = content

@@ -1,6 +1,7 @@
 package languages
 
 import convertors.*
+import convertors.text.*
 import languages.env.*
 import languages.terms.*
 import languages.terms.blanks.BlankExprDropDown

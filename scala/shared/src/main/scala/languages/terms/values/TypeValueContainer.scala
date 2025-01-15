@@ -1,6 +1,6 @@
 package languages.terms.values
 
-import convertors.ConvertableText
+import convertors.text.ConvertableText
 import languages.terms.types.Type
 
 case class TypeValueContainer(typ: Type) extends Value {

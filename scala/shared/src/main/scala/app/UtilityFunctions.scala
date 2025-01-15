@@ -70,4 +70,19 @@ object UtilityFunctions {
       cache += (key -> result)
       result
   }
+
+  def escapeLaTeX(text: String): String = text
+    .replace("\\", "\\textbackslash{}")
+    .replace("{", "\\{")
+    .replace("}", "\\}")
+    .replace("_", "\\_")
+    .replace("^", "\\^{}")
+    .replace("~", "\\textasciitilde{}")
+    .replace("#", "\\#")
+    .replace("$", "\\$")
+    .replace("%", "\\%")
+    .replace("&", "\\&")
+    .replace("<", "\\textless{}")
+    .replace(">", "\\textgreater{}")
+    .replace("|", "\\textbar{}")
 }

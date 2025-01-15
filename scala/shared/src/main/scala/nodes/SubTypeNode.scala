@@ -1,6 +1,7 @@
 package nodes
 
-import convertors.{ConvertableText, DisplayMode}
+import convertors.DisplayMode
+import convertors.text.ConvertableText
 import languages.terms.types.TypePlaceholder
 
 /** An inner node that contains a sub-type.

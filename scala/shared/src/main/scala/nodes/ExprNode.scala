@@ -1,7 +1,8 @@
 package nodes
 
 import app.{ClickDeduceException, UtilityFunctions}
-import convertors.{ConvertableText, DisplayMode, HtmlElement}
+import convertors.DisplayMode
+import convertors.text.{ConvertableText, HtmlElement}
 import languages.AbstractNodeLanguage
 import languages.terms.Term
 import languages.terms.blanks.BlankExprDropDown
