@@ -30,3 +30,8 @@ case class ListElement(
     case x :: xs  => x :: sep :: intersperse(xs, sep)
   }
 }
+
+object ListElement {
+  def noBrackets(items: Seq[ConvertableText], delimiter: ConvertableText = TextElement(", ")): ListElement =
+    ListElement(items, NullElement(), NullElement(), delimiter)
+}

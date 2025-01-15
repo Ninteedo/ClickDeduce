@@ -3,6 +3,7 @@ package languages
 import convertors.text.*
 import languages.env.*
 import languages.env.Env.Variable
+import languages.previews.*
 import languages.terms.*
 import languages.terms.builders.*
 import languages.terms.errors.*
@@ -214,9 +215,10 @@ class LData extends LRec {
           .setConclusion(formatLetPair(TermCommons.x, TermCommons.y, TermCommons.e(1), TermCommons.e(2)), TermCommons.v)
           .addAssumption(TermCommons.e(1), formatPair(TermCommons.v(1), TermCommons.v(2)))
           .addAssumption(
-            MultiElement(TermCommons.e(2), EvalMultiSubst(
+            EvalMultiSubst(
+              TermCommons.e(2),
               EvalSubst(TermCommons.v(1), TermCommons.x),
-              EvalSubst(TermCommons.v(2), TermCommons.y))
+              EvalSubst(TermCommons.v(2), TermCommons.y)
             ),
             TermCommons.v
           )

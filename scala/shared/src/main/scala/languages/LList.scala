@@ -3,6 +3,7 @@ package languages
 import convertors.*
 import convertors.text.*
 import languages.env.*
+import languages.previews.*
 import languages.terms.*
 import languages.terms.builders.*
 import languages.terms.errors.*
@@ -218,10 +219,12 @@ class LList extends LPoly {
           ))
           .addAssumption(EvalRulePart(TermCommons.e, formatCons(TermCommons.v(1), TermCommons.v(2))))
           .addAssumption(EvalRulePart(
-            MultiElement(
+            EvalMultiSubst(
               TermCommons.e(2),
-              EvalMultiSubst(EvalSubst(TermCommons.v(1), TermCommons.x), EvalSubst(TermCommons.v(2), TermCommons.y)),
-              TermCommons.v(2))
+              EvalSubst(TermCommons.v(1), TermCommons.x),
+              EvalSubst(TermCommons.v(2), TermCommons.y)
+            ),
+            TermCommons.v(2)
           ))
       )
       .buildOption
