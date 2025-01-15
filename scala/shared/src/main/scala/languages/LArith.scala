@@ -33,11 +33,6 @@ class LArith extends ClickDeduceLanguage {
     override def typeCheckInner(tEnv: TypeEnv): Type = IntType()
 
     override def toText: ConvertableText = x.toText
-
-    override def getRulePreview: Option[RulePreview] = RulePreviewBuilder()
-      .addTypeCheckRule(TypeCheckRuleBuilder().setConclusion(MathElement("n"), IntType().toText))
-      .addEvaluationRule(EvalRuleBuilder().setConclusion(TermCommons.v, TermCommons.v))
-      .buildOption
   }
 
   object Num extends ExprCompanion {
@@ -51,6 +46,11 @@ class LArith extends ClickDeduceLanguage {
       case List(l: LiteralInt) => Some(Num(l))
       case _ => Some(Num(LiteralInt(0)))
     }
+
+    override lazy val rulePreview: Option[RulePreview] = RulePreviewBuilder()
+      .addTypeCheckRule(TypeCheckRuleBuilder().setConclusion(MathElement("n"), IntType().toText))
+      .addEvaluationRule(EvalRuleBuilder().setConclusion(TermCommons.v, TermCommons.v))
+      .buildOption
   }
 
   private def formatArithOperator(op: ConvertableText, toggle: Boolean): ConvertableText =
@@ -82,21 +82,6 @@ class LArith extends ClickDeduceLanguage {
     }
 
     override def toText: ConvertableText = formatPlus(e1.toTextBracketed, e2.toTextBracketed)
-
-    override def getRulePreview: Option[RulePreview] = RulePreviewBuilder()
-      .addTypeCheckRule(
-        TypeCheckRuleBuilder()
-          .setConclusion(formatPlus(TermCommons.e(1), TermCommons.e(2)), IntType().toText)
-          .addAssumption(TypeCheckRulePart.eTo(1, IntType()))
-          .addAssumption(TypeCheckRulePart.eTo(2, IntType()))
-      )
-      .addEvaluationRule(
-        EvalRuleBuilder()
-          .setConclusion(formatPlus(TermCommons.e(1), TermCommons.e(2)), formatPlus(TermCommons.v(1), TermCommons.v(2), arith = true))
-          .addAssumption(EvalRulePart.eToV(1))
-          .addAssumption(EvalRulePart.eToV(2))
-      )
-      .buildOption
   }
 
   object Plus extends ExprCompanion {
@@ -106,6 +91,23 @@ class LArith extends ClickDeduceLanguage {
       case List(e1: Expr, e2: Expr) => Some(Plus(e1, e2))
       case _ => Some(Plus(defaultExpr, defaultExpr))
     }
+
+    override lazy val rulePreview: Option[RulePreview] = RulePreviewBuilder()
+      .addTypeCheckRule(
+        TypeCheckRuleBuilder()
+          .setConclusion(formatPlus(TermCommons.e(1), TermCommons.e(2)), IntType().toText)
+          .addAssumption(TypeCheckRulePart.eTo(1, IntType()))
+          .addAssumption(TypeCheckRulePart.eTo(2, IntType()))
+      )
+      .addEvaluationRule(
+        EvalRuleBuilder()
+          .setConclusion(
+            formatPlus(TermCommons.e(1), TermCommons.e(2)), formatPlus(TermCommons.v(1), TermCommons.v(2), arith = true)
+          )
+          .addAssumption(EvalRulePart.eToV(1))
+          .addAssumption(EvalRulePart.eToV(2))
+      )
+      .buildOption
   }
 
   private def formatTimes(e1: ConvertableText, e2: ConvertableText, arith: Boolean = false): ConvertableText =
@@ -135,21 +137,6 @@ class LArith extends ClickDeduceLanguage {
 
     override def toText: ConvertableText =
       formatTimes(e1.toTextBracketed, e2.toTextBracketed)
-
-    override def getRulePreview: Option[RulePreview] = RulePreviewBuilder()
-      .addTypeCheckRule(
-        TypeCheckRuleBuilder()
-          .setConclusion(formatTimes(TermCommons.e(1), TermCommons.e(2)), IntType().toText)
-          .addAssumption(TypeCheckRulePart.eTo(1, IntType()))
-          .addAssumption(TypeCheckRulePart.eTo(2, IntType()))
-      )
-      .addEvaluationRule(
-        EvalRuleBuilder()
-          .setConclusion(formatTimes(TermCommons.e(1), TermCommons.e(2)), formatTimes(TermCommons.v(1), TermCommons.v(2), arith = true))
-          .addAssumption(EvalRulePart.eToV(1))
-          .addAssumption(EvalRulePart.eToV(2))
-      )
-      .buildOption
   }
 
   object Times extends ExprCompanion {
@@ -159,6 +146,24 @@ class LArith extends ClickDeduceLanguage {
       case List(e1: Expr, e2: Expr) => Some(Times(e1, e2))
       case _ => Some(Times(defaultExpr, defaultExpr))
     }
+
+    override lazy val rulePreview: Option[RulePreview] = RulePreviewBuilder()
+      .addTypeCheckRule(
+        TypeCheckRuleBuilder()
+          .setConclusion(formatTimes(TermCommons.e(1), TermCommons.e(2)), IntType().toText)
+          .addAssumption(TypeCheckRulePart.eTo(1, IntType()))
+          .addAssumption(TypeCheckRulePart.eTo(2, IntType()))
+      )
+      .addEvaluationRule(
+        EvalRuleBuilder()
+          .setConclusion(
+            formatTimes(TermCommons.e(1), TermCommons.e(2)),
+            formatTimes(TermCommons.v(1), TermCommons.v(2), arith = true)
+          )
+          .addAssumption(EvalRulePart.eToV(1))
+          .addAssumption(EvalRulePart.eToV(2))
+      )
+      .buildOption
   }
 
   // values

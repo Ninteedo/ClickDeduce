@@ -39,25 +39,6 @@ class LLam extends LLet {
       }
 
     override def toText: ConvertableText = MultiElement(e1.toTextBracketed, TextElement(" "), e2.toTextBracketed)
-
-    override def getRulePreview: Option[RulePreview] = Some(
-      RulePreview(
-        TypeCheckRulePreview(
-          TypeCheckRulePart(MultiElement(TermCommons.e(1).spaceAfter, TermCommons.e(2)), TermCommons.t(2)),
-          TypeCheckRulePart(TermCommons.e(1), MultiElement(TermCommons.t(1), Symbols.singleRightArrow.spacesAround, TermCommons.t(2))),
-          TypeCheckRulePart(TermCommons.e(2), TermCommons.t(1))
-        ),
-        EvalRulePreview(
-          EvalRulePart(MultiElement(TermCommons.e(1).spaceAfter, TermCommons.e(2)), MathElement("v")),
-          EvalRulePart(TermCommons.e(1), MultiElement(Symbols.lambdaLower, MathElement("x.e"))),
-          EvalRulePart.eToV(2),
-          EvalRulePart(
-            MultiElement(MathElement("e"), SquareBracketedElement(MultiElement(TermCommons.v(2), Symbols.forwardSlash, MathElement("x")))),
-            MathElement("v")
-          )
-        )
-      )
-    )
   }
 
   object Apply extends ExprCompanion {
@@ -66,6 +47,30 @@ class LLam extends LLet {
       case Nil                      => Some(Apply(defaultExpr, defaultExpr))
       case _                        => None
     }
+
+    override lazy val rulePreview: Option[RulePreview] = Some(
+      RulePreview(
+        TypeCheckRulePreview(
+          TypeCheckRulePart(MultiElement(TermCommons.e(1).spaceAfter, TermCommons.e(2)), TermCommons.t(2)),
+          TypeCheckRulePart(
+            TermCommons.e(1), MultiElement(TermCommons.t(1), Symbols.singleRightArrow.spacesAround, TermCommons.t(2))
+          ),
+          TypeCheckRulePart(TermCommons.e(2), TermCommons.t(1))
+        ),
+        EvalRulePreview(
+          EvalRulePart(MultiElement(TermCommons.e(1).spaceAfter, TermCommons.e(2)), MathElement("v")),
+          EvalRulePart(TermCommons.e(1), MultiElement(Symbols.lambdaLower, MathElement("x.e"))),
+          EvalRulePart.eToV(2),
+          EvalRulePart(
+            MultiElement(
+              MathElement("e"),
+              SquareBracketedElement(MultiElement(TermCommons.v(2), Symbols.forwardSlash, MathElement("x")))
+            ),
+            MathElement("v")
+          )
+        )
+      )
+    )
   }
 
   case class Lambda(v: LiteralIdentifierBind, typ: Type, e: Expr) extends Expr {
@@ -97,8 +102,18 @@ class LLam extends LLet {
       SpaceAfter(MathElement.period),
       e.toText
     )
+  }
 
-    override def getRulePreview: Option[RulePreview] = {
+  object Lambda extends ExprCompanion {
+    def apply(v: Variable, typ: Type, e: Expr): Lambda = new Lambda(LiteralIdentifierBind(v), typ, e)
+
+    override def create(args: BuilderArgs): Option[Expr] = args match {
+      case List(v: LiteralIdentifierBind, typ: Type, e: Expr) => Some(Lambda(v, typ, e))
+      case Nil => Some(Lambda(LiteralIdentifierBind.default, defaultType, defaultExpr))
+      case _   => None
+    }
+
+    override lazy val rulePreview: Option[RulePreview] = {
       val evalExprText = MultiElement(
         Symbols.lambdaLower,
         MathElement("x"),
@@ -135,16 +150,6 @@ class LLam extends LLet {
           )
         )
       )
-    }
-  }
-
-  object Lambda extends ExprCompanion {
-    def apply(v: Variable, typ: Type, e: Expr): Lambda = new Lambda(LiteralIdentifierBind(v), typ, e)
-
-    override def create(args: BuilderArgs): Option[Expr] = args match {
-      case List(v: LiteralIdentifierBind, typ: Type, e: Expr) => Some(Lambda(v, typ, e))
-      case Nil => Some(Lambda(LiteralIdentifierBind.default, defaultType, defaultExpr))
-      case _   => None
     }
   }
 

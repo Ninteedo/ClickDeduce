@@ -28,12 +28,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
     def createExprOption(exprBuilderName: BuilderName): TypedTag[String] = {
       val langName = exprBuilderName._1
 
-      def exprRulePreview(expr: Expr): TypedTag[String] = {
-        val preview = expr.getRulePreview
-        if (preview.isEmpty) div()
-        else preview.get.toHtml
-      }
-
       exprBuilderName._2 match {
         case name: String => option(data("value") := name, name)
         case (name: String, aliases: List[String]) =>
@@ -41,7 +35,6 @@ trait AbstractNodeLanguage extends AbstractLanguage {
             data("value") := name,
             data("aliases") := aliases.mkString(","),
             data("lang") := langName,
-//            data("preview") := exprRulePreview(getExprBuilder(name).get.apply(Nil).get).toString,
             name
           )
       }

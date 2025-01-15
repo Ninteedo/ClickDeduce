@@ -38,16 +38,6 @@ class LLet extends LIf {
     override val needsBrackets: Boolean = false
 
     override def toText: ConvertableText = v.toText
-
-    override def getRulePreview: Option[RulePreview] = Some(
-      RulePreview(
-        List(TypeCheckRulePreview(
-          TypeCheckRulePart(MathElement("x"), Symbols.tau),
-          TypeCheckRulePart(MultiElement(Symbols.gamma, BracketedElement(MathElement("x")), MathElement.equals.spacesAround, Symbols.tau)),
-        )),
-        List()  // TODO: does variable lookup need evaluation rule preview
-      )
-    )
   }
 
   object Var extends ExprCompanion {
@@ -60,6 +50,20 @@ class LLet extends LIf {
     }
 
     override val aliases: List[String] = List("Variable", "X")
+
+    override lazy val rulePreview: Option[RulePreview] = Some(
+      RulePreview(
+        List(TypeCheckRulePreview(
+          TypeCheckRulePart(MathElement("x"), Symbols.tau),
+          TypeCheckRulePart(MultiElement(
+            Symbols.gamma, BracketedElement(MathElement("x")), MathElement.equals.spacesAround, Symbols.tau
+          )
+          ),
+        )
+        ),
+        List() // TODO: does variable lookup need evaluation rule preview
+      )
+    )
   }
 
   private def formatLet(v: ConvertableText, assign: ConvertableText, bound: ConvertableText): ConvertableText =
@@ -86,8 +90,20 @@ class LLet extends LIf {
       List((assign, tEnv), (bound, tEnv + (v -> assign.typeCheck(tEnv))))
 
     override def toText: ConvertableText = formatLet(v.toText, assign.toTextBracketed, bound.toTextBracketed)
+  }
 
-    override def getRulePreview: Option[RulePreview] = {
+  object Let extends ExprCompanion {
+    def apply(v: Variable, assign: Expr, bound: Expr): Let = new Let(LiteralIdentifierBind(v), assign, bound)
+
+    override def create(args: BuilderArgs): Option[Expr] = args match {
+      case List(v: LiteralIdentifierBind, assign: Expr, bound: Expr) => Some(Let(v, assign, bound))
+      case Nil => Some(Let(LiteralIdentifierBind.default, defaultExpr, defaultExpr))
+      case _   => None
+    }
+
+    override val aliases: List[String] = List("=")
+
+    override lazy val rulePreview: Option[RulePreview] = {
       val exprText = formatLet(TermCommons.x, TermCommons.e(1), TermCommons.e(2))
       RulePreviewBuilder()
         .addTypeCheckRule(
@@ -104,18 +120,6 @@ class LLet extends LIf {
         )
         .buildOption
     }
-  }
-
-  object Let extends ExprCompanion {
-    def apply(v: Variable, assign: Expr, bound: Expr): Let = new Let(LiteralIdentifierBind(v), assign, bound)
-
-    override def create(args: BuilderArgs): Option[Expr] = args match {
-      case List(v: LiteralIdentifierBind, assign: Expr, bound: Expr) => Some(Let(v, assign, bound))
-      case Nil => Some(Let(LiteralIdentifierBind.default, defaultExpr, defaultExpr))
-      case _   => None
-    }
-
-    override val aliases: List[String] = List("=")
   }
 
   // errors

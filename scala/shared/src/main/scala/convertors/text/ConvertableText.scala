@@ -3,6 +3,9 @@ package convertors.text
 import convertors.*
 import scalatags.Text.TypedTag
 
+/**
+ * Text that can be converted to plain text, HTML, and LaTeX.
+ */
 trait ConvertableText {
   def asPlainText: String
   def asHtml: TypedTag[String]

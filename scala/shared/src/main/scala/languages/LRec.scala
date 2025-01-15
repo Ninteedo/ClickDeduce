@@ -80,26 +80,6 @@ class LRec extends LLam {
       TypeElement(outType.toTextBracketed),
       e.toTextBracketed
     )
-
-    override def getRulePreview: Option[RulePreview] = RulePreviewBuilder()
-      .addTypeCheckRule(
-        TypeCheckRuleBuilder()
-          .setConclusion(
-            formatRec(TermCommons.f, TermCommons.x, TermCommons.t(1), TermCommons.t(2), TermCommons.e),
-            formatFuncType(TermCommons.t(1), TermCommons.t(2))
-          )
-          .addAssumption(TermCommons.e, TermCommons.t(2), List(
-            TypeCheckRuleBind(TermCommons.f, formatFuncType(TermCommons.t(1), TermCommons.t(2))),
-            TypeCheckRuleBind(TermCommons.x, TermCommons.t(1))
-          ))
-      )
-      .addEvaluationRule(
-        EvalRuleBuilder()
-          .setConclusion(EvalRulePart.reflexive(
-            formatRec(TermCommons.f, TermCommons.x, TermCommons.t(1), TermCommons.t(2), TermCommons.e, hideTypes = true)
-          ))
-      )
-      .buildOption
   }
 
   object Rec extends ExprCompanion {
@@ -115,6 +95,29 @@ class LRec extends LLam {
     }
 
     override val aliases: List[String] = List("RecursiveFunction")
+
+    override lazy val rulePreview: Option[RulePreview] = RulePreviewBuilder()
+      .addTypeCheckRule(
+        TypeCheckRuleBuilder()
+          .setConclusion(
+            formatRec(TermCommons.f, TermCommons.x, TermCommons.t(1), TermCommons.t(2), TermCommons.e),
+            formatFuncType(TermCommons.t(1), TermCommons.t(2))
+          )
+          .addAssumption(
+            TermCommons.e, TermCommons.t(2), List(
+              TypeCheckRuleBind(TermCommons.f, formatFuncType(TermCommons.t(1), TermCommons.t(2))),
+              TypeCheckRuleBind(TermCommons.x, TermCommons.t(1))
+            )
+          )
+      )
+      .addEvaluationRule(
+        EvalRuleBuilder()
+          .setConclusion(EvalRulePart.reflexive(
+            formatRec(TermCommons.f, TermCommons.x, TermCommons.t(1), TermCommons.t(2), TermCommons.e, hideTypes = true)
+          )
+          )
+      )
+      .buildOption
   }
 
   // values

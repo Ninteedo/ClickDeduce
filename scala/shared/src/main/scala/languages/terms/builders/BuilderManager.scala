@@ -12,35 +12,11 @@ type BuilderName = (String, String | (String, List[String])) // langName, then e
  * @tparam T
  *   The type of term.
  */
-class BuilderManager[T <: Term] {
-  private var builders: Map[String, BuilderArgs => Option[T]] = Map()
+class BuilderManager[T <: Term, C <: BuilderCompanion[T]] {
+  private var companions: Map[String, C] = Map()
   private var builderNamesList: List[BuilderName] = List()
 
-  /** Add a builder to the manager.
-   * @param name
-   *   The name of the builder.
-   * @param builder
-   *   The builder function.
-   * @param langName
-   *   The name of the language.
-   * @param hidden
-   *   Whether the term should be hidden from the user.
-   * @param aliases
-   *   List of alternate names for the term.
-   */
-  private def addBuilder(
-    name: String,
-    builder: BuilderArgs => Option[T],
-    langName: String,
-    hidden: Boolean = false,
-    aliases: List[String] = Nil
-  ): Unit = {
-    builders += (name -> builder)
-    if (!hidden) {
-      val entry = if (aliases.isEmpty) name else (name, aliases)
-      builderNamesList = builderNamesList :+ (langName, entry)
-    }
-  }
+  protected def getCompanion(name: String): Option[C] = companions.get(name)
 
   /** Get a builder by name.
    * @param name
@@ -48,7 +24,7 @@ class BuilderManager[T <: Term] {
    * @return
    *   Some builder, or None if not found.
    */
-  def getBuilder(name: String): Option[BuilderArgs => Option[T]] = builders.get(name)
+  def getBuilder(name: String): Option[BuilderArgs => Option[T]] = getCompanion(name).map(c => c.create)
 
   /** Build a term by name and arguments.
    * @param name
@@ -71,7 +47,11 @@ class BuilderManager[T <: Term] {
    */
   def builderNames: List[BuilderName] = builderNamesList
 
-  def register(c: BuilderCompanion[T], langName: String): Unit = {
-    addBuilder(c.name, c.create, langName, c.isHidden, c.aliases)
+  def register(c: C, langName: String): Unit = {
+    companions += (c.name -> c)
+    if (!c.isHidden) {
+      val entry = if c.aliases.isEmpty then c.name else (c.name, c.aliases)
+      builderNamesList = builderNamesList :+ (langName, entry)
+    }
   }
 }

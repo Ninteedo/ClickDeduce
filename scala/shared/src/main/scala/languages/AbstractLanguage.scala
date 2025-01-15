@@ -1,11 +1,11 @@
 package languages
 
-import languages.env.{Env, TypeEnv, ValueEnv}
+import languages.previews.RulePreview
 import languages.terms.Term
 import languages.terms.builders.*
 import languages.terms.exprs.Expr
-import languages.terms.types.{Type, TypeContainer, TypePlaceholder, UnknownType}
-import languages.terms.values.{TypeValueContainer, Value}
+import languages.terms.types.{Type, TypeContainer, UnknownType}
+import languages.terms.values.Value
 
 import scala.collection.immutable.List
 
@@ -20,9 +20,9 @@ trait AbstractLanguage {
 
   // <editor-fold desc="Builders">
 
-  private val exprBuilderManager = new BuilderManager[Expr]
-  private val typeBuilderManager = new BuilderManager[Type]
-  private val valueBuilderManager = new BuilderManager[Value]
+  private val exprBuilderManager = new ExprBuilderManager
+  private val typeBuilderManager = new BuilderManager[Type, TypeCompanion]
+  private val valueBuilderManager = new BuilderManager[Value, ValueCompanion]
 
   /** Register a list of terms for a particular language.
     *
@@ -69,6 +69,8 @@ trait AbstractLanguage {
     *   The expression, or throw an [[UnknownTermBuilder]] exception if the builder is not found.
     */
   def buildExpr(name: String, args: BuilderArgs): Expr = exprBuilderManager.build(name, args)
+  
+  def getExprRulePreview(name: String): Option[RulePreview] = exprBuilderManager.getRulePreview(name)
 
   /** Get a type builder by name.
     * @param name

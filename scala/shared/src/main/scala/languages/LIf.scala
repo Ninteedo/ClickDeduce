@@ -24,17 +24,6 @@ class LIf extends LArith {
     override val needsBrackets: Boolean = false
 
     override def toText: ConvertableText = b.toText
-
-    override def getRulePreview: Option[RulePreview] = RulePreviewBuilder()
-      .addTypeCheckRule(
-        TypeCheckRuleBuilder()
-          .setConclusion(MathElement("b"), BoolType().toText)
-      )
-      .addEvaluationRule(
-        EvalRuleBuilder()
-          .setConclusion(EvalRulePart(TermCommons.v, TermCommons.v))
-      )
-      .buildOption
   }
 
   object Bool extends ExprCompanion {
@@ -47,6 +36,17 @@ class LIf extends LArith {
     }
 
     override val aliases: List[String] = List("Boolean", "True", "False")
+
+    override lazy val rulePreview: Option[RulePreview] = RulePreviewBuilder()
+      .addTypeCheckRule(
+        TypeCheckRuleBuilder()
+          .setConclusion(MathElement("b"), BoolType().toText)
+      )
+      .addEvaluationRule(
+        EvalRuleBuilder()
+          .setConclusion(EvalRulePart(TermCommons.v, TermCommons.v))
+      )
+      .buildOption
   }
 
   private def formatEquals(e1: ConvertableText, e2: ConvertableText): ConvertableText =
@@ -82,8 +82,18 @@ class LIf extends LArith {
     }
 
     override def toText: ConvertableText = formatEquals(e1.toTextBracketed, e2.toTextBracketed)
+  }
 
-    override def getRulePreview: Option[RulePreview] = RulePreviewBuilder()
+  object Equal extends ExprCompanion {
+    override def create(args: BuilderArgs): Option[Expr] = args match {
+      case List(e1: Expr, e2: Expr) => Some(Equal(e1, e2))
+      case Nil                      => Some(Equal(defaultExpr, defaultExpr))
+      case _                        => None
+    }
+
+    override val aliases: List[String] = List("==")
+
+    override lazy val rulePreview: Option[RulePreview] = RulePreviewBuilder()
       .addTypeCheckRule(
         TypeCheckRuleBuilder()
           .setConclusion(formatEquals(TermCommons.e(1), TermCommons.e(2)), BoolType().toText)
@@ -101,19 +111,11 @@ class LIf extends LArith {
           .setConclusion(formatEquals(TermCommons.e(1), TermCommons.e(2)), TextElement("false"))
           .addAssumption(TermCommons.e(1), TermCommons.v(1))
           .addAssumption(TermCommons.e(2), TermCommons.v(2))
-          .addAssumption(EvalRulePart(MultiElement(TermCommons.v(1), MathElement.notEquals.spacesAround, TermCommons.v(2))))
+          .addAssumption(
+            EvalRulePart(MultiElement(TermCommons.v(1), MathElement.notEquals.spacesAround, TermCommons.v(2)))
+          )
       )
       .buildOption
-  }
-
-  object Equal extends ExprCompanion {
-    override def create(args: BuilderArgs): Option[Expr] = args match {
-      case List(e1: Expr, e2: Expr) => Some(Equal(e1, e2))
-      case Nil                      => Some(Equal(defaultExpr, defaultExpr))
-      case _                        => None
-    }
-
-    override val aliases: List[String] = List("==")
   }
 
   case class LessThan(e1: Expr, e2: Expr) extends Expr {
@@ -176,8 +178,16 @@ class LIf extends LArith {
 
     override def toText: ConvertableText =
       formatIfThenElse(cond.toTextBracketed, then_expr.toTextBracketed, else_expr.toTextBracketed)
+  }
 
-    override def getRulePreview: Option[RulePreview] = {
+  object IfThenElse extends ExprCompanion {
+    override def create(args: BuilderArgs): Option[Expr] = args match {
+      case List(cond: Expr, then_expr: Expr, else_expr: Expr) => Some(IfThenElse(cond, then_expr, else_expr))
+      case Nil                                                => Some(IfThenElse(defaultExpr, defaultExpr, defaultExpr))
+      case _                                                  => None
+    }
+
+    override lazy val rulePreview: Option[RulePreview] = {
       val exprText = formatIfThenElse(TermCommons.e, TermCommons.e(1), TermCommons.e(2))
       RulePreviewBuilder()
         .addTypeCheckRule(
@@ -200,14 +210,6 @@ class LIf extends LArith {
             .addAssumption(TermCommons.e(2), TermCommons.v(2))
         )
         .buildOption
-    }
-  }
-
-  object IfThenElse extends ExprCompanion {
-    override def create(args: BuilderArgs): Option[Expr] = args match {
-      case List(cond: Expr, then_expr: Expr, else_expr: Expr) => Some(IfThenElse(cond, then_expr, else_expr))
-      case Nil                                                => Some(IfThenElse(defaultExpr, defaultExpr, defaultExpr))
-      case _                                                  => None
     }
   }
 

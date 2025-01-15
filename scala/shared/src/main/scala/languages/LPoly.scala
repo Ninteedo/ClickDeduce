@@ -38,8 +38,20 @@ class LPoly extends LData {
       List((e, env + (v -> TypeValueContainer(TypeVar(v)))))
 
     override def toText: ConvertableText = formatPoly(v.toText, e.toTextBracketed)
+  }
 
-    override def getRulePreview: Option[RulePreview] = RulePreviewBuilder()
+  object Poly extends ExprCompanion {
+    def apply(v: Variable, e: Expr): Poly = Poly(LiteralIdentifierBind(v), e)
+
+    override def create(args: BuilderArgs): Option[Expr] = args match {
+      case List(v: LiteralIdentifierBind, e: Expr) => Some(Poly(v, e))
+      case Nil                                     => Some(Poly(LiteralIdentifierBind.default, defaultExpr))
+      case _                                       => None
+    }
+
+    override val aliases: List[String] = List("Polymorphic", "PolyType")
+
+    override lazy val rulePreview: Option[RulePreview] = RulePreviewBuilder()
       .addTypeCheckRule(
         TypeCheckRuleBuilder()
           .setConclusion(
@@ -54,18 +66,6 @@ class LPoly extends LData {
           .setConclusion(EvalRulePart.reflexive(formatPoly(TermCommons.A, TermCommons.e)))
       )
       .buildOption
-  }
-
-  object Poly extends ExprCompanion {
-    def apply(v: Variable, e: Expr): Poly = Poly(LiteralIdentifierBind(v), e)
-
-    override def create(args: BuilderArgs): Option[Expr] = args match {
-      case List(v: LiteralIdentifierBind, e: Expr) => Some(Poly(v, e))
-      case Nil                                     => Some(Poly(LiteralIdentifierBind.default, defaultExpr))
-      case _                                       => None
-    }
-
-    override val aliases: List[String] = List("Polymorphic", "PolyType")
   }
 
   private def formatApplyType(e: ConvertableText, t: ConvertableText): ConvertableText =
@@ -83,8 +83,16 @@ class LPoly extends LData {
     }
 
     override def toText: ConvertableText = formatApplyType(e.toTextBracketed, typ.toText)
+  }
 
-    override def getRulePreview: Option[RulePreview] = RulePreviewBuilder()
+  object ApplyType extends ExprCompanion {
+    override def create(args: BuilderArgs): Option[Expr] = args match {
+      case List(e: Expr, t: Type) => Some(ApplyType(e, t))
+      case Nil                    => Some(ApplyType(defaultExpr, defaultType))
+      case _                      => None
+    }
+
+    override lazy val rulePreview: Option[RulePreview] = RulePreviewBuilder()
       .addTypeCheckRule(
         TypeCheckRuleBuilder()
           .setConclusion(
@@ -100,14 +108,6 @@ class LPoly extends LData {
           .addAssumption(MultiElement(TermCommons.e(0), EvalSubst(TermCommons.t, TermCommons.A)), TermCommons.v)
       )
       .buildOption
-  }
-
-  object ApplyType extends ExprCompanion {
-    override def create(args: BuilderArgs): Option[Expr] = args match {
-      case List(e: Expr, t: Type) => Some(ApplyType(e, t))
-      case Nil                    => Some(ApplyType(defaultExpr, defaultType))
-      case _                      => None
-    }
   }
 
   // types

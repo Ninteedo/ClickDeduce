@@ -1,7 +1,6 @@
 package languages.terms.exprs
 
 import languages.env.{Env, TypeEnv, ValueEnv}
-import languages.previews.RulePreview
 import languages.terms.Term
 import languages.terms.errors.{EvalException, TypeException}
 import languages.terms.types.Type
@@ -104,5 +103,4 @@ abstract class Expr extends Term {
    */
   protected def typeCheckInner(tEnv: TypeEnv): Type
 
-  def getRulePreview: Option[RulePreview] = None
 }

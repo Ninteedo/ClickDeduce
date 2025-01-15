@@ -30,17 +30,6 @@ class LList extends LPoly {
     override def toText: ConvertableText = nilSymbol
 
     override val needsBrackets: Boolean = false
-
-    override def getRulePreview: Option[RulePreview] = RulePreviewBuilder()
-      .addTypeCheckRule(
-        TypeCheckRuleBuilder()
-          .setConclusion(TypeCheckRulePart(nilSymbol, listTypeText(Symbols.tau)))
-      )
-      .addEvaluationRule(
-        EvalRuleBuilder()
-          .setConclusion(EvalRulePart.reflexive(nilSymbol))
-      )
-      .buildOption
   }
 
   object ListNil extends ExprCompanion {
@@ -51,6 +40,17 @@ class LList extends LPoly {
     }
 
     override val aliases: List[String] = List("ListNil")
+
+    override lazy val rulePreview: Option[RulePreview] = RulePreviewBuilder()
+      .addTypeCheckRule(
+        TypeCheckRuleBuilder()
+          .setConclusion(TypeCheckRulePart(nilSymbol, listTypeText(Symbols.tau)))
+      )
+      .addEvaluationRule(
+        EvalRuleBuilder()
+          .setConclusion(EvalRulePart.reflexive(nilSymbol))
+      )
+      .buildOption
   }
 
   private def formatCons(head: ConvertableText, tail: ConvertableText): ConvertableText =
@@ -71,20 +71,6 @@ class LList extends LPoly {
     }
 
     override def toText: ConvertableText = formatCons(head.toTextBracketed, tail.toTextBracketed)
-
-    override def getRulePreview: Option[RulePreview] = RulePreviewBuilder()
-      .addTypeCheckRule(TypeCheckRuleBuilder()
-        .setConclusion(TypeCheckRulePart(
-          formatCons(TermCommons.e(1), TermCommons.e(2)),
-          listTypeText(Symbols.tau)
-        ))
-        .addAssumption(TypeCheckRulePart(TermCommons.e(1), Symbols.tau))
-        .addAssumption(TypeCheckRulePart(TermCommons.e(2), listTypeText(Symbols.tau)))
-      )
-      .addEvaluationRule(EvalRuleBuilder()
-        .setConclusion(EvalRulePart.reflexive(formatCons(TermCommons.v(1), TermCommons.v(2))))
-      )
-      .buildOption
   }
 
   object Cons extends ExprCompanion {
@@ -95,6 +81,21 @@ class LList extends LPoly {
     }
 
     override val aliases: List[String] = List("ListCons", "::")
+
+    override lazy val rulePreview: Option[RulePreview] = RulePreviewBuilder()
+      .addTypeCheckRule(TypeCheckRuleBuilder()
+        .setConclusion(TypeCheckRulePart(
+          formatCons(TermCommons.e(1), TermCommons.e(2)),
+          listTypeText(Symbols.tau)
+        )
+        )
+        .addAssumption(TypeCheckRulePart(TermCommons.e(1), Symbols.tau))
+        .addAssumption(TypeCheckRulePart(TermCommons.e(2), listTypeText(Symbols.tau)))
+      )
+      .addEvaluationRule(EvalRuleBuilder()
+        .setConclusion(EvalRulePart.reflexive(formatCons(TermCommons.v(1), TermCommons.v(2))))
+      )
+      .buildOption
   }
 
   private def formatCaseList(list: ConvertableText, nilCase: ConvertableText, headVar: ConvertableText, tailVar: ConvertableText, consCase: ConvertableText): ConvertableText =
@@ -185,49 +186,6 @@ class LList extends LPoly {
     )
 
     override def toText: ConvertableText = formatCaseList(list.toTextBracketed, nilCase.toTextBracketed, headVar.toText, tailVar.toText, consCase.toTextBracketed)
-
-    override def getRulePreview: Option[RulePreview] = RulePreviewBuilder()
-      .addTypeCheckRule(
-        TypeCheckRuleBuilder()
-          .setConclusion(TypeCheckRulePart(
-            formatCaseList(TermCommons.e, TermCommons.e(1), TermCommons.x, TermCommons.y, TermCommons.e(2)),
-            TermCommons.t(2)
-          ))
-          .addAssumption(TypeCheckRulePart(TermCommons.e, listTypeText(TermCommons.t(1))))
-          .addAssumption(TypeCheckRulePart(TermCommons.e(1), TermCommons.t(2)))
-          .addAssumption(
-            TypeCheckRulePart(TermCommons.e(2), TermCommons.t(2), List(
-              TypeCheckRuleBind(TermCommons.x, TermCommons.t(1)),
-              TypeCheckRuleBind(TermCommons.y, listTypeText(TermCommons.t(1)))
-            )),
-          )
-      )
-      .addEvaluationRule(
-        EvalRuleBuilder()
-          .setConclusion(EvalRulePart(
-            formatCaseList(TermCommons.e, TermCommons.e(1), TermCommons.x, TermCommons.y, TermCommons.e(2)),
-            TermCommons.v(1)
-          ))
-          .addAssumption(EvalRulePart(TermCommons.e, nilSymbol))
-          .addAssumption(EvalRulePart(TermCommons.e(1), TermCommons.v(1)))
-      )
-      .addEvaluationRule(
-        EvalRuleBuilder()
-          .setConclusion(EvalRulePart(
-            formatCaseList(TermCommons.e, TermCommons.e(1), TermCommons.x, TermCommons.y, TermCommons.e(2)),
-            TermCommons.v(2)
-          ))
-          .addAssumption(EvalRulePart(TermCommons.e, formatCons(TermCommons.v(1), TermCommons.v(2))))
-          .addAssumption(EvalRulePart(
-            EvalMultiSubst(
-              TermCommons.e(2),
-              EvalSubst(TermCommons.v(1), TermCommons.x),
-              EvalSubst(TermCommons.v(2), TermCommons.y)
-            ),
-            TermCommons.v(2)
-          ))
-      )
-      .buildOption
   }
 
   object CaseList extends ExprCompanion {
@@ -248,6 +206,55 @@ class LList extends LPoly {
     }
 
     override val aliases: List[String] = List("ListCase")
+
+    override lazy val rulePreview: Option[RulePreview] = RulePreviewBuilder()
+      .addTypeCheckRule(
+        TypeCheckRuleBuilder()
+          .setConclusion(TypeCheckRulePart(
+            formatCaseList(TermCommons.e, TermCommons.e(1), TermCommons.x, TermCommons.y, TermCommons.e(2)),
+            TermCommons.t(2)
+          )
+          )
+          .addAssumption(TypeCheckRulePart(TermCommons.e, listTypeText(TermCommons.t(1))))
+          .addAssumption(TypeCheckRulePart(TermCommons.e(1), TermCommons.t(2)))
+          .addAssumption(
+            TypeCheckRulePart(
+              TermCommons.e(2), TermCommons.t(2), List(
+                TypeCheckRuleBind(TermCommons.x, TermCommons.t(1)),
+                TypeCheckRuleBind(TermCommons.y, listTypeText(TermCommons.t(1)))
+              )
+            ),
+          )
+      )
+      .addEvaluationRule(
+        EvalRuleBuilder()
+          .setConclusion(EvalRulePart(
+            formatCaseList(TermCommons.e, TermCommons.e(1), TermCommons.x, TermCommons.y, TermCommons.e(2)),
+            TermCommons.v(1)
+          )
+          )
+          .addAssumption(EvalRulePart(TermCommons.e, nilSymbol))
+          .addAssumption(EvalRulePart(TermCommons.e(1), TermCommons.v(1)))
+      )
+      .addEvaluationRule(
+        EvalRuleBuilder()
+          .setConclusion(EvalRulePart(
+            formatCaseList(TermCommons.e, TermCommons.e(1), TermCommons.x, TermCommons.y, TermCommons.e(2)),
+            TermCommons.v(2)
+          )
+          )
+          .addAssumption(EvalRulePart(TermCommons.e, formatCons(TermCommons.v(1), TermCommons.v(2))))
+          .addAssumption(EvalRulePart(
+            EvalMultiSubst(
+              TermCommons.e(2),
+              EvalSubst(TermCommons.v(1), TermCommons.x),
+              EvalSubst(TermCommons.v(2), TermCommons.y)
+            ),
+            TermCommons.v(2)
+          )
+          )
+      )
+      .buildOption
   }
 
   // types
