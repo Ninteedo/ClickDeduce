@@ -5,8 +5,8 @@ import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
 abstract class InferenceRulePreview {
-  val assumptions: Seq[InferenceRulePart]
-  val conclusion: InferenceRulePart
+  val assumptions: Seq[RulePart]
+  val conclusion: RulePart
 
   protected val divClass: String
 

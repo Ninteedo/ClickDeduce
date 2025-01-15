@@ -3,7 +3,7 @@ package languages.previews
 import convertors.text.ConvertableText
 import scalatags.Text.TypedTag
 
-trait InferenceRulePart extends ConvertableText {
+trait RulePart extends ConvertableText {
   def toText: ConvertableText
 
   override def asPlainText: String = toText.asPlainText

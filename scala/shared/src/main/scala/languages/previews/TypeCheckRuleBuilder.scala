@@ -3,10 +3,10 @@ package languages.previews
 import convertors.text.ConvertableText
 
 class TypeCheckRuleBuilder {
-  private var assumptions: List[InferenceRulePart] = Nil
-  private var conclusion: Option[InferenceRulePart] = None
+  private var assumptions: List[RulePart] = Nil
+  private var conclusion: Option[RulePart] = None
 
-  def addAssumption(assumption: InferenceRulePart): TypeCheckRuleBuilder = {
+  def addAssumption(assumption: RulePart): TypeCheckRuleBuilder = {
     assumptions = assumptions :+ assumption
     this
   }
@@ -19,7 +19,7 @@ class TypeCheckRuleBuilder {
     addAssumption(TypeCheckRulePart(l, r, binds))
   }
 
-  def setConclusion(conclusion: InferenceRulePart): TypeCheckRuleBuilder = {
+  def setConclusion(conclusion: RulePart): TypeCheckRuleBuilder = {
     this.conclusion = Some(conclusion)
     this
   }

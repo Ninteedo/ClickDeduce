@@ -3,10 +3,10 @@ package languages.previews
 import convertors.text.ConvertableText
 
 class EvalRuleBuilder {
-  private var assumptions: List[InferenceRulePart] = Nil
-  private var conclusion: Option[InferenceRulePart] = None
+  private var assumptions: List[RulePart] = Nil
+  private var conclusion: Option[RulePart] = None
 
-  def addAssumption(assumption: InferenceRulePart): EvalRuleBuilder = {
+  def addAssumption(assumption: RulePart): EvalRuleBuilder = {
     assumptions = assumptions :+ assumption
     this
   }
@@ -15,7 +15,7 @@ class EvalRuleBuilder {
     addAssumption(EvalRulePart(l, r))
   }
 
-  def setConclusion(conclusion: InferenceRulePart): EvalRuleBuilder = {
+  def setConclusion(conclusion: RulePart): EvalRuleBuilder = {
     this.conclusion = Some(conclusion)
     this
   }

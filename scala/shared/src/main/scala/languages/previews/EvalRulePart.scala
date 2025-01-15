@@ -2,7 +2,7 @@ package languages.previews
 
 import convertors.text.*
 
-case class EvalRulePart(t: ConvertableText) extends InferenceRulePart {
+case class EvalRulePart(t: ConvertableText) extends RulePart {
   override def toText: ConvertableText = t
 }
 

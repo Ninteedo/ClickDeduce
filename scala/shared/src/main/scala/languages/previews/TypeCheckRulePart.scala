@@ -3,7 +3,7 @@ package languages.previews
 import convertors.text.*
 import languages.terms.types.Type
 
-case class TypeCheckRulePart(t: ConvertableText) extends InferenceRulePart {
+case class TypeCheckRulePart(t: ConvertableText) extends RulePart {
   override def toText: ConvertableText = t
 }
 
@@ -14,9 +14,8 @@ object TypeCheckRulePart {
     TypeCheckRulePart(
       MultiElement(
         Symbols.gamma,
-        if binds.isEmpty
-        then NullElement()
-        else MultiElement(MathElement.comma.spaceAfter, ListElement(binds, NullElement(), NullElement())),
+        if binds.isEmpty then NullElement()
+        else MultiElement(MathElement.comma.spaceAfter, ListElement.noBrackets(binds)),
         Symbols.turnstile.spacesAround,
         l,
         MathElement.colon.spaceAfter,
