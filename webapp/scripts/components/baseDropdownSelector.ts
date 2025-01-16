@@ -189,7 +189,7 @@ export class BaseDropdownSelector implements AbstractTreeInput {
         return this.getVisibleOptions().findIndex((option) => option.isHighlighted());
     }
 
-    private getSelectedOption(): DropdownOption | undefined {
+    protected getSelectedOption(): DropdownOption | undefined {
         return this.getVisibleOptions().find(option => option.isHighlighted());
     }
 

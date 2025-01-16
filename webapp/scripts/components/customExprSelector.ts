@@ -73,12 +73,14 @@ export class CustomExprSelector extends BaseDropdownSelector {
     }
 
     protected override enterPressed() {
-        const parsedExpr = parseExprText(getCurrentLanguage(), this.input.value);
-        if (parsedExpr) {
-            runAction("ParseExprAction", this.getTreePath(), this.input.value);
-        } else {
-            super.enterPressed();
+        if (!this.getSelectedOption()) {
+            const parsedExpr = parseExprText(getCurrentLanguage(), this.input.value);
+            if (parsedExpr) {
+                runAction("ParseExprAction", this.getTreePath(), this.input.value);
+                return;
+            }
         }
+        super.enterPressed();
     }
 
     protected override postSelectOption(value: string) {
