@@ -14,10 +14,7 @@ export default class TreeHistoryManager {
     }
 
     public addRecord(record: TreeHistoryRecord): void {
-        if (this.records.length > 0 &&
-            record.html === this.records[this.recordIndex].html &&
-            record.nodeString === this.records[this.recordIndex].nodeString
-        ) {
+        if (this.records.length > 0 && record === this.records[this.recordIndex]) {
             return;
         }
 

@@ -72,13 +72,6 @@ export class CustomExprSelector extends BaseDropdownSelector {
         }
     }
 
-    protected override updateDropdown() {
-        super.updateDropdown();
-        if (!this.isTypeSelector()) {
-            console.log(parseExprText(getCurrentLanguage(), this.input.value));
-        }
-    }
-
     protected override enterPressed() {
         const parsedExpr = parseExprText(getCurrentLanguage(), this.input.value);
         if (parsedExpr) {

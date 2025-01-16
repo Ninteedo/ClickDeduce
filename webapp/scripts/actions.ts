@@ -145,6 +145,10 @@ export function runAction(actionName: string, treePath: string, extraArgs: any[]
         const [newNodeString, newHtml] = postProcessActionNew(langName, modeName, actionName, lastNodeString, treePath, extraArgsClean);
         console.log(newNodeString);
         updateTree(newHtml, newNodeString, modeName, langName, true);
+
+        if (!document.activeElement || document.activeElement.tagName === "BODY") {
+            setFocusElement(treePath);
+        }
     } catch (e) {
         displayError(e);
         reloadCurrentTree();
