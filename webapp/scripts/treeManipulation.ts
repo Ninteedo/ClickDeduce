@@ -299,6 +299,7 @@ export function enableInputs(): void {
 export function loadTreeFromString(nodeString: string): void {
     lastNodeString = nodeString;
     runAction("IdentityAction", "");
+    zoomToFit();
 }
 
 export function getCurrentLanguage(): string {

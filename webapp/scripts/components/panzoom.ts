@@ -6,7 +6,7 @@ let panzoomInstance: PanZoom;
 /**
  * Zooms the tree to fit the container.
  */
-export async function zoomToFit(): Promise<void> {
+export function zoomToFit(): void {
     const container: HTMLElement = getTreeContainer();
     const rootSubtree: HTMLDivElement = getRootSubtree();
 
