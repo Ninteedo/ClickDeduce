@@ -1,5 +1,5 @@
 import panzoom, {PanZoom} from "panzoom";
-import {getTreeContainer} from "../globals/elements";
+import {getRootSubtree, getTree, getTreeContainer} from "../globals/elements";
 
 let panzoomInstance: PanZoom;
 
@@ -8,7 +8,7 @@ let panzoomInstance: PanZoom;
  */
 export async function zoomToFit(): Promise<void> {
     const container: HTMLElement = getTreeContainer();
-    const rootSubtree: HTMLDivElement = document.querySelector('.subtree[data-tree-path=""]') as HTMLDivElement;
+    const rootSubtree: HTMLDivElement = getRootSubtree();
 
     const scaleWidth = container.clientWidth / rootSubtree.clientWidth;
 
@@ -54,5 +54,17 @@ function getAutoZoomCheckbox(): HTMLInputElement {
 }
 
 export function centerTree(): void {
-    panzoomInstance.moveTo(0, 0);
+    const tree: HTMLDivElement = getTree();
+    const container: HTMLElement = getTreeContainer();
+
+    const treeWidth = tree.clientWidth;
+    // const treeHeight = tree.clientHeight;
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
+
+    const x = (containerWidth - treeWidth) / 2;
+    const y = containerHeight / 3;
+
+    panzoomInstance.zoomAbs(0, 0, 1);
+    panzoomInstance.moveTo(x, y);
 }

@@ -1,9 +1,8 @@
 import {handleTabPressed, setNextFocusElement} from "../interface";
 import {handleLiteralChanged} from "../actions";
-import {getTree} from "../treeManipulation";
 import {BaseDropdownSelector} from "./baseDropdownSelector";
 import {AbstractTreeInput} from "./abstractTreeInput";
-import {getTreePathOfElement} from "../globals/elements";
+import {getTree, getTreePathOfElement} from "../globals/elements";
 
 export class LiteralInput implements AbstractTreeInput {
     protected readonly input: HTMLInputElement;

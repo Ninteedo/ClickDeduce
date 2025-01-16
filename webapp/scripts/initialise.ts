@@ -9,7 +9,7 @@ import {
     resetCopyCache,
     startNodeBlank
 } from "./actions";
-import {getTree, redo, resetTreeManipulation, undo, updateTextInputWidth} from "./treeManipulation";
+import {redo, resetTreeManipulation, undo, updateTextInputWidth} from "./treeManipulation";
 import {handleTabPressed, resetInterfaceGlobals, toggleControls} from "./interface";
 import {loadImages} from "./imageLoading";
 import {setupExampleSelector} from "./components/customExprSelector";
@@ -26,6 +26,7 @@ import {
     getRedoButton,
     getSaveButton,
     getToggleControlsButton,
+    getTree,
     getUndoButton,
     getZoomToFitButton
 } from "./globals/elements";

@@ -1,8 +1,8 @@
 import {hasClassOrParentHasClass} from "../utils";
-import {getCurrentLanguage, getTree} from "../treeManipulation";
+import {getCurrentLanguage} from "../treeManipulation";
 import {handleExprSelectorChoice, runAction} from "../actions";
 import {BaseDropdownSelector, DropdownOption} from "./baseDropdownSelector";
-import {getTreePathOfElement} from "../globals/elements";
+import {getTree, getTreePathOfElement} from "../globals/elements";
 import {getRulePreview, parseExprText} from "../serverRequest";
 
 const UP_ARROW = '&#9650;';

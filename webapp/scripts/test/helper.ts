@@ -21,12 +21,6 @@ export function loadIndexHtmlTemplate(): string {
     return loadHtmlTemplate('index');
 }
 
-export function getTree(): HTMLElement {
-    const tree = document.getElementById('tree');
-    if (tree === null) throw new Error('Could not find tree element');
-    return tree;
-}
-
 export function getStartNodeButton() {
     return document.getElementById('start-node-button');
 }

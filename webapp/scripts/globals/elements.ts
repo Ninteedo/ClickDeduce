@@ -16,6 +16,18 @@ export function getTreeContainer(): HTMLElement {
     return container;
 }
 
+export function getTree(): HTMLDivElement {
+    const foundTree = document.getElementById('tree');
+    if (!(foundTree instanceof HTMLDivElement)) throw new Error('Could not find tree element');
+    return foundTree;
+}
+
+export function getRootSubtree(): HTMLDivElement {
+    const rootSubtree = document.querySelector('.subtree[data-tree-path=""]');
+    if (!rootSubtree) throw new Error('Root subtree not found');
+    return rootSubtree as HTMLDivElement;
+}
+
 export function getPasteButton(): HTMLButtonElement {
     const pasteButton = document.getElementById('paste-button') as HTMLButtonElement;
     if (!pasteButton) throw new Error('Paste button not found');

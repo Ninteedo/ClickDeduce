@@ -6,7 +6,6 @@ import {
     doLiteralEdit,
     getExprDropdownOptions,
     getLeftmostExprDropdown,
-    getTree,
     loadIndexHtmlTemplate,
     pressStartNodeButton,
     selectExprOption,
@@ -14,7 +13,7 @@ import {
 } from "./helper";
 import {CustomExprSelector} from "../components/customExprSelector";
 import {getExprSelectors} from "../treeManipulation";
-import {getCopyButton, getLangSelector, getPasteButton, getUndoButton} from "../globals/elements";
+import {getCopyButton, getLangSelector, getPasteButton, getTree, getUndoButton} from "../globals/elements";
 
 const indexHtml = loadIndexHtmlTemplate();
 

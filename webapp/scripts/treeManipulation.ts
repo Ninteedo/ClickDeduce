@@ -9,7 +9,7 @@ import {setupFileDragAndDrop, setupFileInput} from "./saveLoad";
 import {AbstractTreeInput} from "./components/abstractTreeInput";
 import {markHasUsedLangSelector} from "./attention";
 import TreeHistoryManager from "./components/TreeHistoryManager";
-import {getRedoButton, getUndoButton} from "./globals/elements";
+import {getRedoButton, getTree, getUndoButton} from "./globals/elements";
 import {isAutoZoomEnabled, zoomToFit} from "./components/panzoom";
 import {getContextMenuSelectedElement} from "./components/contextMenu";
 
@@ -299,15 +299,6 @@ export function enableInputs(): void {
 export function loadTreeFromString(nodeString: string): void {
     lastNodeString = nodeString;
     runAction("IdentityAction", "");
-}
-
-export function getTree(): HTMLDivElement {
-    const foundTree = document.getElementById('tree');
-    if (foundTree instanceof HTMLDivElement) {
-        return foundTree;
-    } else {
-        throw new Error('Could not find tree element');
-    }
 }
 
 export function getCurrentLanguage(): string {
