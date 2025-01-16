@@ -8,6 +8,7 @@ import languages.terms.types.{Type, TypeContainer, UnknownType}
 import languages.terms.values.Value
 
 import scala.collection.immutable.List
+import scala.util.parsing.combinator.JavaTokenParsers
 
 /** Base trait, defining the term structure of all languages.
   *
@@ -72,7 +73,16 @@ trait AbstractLanguage {
 
   def getExprRulePreview(name: String): Option[RulePreview] = exprBuilderManager.getRulePreview(name)
 
-  def parseExpr(exprText: String): Option[Expr]
+  protected trait ExprParser extends JavaTokenParsers {
+    def expr: Parser[Expr]
+  }
+
+  protected val exprParser: ExprParser
+
+  def parseExpr(exprText: String): Option[Expr] = exprParser.parseAll(exprParser.expr, exprText) match {
+    case exprParser.Success(result, _) => Some(result)
+    case _                             => None
+  }
 
   /** Get a type builder by name.
     * @param name

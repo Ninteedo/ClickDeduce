@@ -330,13 +330,7 @@ class LIf extends LArith {
     override def expr: Parser[Expr] = level4
   }
 
-  override def parseExpr(exprText: String): Option[Expr] = {
-    val parser = new LIfParser
-    parser.parseAll(parser.expr, exprText) match {
-      case parser.Success(result, _) => Some(result)
-      case _ => None
-    }
-  }
+  override protected val exprParser: ExprParser = new LIfParser
 }
 
 object LIf extends LIf {}

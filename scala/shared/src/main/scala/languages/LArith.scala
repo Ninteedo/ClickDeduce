@@ -14,7 +14,6 @@ import languages.terms.types.Type
 import languages.terms.values.Value
 
 import scala.annotation.targetName
-import scala.util.parsing.combinator.JavaTokenParsers
 
 class LArith extends ClickDeduceLanguage {
   registerTerms("LArith", List(Num, Plus, Times, IntType, NumV))
@@ -300,7 +299,7 @@ class LArith extends ClickDeduceLanguage {
     }
   }
 
-  protected class LArithParser extends JavaTokenParsers {
+  protected class LArithParser extends ExprParser {
     protected def num: Parser[Num] = wholeNumber ^^ (n => Num(LiteralInt(BigInt(n))))
 
     protected def chainl1(p: Parser[Expr], op: Parser[(Expr, Expr) => Expr]): Parser[Expr] = {
@@ -316,16 +315,10 @@ class LArith extends ClickDeduceLanguage {
 
     protected def level5: Parser[Expr] = chainl1(level6, "+" ^^^ {Plus(_, _)})
 
-    def expr: Parser[Expr] = level5
+    override def expr: Parser[Expr] = level5
   }
 
-  override def parseExpr(exprText: String): Option[Expr] = {
-    val LArithParser = new LArithParser
-    LArithParser.parseAll(LArithParser.expr, exprText) match {
-      case LArithParser.Success(result, _) => Some(result)
-      case _                               => None
-    }
-  }
+  override protected val exprParser: ExprParser = new LArithParser
 }
 
 object LArith extends LArith {}

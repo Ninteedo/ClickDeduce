@@ -333,6 +333,33 @@ class LLam extends LLet {
       )
     }
   }
+
+  protected class LLamParser extends LLetParser {
+    protected def lambda: Parser[Lambda] =
+      ("\\" ~> ident ~ (":" ~> typ).? ~ "." ~ expr ^^ {
+        case v ~ Some(t) ~ _ ~ e => Lambda(v, t, e)
+        case v ~ None ~ _ ~ e    => Lambda(v, defaultType, e)
+      }) |
+        ("lambda" ~> ident ~ (":" ~> typ).? ~ "." ~ expr ^^ {
+          case v ~ Some(t) ~ _ ~ e => Lambda(v, t, e)
+          case v ~ None ~ _ ~ e    => Lambda(v, defaultType, e)
+        })
+
+    protected def typ: Parser[Type] =
+      "(?i)int".r ^^ {_ => IntType()} |
+        "(?i)bool".r ^^ {_ => BoolType()} |
+        "(" ~> typ <~ ")"
+
+    protected def applyExpr: Parser[Expr] = rep1(super.expr) ^^ {
+      case first :: rest => rest.foldLeft(first)(Apply.apply)
+    }
+
+    override def primitive: Parser[Expr] = lambda | super.primitive
+
+    override def expr: Parser[Expr] = applyExpr
+  }
+
+  override protected val exprParser: ExprParser = new LLamParser
 }
 
 object LLam extends LLam {}

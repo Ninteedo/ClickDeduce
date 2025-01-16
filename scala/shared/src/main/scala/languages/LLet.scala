@@ -251,6 +251,22 @@ class LLet extends LIf {
       )
     }
   }
+
+  protected class LLetParser extends LIfParser {
+    protected val keywords: Set[String] = Set(
+      "let", "in", "if", "then", "else", "true", "false"
+    )
+
+    protected def varP: Parser[Expr] = ident.filter(!keywords.contains(_)) ^^ {Var(_)}
+
+    protected def let: Parser[Expr] = "let" ~> ident ~ ("=" ~> expr) ~ ("in" ~> expr) ^^ {
+      case v ~ assign ~ bound => Let(v, assign, bound)
+    }
+
+    override protected def primitive: Parser[Expr] = super.primitive | let | varP
+  }
+
+  override protected val exprParser: ExprParser = new LLetParser
 }
 
 object LLet extends LLet {}
