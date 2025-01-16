@@ -1,9 +1,9 @@
-import {hasClassOrParentHasClass} from "../utils";
-import {getCurrentLanguage} from "../treeManipulation";
+import {getSelectedMode, hasClassOrParentHasClass} from "../utils";
+import {getCurrentLanguage, getCurrentNodeString} from "../treeManipulation";
 import {handleExprSelectorChoice, runAction} from "../actions";
 import {BaseDropdownSelector, DropdownOption} from "./baseDropdownSelector";
 import {getTree, getTreePathOfElement} from "../globals/elements";
-import {getRulePreview, parseExprText} from "../serverRequest";
+import {getExprParsePreviewHtml, getRulePreview, parseExprText} from "../serverRequest";
 
 const UP_ARROW = '&#9650;';
 const DOWN_ARROW = '&#9660;';
@@ -14,6 +14,9 @@ export class CustomExprSelector extends BaseDropdownSelector {
 
     protected rulePreview: HTMLDivElement | undefined = undefined;
     protected readonly RULE_PREVIEW_CLASS = 'rule-preview';
+
+    protected parsePreview: HTMLDivElement | undefined = undefined;
+    protected readonly PARSE_PREVIEW_CLASS = 'parse-preview';
 
     constructor(container: HTMLDivElement) {
         super(container, '.expr-selector-input', '.expr-selector-dropdown', 'ul > li');
@@ -69,6 +72,45 @@ export class CustomExprSelector extends BaseDropdownSelector {
     hideRulePreview(): void {
         if (this.rulePreview !== undefined) {
             this.rulePreview.classList.remove(this.DROPDOWN_VISIBLE_CLASS);
+        }
+    }
+
+    protected override updateDropdown() {
+        super.updateDropdown();
+
+        const parseHtml = getExprParsePreviewHtml(
+            getCurrentLanguage(),
+            this.input.value,
+            getSelectedMode(),
+            getCurrentNodeString()!,
+            this.getTreePath()
+        );
+        if (parseHtml) {
+            this.showParsePreview(parseHtml);
+        } else {
+            this.hideParsePreview();
+        }
+    }
+
+    protected override handleBlur(): void {
+        super.handleBlur();
+        this.hideRulePreview();
+        this.hideParsePreview();
+    }
+
+    showParsePreview(html: string): void {
+        if (this.parsePreview === undefined) {
+            this.parsePreview = document.createElement('div');
+            this.parsePreview.classList.add(this.PARSE_PREVIEW_CLASS);
+            this.container.appendChild(this.parsePreview);
+        }
+        this.parsePreview.innerHTML = html;
+        this.parsePreview.classList.add(this.DROPDOWN_VISIBLE_CLASS);
+    }
+
+    hideParsePreview(): void {
+        if (this.parsePreview !== undefined) {
+            this.parsePreview.classList.remove(this.DROPDOWN_VISIBLE_CLASS);
         }
     }
 

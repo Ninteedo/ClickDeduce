@@ -22,6 +22,7 @@ abstract class OuterNode extends Node {
       } else value.treePath :+ index
     case None => Nil
   }
+
   /** The arguments of this node.
     *
     * This is different from the children of the node, as the children are the visible outer nodes, while the args are

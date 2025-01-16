@@ -1,10 +1,10 @@
 package convertors
 
+import languages.ClickDeduceLanguage
 import languages.env.{Env, TypeEnv, ValueEnv}
 import languages.terms.Term
 import languages.terms.types.Type
 import languages.terms.values.Value
-import languages.{AbstractNodeLanguage, ClickDeduceLanguage}
 import nodes.*
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*

@@ -309,3 +309,7 @@ export function getCurrentLanguage(): string {
 export function setCurrentLanguage(lang: string): void {
     langSelector.value = lang;
 }
+
+export function getCurrentNodeString(): string | null {
+    return lastNodeString;
+}

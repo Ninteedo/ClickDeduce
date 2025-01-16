@@ -3,9 +3,10 @@ package app
 import actions.exceptions.ActionInvocationException
 import convertors.{DisplayMode, HTMLConvertor, LaTeXConvertor}
 import languages.*
+import languages.env.{TypeEnv, ValueEnv}
 import languages.terms.blanks.BlankExprDropDown
 import nodes.exceptions.NodeStringParseException
-import nodes.{ExprChoiceNode, ExprNode, Node, OuterNode}
+import nodes.*
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
@@ -150,10 +151,39 @@ object ScalaJsEntry {
 
   @JSExportTopLevel("parseExpr")
   def parseExpr(langName: String, exprText: String): String = {
-    val lang = getLanguage(langName)
-    lang.parseExpr(exprText) match {
+    getLanguage(langName).parseExpr(exprText) match {
       case Some(expr) => expr.toString
       case None => ""
+    }
+  }
+
+  @JSExportTopLevel("exprParsePreviewHtml")
+  def exprParsePreviewHtml(langName: String, exprText: String, modeName: String, nodeString: String, treePathString: String): String = {
+    val lang = getLanguage(langName)
+    val default = ""
+    lang.parseExpr(exprText) match {
+      case Some(expr) =>
+        Node.read(lang, nodeString) match {
+          case Some(node: ExprNodeParent) =>
+            val treePath = Node.readPathString(treePathString)
+            node.findChild(treePath) match {
+              case Some(child: ExprNodeParent) =>
+                val mode = DisplayMode.fromString(modeName)
+                val env = child.getEnv(mode)
+                val newChild = ExprNode.fromExpr(lang, expr)
+
+                newChild.overrideEnv(env, mode)
+                if (mode == DisplayMode.Edit || mode == DisplayMode.Evaluation) {
+                  newChild.overrideEnv(TypeEnv.fromValueEnv(env.asInstanceOf[ValueEnv]), DisplayMode.TypeCheck)
+                }
+
+                println(newChild.getEnv(mode))
+                HTMLConvertor(lang, mode).convert(newChild)
+              case _ => default
+            }
+          case _ => default
+        }
+      case _ => default
     }
   }
 }

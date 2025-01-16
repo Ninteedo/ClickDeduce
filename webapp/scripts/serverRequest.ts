@@ -1,5 +1,6 @@
 import {
     checkTask,
+    exprParsePreviewHtml,
     getExprRulePreview,
     getLangSelector,
     getTasks,
@@ -85,4 +86,14 @@ export function getRulePreview(langName: string, exprName: string): string {
 
 export function parseExprText(langName: string, exprText: string): string {
     return parseExpr(langName, exprText);
+}
+
+export function getExprParsePreviewHtml(
+    langName: string,
+    exprText: string,
+    modeName: string,
+    nodeString: string,
+    treePathString: string
+): string {
+    return exprParsePreviewHtml(langName, exprText, modeName, nodeString, treePathString);
 }

@@ -16,21 +16,21 @@ import nodes.exceptions.{DepthLimitExceededException, NodeParentWrongTypeExcepti
   * Has a depth limit to prevent infinite recursion.
   */
 abstract class ExprNodeParent(lang: AbstractNodeLanguage) extends OuterNode {
-  lazy val getEditValueResult: Value = {
+  def getEditValueResult: Value = {
     if (willDepthLimitBeExceeded()) StackOverflowErrorValue()
     else getExpr.eval(getEditEnv)
   }
   /** Evaluation result of the expression represented by this node.
-    */
-  lazy val getValue: Value = getExpr.eval(getEvalEnv)
+   */
+  def getValue: Value = getExpr.eval(getEvalEnv)
   /** Type-checking result of the expression represented by this node.
-    */
-  lazy val getType: Type = getExpr.typeCheck(getTypeEnv)
-  lazy val getEditEnv: ValueEnv = getCorrectEnv(_.getChildrenBase, _.getEditEnv)
-  lazy val getEvalEnv: ValueEnv = getCorrectEnv(_.getChildrenEval, _.getEvalEnv)
-  lazy val getTypeEnv: TypeEnv = getCorrectEnv(_.getChildrenTypeCheck, _.getTypeEnv)
+   */
+  def getType: Type = getExpr.typeCheck(getTypeEnv)
+  def getEditEnv: ValueEnv = editEnvOverride.getOrElse(getCorrectEnv(_.getChildrenBase, _.getEditEnv))
+  def getEvalEnv: ValueEnv = evalEnvOverride.getOrElse(getCorrectEnv(_.getChildrenEval, _.getEvalEnv))
+  def getTypeEnv: TypeEnv = typeEnvOverride.getOrElse(getCorrectEnv(_.getChildrenTypeCheck, _.getTypeEnv))
   /** The name of the expression represented by this node.
-    */
+   */
   val exprName: String
   private val visibleChildrenCache = collection.mutable.Map[DisplayMode, List[OuterNode]]()
   private var isPhantomStore = false
@@ -38,48 +38,46 @@ abstract class ExprNodeParent(lang: AbstractNodeLanguage) extends OuterNode {
 
   private val depthLimit: Int = 100
 
-  /** The depth of this node in the tree.
-    *
-    * Only starts
-    * @return
-    */
   def depth: Int = getPhantomDepth
 
   /** Check if the depth limit will be exceeded by evaluating this node, throwing an exception if it will.
-    *
-    * Similar to [[willDepthLimitBeExceeded]], but throws an exception if the depth limit will be exceeded.
-    *
-    * @param currDepth
-    *   The current depth, default 0.
-    * @throws DepthLimitExceededException
-    *   if the depth limit will be exceeded.
-    */
+   *
+   * Similar to [[willDepthLimitBeExceeded]], but throws an exception if the depth limit will be exceeded.
+   *
+   * @param currDepth
+   * The current depth, default 0.
+   * @throws DepthLimitExceededException
+   * if the depth limit will be exceeded.
+   */
   def checkDepthLimitWillBeExceeded(currDepth: Int = 0): Unit = {
     if (currDepth + 1 >= depthLimit) throw DepthLimitExceededException(depthLimit)
 
     getVisibleChildren(DisplayMode.Evaluation).reverse.foreach({
       case n: ExprNodeParent => n.checkDepthLimitWillBeExceeded(currDepth + 1)
-      case _           =>
+      case _ =>
     })
   }
 
   /** Whether the depth limit will be exceeded by evaluating this node.
-    * @param currDepth
-    *   The current depth, default 0.
-    * @return
-    *   Whether the depth limit will be exceeded.
-    */
+   *
+   * @param currDepth
+   * The current depth, default 0.
+   * @return
+   * Whether the depth limit will be exceeded.
+   */
   def willDepthLimitBeExceeded(currDepth: Int = 0): Boolean = {
     (currDepth + 1 >= depthLimit) || getVisibleChildren(DisplayMode.Evaluation).reverse.exists({
       case n: ExprNodeParent => n.willDepthLimitBeExceeded(currDepth + 1)
-      case _           => false
-    })
+      case _ => false
+    }
+    )
   }
 
   /** The expression represented by this node.
-    * @return
-    *   Represented expression.
-    */
+   *
+   * @return
+   * Represented expression.
+   */
   def getExpr: Expr
 
   def hasUpdatedEnv(mode: DisplayMode): Boolean = {
@@ -92,8 +90,8 @@ abstract class ExprNodeParent(lang: AbstractNodeLanguage) extends OuterNode {
     if (!isParentInitialised) markRoot()
     super.getParent match {
       case Some(n: ExprNodeParent) => Some(n)
-      case None              => None
-      case Some(n)           => throw NodeParentWrongTypeException("ExprNode", n.name)
+      case None => None
+      case Some(n) => throw NodeParentWrongTypeException("ExprNode", n.name)
     }
   }
 
@@ -101,16 +99,17 @@ abstract class ExprNodeParent(lang: AbstractNodeLanguage) extends OuterNode {
     case Some(n: ExprNodeParent) =>
       if (n.depth >= depthLimit) throw DepthLimitExceededException(depthLimit)
       super.setParent(Some(n))
-    case None    => super.setParent(None)
+    case None => super.setParent(None)
     case Some(n) => throw NodeParentWrongTypeException("ExprNode", n.name)
   }
 
   /** Get the environment for the given mode.
-    * @param mode
-    *   The display mode.
-    * @return
-    *   The environment for the given mode, either a [[ValueEnv]] or a [[TypeEnv]].
-    */
+   *
+   * @param mode
+   * The display mode.
+   * @return
+   * The environment for the given mode, either a [[ValueEnv]] or a [[TypeEnv]].
+   */
   def getEnv(mode: DisplayMode): ValueEnv | TypeEnv = mode match {
     case DisplayMode.Edit       => getEditEnv
     case DisplayMode.TypeCheck  => getTypeEnv
@@ -121,13 +120,23 @@ abstract class ExprNodeParent(lang: AbstractNodeLanguage) extends OuterNode {
     visibleChildrenCache,
     mode,
     mode match {
-      case DisplayMode.Edit       => children
-      case DisplayMode.TypeCheck  => children
+      case DisplayMode.Edit => children
+      case DisplayMode.TypeCheck => children
       case DisplayMode.Evaluation => visibleEvaluationChildren
     }
   )
 
   override def isPhantom: Boolean = isPhantomStore
+
+  private var editEnvOverride: Option[ValueEnv] = None
+  private var evalEnvOverride: Option[ValueEnv] = None
+  private var typeEnvOverride: Option[TypeEnv] = None
+
+  def overrideEnv(env: ValueEnv | TypeEnv, mode: DisplayMode): Unit = mode match {
+    case DisplayMode.Edit => editEnvOverride = Some(env.asInstanceOf[ValueEnv])
+    case DisplayMode.Evaluation => evalEnvOverride = Some(env.asInstanceOf[ValueEnv])
+    case DisplayMode.TypeCheck => typeEnvOverride = Some(env.asInstanceOf[TypeEnv])
+  }
 
   private def getCorrectEnv[T](
     childrenFunction: Expr => Env[T] => List[(Term, Env[T])],
@@ -147,7 +156,7 @@ abstract class ExprNodeParent(lang: AbstractNodeLanguage) extends OuterNode {
 
     childExprList.flatMap({ case expr: Expr =>
       val matchingChild = unconsumedChildren.collectFirst {
-        case c: ExprNodeParent if c.getExpr eq expr                       => c
+        case c: ExprNodeParent if c.getExpr eq expr                 => c
         case c: ExprChoiceNode if c.getExpr == expr && !c.isPhantom => c
       }
 

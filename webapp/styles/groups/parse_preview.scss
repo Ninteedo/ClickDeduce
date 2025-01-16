@@ -1,0 +1,17 @@
+.parse-preview {
+  position: absolute;
+  z-index: 999;
+
+  transform: translateY(-110%);
+
+  background-color: $semi-background;
+  border: 1px solid $input-outline;
+  border-radius: 0.1rem;
+  pointer-events: none;
+
+  padding: 0.2rem;
+
+  &:not(.show) {
+    opacity: 0;
+  }
+}

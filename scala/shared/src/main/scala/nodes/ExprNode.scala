@@ -37,7 +37,7 @@ case class ExprNode(lang: AbstractNodeLanguage, exprName: String, args: List[Inn
     * @param e
     *   The expression to set this node's expression to.
     */
-  def overrideExpr(e: Expr): Unit = {
+  private def overrideExpr(e: Expr): Unit = {
     exprOverride = Some(e)
   }
 
