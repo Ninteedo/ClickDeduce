@@ -1,6 +1,6 @@
 import {hasClassOrParentHasClass} from "../utils";
 import {getCurrentLanguage, getTree} from "../treeManipulation";
-import {handleExprSelectorChoice} from "../actions";
+import {handleExprSelectorChoice, runAction} from "../actions";
 import {BaseDropdownSelector, DropdownOption} from "./baseDropdownSelector";
 import {getTreePathOfElement} from "../globals/elements";
 import {getRulePreview, parseExprText} from "../serverRequest";
@@ -76,6 +76,15 @@ export class CustomExprSelector extends BaseDropdownSelector {
         super.updateDropdown();
         if (!this.isTypeSelector()) {
             console.log(parseExprText(getCurrentLanguage(), this.input.value));
+        }
+    }
+
+    protected override enterPressed() {
+        const parsedExpr = parseExprText(getCurrentLanguage(), this.input.value);
+        if (parsedExpr) {
+            runAction("ParseExprAction", this.getTreePath(), this.input.value);
+        } else {
+            super.enterPressed();
         }
     }
 

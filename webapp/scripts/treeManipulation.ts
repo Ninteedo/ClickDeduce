@@ -36,7 +36,7 @@ export function resetTreeManipulation(): void {
     modeRadios = Array.from(document.querySelectorAll('input[name="mode"]'));
     for (const radio of modeRadios) {
         radio.addEventListener('change', () => {
-            runAction("IdentityAction", "", []);
+            runAction("IdentityAction", "");
         });
     }
 
@@ -58,7 +58,7 @@ function loadLangSelector(): void {
     if (!langSelector) throw new Error('Language selector not found');
     langSelector.addEventListener('change', () => {
         markHasUsedLangSelector();
-        runAction("IdentityAction", "", []);
+        runAction("IdentityAction", "");
     })
 }
 
@@ -298,7 +298,7 @@ export function enableInputs(): void {
 
 export function loadTreeFromString(nodeString: string): void {
     lastNodeString = nodeString;
-    runAction("IdentityAction", "", [])
+    runAction("IdentityAction", "");
 }
 
 export function getTree(): HTMLDivElement {

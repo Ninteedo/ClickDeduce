@@ -16,6 +16,7 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
     case "EditLiteralAction" => 1
     case "DeleteAction"      => 0
     case "PasteAction"       => 1
+    case "ParseExprAction"   => 1
     case "IdentityAction"    => 0
     case _                   => throw new ActionInvocationException(s"Unknown action name: $actionName")
   }
@@ -36,6 +37,7 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
       case "EditLiteralAction" => EditLiteralAction(node, treePath, lang, extraArgs.head)
       case "DeleteAction"      => DeleteAction(node, treePath, lang)
       case "PasteAction"       => PasteAction(node, treePath, lang, extraArgs.head)
+      case "ParseExprAction"   => ParseExprAction(node, treePath, lang, extraArgs.head)
       case "IdentityAction"    => IdentityAction(node, treePath, lang)
       case _                   => throw new ActionInvocationException(s"Unknown action name: $actionName")
     }

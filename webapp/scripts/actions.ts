@@ -54,7 +54,7 @@ export function handleLiteralChanged(textInput: HTMLInputElement): void {
         focusedTreePath = nextFocusElement.getTreePath();
     }
 
-    runAction("EditLiteralAction", treePath, [literalValue]);
+    runAction("EditLiteralAction", treePath, literalValue);
 
     if (focusedTreePath == null) return;
     let focusedElement: HTMLElement | null = document.querySelector(`input[data-tree-path="${focusedTreePath}"]`);
@@ -120,7 +120,7 @@ export function handleExprSelectorChoice(selector: HTMLDivElement, value: string
     }
 
     input.value = value;
-    runAction(actionName, getTreePathOfElement(selector), [value])
+    runAction(actionName, getTreePathOfElement(selector), value);
 
     if (focusedTreePath === null) return;
     setFocusElement(focusedTreePath);
@@ -132,7 +132,7 @@ export function handleExprSelectorChoice(selector: HTMLDivElement, value: string
  * @param treePath the tree path of the node to run the action on
  * @param extraArgs any extra arguments to pass to the action
  */
-export function runAction(actionName: string, treePath: string, extraArgs: any[]): void {
+export function runAction(actionName: string, treePath: string, extraArgs: any[] | any = []): void {
     if (lastNodeString == null) {
         return;
     }
@@ -140,8 +140,9 @@ export function runAction(actionName: string, treePath: string, extraArgs: any[]
 
     const modeName: string = getSelectedMode();
     const langName: string = getSelectedLanguage();
+    const extraArgsClean: any[] = Array.isArray(extraArgs) ? extraArgs : [extraArgs];
     try {
-        const [newNodeString, newHtml] = postProcessActionNew(langName, modeName, actionName, lastNodeString, treePath, extraArgs);
+        const [newNodeString, newHtml] = postProcessActionNew(langName, modeName, actionName, lastNodeString, treePath, extraArgsClean);
         console.log(newNodeString);
         updateTree(newHtml, newNodeString, modeName, langName, true);
     } catch (e) {
@@ -152,7 +153,7 @@ export function runAction(actionName: string, treePath: string, extraArgs: any[]
 }
 
 export function deleteTreeNode(treePath: string): void {
-    runAction("DeleteAction", treePath, []);
+    runAction("DeleteAction", treePath);
     setFocusElement(treePath);
 }
 
@@ -188,7 +189,7 @@ export function contextMenuCopy(): void {
  */
 export function pasteTreeNode(treePath: string): void {
     if (copyCache) {
-        runAction("PasteAction", treePath, [copyCache]);
+        runAction("PasteAction", treePath, copyCache);
         setFocusElement(treePath);
     }
 }

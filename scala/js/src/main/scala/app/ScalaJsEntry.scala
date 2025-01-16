@@ -153,7 +153,7 @@ object ScalaJsEntry {
     val lang = getLanguage(langName)
     lang.parseExpr(exprText) match {
       case Some(expr) => expr.toString
-      case None => throw new IllegalArgumentException(s"Failed to parse expression: $exprText")
+      case None => ""
     }
   }
 }

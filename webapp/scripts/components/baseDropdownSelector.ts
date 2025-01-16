@@ -101,7 +101,7 @@ export class BaseDropdownSelector implements AbstractTreeInput {
 
     protected handleKeydown(event: KeyboardEvent): void {
         if (event.key === 'Enter') {
-            this.selectHighlightedOption();
+            this.enterPressed();
         } else if (event.key === 'ArrowDown') {
             this.moveHighlight(1);
         } else if (event.key === 'ArrowUp') {
@@ -173,7 +173,7 @@ export class BaseDropdownSelector implements AbstractTreeInput {
 
     protected clearOptionHighlight(): void {}
 
-    private selectHighlightedOption(): void {
+    protected enterPressed(): void {
         const highlighted = this.getSelectedOption();
         if (highlighted) {
             setNextFocusElement(this);
