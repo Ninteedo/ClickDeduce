@@ -1,4 +1,4 @@
-import TreeHistoryRecord from "./TreeHistoryRecord";
+import TreeHistoryRecord, {treeHistoryRecordsEqual} from "./TreeHistoryRecord";
 import {updateTree} from "../treeManipulation";
 
 export default class TreeHistoryManager {
@@ -14,7 +14,7 @@ export default class TreeHistoryManager {
     }
 
     public addRecord(record: TreeHistoryRecord): void {
-        if (this.records.length > 0 && record === this.records[this.recordIndex]) {
+        if (this.records.length > 0 && treeHistoryRecordsEqual(record, this.records[this.recordIndex])) {
             return;
         }
 

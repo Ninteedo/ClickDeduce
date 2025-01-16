@@ -11,7 +11,6 @@ import {
 } from "./actions";
 import {getTree, redo, resetTreeManipulation, undo, updateTextInputWidth} from "./treeManipulation";
 import {handleTabPressed, resetInterfaceGlobals, toggleControls} from "./interface";
-import panzoom, {PanZoom} from "panzoom";
 import {loadImages} from "./imageLoading";
 import {setupExampleSelector} from "./components/customExprSelector";
 import {loadTree, saveTree} from "./saveLoad";
@@ -30,10 +29,8 @@ import {
     getUndoButton,
     getZoomToFitButton
 } from "./globals/elements";
-import {setPanZoomInstance, zoomToFit} from "./components/panzoom";
+import {setUpPanZoom, zoomToFit} from "./components/panzoom";
 import {closeExportOutput, copyExportOutput, exportLaTeX} from "./components/latexOutput";
-
-export let panzoomInstance: PanZoom;
 
 /**
  * Sets up the global variables and initialises the panzoom instance.
@@ -48,20 +45,7 @@ export function initialise(skipImages: boolean = false): void {
         loadImages();
     }
     resetTreeManipulation();
-    setPanZoomInstance(panzoom(getTree(), {
-        bounds: true,
-        boundsPadding: -0.1,
-        zoomDoubleClickSpeed: 1,
-        minZoom: 0.1,
-        maxZoom: 10,
-        onTouch: () => {
-            // TODO: cannot use on mobile currently
-            return false;  // tells the library to not preventDefault.
-        },
-        filterKey: () => {
-            return true;  // don't let panzoom handle this event:
-        }
-    }));
+    setUpPanZoom(getTree());
 
     setupButtons();
     startNodeBlank();

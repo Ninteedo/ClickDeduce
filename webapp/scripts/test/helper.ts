@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import {doStartNodeBlank, handleLiteralChanged} from "../actions";
+import {handleLiteralChanged, startNodeBlank} from "../actions";
 import {CustomExprSelector} from "../components/customExprSelector";
 import {getExprSelectors} from "../treeManipulation";
 import {vitest} from "vitest";
@@ -32,7 +32,7 @@ export function getStartNodeButton() {
 }
 
 export function pressStartNodeButton() {
-    doStartNodeBlank(new Event(""));
+    startNodeBlank();
 }
 
 export function changeLanguage(langIndex: number): void {

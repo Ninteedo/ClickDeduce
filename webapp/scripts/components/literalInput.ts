@@ -87,12 +87,12 @@ export class LiteralInput implements AbstractTreeInput {
     }
 
     protected onBlurred(): void {
-        this.handleInputChanged();
+        this.handleInputChanged(true);
     }
 
-    private handleInputChanged(): void {
+    private handleInputChanged(doNotFocus: boolean = false): void {
         if (this.getValue() === this.initialValue) return;
-        handleLiteralChanged(this.input);
+        handleLiteralChanged(this.input, doNotFocus);
     }
 
     private updateInputWidth(): void {

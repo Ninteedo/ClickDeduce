@@ -6,6 +6,7 @@ import {getNodeStringFromPath} from "./utility/parseNodeString";
 import {getTreePathOfElement} from "./globals/elements";
 import {getContextMenuSelectedElement} from "./components/contextMenu";
 import {displayError} from "./components/displayError";
+import {centerTree} from "./components/panzoom";
 
 let copyCache: string | null = null;
 
@@ -17,18 +18,16 @@ export function resetCopyCache(): void {
 }
 
 export function startNodeBlank(): void {
-    doStartNodeBlank(new Event("submit"));
+    doStartNodeBlank();
 }
 
-/**
- * Handles the form submission event.
- * @param event the form submission event
- */
 export function doStartNodeBlank(event?: Event): void {
     if (event) event.preventDefault();
 
     const [newNodeString, newHtml] = postStartNodeBlankNew(getSelectedLanguage());
     updateTree(newHtml, newNodeString, getSelectedMode(), getSelectedLanguage(), true);
+
+    centerTree();
 }
 
 function parseLiteralValue(inputElement: HTMLInputElement): string {
@@ -44,8 +43,9 @@ function parseLiteralValue(inputElement: HTMLInputElement): string {
  * Executes the EditLiteralAction.
  *
  * @param textInput the literal input element
+ * @param doNotFocus if true then element will not be focused after the action
  */
-export function handleLiteralChanged(textInput: HTMLInputElement): void {
+export function handleLiteralChanged(textInput: HTMLInputElement, doNotFocus: boolean = false): void {
     const literalValue: string = parseLiteralValue(textInput);
     const treePath: string = getTreePathOfElement(textInput);
 
@@ -54,9 +54,9 @@ export function handleLiteralChanged(textInput: HTMLInputElement): void {
         focusedTreePath = nextFocusElement.getTreePath();
     }
 
-    runAction("EditLiteralAction", treePath, literalValue);
+    runAction("EditLiteralAction", treePath, literalValue, doNotFocus);
 
-    if (focusedTreePath == null) return;
+    if (focusedTreePath == null || doNotFocus) return;
     let focusedElement: HTMLElement | null = document.querySelector(`input[data-tree-path="${focusedTreePath}"]`);
     if (focusedElement && focusedElement instanceof HTMLElement) {
         focusedElement.focus();
@@ -131,8 +131,9 @@ export function handleExprSelectorChoice(selector: HTMLDivElement, value: string
  * @param actionName the name of the action to run
  * @param treePath the tree path of the node to run the action on
  * @param extraArgs any extra arguments to pass to the action
+ * @param doNotFocus if true then the element will not be focused after the action
  */
-export function runAction(actionName: string, treePath: string, extraArgs: any[] | any = []): void {
+export function runAction(actionName: string, treePath: string, extraArgs: any[] | any = [], doNotFocus: boolean = false): void {
     if (lastNodeString == null) {
         return;
     }
@@ -146,7 +147,7 @@ export function runAction(actionName: string, treePath: string, extraArgs: any[]
         console.log(newNodeString);
         updateTree(newHtml, newNodeString, modeName, langName, true);
 
-        if (!document.activeElement || document.activeElement.tagName === "BODY") {
+        if (!doNotFocus && (!document.activeElement || document.activeElement.tagName === "BODY")) {
             setFocusElement(treePath);
         }
     } catch (e) {

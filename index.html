@@ -62,8 +62,13 @@
       <div class="control-group">
         <h4>Options</h4>
         <form>
-          <label for="value-highlighting-toggle"><input type="checkbox" id="value-highlighting-toggle"/> Value Highlighting</label>
-          <label for="auto-zoom-toggle"><input type="checkbox" id="auto-zoom-toggle"/> Auto Zoom</label>
+          <label for="value-highlighting-toggle" title="Show values and types in different colours">
+            <input type="checkbox" id="value-highlighting-toggle"/>
+            Value Highlighting</label>
+          <label for="auto-zoom-toggle" title="Automatically zoom to fit when making a change">
+            <input type="checkbox" id="auto-zoom-toggle"/>
+            Auto Zoom
+          </label>
         </form>
       </div>
 
@@ -83,7 +88,7 @@
 
 <div id="tree-container">
   <div id="tree-buttons">
-    <button id="zoom-to-fit">
+    <button id="zoom-to-fit" title="Zoom to fit">
     </button>
   </div>
   <div id="tree"></div>
