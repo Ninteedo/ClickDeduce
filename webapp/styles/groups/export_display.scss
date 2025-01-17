@@ -1,3 +1,5 @@
+@use "../abstracts/colours";
+
 #export-output-container {
   flex-direction: column;
   width: 80%;
@@ -5,7 +7,7 @@
   left: 10%;
   z-index: 1000;
   position: fixed;
-  background-color: $semi-background;
+  background-color: colours.$semi-background;
   padding: 10px;
   border-radius: 10px;
 
@@ -22,7 +24,7 @@
   }
 
   #export-output-desc {
-    color: $comment;
+    color: colours.$comment;
     &.visible {
       display: block;
     }
@@ -34,8 +36,8 @@
   #export-output {
     resize: none;
     height: 100%;
-    background-color: $tree-background;
-    color: $foreground;
+    background-color: colours.$tree-background;
+    color: colours.$foreground;
   }
 
   #export-output-controls {

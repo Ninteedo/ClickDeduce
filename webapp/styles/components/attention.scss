@@ -1,13 +1,15 @@
+@use "../abstracts/colours";
+
 .attention {
+  animation: glow 3s infinite ease-in-out;
+
   @keyframes glow {
     0%, 100% {
-      box-shadow: 0 0 1px 0.1rem $semi-background;
+      box-shadow: 0 0 1px 0.1rem colours.$semi-background;
     }
 
     50% {
-      box-shadow: 0 0 1px 0.1rem $foreground;
+      box-shadow: 0 0 1px 0.1rem colours.$foreground;
     }
   }
-
-  animation: glow 3s infinite ease-in-out;
 }

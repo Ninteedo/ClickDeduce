@@ -20,6 +20,7 @@
     "jsdom": "~26.0.0",
     "node-fetch": "~2.6.1",
     "sass": "~1.83.4",
+    "sass-migrator": "^2.3.0",
     "sass-loader": "~16.0.4",
     "style-loader": "~4.0.0",
     "tree-kill": "^1.2.2",

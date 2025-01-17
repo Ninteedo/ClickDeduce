@@ -1,3 +1,5 @@
+@use "../abstracts/colours";
+
 div#tasks.control-group {
   overflow-y: scroll;
   flex-grow: 1;
@@ -7,14 +9,14 @@ div#tasks.control-group {
   margin-right: 0;
 
   div.task {
-    border: 1px solid $input-outline;
+    border: 1px solid colours.$input-outline;
     border-radius: 0.2rem;
 
     margin: 0.1rem;
     padding: 0.2rem;
 
-    background-color: $tree-background;
-    box-shadow: 0 0 0.3rem $input-outline;
+    background-color: colours.$tree-background;
+    box-shadow: 0 0 0.3rem colours.$input-outline;
 
     overflow: hidden;
 
@@ -31,7 +33,7 @@ div#tasks.control-group {
     }
 
     &.fulfilled {
-      background-color: $success-background;
+      background-color: colours.$success-background;
 
       //p.description {
       //  max-height: 0;

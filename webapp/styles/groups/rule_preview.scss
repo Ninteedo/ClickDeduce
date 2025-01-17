@@ -1,3 +1,5 @@
+@use "../abstracts/colours";
+
 .rule-preview {
   position: absolute;
   z-index: 1000;
@@ -7,8 +9,8 @@
 
   left: 100%;
 
-  background-color: $semi-background;
-  border: 1px solid $input-outline;
+  background-color: colours.$semi-background;
+  border: 1px solid colours.$input-outline;
   border-radius: 0.1rem;
 
   pointer-events: none;
@@ -16,7 +18,7 @@
   .assumptions {
     display: flex;
     flex-direction: column;
-    border-bottom: 2px solid $foreground;
+    border-bottom: 2px solid colours.$foreground;
   }
 
   .conclusion {
@@ -53,7 +55,7 @@
       display: flex !important;
       flex-direction: row;
 
-      border: 1px solid $input-outline;
+      border: 1px solid colours.$input-outline;
 
       > * {
         margin: 0 auto;

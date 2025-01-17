@@ -1,6 +1,8 @@
+@use "../abstracts/colours";
+
 body {
-  background-color: $outer-background;
-  color: $foreground;
+  background-color: colours.$outer-background;
+  color: colours.$foreground;
   display: flex;
   flex-direction: column;
   width: 98%;
@@ -9,16 +11,16 @@ body {
 }
 
 input, button, select {
-  background-color: $current-line;
-  color: $foreground;
-  border: $input-outline solid 1px;
+  background-color: colours.$current-line;
+  color: colours.$foreground;
+  border: colours.$input-outline solid 1px;
   border-radius: 3px;
   padding: 0 2px;
   font-family: 'Roboto Mono', sans-serif;
 
   &:disabled {
-    background-color: $disabled-input;
-    color: $disabled-input-text;
+    background-color: colours.$disabled-input;
+    color: colours.$disabled-input-text;
     cursor: not-allowed;
   }
 }
@@ -27,7 +29,7 @@ button {
   font-family: 'Roboto', sans-serif;
 
   &:active {
-    background-color: $highlighted-tree;
+    background-color: colours.$highlighted-tree;
   }
 
   &:not(:disabled) {

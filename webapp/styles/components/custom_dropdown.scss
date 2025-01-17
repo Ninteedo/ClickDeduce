@@ -1,16 +1,18 @@
+@use "../abstracts/colours";
+
 .dropdown-selector-container {
   display: inline-flex;
   position: relative;
 
   &.focused {
-    box-shadow: -1px 0 2px 1px $foreground, 0 -1px 2px 1px $foreground, 1px 0 2px 1px $foreground, 0 1px 2px 1px $foreground;
+    box-shadow: -1px 0 2px 1px colours.$foreground, 0 -1px 2px 1px colours.$foreground, 1px 0 2px 1px colours.$foreground, 0 1px 2px 1px colours.$foreground;
     border-radius: 3px;
   }
 
   &.guide-highlight {
     input, button {
-      background-color: $highlighted-input;
-      color: $highlighted-input-text;
+      background-color: colours.$highlighted-input;
+      color: colours.$highlighted-input-text;
     }
   }
 
@@ -22,7 +24,7 @@
 
   button {
     margin: 0;
-    border: $input-outline solid 1px;
+    border: colours.$input-outline solid 1px;
     border-radius: 0 3px 3px 0;
   }
 
@@ -30,9 +32,9 @@
     position: absolute;
     top: 100%;
     left: 0;
-    background-color: $context-menu-background;
-    color: $foreground;
-    border: $input-outline solid 1px;
+    background-color: colours.$context-menu-background;
+    color: colours.$foreground;
+    border: colours.$input-outline solid 1px;
     z-index: 1;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.16), 0 2px 4px rgba(0, 0, 0, 0.23);
     pointer-events: bounding-box;
@@ -62,7 +64,7 @@
         font-style: normal;
 
         &.highlight {
-          background-color: $highlighted-tree;
+          background-color: colours.$highlighted-tree;
           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.16), 0 2px 4px rgba(0, 0, 0, 0.23);
           font-weight: bold;
         }
@@ -72,7 +74,7 @@
         }
 
         &:hover {
-          background-color: $hover-background;
+          background-color: colours.$hover-background;
         }
       }
     }

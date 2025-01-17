@@ -1,26 +1,29 @@
+@use "../abstracts/colours";
+@use "../base/typography";
+
 form {
   display: inline;
 }
 
 @mixin textbox-base {
-  background-color: $current-line;
-  color: $foreground;
-  border: $input-outline solid 1px;
+  background-color: colours.$current-line;
+  color: colours.$foreground;
+  border: colours.$input-outline solid 1px;
   border-radius: 3px;
   padding: 0 2px;
-  @include monospace;
+  @include typography.monospace;
   height: 1.4rem;
   font-size: 1.1rem;
 
   &:disabled {
-    background-color: $disabled-input;
-    color: $disabled-input-text;
+    background-color: colours.$disabled-input;
+    color: colours.$disabled-input-text;
     cursor: not-allowed;
   }
 
   &.guide-highlight {
-    background-color: $highlighted-input;
-    color: $highlighted-input-text;
+    background-color: colours.$highlighted-input;
+    color: colours.$highlighted-input-text;
   }
 }
 
@@ -47,9 +50,9 @@ input[type='number'] {
   appearance: none;
 
   font: inherit;
-  color: $foreground;
-  background-color: $current-line;
-  border: $input-outline solid 1px;
+  color: colours.$foreground;
+  background-color: colours.$current-line;
+  border: colours.$input-outline solid 1px;
 
   width: 1em;
   height: 1em;
@@ -62,11 +65,11 @@ input[type='number'] {
     width: 0.5em;
     height: 0.5em;
     margin: 0.2em;
-    background-color: $foreground;
+    background-color: colours.$foreground;
   }
 
   &:hover {
-    border: $foreground solid 1px;
+    border: colours.$foreground solid 1px;
   }
 }
 
@@ -103,16 +106,16 @@ input[type="checkbox"] {
 }
 
 select {
-  background-color: $current-line;
-  color: $foreground;
-  border: $input-outline solid 1px;
+  background-color: colours.$current-line;
+  color: colours.$foreground;
+  border: colours.$input-outline solid 1px;
   border-radius: 3px;
   padding: 0.2rem;
   font-size: 1.1rem;
 
   &:disabled {
-    background-color: $disabled-input;
-    color: $disabled-input-text;
+    background-color: colours.$disabled-input;
+    color: colours.$disabled-input-text;
     cursor: not-allowed;
     opacity: 0.6;
   }

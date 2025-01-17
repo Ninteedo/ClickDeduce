@@ -1,3 +1,5 @@
+@use "../abstracts/colours";
+
 #controls {
   display: flex;
   justify-content: flex-start;
@@ -23,7 +25,7 @@
   }
 
   a {
-    color: $link-text;
+    color: colours.$link-text;
   }
 
   &.hidden {
@@ -36,10 +38,10 @@
 
 div.control-group {
   margin: 0 0.1rem;
-  background-color: $semi-background;
-  border: 0.1rem solid $input-outline;
+  background-color: colours.$semi-background;
+  border: 0.1rem solid colours.$input-outline;
   border-radius: 0.3rem;
-  box-shadow: 0 0 0.3rem $input-outline;
+  box-shadow: 0 0 0.3rem colours.$input-outline;
   padding: 0.25rem;
   height: fit-content;
   width: max-content;
@@ -65,9 +67,9 @@ div.control-group {
 }
 
 #controls-container {
-  background-color: $controls-background;
+  background-color: colours.$controls-background;
   //border: 2px solid $input-outline;
   border-radius: 0.4rem;
-  box-shadow: 0 0 0.3rem $controls-background;
+  box-shadow: 0 0 0.3rem colours.$controls-background;
   padding: 0.05rem 0.05rem 0 0.05rem;
 }

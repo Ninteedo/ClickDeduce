@@ -1,11 +1,13 @@
+@use "../abstracts/colours";
+
 .parse-preview {
   position: absolute;
   z-index: 999;
 
   transform: translateY(-110%);
 
-  background-color: $semi-background;
-  border: 1px solid $input-outline;
+  background-color: colours.$semi-background;
+  border: 1px solid colours.$input-outline;
   border-radius: 0.1rem;
   pointer-events: none;
 

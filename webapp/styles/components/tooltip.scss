@@ -1,9 +1,11 @@
+@use "../abstracts/colours";
+
 .tooltip {
   .tooltip-text {
     visibility: hidden;
-    background-color: $context-menu-background;
-    color: $foreground;
-    border: $input-outline solid 1px;
+    background-color: colours.$context-menu-background;
+    color: colours.$foreground;
+    border: colours.$input-outline solid 1px;
     text-align: center;
     border-radius: 6px;
     padding: 2px 3px;
@@ -29,6 +31,6 @@
   &:not(.tooltip .tooltip) {
     position: relative;
     display: inline-block;
-    border-bottom: 1px dashed $foreground;
+    border-bottom: 1px dashed colours.$foreground;
   }
 }

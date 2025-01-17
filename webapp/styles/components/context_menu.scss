@@ -1,9 +1,11 @@
+@use "../abstracts/colours";
+
 .custom-menu {
   display: none;
   position: absolute;
-  box-shadow: 1px 1px 2px $context-menu-box-shadow;
-  border: solid 1px $context-menu-border;
-  background-color: $context-menu-background;
+  box-shadow: 1px 1px 2px colours.$context-menu-box-shadow;
+  border: solid 1px colours.$context-menu-border;
+  background-color: colours.$context-menu-background;
   z-index: 1000;
 }
 
@@ -19,17 +21,17 @@
     &:not([disabled]) {
       cursor: pointer;
       &:hover {
-        background-color: $highlighted-tree;
+        background-color: colours.$highlighted-tree;
       }
     }
 
     &[disabled] {
-      background-color: $disabled-input;
+      background-color: colours.$disabled-input;
       cursor: not-allowed;
     }
 
     &:not(:first-child) {
-      border-top: 1px solid $context-menu-border;
+      border-top: 1px solid colours.$context-menu-border;
     }
   }
 }

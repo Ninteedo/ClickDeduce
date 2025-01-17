@@ -1,9 +1,11 @@
+@use "../abstracts/colours";
+
 .error-message {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  background-color: $red;
-  color: $tree-background;
+  background-color: colours.$red;
+  color: colours.$tree-background;
   padding: 15px;
   border-radius: 5px;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);

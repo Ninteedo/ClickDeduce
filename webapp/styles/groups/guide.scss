@@ -1,5 +1,7 @@
+@use "../abstracts/colours";
+
 .example-outer {
-  border: 1px solid $foreground;
+  border: 1px solid colours.$foreground;
   border-radius: 2px;
   padding: 5px;
   margin-bottom: 10px;

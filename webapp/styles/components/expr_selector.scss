@@ -1,4 +1,6 @@
-@import 'custom_dropdown';
+@use 'custom_dropdown';
+@use "../abstracts/colours";
+
 
 div.expr-selector-container {
   //display: inline-flex;
@@ -80,10 +82,10 @@ div.expr-selector-container {
 }
 
 div.expr-selector-placeholder {
-  border: $input-outline solid 1px;
+  border: colours.$input-outline solid 1px;
   border-radius: 3px;
   padding: 0 2px;
-  background-color: $disabled-input;
-  color: $disabled-input-text;
+  background-color: colours.$disabled-input;
+  color: colours.$disabled-input-text;
   cursor: not-allowed;
 }
