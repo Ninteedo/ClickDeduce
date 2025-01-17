@@ -3,7 +3,9 @@ import {getCurrentLanguage, getCurrentNodeString} from "../treeManipulation";
 import {handleExprSelectorChoice, runAction} from "../actions";
 import {BaseDropdownSelector, DropdownOption} from "./baseDropdownSelector";
 import {getTree, getTreePathOfElement} from "../globals/elements";
-import {getExprParsePreviewHtml, getRulePreview, parseExprText} from "../serverRequest";
+import {getExprParsePreviewHtml, parseExprText} from "../serverRequest";
+import {RulePreview} from "./rulePreview";
+import {ParsePreview} from "./parsePreview";
 
 const UP_ARROW = '&#9650;';
 const DOWN_ARROW = '&#9660;';
@@ -12,16 +14,15 @@ const DOWN_ARROW = '&#9660;';
 export class CustomExprSelector extends BaseDropdownSelector {
     private readonly button: HTMLButtonElement;
 
-    protected rulePreview: HTMLDivElement | undefined = undefined;
-    protected readonly RULE_PREVIEW_CLASS = 'rule-preview';
-
-    protected parsePreview: HTMLDivElement | undefined = undefined;
-    protected readonly PARSE_PREVIEW_CLASS = 'parse-preview';
+    protected readonly rulePreview: RulePreview;
+    protected readonly parsePreview: ParsePreview;
 
     constructor(container: HTMLDivElement) {
         super(container, '.expr-selector-input', '.expr-selector-dropdown', 'ul > li');
         this.button = container.querySelector('.expr-selector-button') as HTMLButtonElement;
         this.setup();
+        this.rulePreview = new RulePreview(container);
+        this.parsePreview = new ParsePreview(container);
     }
 
     private setup(): void {
@@ -32,7 +33,7 @@ export class CustomExprSelector extends BaseDropdownSelector {
     override setupOptionListener(option: DropdownOption): void {
         super.setupOptionListener(option);
         option.element.addEventListener('mouseenter', () => {
-            this.showRulePreview(option.getValue());
+            this.rulePreview.show(option.getValue());
         });
     }
 
@@ -44,38 +45,20 @@ export class CustomExprSelector extends BaseDropdownSelector {
     protected override hideDropdown(): void {
         super.hideDropdown();
         this.button.innerHTML = DOWN_ARROW;
-        this.hideRulePreview();
+        this.rulePreview.hide();
     }
 
     protected override setOptionHighlight(option: DropdownOption): void {
         super.setOptionHighlight(option);
-        this.showRulePreview(option.getValue());
+        this.rulePreview.show(option.getValue());
     }
 
     protected override clearOptionHighlight(): void {
         super.clearOptionHighlight();
-        this.hideRulePreview();
+        this.rulePreview.hide();
     }
 
-    showRulePreview(value: string): void {
-        if (this.isTypeSelector()) return;
-
-        if (this.rulePreview === undefined) {
-            this.rulePreview = document.createElement('div');
-            this.rulePreview.classList.add(this.RULE_PREVIEW_CLASS);
-            this.container.appendChild(this.rulePreview);
-        }
-        this.rulePreview.innerHTML = getRulePreview(getCurrentLanguage(), value);
-        this.rulePreview.classList.add(this.DROPDOWN_VISIBLE_CLASS);
-    }
-
-    hideRulePreview(): void {
-        if (this.rulePreview !== undefined) {
-            this.rulePreview.classList.remove(this.DROPDOWN_VISIBLE_CLASS);
-        }
-    }
-
-    protected override updateDropdown() {
+    protected override updateDropdown(): void {
         super.updateDropdown();
 
         const parseHtml = getExprParsePreviewHtml(
@@ -86,35 +69,19 @@ export class CustomExprSelector extends BaseDropdownSelector {
             this.getTreePath()
         );
         if (parseHtml) {
-            this.showParsePreview(parseHtml);
+            this.parsePreview.show(parseHtml);
         } else {
-            this.hideParsePreview();
+            this.parsePreview.hide();
         }
     }
 
     protected override handleBlur(): void {
         super.handleBlur();
-        this.hideRulePreview();
-        this.hideParsePreview();
+        this.rulePreview.hide();
+        this.parsePreview.hide();
     }
 
-    showParsePreview(html: string): void {
-        if (this.parsePreview === undefined) {
-            this.parsePreview = document.createElement('div');
-            this.parsePreview.classList.add(this.PARSE_PREVIEW_CLASS);
-            this.container.appendChild(this.parsePreview);
-        }
-        this.parsePreview.innerHTML = html;
-        this.parsePreview.classList.add(this.DROPDOWN_VISIBLE_CLASS);
-    }
-
-    hideParsePreview(): void {
-        if (this.parsePreview !== undefined) {
-            this.parsePreview.classList.remove(this.DROPDOWN_VISIBLE_CLASS);
-        }
-    }
-
-    protected override enterPressed() {
+    protected override enterPressed(): void {
         if (!this.getSelectedOption()) {
             const parsedExpr = parseExprText(getCurrentLanguage(), this.input.value);
             if (parsedExpr) {
