@@ -20,7 +20,7 @@ object Symbols {
   val times: ConvertableText = Symbol("×", "&times;", "\\times", mathMode = true)
   val gamma: ConvertableText = Symbol("Γ", "&Gamma;", "\\Gamma")
   val lambdaLower: ConvertableText = Symbol("λ", "&lambda;", "\\lambda", mathMode = true)
-  val lambdaUpper: ConvertableText = Symbol("Λ", "&Lambda;", "\\Lambda", mathMode = true)
+  val lambdaUpper: ConvertableText = Symbol("Λ", "&Lambda;", "\\Lambda")
   val sigma: ConvertableText = Symbol("σ", "&sigma;", "\\sigma", mathMode = true)
   val tau: ConvertableText = Symbol("τ", "&tau;", "\\tau", mathMode = true)
   val forall: ConvertableText = Symbol("∀", "&forall;", "\\forall")

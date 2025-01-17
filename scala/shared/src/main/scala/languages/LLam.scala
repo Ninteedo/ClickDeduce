@@ -354,7 +354,7 @@ class LLam extends LLet {
       case first :: rest => rest.foldLeft(first)(Apply.apply)
     }
 
-    override def primitive: Parser[Expr] = lambda | super.primitive
+    override protected def primitive: Parser[Expr] = lambda | super.primitive
 
     override def expr: Parser[Expr] = applyExpr
   }

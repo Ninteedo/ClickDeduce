@@ -649,6 +649,32 @@ class LData extends LRec {
       )
     }
   }
+
+  protected class LDataParser extends LRecParser {
+    def pair: Parser[Pair] = "(" ~ expr ~ "," ~ expr ~ ")" ^^ { case _ ~ e1 ~ _ ~ e2 ~ _ => Pair(e1, e2) }
+
+    def fst: Parser[Fst] = "fst" ~ expr ^^ { case _ ~ e => Fst(e) }
+
+    def snd: Parser[Snd] = "snd" ~ expr ^^ { case _ ~ e => Snd(e) }
+
+    def letPair: Parser[LetPair] = "let" ~ "pair" ~ ident ~ ident ~ "=" ~ expr ~ "in" ~ expr ^^ {
+      case _ ~ _ ~ x ~ y ~ _ ~ assign ~ _ ~ bound => LetPair(LiteralIdentifierBind(x), LiteralIdentifierBind(y), assign, bound)
+    }
+
+    def left: Parser[Left] = "left" ~ expr ^^ { case _ ~ e => Left(e, defaultType) }
+
+    def right: Parser[Right] = "right" ~ expr ^^ { case _ ~ e => Right(defaultType, e) }
+
+    def caseSwitch: Parser[CaseSwitch] = "case" ~ expr ~ "of" ~ "{" ~ "left" ~ ident ~ "=>" ~ expr ~ ";" ~ "right" ~ ident ~ "=>" ~ expr ~ "}" ^^ {
+      case _ ~ e ~ _ ~ _ ~ _ ~ x ~ _ ~ lExpr ~ _ ~ _ ~ y ~ _ ~ rExpr ~ _ =>
+        CaseSwitch(e, x, y, lExpr, rExpr)
+    }
+
+    override protected def primitive: Parser[Expr] =
+      pair | fst | snd | letPair | left | right | caseSwitch | super.primitive
+  }
+
+  override protected val exprParser: ExprParser = new LDataParser
 }
 
 object LData extends LData {}

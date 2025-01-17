@@ -303,7 +303,7 @@ class LList extends LPoly {
     override val isError: Boolean = head.isError || tail.isError
 
     override def elems: List[Value] = tail match {
-      case l: ListValue => head +: l.elems
+      case l: ListValue => head :: l.elems
       case _            => List(head)
     }
   }
@@ -325,7 +325,38 @@ class LList extends LPoly {
     override val message: String = s"ListCase expected a list, but got $t"
   }
 
+  // tasks
+
   setTasks()
+
+  // parser
+
+  protected class LListParser extends LPolyParser {
+    private val nilRegex = "(?i)nil".r
+
+    private def nil: Parser[ListNil] = nilRegex ~ "[" ~ typ ~ "]" ^^ {
+      case _ ~ _ ~ typ ~ _ => ListNil(typ)
+    } | (nilRegex ~ (":" ~> typ) ^^ {
+      case _ ~ typ => ListNil(typ)
+    }) | nilRegex ^^ (_ => ListNil(defaultType))
+
+    private def caseList: Parser[CaseList] = "case" ~ "list" ~ expr ~ "of" ~ "{" ~ "(?i)nil".r ~ "=>" ~ expr ~
+      ";" ~ ident ~ "::" ~ ident ~ "=>" ~ expr ~ "}" ^^ {
+      case _ ~ _ ~ list ~ _ ~ _ ~ _ ~ _ ~ nilCase ~ _ ~ headVar ~ _ ~ tailVar ~ _ ~ consCase ~ _ =>
+        CaseList(list, nilCase, LiteralIdentifierBind(headVar), LiteralIdentifierBind(tailVar), consCase)
+    }
+
+    private def cons: Parser[Expr] = level3 ~ ("::" ~> expr).? ^^ {
+      case head ~ Some(tail) => Cons(head, tail)
+      case head ~ None => head
+    }
+
+    override protected def level2: Parser[Expr] = cons
+
+    override protected def primitive: Parser[Expr] = nil | caseList | super.primitive
+  }
+
+  override protected val exprParser: ExprParser = new LListParser
 }
 
 object LList extends LList {}

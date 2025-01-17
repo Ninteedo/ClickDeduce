@@ -92,4 +92,19 @@ class ExprParseTest extends AnyFunSuite, TableDrivenPropertyChecks {
       ("f (x y) z", l.Apply(l.Apply(l.Var("f"), l.Apply(l.Var("x"), l.Var("y"))), l.Var("z")))
     ))
   }
+
+  test("can parse LList expressions") {
+    val l = LList
+    testParses(l, List(
+      ("nil", l.ListNil(l.defaultType)),
+      ("nIL", l.ListNil(l.defaultType)),
+      ("nil: int", l.ListNil(l.IntType())),
+      ("Nil[bool]", l.ListNil(l.BoolType())),
+      ("4 :: 5", l.Cons(l.Num(4), l.Num(5))),
+      ("false :: nil: bool", l.Cons(l.Bool(false), l.ListNil(l.BoolType()))),
+      ("1 :: 2 :: 3", l.Cons(l.Num(1), l.Cons(l.Num(2), l.Num(3)))),
+      ("1 + 2 :: 3 + 4 :: 4 + 5", l.Cons(l.Plus(l.Num(1), l.Num(2)), l.Cons(l.Plus(l.Num(3), l.Num(4)), l.Plus(l.Num(4), l.Num(5))))),
+      ("1 :: 2 :: nil", l.Cons(l.Num(1), l.Cons(l.Num(2), l.ListNil(l.defaultType))))
+    ))
+  }
 }

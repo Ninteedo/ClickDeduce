@@ -323,11 +323,9 @@ class LIf extends LArith {
       case cond ~ _ ~ thenExpr ~ _ ~ elseExpr => IfThenElse(cond, thenExpr, elseExpr)
     }
 
-    protected def level4: Parser[Expr] = chainl1(level5, "==" ^^^ {Equal(_, _)} | "<" ^^^ {LessThan(_, _)})
+    override protected def level4Parse: Parser[(Expr, Expr) => Expr] = "==" ^^^ {Equal(_, _)} | "<" ^^^ {LessThan(_, _)}
 
     override protected def primitive: Parser[Expr] = bool | ifThenElse | super.primitive
-
-    override def expr: Parser[Expr] = level4
   }
 
   override protected val exprParser: ExprParser = new LIfParser

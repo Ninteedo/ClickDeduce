@@ -249,6 +249,12 @@ class LPoly extends LData {
       ValueEnv.empty
     )
   }
+
+  protected class LPolyParser extends LDataParser {
+
+  }
+
+  override protected val exprParser: ExprParser = new LPolyParser
 }
 
 object LPoly extends LPoly {}

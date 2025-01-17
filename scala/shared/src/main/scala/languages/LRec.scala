@@ -214,6 +214,16 @@ class LRec extends LLam {
       )
     }
   }
+
+  protected class LRecParser extends LLamParser {
+    protected def rec: Parser[Rec] = "rec" ~> ident ~ ("(" ~> ident <~ ":") ~ typ ~ ")" ~ ":" ~ typ ~ "." ~ expr ^^ {
+      case f ~ v ~ inType ~ _ ~ _ ~ outType ~ _ ~ e => Rec(f, v, inType, outType, e)
+    }
+
+    override protected def primitive: Parser[Expr] = rec | super.primitive
+  }
+
+  override protected val exprParser: ExprParser = new LRecParser
 }
 
 object LRec extends LRec {}

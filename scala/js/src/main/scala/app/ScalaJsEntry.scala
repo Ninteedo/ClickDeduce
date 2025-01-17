@@ -5,8 +5,8 @@ import convertors.{DisplayMode, HTMLConvertor, LaTeXConvertor}
 import languages.*
 import languages.env.{TypeEnv, ValueEnv}
 import languages.terms.blanks.BlankExprDropDown
-import nodes.exceptions.NodeStringParseException
 import nodes.*
+import nodes.exceptions.NodeStringParseException
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
@@ -177,7 +177,6 @@ object ScalaJsEntry {
                   newChild.overrideEnv(TypeEnv.fromValueEnv(env.asInstanceOf[ValueEnv]), DisplayMode.TypeCheck)
                 }
 
-                println(newChild.getEnv(mode))
                 HTMLConvertor(lang, mode).convert(newChild)
               case _ => default
             }
