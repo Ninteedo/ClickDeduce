@@ -123,6 +123,7 @@ describe("tab cycling between input elements behaves correctly", () => {
             element.dispatchEvent(new KeyboardEvent('keydown', {
                 key: 'Tab'
             }));
+            console.log(`index: ${index}`);
             expect(document.activeElement).toEqual(tabbableElements[(index + 1) % tabbableElements.length]);
         });
     });

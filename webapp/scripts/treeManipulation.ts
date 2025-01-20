@@ -1,8 +1,8 @@
 import {runAction} from "./actions";
 import {getLangSelectorNew} from "./serverRequest";
-import {CustomExprSelector, replaceSelectInputs} from "./components/customExprSelector";
+import {CustomExprSelector} from "./components/customExprSelector";
 import {updateTaskList} from "./tasks";
-import {createLiteralInputs, LiteralInput} from "./components/literalInput";
+import {LiteralInput} from "./components/literalInput";
 import {setupFileDragAndDrop, setupFileInput} from "./saveLoad";
 import {AbstractTreeInput} from "./components/abstractTreeInput";
 import {markHasUsedLangSelector} from "./attention";
@@ -17,8 +17,6 @@ let modeRadios: HTMLInputElement[];
 let langSelector: HTMLSelectElement;
 
 let activeInputs: AbstractTreeInput[] = [];
-let literalInputs: LiteralInput[] = [];
-let exprSelectors: CustomExprSelector[] = [];
 
 let rootSubtree: Subtree | null = null;
 
@@ -91,8 +89,6 @@ export function updateTree(newTreeHtml: string, newNodeString: string, modeName:
     }
     treeHistoryManager.updateButtons();
     makeOrphanedInputsReadOnly();
-    literalInputs = createLiteralInputs();
-    exprSelectors = replaceSelectInputs();
     updateActiveInputsList();
     setSelectedMode(modeName);
     setCurrentLanguage(lang);
@@ -121,7 +117,7 @@ function makeOrphanedInputsReadOnly(): void {
  * Also adds event listeners to the inputs.
  */
 function updateActiveInputsList(): void {
-    activeInputs = (literalInputs as AbstractTreeInput[]).concat(exprSelectors as AbstractTreeInput[]);
+    activeInputs = getRootSubtree()!.getAllInputs();
     activeInputs.sort((a, b) => {
         return a.getTreePath().localeCompare(b.getTreePath(), undefined, {numeric: true, sensitivity: 'base'});
     });
@@ -132,11 +128,11 @@ export function getActiveInputs(): AbstractTreeInput[] {
 }
 
 export function getLiteralInputs(): LiteralInput[] {
-    return literalInputs;
+    return getActiveInputs().filter(input => input instanceof LiteralInput) as LiteralInput[];
 }
 
 export function getExprSelectors(): CustomExprSelector[] {
-    return exprSelectors;
+    return getActiveInputs().filter(input => input instanceof CustomExprSelector) as CustomExprSelector[];
 }
 
 /**

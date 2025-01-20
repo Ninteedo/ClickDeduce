@@ -215,7 +215,7 @@ describe("phantom inputs are made read-only and disabled", () => {
         selectExprOption(getDropdownAt("0-2-0"), "Var");
         doLiteralEdit(getLiteralInputAt("0-2-0-0"), "x");
         selectExprOption(getDropdownAt("1"), "Num");
-        doLiteralEdit(getLiteralInputAt("1-0"), "hi");
+        doLiteralEdit(getLiteralInputAt("1-0"), "28");
 
         document.getElementById("eval-mode-radio")?.click();
         slightDelay();
@@ -230,7 +230,7 @@ describe("phantom inputs are made read-only and disabled", () => {
         });
 
         const placeholderDivs = document.querySelectorAll(placeholderSelector);
-        expect(placeholderDivs).toHaveLength(2);
+        expect(placeholderDivs).toHaveLength(1);
     });
 });
 

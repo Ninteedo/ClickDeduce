@@ -1,7 +1,7 @@
 import {parseTreePath} from "../utils";
 import {getContextMenuSelectedElement} from "./contextMenu";
 import {createLiteralInput} from "./literalInput";
-import {createExprSelector} from "./customExprSelector";
+import {createExprSelector, replaceDisabledSelectInputs} from "./customExprSelector";
 import {AbstractTreeInput} from "./abstractTreeInput";
 
 export class Subtree {
@@ -10,6 +10,8 @@ export class Subtree {
     private readonly children: Subtree[];
 
     private readonly treePath: string;
+    private readonly parsedTreePath: number[];
+
     private readonly nodeElement: HTMLDivElement;
     private readonly argsElement: HTMLDivElement | null;
 
@@ -26,10 +28,12 @@ export class Subtree {
         this.parent = parent;
 
         this.treePath = this.element.getAttribute(this.DATA_TREE_PATH)!;
+        this.parsedTreePath = parseTreePath(this.treePath);
+
         this.nodeElement = this.element.querySelector('.node') as HTMLDivElement;
         this.argsElement = this.element.querySelector('.args') as HTMLDivElement | null;
 
-        this.isPhantom = this.element.classList.contains(this.PHANTOM_CLASS) || this.getParent()?.isPhantom || false;
+        this.isPhantom = this.getParent()?.isPhantom || this.element.classList.contains(this.PHANTOM_CLASS) || false;
 
         const literalInputs = Array.from(this.nodeElement.querySelectorAll("input.literal[data-tree-path]:not([disabled])"))
             .map(input => createLiteralInput(input as HTMLInputElement));
@@ -38,21 +42,14 @@ export class Subtree {
             .map(select => createExprSelector(select as HTMLSelectElement));
         this.inputs = (literalInputs as AbstractTreeInput[]).concat(exprSelectors);
 
-        const myTreePath = parseTreePath(this.treePath);
         this.children = [];
-        this.argsElement?.querySelectorAll('.subtree').forEach(element => {
-            const treePathString = element.getAttribute(this.DATA_TREE_PATH);
-            if (treePathString) {
-                const treePath = parseTreePath(treePathString);
-                if (treePath.length === myTreePath.length + 1) {
-                    if (treePath[myTreePath.length] !== this.children.length) {
-                        throw new Error("Subtrees not in correct order");
-                    }
-
+        if (this.argsElement && this.argsElement.children) {
+            Array.from(this.argsElement!.children!).forEach(element => {
+                if (element.classList.contains('subtree')) {
                     this.children.push(new Subtree(element as HTMLDivElement, this));
                 }
-            }
-        });
+            });
+        }
 
         this.doSetup();
     }
@@ -63,6 +60,7 @@ export class Subtree {
         if (this.isPhantom) {
             this.disableInputs();
         }
+        replaceDisabledSelectInputs(this.nodeElement);
     }
 
     private addHoverListeners(): void {
@@ -114,6 +112,10 @@ export class Subtree {
         return this.element.classList.contains(this.HIGHLIGHT_CLASS);
     }
 
+    getTreePath(): number[] {
+        return this.parsedTreePath;
+    }
+
     getParent(): Subtree | null {
         return this.parent;
     }
@@ -126,9 +128,28 @@ export class Subtree {
         if (treePath.length === 0) {
             return this;
         }
-        if (treePath[0] < 0 || treePath[0] >= this.children.length) {
-            return null;
+        const next = this.children.find(child => child.getTreePath()[this.getTreePath().length] === treePath[0]);
+
+        return next?.getChildFromPath(treePath.slice(1)) ?? null;
+    }
+
+    /**
+     * Gets the inputs in this specific subtree.
+     */
+    getInputs(): AbstractTreeInput[] {
+        if (this.isPhantom) {
+            return [];
         }
-        return this.children[treePath[0]].getChildFromPath(treePath.slice(1));
+        return this.inputs;
+    }
+
+    /**
+     * Get all inputs in this subtree and its children.
+     */
+    getAllInputs(): AbstractTreeInput[] {
+        if (this.isPhantom) {
+            return [];
+        }
+        return this.inputs.concat(this.children.flatMap(child => child.getAllInputs()));
     }
 }

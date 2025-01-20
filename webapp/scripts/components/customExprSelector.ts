@@ -96,6 +96,18 @@ export class CustomExprSelector extends BaseDropdownSelector {
         handleExprSelectorChoice(this.container, value);
     }
 
+    override disable() {
+        super.disable();
+        console.log('disable');
+        this.button.setAttribute('disabled', 'true');
+    }
+
+    override enable() {
+        super.enable();
+        console.log('enable');
+        this.button.removeAttribute('disabled');
+    }
+
     isTypeSelector(): boolean {
         return this.container.getAttribute('data-kind') === 'type';
     }
@@ -140,8 +152,12 @@ export function createExprSelector(select: HTMLSelectElement): CustomExprSelecto
     return setupTermSelector(newSelector);
 }
 
-function replaceDisabledSelectInputs(): void {
-    const selectInputs: NodeListOf<HTMLSelectElement> = getTree().querySelectorAll(
+export function replaceDisabledSelectInputs(element: HTMLElement | undefined = undefined): void {
+    if (!element) {
+        element = getTree();
+    }
+
+    const selectInputs: NodeListOf<HTMLSelectElement> = element.querySelectorAll(
         'select.expr-dropdown:disabled, select.type-dropdown:disabled, .phantom select.expr-dropdown, .phantom select.type-dropdown'
     );
 

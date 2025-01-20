@@ -11,15 +11,15 @@ import nodes.exceptions.InvalidTreePathException
 abstract class OuterNode extends Node {
 
   override lazy val treePath: List[Int] = getParent match {
-    case Some(value) =>
-      val index: Int = value.args.indexWhere({
+    case Some(parent) =>
+      val index: Int = parent.args.indexWhere({
         case SubExprNode(node) => node eq this
         case SubTypeNode(node) => node eq this
         case _                 => false
       })
       if (index == -1) {
         if (isPhantom) Nil else throw new ClickDeduceException("Could not find self in parent node's args")
-      } else value.treePath :+ index
+      } else parent.treePath :+ index
     case None => Nil
   }
 
