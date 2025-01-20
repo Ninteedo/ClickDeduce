@@ -7,7 +7,7 @@ import {setupFileDragAndDrop, setupFileInput} from "./saveLoad";
 import {AbstractTreeInput} from "./components/abstractTreeInput";
 import {markHasUsedLangSelector} from "./attention";
 import TreeHistoryManager from "./components/TreeHistoryManager";
-import {getRedoButton, getRootSubtree, getTree, getUndoButton} from "./globals/elements";
+import {getFirstSubtree, getRedoButton, getTree, getUndoButton} from "./globals/elements";
 import {isAutoZoomEnabled, zoomToFit} from "./components/panzoom";
 import {Subtree} from "./components/subtree";
 
@@ -41,8 +41,7 @@ export function resetTreeManipulation(): void {
         });
     }
 
-    loadLangSelector();
-    langSelector = document.getElementById('lang-selector') as HTMLSelectElement;
+    langSelector = loadLangSelector();
 
     setupFileInput();
     setupFileDragAndDrop();
@@ -51,16 +50,19 @@ export function resetTreeManipulation(): void {
 /**
  * Loads the language selector HTML from the server and adds it to the DOM.
  */
-function loadLangSelector(): void {
+function loadLangSelector(): HTMLSelectElement {
     const langSelectorContainer: HTMLDivElement = document.getElementById('lang-selector-div') as HTMLDivElement;
 
     langSelectorContainer.innerHTML = getLangSelectorNew();
     const langSelector: HTMLElement | null = document.getElementById('lang-selector');
-    if (!langSelector) throw new Error('Language selector not found');
+    if (!(langSelector instanceof HTMLSelectElement)) throw new Error('Language selector not found');
+    langSelector.selectedIndex = 0;
     langSelector.addEventListener('change', () => {
         markHasUsedLangSelector();
         runAction("IdentityAction", "");
-    })
+    });
+
+    return langSelector;
 }
 
 
@@ -78,7 +80,7 @@ function loadLangSelector(): void {
 export function updateTree(newTreeHtml: string, newNodeString: string, modeName: string, lang: string, addToHistory: boolean = false): void {
     getTree().innerHTML = newTreeHtml;
     lastNodeString = newNodeString;
-    rootSubtree = new Subtree(getRootSubtree(), null);
+    rootSubtree = new Subtree(getFirstSubtree(), null);
     if (addToHistory) {
         treeHistoryManager.addRecord({
             html: newTreeHtml,
@@ -217,4 +219,8 @@ export function setCurrentLanguage(lang: string): void {
 
 export function getCurrentNodeString(): string | null {
     return lastNodeString;
+}
+
+export function getRootSubtree(): Subtree | null {
+    return rootSubtree;
 }

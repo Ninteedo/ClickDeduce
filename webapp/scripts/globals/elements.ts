@@ -22,7 +22,7 @@ export function getTree(): HTMLDivElement {
     return foundTree;
 }
 
-export function getRootSubtree(): HTMLDivElement {
+export function getFirstSubtree(): HTMLDivElement {
     const rootSubtree = document.querySelector('.subtree[data-tree-path=""]');
     if (!rootSubtree) throw new Error('Root subtree not found');
     return rootSubtree as HTMLDivElement;

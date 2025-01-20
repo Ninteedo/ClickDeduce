@@ -1,5 +1,5 @@
 import panzoom, {PanZoom} from "panzoom";
-import {getRootSubtree, getTree, getTreeContainer} from "../globals/elements";
+import {getFirstSubtree, getTree, getTreeContainer} from "../globals/elements";
 
 let panzoomInstance: PanZoom;
 
@@ -8,7 +8,7 @@ let panzoomInstance: PanZoom;
  */
 export function zoomToFit(): void {
     const container: HTMLElement = getTreeContainer();
-    const rootSubtree: HTMLDivElement = getRootSubtree();
+    const rootSubtree: HTMLDivElement = getFirstSubtree();
 
     const scaleWidth = container.clientWidth / rootSubtree.clientWidth;
 
