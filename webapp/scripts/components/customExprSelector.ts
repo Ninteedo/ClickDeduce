@@ -138,6 +138,24 @@ export function replaceSelectInputs(): CustomExprSelector[] {
     return exprSelectors;
 }
 
+export function createExprSelector(select: HTMLSelectElement): CustomExprSelector {
+    const options = Array.from(select.options).slice(1);
+    const treePath = getTreePathOfElement(select);
+    let placeholderText: string;
+    let kind: string;
+    if (select.classList.contains('expr-dropdown')) {
+        placeholderText = 'Enter Expression...';
+        kind = 'expr';
+    } else {
+        placeholderText = 'Enter Type...';
+        kind = 'type';
+    }
+    select.outerHTML = createExprSelectorHTML(treePath, kind, placeholderText, options);
+
+    const newSelector = getTree().querySelector(`.expr-selector-container[data-tree-path="${treePath}"]`) as HTMLDivElement;
+    return setupTermSelector(newSelector);
+}
+
 function replaceDisabledSelectInputs(): void {
     const selectInputs: NodeListOf<HTMLSelectElement> = getTree().querySelectorAll(
         'select.expr-dropdown:disabled, select.type-dropdown:disabled, .phantom select.expr-dropdown, .phantom select.type-dropdown'

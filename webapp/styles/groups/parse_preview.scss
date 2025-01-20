@@ -4,7 +4,7 @@
   position: absolute;
   z-index: 999;
 
-  transform: translateY(-110%);
+  transform: translateY(calc(-100% - 0.5rem));
 
   background-color: colours.$semi-background;
   border: 1px solid colours.$input-outline;

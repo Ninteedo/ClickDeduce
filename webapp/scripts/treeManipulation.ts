@@ -1,6 +1,4 @@
-import {hasClassOrParentHasClass} from "./utils";
 import {runAction} from "./actions";
-import {clearHighlight} from "./interface";
 import {getLangSelectorNew} from "./serverRequest";
 import {CustomExprSelector, replaceSelectInputs} from "./components/customExprSelector";
 import {updateTaskList} from "./tasks";
@@ -9,9 +7,9 @@ import {setupFileDragAndDrop, setupFileInput} from "./saveLoad";
 import {AbstractTreeInput} from "./components/abstractTreeInput";
 import {markHasUsedLangSelector} from "./attention";
 import TreeHistoryManager from "./components/TreeHistoryManager";
-import {getRedoButton, getTree, getUndoButton} from "./globals/elements";
+import {getRedoButton, getRootSubtree, getTree, getUndoButton} from "./globals/elements";
 import {isAutoZoomEnabled, zoomToFit} from "./components/panzoom";
-import {getContextMenuSelectedElement} from "./components/contextMenu";
+import {Subtree} from "./components/subtree";
 
 let treeHistoryManager: TreeHistoryManager;
 
@@ -21,6 +19,8 @@ let langSelector: HTMLSelectElement;
 let activeInputs: AbstractTreeInput[] = [];
 let literalInputs: LiteralInput[] = [];
 let exprSelectors: CustomExprSelector[] = [];
+
+let rootSubtree: Subtree | null = null;
 
 export let lastNodeString: string | null = null;
 
@@ -32,6 +32,7 @@ export function resetTreeManipulation(): void {
 
     activeInputs = [];
     lastNodeString = null;
+    rootSubtree = null;
 
     modeRadios = Array.from(document.querySelectorAll('input[name="mode"]'));
     for (const radio of modeRadios) {
@@ -77,7 +78,7 @@ function loadLangSelector(): void {
 export function updateTree(newTreeHtml: string, newNodeString: string, modeName: string, lang: string, addToHistory: boolean = false): void {
     getTree().innerHTML = newTreeHtml;
     lastNodeString = newNodeString;
-    treeCleanup();
+    rootSubtree = new Subtree(getRootSubtree(), null);
     if (addToHistory) {
         treeHistoryManager.addRecord({
             html: newTreeHtml,
@@ -87,7 +88,9 @@ export function updateTree(newTreeHtml: string, newNodeString: string, modeName:
         });
     }
     treeHistoryManager.updateButtons();
+    makeOrphanedInputsReadOnly();
     literalInputs = createLiteralInputs();
+    exprSelectors = replaceSelectInputs();
     updateActiveInputsList();
     setSelectedMode(modeName);
     setCurrentLanguage(lang);
@@ -96,75 +99,8 @@ export function updateTree(newTreeHtml: string, newNodeString: string, modeName:
     if (isAutoZoomEnabled()) zoomToFit();
 }
 
-/**
- * Updates the state of the tree after it has been changed.
- *
- * Adds hover listeners to the tree, makes orphaned inputs read-only,
- * and updates the stored initial values of literal inputs.
- */
-function treeCleanup(): void {
-    exprSelectors = replaceSelectInputs();
-    addHoverListeners();
-    makeOrphanedInputsReadOnly();
-    makePhantomInputsReadOnly();
-    makeDisabledInputsFocusOriginal();
-    addClickListeners();
-}
-
 export function reloadCurrentTree(): void {
     treeHistoryManager.reloadCurrentTree();
-}
-
-/**
- * Adds hover listeners to the tree.
- *
- * These automatically add and remove the highlight class to the subtree elements.
- */
-function addHoverListeners(): void {
-    document.querySelectorAll('.subtree').forEach(div => {
-        div.addEventListener('mouseover', (event) => {
-            event.stopPropagation();  // Stop the event from bubbling up to parent subtree elements
-            const target: EventTarget | null = event.currentTarget;
-
-            // Remove the highlight from any other subtree elements
-            if (!getContextMenuSelectedElement()) {
-                document.querySelectorAll('.subtree').forEach(el => el.classList.remove('highlight'));
-                if (target instanceof HTMLElement) {
-                    target.classList.add('highlight');  // Add the highlight to the subtree currently hovered over
-                }
-            }
-        });
-        div.addEventListener('mouseout', (event) => {
-            event.stopPropagation();  // Stop the event from bubbling up to parent subtree elements
-            if (!getContextMenuSelectedElement()) {
-                clearHighlight();  // Remove the highlight from currently hovered over subtree
-            }
-        });
-    });
-}
-
-/**
- * Add left-click listeners to nodes that focus the node's input when clicked (if it exists).
- */
-function addClickListeners(): void {
-    document.querySelectorAll('.subtree').forEach(subtree => {
-        if (subtree instanceof HTMLElement) {
-            const input = subtree.querySelector(':scope > .node input:not([disabled])');
-            if (input instanceof HTMLInputElement) {
-                subtree.addEventListener('click', (evt) => {
-                    if (!subtree.classList.contains('highlight')) return;
-                    evt.preventDefault();
-                    input.focus();
-                    input.select();
-                });
-                subtree.querySelectorAll('input').forEach(input => {
-                    input.addEventListener('click', (evt) => {
-                        evt.stopPropagation();
-                    });
-                })
-            }
-        }
-    });
 }
 
 /**
@@ -174,37 +110,6 @@ function makeOrphanedInputsReadOnly(): void {
     document.querySelectorAll('#tree select:not([data-tree-path]), #tree input.literal:not([data-tree-path])').forEach(el => {
         el.setAttribute('readonly', "true");
         el.setAttribute('disabled', "true");
-    });
-}
-
-/**
- * Makes all inputs with the phantom class or part of a phantom subtree read-only.
- */
-function makePhantomInputsReadOnly(): void {
-    document.querySelectorAll('#tree select, #tree input').forEach(el => {
-        if (el instanceof HTMLElement && hasClassOrParentHasClass(el, 'phantom')) {
-            el.setAttribute('readonly', "true");
-            el.setAttribute('disabled', "true");
-
-            if (el.classList.contains('identifier-lookup')) {
-                el.parentElement?.classList.add('dropdown-selector-container')
-            }
-        }
-    })
-}
-
-function makeDisabledInputsFocusOriginal(): void {
-    document.querySelectorAll('div.expr-selector-placeholder, div.type-dropdown-placeholder').forEach(input => {
-        const treePath = input.getAttribute('data-tree-path');
-        if (treePath === null) return;
-
-        const origin = getTree().querySelector(`input:not([disabled])[data-tree-path="${treePath}"]`) as HTMLInputElement;
-        input.addEventListener('mouseover', () => {
-            origin.parentElement?.classList.add('guide-highlight');
-        });
-        input.addEventListener('mouseout', () => {
-            origin.parentElement?.classList.remove('guide-highlight');
-        });
     });
 }
 

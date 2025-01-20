@@ -187,15 +187,18 @@ class LiteralBoolInput extends LiteralInput {
 export function createLiteralInputs(): LiteralInput[] {
     return Array.from(document.querySelectorAll('input.literal[data-tree-path]:not([disabled])')).map((input: Element) => {
         if (!(input instanceof HTMLInputElement)) throw new Error('Expected input to be an HTMLInputElement');
-
-        if (input.classList.contains('identifier-lookup')) {
-            return new LiteralIdentifierLookupInput(input);
-        } else if (input.classList.contains('integer')) {
-            return new LiteralIntInput(input);
-        } else if (input.type === 'checkbox') {
-            return new LiteralBoolInput(input);
-        } else {
-            return new LiteralInput(input);
-        }
+        return createLiteralInput(input);
     });
+}
+
+export function createLiteralInput(input: HTMLInputElement): LiteralInput {
+    if (input.classList.contains('identifier-lookup')) {
+        return new LiteralIdentifierLookupInput(input);
+    } else if (input.classList.contains('integer')) {
+        return new LiteralIntInput(input);
+    } else if (input.type === 'checkbox') {
+        return new LiteralBoolInput(input);
+    } else {
+        return new LiteralInput(input);
+    }
 }

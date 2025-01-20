@@ -52,11 +52,6 @@
     transform: translate(-50%, -50%);
   }
 
-  &.axiom {
-    display: flex;
-    flex-direction: column-reverse;
-  }
-
   .annotation-axiom, .annotation-new {
     font-size: 0.75rem;
     color: colours.$comment;
