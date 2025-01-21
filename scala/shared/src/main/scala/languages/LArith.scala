@@ -16,6 +16,8 @@ import languages.terms.values.Value
 import scala.annotation.targetName
 
 class LArith extends ClickDeduceLanguage {
+  lang =>
+
   registerTerms("LArith", List(Num, Plus, Times, IntType, NumV))
 
   // expressions
@@ -302,6 +304,8 @@ class LArith extends ClickDeduceLanguage {
   protected class LArithParser extends ExprParser {
     protected def num: Parser[Num] = wholeNumber ^^ (n => Num(LiteralInt(BigInt(n))))
 
+    protected def blank: Parser[BlankExprDropDown] = "_" ^^^ BlankExprDropDown(lang)
+
     protected def chainl1(p: Parser[Expr], op: Parser[(Expr, Expr) => Expr]): Parser[Expr] = {
       def rest(acc: Expr): Parser[Expr] =
         ((op ~ p) ^^ { case f ~ x => f(acc, x) } flatMap rest) | success(acc)
@@ -309,7 +313,7 @@ class LArith extends ClickDeduceLanguage {
       p flatMap rest
     }
 
-    protected def primitive: Parser[Expr] = num | "(" ~> expr <~ ")"
+    protected def primitive: Parser[Expr] = num | blank | "(" ~> expr <~ ")"
 
     private def level6: Parser[Expr] = chainl1(primitive, level6Parse)
 
