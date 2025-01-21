@@ -3,6 +3,7 @@ import {getContextMenuSelectedElement} from "./contextMenu";
 import {createLiteralInput} from "./literalInput";
 import {createExprSelector, replaceDisabledSelectInputs} from "./customExprSelector";
 import {AbstractTreeInput} from "./abstractTreeInput";
+import {RuleAnnotation} from "./ruleAnnotation";
 
 export class Subtree {
     private readonly element: HTMLDivElement;
@@ -16,6 +17,9 @@ export class Subtree {
     private readonly argsElement: HTMLDivElement | null;
 
     private readonly inputs: AbstractTreeInput[];
+    private readonly allInputs: AbstractTreeInput[];
+
+    private readonly ruleAnnotation: RuleAnnotation;
 
     private readonly isPhantom: boolean;
 
@@ -50,6 +54,16 @@ export class Subtree {
                 }
             });
         }
+
+        this.allInputs = this.inputs.concat(this.children.flatMap(child => child.getAllInputs()));
+
+        let ruleAnnotationElement;
+        if (this.argsElement) {
+            ruleAnnotationElement = this.argsElement.lastElementChild;
+        } else {
+            ruleAnnotationElement = this.element.lastElementChild;
+        }
+        this.ruleAnnotation = new RuleAnnotation(ruleAnnotationElement as HTMLDivElement, this);
 
         this.doSetup();
     }
@@ -112,6 +126,10 @@ export class Subtree {
         return this.element.classList.contains(this.HIGHLIGHT_CLASS);
     }
 
+    getElement(): HTMLDivElement {
+        return this.element;
+    }
+
     getTreePath(): number[] {
         return this.parsedTreePath;
     }
@@ -134,22 +152,16 @@ export class Subtree {
     }
 
     /**
-     * Gets the inputs in this specific subtree.
-     */
-    getInputs(): AbstractTreeInput[] {
-        if (this.isPhantom) {
-            return [];
-        }
-        return this.inputs;
-    }
-
-    /**
      * Get all inputs in this subtree and its children.
      */
     getAllInputs(): AbstractTreeInput[] {
         if (this.isPhantom) {
             return [];
         }
-        return this.inputs.concat(this.children.flatMap(child => child.getAllInputs()));
+        return this.allInputs;
+    }
+
+    getRuleAnnotation(): RuleAnnotation {
+        return this.ruleAnnotation;
     }
 }

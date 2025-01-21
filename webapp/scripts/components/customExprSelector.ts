@@ -98,13 +98,11 @@ export class CustomExprSelector extends BaseDropdownSelector {
 
     override disable() {
         super.disable();
-        console.log('disable');
         this.button.setAttribute('disabled', 'true');
     }
 
     override enable() {
         super.enable();
-        console.log('enable');
         this.button.removeAttribute('disabled');
     }
 
