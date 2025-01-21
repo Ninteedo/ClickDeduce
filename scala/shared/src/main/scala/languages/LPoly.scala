@@ -105,7 +105,7 @@ class LPoly extends LData {
         EvalRuleBuilder()
           .setConclusion(formatApplyType(TermCommons.e, TermCommons.t), TermCommons.v)
           .addAssumption(TermCommons.e, formatPoly(TermCommons.A, TermCommons.e(0)))
-          .addAssumption(MultiElement(TermCommons.e(0), EvalSubst(TermCommons.t, TermCommons.A)), TermCommons.v)
+          .addAssumption(TermCommons.e(0), TermCommons.v, List(EvalRuleBind(TermCommons.A, TermCommons.t)))
       )
       .buildOption
   }

@@ -112,10 +112,10 @@ class LRec extends LLam {
       )
       .addEvaluationRule(
         EvalRuleBuilder()
-          .setConclusion(EvalRulePart.reflexive(
-            formatRec(TermCommons.f, TermCommons.x, TermCommons.t(1), TermCommons.t(2), TermCommons.e, hideTypes = true)
-          )
-          )
+          .setConclusion(EvalRulePart(
+            formatRec(TermCommons.f, TermCommons.x, TermCommons.t(1), TermCommons.t(2), TermCommons.e, hideTypes = true),
+            EvalRuleAbstraction(TermCommons.env, formatRec(TermCommons.f, TermCommons.x, TermCommons.t(1), TermCommons.t(2), TermCommons.e, hideTypes = true))
+          ))
       )
       .buildOption
   }

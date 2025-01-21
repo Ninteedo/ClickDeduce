@@ -233,12 +233,9 @@ class LData extends LRec {
           .setConclusion(formatLetPair(TermCommons.x, TermCommons.y, TermCommons.e(1), TermCommons.e(2)), TermCommons.v)
           .addAssumption(TermCommons.e(1), formatPair(TermCommons.v(1), TermCommons.v(2)))
           .addAssumption(
-            EvalMultiSubst(
-              TermCommons.e(2),
-              EvalSubst(TermCommons.v(1), TermCommons.x),
-              EvalSubst(TermCommons.v(2), TermCommons.y)
-            ),
-            TermCommons.v
+            TermCommons.e(2),
+            TermCommons.v,
+            List(EvalRuleBind(TermCommons.x, TermCommons.v(1)), EvalRuleBind(TermCommons.y, TermCommons.v(2)))
           )
       )
       .buildOption
@@ -423,7 +420,11 @@ class LData extends LRec {
             TermCommons.v
           )
           .addAssumption(TermCommons.e, formatLeft(TermCommons.v(1)))
-          .addAssumption(MultiElement(TermCommons.e(1), EvalSubst(TermCommons.v(1), TermCommons.x)), TermCommons.v)
+          .addAssumption(
+            TermCommons.e(1),
+            TermCommons.v,
+            List(EvalRuleBind(TermCommons.x, TermCommons.v(1)))
+          )
       )
       .addEvaluationRule(
         EvalRuleBuilder()
@@ -432,7 +433,11 @@ class LData extends LRec {
             TermCommons.v
           )
           .addAssumption(TermCommons.e, formatRight(TermCommons.v(2)))
-          .addAssumption(MultiElement(TermCommons.e(2), EvalSubst(TermCommons.v(2), TermCommons.y)), TermCommons.v)
+          .addAssumption(
+            TermCommons.e(2),
+            TermCommons.v,
+            List(EvalRuleBind(TermCommons.y, TermCommons.v(2)))
+          )
       )
       .buildOption
   }

@@ -58,15 +58,14 @@ class LLam extends LLet {
           TypeCheckRulePart(TermCommons.e(2), TermCommons.t(1))
         ),
         EvalRulePreview(
-          EvalRulePart(MultiElement(TermCommons.e(1).spaceAfter, TermCommons.e(2)), MathElement("v")),
-          EvalRulePart(TermCommons.e(1), MultiElement(Symbols.lambdaLower, MathElement("x.e"))),
+          EvalRulePart(MultiElement(TermCommons.e(1).spaceAfter, TermCommons.e(2)), TermCommons.v),
+          EvalRulePart(TermCommons.e(1), EvalRuleAbstraction(TermCommons.env(0), MultiElement(Symbols.lambdaLower, MathElement("x.e")))),
           EvalRulePart.eToV(2),
           EvalRulePart(
-            MultiElement(
-              MathElement("e"),
-              SquareBracketedElement(MultiElement(TermCommons.v(2), Symbols.forwardSlash, MathElement("x")))
-            ),
-            MathElement("v")
+            TermCommons.e,
+            TermCommons.v,
+            TermCommons.env(0),
+            List(EvalRuleBind(TermCommons.x, TermCommons.v(2)))
           )
         )
       )
@@ -146,7 +145,7 @@ class LLam extends LLet {
             )
           ),
           EvalRulePreview(
-            EvalRulePart(evalExprText, evalExprText)
+            EvalRulePart(evalExprText, EvalRuleAbstraction(Symbols.sigma, evalExprText))
           )
         )
       )

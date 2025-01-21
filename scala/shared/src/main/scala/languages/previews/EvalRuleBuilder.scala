@@ -11,8 +11,8 @@ class EvalRuleBuilder {
     this
   }
 
-  def addAssumption(l: ConvertableText, r: ConvertableText): EvalRuleBuilder = {
-    addAssumption(EvalRulePart(l, r))
+  def addAssumption(l: ConvertableText, r: ConvertableText, binds: List[EvalRuleBind] = Nil): EvalRuleBuilder = {
+    addAssumption(EvalRulePart(l, r, binds))
   }
 
   def setConclusion(conclusion: RulePart): EvalRuleBuilder = {

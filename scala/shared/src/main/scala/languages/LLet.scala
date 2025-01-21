@@ -51,19 +51,17 @@ class LLet extends LIf {
 
     override val aliases: List[String] = List("Variable", "X")
 
-    override lazy val rulePreview: Option[RulePreview] = Some(
-      RulePreview(
-        List(TypeCheckRulePreview(
-          TypeCheckRulePart(MathElement("x"), Symbols.tau),
-          TypeCheckRulePart(MultiElement(
-            Symbols.gamma, BracketedElement(MathElement("x")), MathElement.equals.spacesAround, Symbols.tau
-          )
-          ),
-        )
-        ),
-        List() // TODO: does variable lookup need evaluation rule preview
+    override lazy val rulePreview: Option[RulePreview] = RulePreviewBuilder()
+      .addTypeCheckRule(
+        TypeCheckRuleBuilder()
+          .setConclusion(TermCommons.x, TermCommons.t)
+          .addAssumption(TypeCheckRulePart(MultiElement(Symbols.gamma, BracketedElement(TermCommons.x), MathElement.equals.spacesAround, TermCommons.t)))
       )
-    )
+      .addEvaluationRule(
+        EvalRuleBuilder()
+          .setConclusion(TermCommons.x, MultiElement(Symbols.sigma, BracketedElement(TermCommons.x)))
+      )
+      .buildOption
   }
 
   private def formatLet(v: ConvertableText, assign: ConvertableText, bound: ConvertableText): ConvertableText =
@@ -116,7 +114,7 @@ class LLet extends LIf {
           EvalRuleBuilder()
             .setConclusion(exprText, TermCommons.v(2))
             .addAssumption(TermCommons.e(1), TermCommons.v(1))
-            .addAssumption(MultiElement(TermCommons.e(2), EvalSubst(TermCommons.v(1), TermCommons.x)), TermCommons.v(2))
+            .addAssumption(TermCommons.e(2), TermCommons.v(2), List(EvalRuleBind(TermCommons.x, TermCommons.v(1))))
         )
         .buildOption
     }

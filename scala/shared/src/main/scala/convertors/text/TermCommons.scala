@@ -6,10 +6,13 @@ object TermCommons {
   def v(n: Int): ConvertableText = MultiElement(v, SubscriptElement(MathElement(n.toString)))
 
   def t(n: Int): ConvertableText = MultiElement(t, SubscriptElement(MathElement(n.toString)))
-
+  
+  def env(n: Int): ConvertableText = MultiElement(env, SubscriptElement(MathElement(n.toString)))
+  
   val e: ConvertableText = MathElement("e")
   val v: ConvertableText = MathElement("v")
   val t: ConvertableText = Symbols.tau
+  val env: ConvertableText = Symbols.sigma
   val f: ConvertableText = MathElement("f")
   val x: ConvertableText = MathElement("x")
   val y: ConvertableText = MathElement("y")

@@ -245,14 +245,10 @@ class LList extends LPoly {
           )
           .addAssumption(EvalRulePart(TermCommons.e, formatCons(TermCommons.v(1), TermCommons.v(2))))
           .addAssumption(EvalRulePart(
-            EvalMultiSubst(
-              TermCommons.e(2),
-              EvalSubst(TermCommons.v(1), TermCommons.x),
-              EvalSubst(TermCommons.v(2), TermCommons.y)
-            ),
-            TermCommons.v(2)
-          )
-          )
+            TermCommons.e(2),
+            TermCommons.v(2),
+            List(EvalRuleBind(TermCommons.x, TermCommons.v(1)), EvalRuleBind(TermCommons.y, TermCommons.v(2)))
+          ))
       )
       .buildOption
   }
