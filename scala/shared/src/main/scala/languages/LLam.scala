@@ -334,6 +334,8 @@ class LLam extends LLet {
   }
 
   protected class LLamParser extends LLetParser {
+    override protected def keywords: Set[String] = super.keywords ++ Set("int", "bool")
+
     protected def lambda: Parser[Lambda] =
       ("\\" ~> ident ~ (":" ~> typ).? ~ "." ~ expr ^^ {
         case v ~ Some(t) ~ _ ~ e => Lambda(v, t, e)
@@ -344,13 +346,18 @@ class LLam extends LLet {
           case v ~ None ~ _ ~ e    => Lambda(v, defaultType, e)
         })
 
-    protected def typ: Parser[Type] =
+    protected def typ: Parser[Type] = typPrimitive ~ "->" ~ typ ^^ {
+      case t1 ~ _ ~ t2 => Func(t1, t2)
+    } | typPrimitive
+
+    protected def typPrimitive: Parser[Type] =
       "(?i)int".r ^^ {_ => IntType()} |
-        "(?i)bool".r ^^ {_ => BoolType()} |
-        "(" ~> typ <~ ")"
+      "(?i)bool".r ^^ {_ => BoolType()} |
+      "(" ~> typ <~ ")"
 
     protected def applyExpr: Parser[Expr] = rep1(super.expr) ^^ {
       case first :: rest => rest.foldLeft(first)(Apply.apply)
+      case Nil => throw new IllegalArgumentException("applyExpr: empty list")
     }
 
     override protected def primitive: Parser[Expr] = lambda | super.primitive

@@ -251,11 +251,13 @@ class LLet extends LIf {
   }
 
   protected class LLetParser extends LIfParser {
-    protected val keywords: Set[String] = Set(
+    protected def keywords: Set[String] = Set(
       "let", "in", "if", "then", "else", "true", "false"
     )
+    
+    private lazy val keywordsCache: Set[String] = keywords
 
-    protected def varP: Parser[Expr] = ident.filter(!keywords.contains(_)) ^^ {Var(_)}
+    protected def varP: Parser[Expr] = ident.filter(!keywordsCache.contains(_)) ^^ {Var(_)}
 
     protected def let: Parser[Expr] = "let" ~> ident ~ ("=" ~> expr) ~ ("in" ~> expr) ^^ {
       case v ~ assign ~ bound => Let(v, assign, bound)

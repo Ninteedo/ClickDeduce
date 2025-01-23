@@ -93,7 +93,9 @@ class LList extends LPoly {
         .addAssumption(TypeCheckRulePart(TermCommons.e(2), listTypeText(Symbols.tau)))
       )
       .addEvaluationRule(EvalRuleBuilder()
-        .setConclusion(EvalRulePart.reflexive(formatCons(TermCommons.v(1), TermCommons.v(2))))
+        .setConclusion(formatCons(TermCommons.e(1), TermCommons.e(2)), formatCons(TermCommons.v(1), TermCommons.v(2)))
+        .addAssumption(EvalRulePart.eToV(1))
+        .addAssumption(EvalRulePart.eToV(2))
       )
       .buildOption
   }
@@ -323,7 +325,38 @@ class LList extends LPoly {
 
   // tasks
 
-  setTasks()
+  setTasks(CreateAListTask)
+
+  private object CreateAListTask extends Task {
+    override val name: String = "Create a multi-element list"
+
+    override val description: String = "Create a list of any type with at least two elements, using Cons and ListNil." +
+      "The elements must be of matching types. The type of nil has to be explicitly specified."
+
+    override val difficulty: Int = 2
+
+    override def checkFulfilled(expr: Expr): Boolean = {
+      def listLength(expr: Expr): Option[Int] = expr match {
+        case Cons(_, tail) => tail match {
+          case e: Cons => listLength(e).map(_ + 1)
+          case e: ListNil => Some(1)
+          case _ => None
+        }
+        case ListNil(_) => Some(0)
+        case _ => None
+      }
+
+      def checkList(expr: Expr): Boolean = checkCondition(
+        expr,
+        cond = {
+          case e: Cons => listLength(e).exists(_ >= 2)
+          case _ => false
+        }
+      )
+
+      !expr.typeCheck().isError && checkList(expr)
+    }
+  }
 
   // parser
 
@@ -350,6 +383,10 @@ class LList extends LPoly {
     override protected def level2: Parser[Expr] = cons
 
     override protected def primitive: Parser[Expr] = nil | caseList | super.primitive
+
+    override protected def typ: Parser[Type] = super.typ | "(?i)list".r ~ "[" ~ typ ~ "]" ^^ {
+      case _ ~ _ ~ typ ~ _ => ListType(typ)
+    }
   }
 
   override protected val exprParser: ExprParser = new LListParser

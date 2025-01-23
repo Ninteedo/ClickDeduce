@@ -76,7 +76,7 @@
   align-items: flex-end;
   justify-content: space-between;
 
-  .expr {
+  .expr, .type {
     :not(.expr-selector-container) {
       div {
         display: inline;
