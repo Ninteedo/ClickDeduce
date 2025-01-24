@@ -331,7 +331,7 @@ class LList extends LPoly {
     override val name: String = "Create a multi-element list"
 
     override val description: String = "Create a list of any type with at least two elements, using Cons and ListNil." +
-      "The elements must be of matching types. The type of nil has to be explicitly specified."
+      " The elements must be of matching types. The type of nil has to be explicitly specified."
 
     override val difficulty: Int = 2
 

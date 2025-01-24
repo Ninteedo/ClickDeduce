@@ -3,12 +3,12 @@ import {getLangSelectorNew} from "./serverRequest";
 import {CustomExprSelector} from "./components/customExprSelector";
 import {updateTaskList} from "./tasks";
 import {LiteralInput} from "./components/literalInput";
-import {setupFileDragAndDrop, setupFileInput} from "./saveLoad";
+import {resumeFileDragAndDrop, setupFileDragAndDrop, setupFileInput} from "./saveLoad";
 import {AbstractTreeInput} from "./components/abstractTreeInput";
 import {markHasUsedLangSelector} from "./attention";
 import TreeHistoryManager from "./components/TreeHistoryManager";
 import {getFirstSubtree, getRedoButton, getTree, getUndoButton} from "./globals/elements";
-import {isAutoZoomEnabled, zoomToFit} from "./components/panzoom";
+import {isAutoZoomEnabled, unlockPanZoom, zoomToFit} from "./components/panzoom";
 import {Subtree} from "./components/subtree";
 
 let treeHistoryManager: TreeHistoryManager;
@@ -93,6 +93,9 @@ export function updateTree(newTreeHtml: string, newNodeString: string, modeName:
     setSelectedMode(modeName);
     setCurrentLanguage(lang);
     updateTaskList(lang, lastNodeString);
+
+    resumeFileDragAndDrop();
+    unlockPanZoom();
 
     if (isAutoZoomEnabled()) zoomToFit();
 }
@@ -197,6 +200,8 @@ export function enableInputs(): void {
     });
     langSelector.removeAttribute('disabled');
     getTree().querySelectorAll('.expr-selector-button').forEach(button => button.removeAttribute('disabled'));
+    resumeFileDragAndDrop();
+    unlockPanZoom();
 }
 
 export function loadTreeFromString(nodeString: string): void {

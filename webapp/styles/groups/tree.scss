@@ -64,6 +64,11 @@
       align-self: flex-end;
     }
   }
+
+  .drag-highlight {
+    border: 2px dashed colours.$green;
+    background-color: colours.$highlighted-tree;
+  }
 }
 
 .highlight {

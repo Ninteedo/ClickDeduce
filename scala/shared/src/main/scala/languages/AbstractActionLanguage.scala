@@ -2,8 +2,6 @@ package languages
 
 import actions.*
 import actions.exceptions.ActionInvocationException
-import app.ClickDeduceException
-import languages.terms.literals.Literal
 import nodes.*
 import nodes.exceptions.NodeStringParseException
 
@@ -15,6 +13,7 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
     case "SelectTypeAction"  => 1
     case "EditLiteralAction" => 1
     case "DeleteAction"      => 0
+    case "MoveAction"        => 1
     case "PasteAction"       => 1
     case "ParseExprAction"   => 1
     case "IdentityAction"    => 0
@@ -36,6 +35,7 @@ trait AbstractActionLanguage extends AbstractNodeLanguage {
       case "SelectTypeAction"  => SelectTypeAction(node, treePath, lang, extraArgs.head)
       case "EditLiteralAction" => EditLiteralAction(node, treePath, lang, extraArgs.head)
       case "DeleteAction"      => DeleteAction(node, treePath, lang)
+      case "MoveAction"        => MoveAction(node, treePath, lang, Node.readPathString(extraArgs.head))
       case "PasteAction"       => PasteAction(node, treePath, lang, extraArgs.head)
       case "ParseExprAction"   => ParseExprAction(node, treePath, lang, extraArgs.head)
       case "IdentityAction"    => IdentityAction(node, treePath, lang)

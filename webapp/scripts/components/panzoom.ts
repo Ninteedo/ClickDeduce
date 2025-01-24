@@ -68,3 +68,11 @@ export function centerTree(): void {
     panzoomInstance.zoomAbs(0, 0, 1);
     panzoomInstance.moveTo(x, y);
 }
+
+export function lockPanZoom(): void {
+    panzoomInstance.pause();
+}
+
+export function unlockPanZoom(): void {
+    panzoomInstance.resume();
+}

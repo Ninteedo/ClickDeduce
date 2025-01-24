@@ -18,13 +18,13 @@ import scala.scalajs.js.annotation.JSExportTopLevel
 object ScalaJsEntry {
   private val knownLanguages: List[(String, ClickDeduceLanguage)] = List(
     "LArith" -> LArith(),
-    "LIf" -> LIf(),
-    "LLet" -> LLet(),
-    "LLam" -> LLam(),
-    "LRec" -> LRec(),
-    "LData" -> LData(),
-    "LPoly" -> LPoly(),
-    "LList" -> LList(),
+    "LIf"    -> LIf(),
+    "LLet"   -> LLet(),
+    "LLam"   -> LLam(),
+    "LRec"   -> LRec(),
+    "LData"  -> LData(),
+    "LPoly"  -> LPoly(),
+    "LList"  -> LList(),
   )
 
   private def getLanguage(langName: String): ClickDeduceLanguage = knownLanguages.find(_._1 == langName) match {

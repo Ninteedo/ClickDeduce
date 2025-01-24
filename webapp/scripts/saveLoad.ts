@@ -56,6 +56,8 @@ export function setupFileDragAndDrop(): void {
     const removeHighlight = () => treeContainer.classList.remove(highlightClass);
 
     treeContainer.addEventListener('dragover', (event) => {
+        if (fileDragAndDropPaused) return;
+
         event.preventDefault();
         addHighlight();
     });
@@ -63,6 +65,8 @@ export function setupFileDragAndDrop(): void {
     treeContainer.addEventListener('dragleave', removeHighlight);
 
     treeContainer.addEventListener('drop', (event) => {
+        if (fileDragAndDropPaused) return;
+
         event.preventDefault();
         removeHighlight();
 
@@ -99,4 +103,14 @@ function loadFromFile(reader: FileReader): void {
 
 export function loadTree(): void {
     fileInput.click();
+}
+
+let fileDragAndDropPaused: boolean = false;
+
+export function pauseFileDragAndDrop(): void {
+    fileDragAndDropPaused = true;
+}
+
+export function resumeFileDragAndDrop(): void {
+    fileDragAndDropPaused = false;
 }
