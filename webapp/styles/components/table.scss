@@ -1,0 +1,13 @@
+@use "../abstracts/colours";
+
+table {
+  border-collapse: collapse;
+  text-align: left;
+
+  tr {
+    td {
+      border: 0.1rem solid colours.$table-border;
+      padding: 0.25rem;
+    }
+  }
+}

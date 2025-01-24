@@ -124,3 +124,7 @@ export function getToggleControlsButton(): HTMLButtonElement {
 export function getControlsDiv(): HTMLDivElement {
     return document.getElementById('controls') as HTMLDivElement;
 }
+
+export function getShortcutsLink(): HTMLAnchorElement {
+    return document.getElementById('shortcuts-link') as HTMLAnchorElement;
+}

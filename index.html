@@ -74,9 +74,15 @@
 
       <div class="control-group">
         <h4>Help</h4>
-        <a href="guide">Guide</a>
-        <br/>
-        <a href="https://github.com/Ninteedo/ClickDeduce">GitHub</a>
+        <div class="controls-organised-row">
+          <div class="controls-organised-col">
+            <a href="guide">Guide</a>
+            <a href="https://github.com/Ninteedo/ClickDeduce">GitHub</a>
+          </div>
+          <div class="controls-organised-col">
+            <a id="shortcuts-link">Shortcuts</a>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -105,7 +111,7 @@
 
 <div id="error-message" class="error-message fade-out"></div>
 
-<div id="export-output-container">
+<div id="export-output-container" class="modal-display">
   <label id="export-output-title" for="export-output"></label>
   <label id="export-output-desc" for="export-output"></label>
   <textarea id="export-output" readonly></textarea>
@@ -113,6 +119,11 @@
     <button id="export-copy-button">Copy to Clipboard</button>
     <button id="export-close-button">Close</button>
   </div>
+</div>
+
+<div id="shortcuts-dialog" class="modal-display">
+  <h2>Shortcuts</h2>
+  <div id="shortcuts-dialog-contents"></div>
 </div>
 
 <div id="blocker"></div>

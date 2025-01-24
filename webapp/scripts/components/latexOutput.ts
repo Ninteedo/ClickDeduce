@@ -1,8 +1,22 @@
 import {getSelectedLanguage, getSelectedMode} from "../utils";
 import {lastNodeString} from "../treeManipulation";
 import {getBlocker} from "../globals/elements";
+import {Modal} from "./modal";
 // @ts-ignore
 import {convertToLaTeX} from "scalajs:main.js";
+
+let latexModal: Modal | null = null;
+
+function getLatexModal(): Modal {
+    if (!latexModal) {
+        const outputDiv = document.getElementById('export-output-container') as HTMLDivElement;
+        if (!(outputDiv instanceof HTMLDivElement)) {
+            throw new Error('Export output container not found');
+        }
+        latexModal = new Modal(outputDiv, getBlocker());
+    }
+    return latexModal;
+}
 
 /**
  * Displays the export LaTeX output modal.
@@ -15,7 +29,6 @@ export function exportLaTeX(): void {
 }
 
 function showExportOutput(title: string, output: string, description: string | null): void {
-    const outputDiv = document.getElementById('export-output-container') as HTMLDivElement;
     const outputTextArea = document.getElementById('export-output') as HTMLTextAreaElement;
     outputTextArea.value = output;
     const outputTitle = document.getElementById('export-output-title');
@@ -29,8 +42,7 @@ function showExportOutput(title: string, output: string, description: string | n
             outputDescription.classList.remove('visible');
         }
     }
-    outputDiv.classList.add('visible');
-    getBlocker().classList.add('visible');
+    getLatexModal().show();
 }
 
 /**
@@ -46,7 +58,5 @@ export function copyExportOutput() {
  * Closes the export output modal.
  */
 export function closeExportOutput() {
-    const outputDiv = document.getElementById('export-output-container') as HTMLDivElement;
-    outputDiv.classList.remove('visible');
-    getBlocker().classList.remove('visible');
+    getLatexModal().hide();
 }

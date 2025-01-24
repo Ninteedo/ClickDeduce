@@ -47,9 +47,7 @@ div.control-group {
   width: max-content;
   flex-shrink: 0;
   max-height: 10rem;
-}
 
-.control-group {
   form {
     display: flex;
     flex-direction: column;
@@ -58,6 +56,20 @@ div.control-group {
       display: flex;
       align-items: center;
     }
+  }
+
+  .controls-organised-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 0.1rem;
+  }
+
+  .controls-organised-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 0.1rem;
   }
 }
 

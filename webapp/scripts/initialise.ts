@@ -25,6 +25,7 @@ import {
     getPasteButton,
     getRedoButton,
     getSaveButton,
+    getShortcutsLink,
     getToggleControlsButton,
     getTree,
     getUndoButton,
@@ -32,6 +33,7 @@ import {
 } from "./globals/elements";
 import {setUpPanZoom, zoomToFit} from "./components/panzoom";
 import {closeExportOutput, copyExportOutput, exportLaTeX} from "./components/latexOutput";
+import {showShortcutsDialog} from "./components/shortcutsHelper";
 
 /**
  * Sets up the global variables and initialises the panzoom instance.
@@ -52,7 +54,7 @@ export function initialise(skipImages: boolean = false): void {
     startNodeBlank();
 }
 
-function setupButtons() {
+function setupButtons(): void {
     getUndoButton().addEventListener('click', undo);
     getRedoButton().addEventListener('click', redo);
     getPasteButton().addEventListener('click', contextMenuPaste);
@@ -66,6 +68,7 @@ function setupButtons() {
     getExportCopyButton().addEventListener('click', copyExportOutput);
     getExportCloseButton().addEventListener('click', closeExportOutput);
     getToggleControlsButton().addEventListener('click', toggleControls);
+    getShortcutsLink().addEventListener('click', showShortcutsDialog);
 }
 
 (window as any).initialise = initialise;

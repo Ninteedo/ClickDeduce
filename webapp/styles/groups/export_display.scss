@@ -1,23 +1,12 @@
 @use "../abstracts/colours";
+@use "../components/modal_display";
 
 #export-output-container {
   flex-direction: column;
   width: 80%;
   height: 80%;
-  left: 10%;
-  z-index: 1000;
-  position: fixed;
-  background-color: colours.$semi-background;
-  padding: 10px;
-  border-radius: 10px;
 
-  &:not(.visible) {
-    display: none;
-  }
-
-  &.visible {
-    display: flex;
-  }
+  display: flex;
 
   #export-output-title {
     font-size: 1.875rem;

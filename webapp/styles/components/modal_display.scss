@@ -1,0 +1,23 @@
+@use "../abstracts/colours";
+
+.modal-display {
+  z-index: 1000;
+  position: absolute;
+  padding: 1rem;
+  border-radius: 0.3rem;
+  background-color: colours.$semi-background;
+  border: 0.1rem solid colours.$input-outline;
+  box-shadow: 0 0 2rem rgba(0, 0, 0, 0.5);
+
+  left: 50%;
+  transform: translateX(-50%);
+
+  &:not(.visible) {
+    display: none !important;
+  }
+
+  h2 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+  }
+}
