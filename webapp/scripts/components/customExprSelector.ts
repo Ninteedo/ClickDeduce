@@ -61,6 +61,8 @@ export class CustomExprSelector extends BaseDropdownSelector {
     protected override updateDropdown(): void {
         super.updateDropdown();
 
+        this.input.style.width = `max(19ch, ${this.input.value.length + 1}ch)`;
+
         const parseHtml = getExprParsePreviewHtml(
             getCurrentLanguage(),
             this.input.value,
