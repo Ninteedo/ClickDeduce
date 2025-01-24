@@ -33,7 +33,7 @@ import {
 } from "./globals/elements";
 import {setUpPanZoom, zoomToFit} from "./components/panzoom";
 import {closeExportOutput, copyExportOutput, exportLaTeX} from "./components/latexOutput";
-import {showShortcutsDialog} from "./components/shortcutsHelper";
+import {showShortcutsDialog} from "./components/shortcutsModal";
 
 /**
  * Sets up the global variables and initialises the panzoom instance.

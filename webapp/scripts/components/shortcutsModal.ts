@@ -16,14 +16,14 @@ function getShortcutModal(): Modal {
 
 function getShortcutMap(): Map<string, string> {
     return new Map([
+        ["Right Click", "Context Menu"],
+        ["Tab", "Next Input"],
+        ["Shift + Tab", "Previous Input"],
         ["Ctrl + Z", "Undo"],
         ["Ctrl + Shift + Z", "Redo"],
         ["Ctrl + C", "Copy"],
         ["Ctrl + X", "Cut"],
         ["Ctrl + V", "Paste"],
-        ["Right Click", "Context Menu"],
-        ["Tab", "Next Input"],
-        ["Shift + Tab", "Previous Input"],
     ]);
 }
 

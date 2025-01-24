@@ -126,3 +126,8 @@ label, .prevent-select, #tree :not(input) {
   -webkit-user-select: none;
   -ms-user-select: none;
 }
+
+a.event-link {
+  text-decoration: underline;
+  cursor: pointer;
+}
