@@ -18,9 +18,9 @@ export function openContextMenu(e: MouseEvent): void {
         contextMenuSelectedElement = highlightElement;
 
         const menu = getContextMenu();
-        menu.style.display = 'block';
         menu.style.left = e.pageX + 'px';
         menu.style.top = e.pageY + 'px';
+        menu.style.display = 'block';
 
         const pasteButton = getPasteButton();
         if (hasCopyCache()) {

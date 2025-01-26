@@ -2,6 +2,7 @@ import '../styles/main.sass';
 import {
     clearTreeNode,
     contextMenuCopy,
+    contextMenuEdit,
     contextMenuPaste,
     doStartNodeBlank,
     exampleLiteralChanged,
@@ -15,6 +16,7 @@ import {loadImages} from "./imageLoading";
 import {setupExampleSelector} from "./components/customExprSelector";
 import {loadTree, saveTree} from "./saveLoad";
 import {
+    getContextMenuEditButton,
     getContextMenuZoomToFitButton,
     getCopyButton,
     getDeleteButton,
@@ -59,6 +61,7 @@ function setupButtons(): void {
     getRedoButton().addEventListener('click', redo);
     getPasteButton().addEventListener('click', contextMenuPaste);
     getCopyButton().addEventListener('click', contextMenuCopy);
+    getContextMenuEditButton().addEventListener('click', contextMenuEdit);
     getDeleteButton().addEventListener('click', (e) => clearTreeNode(e));
     getZoomToFitButton().addEventListener('click', zoomToFit);
     getContextMenuZoomToFitButton().addEventListener('click', zoomToFit);

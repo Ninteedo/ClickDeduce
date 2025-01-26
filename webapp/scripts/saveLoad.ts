@@ -32,14 +32,12 @@ export function saveTree(): void {
 export function setupFileInput(): void {
     fileInput.type = 'file';
     fileInput.accept = '.cdtree';
-    fileInput.onchange = (event) => {
+    fileInput.onchange = event => {
         const files = (event.target as HTMLInputElement).files;
         if (!files || files.length === 0) throw new Error('No file selected');
         const file = files[0];
         const reader = new FileReader();
-        reader.onload = () => {
-            loadFromFile(reader);
-        };
+        reader.onload = () => loadFromFile(reader);
         reader.readAsText(file);
     };
 }

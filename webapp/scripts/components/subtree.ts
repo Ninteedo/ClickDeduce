@@ -7,6 +7,8 @@ import {RuleAnnotation} from "./ruleAnnotation";
 import {runAction} from "../actions";
 import {lockPanZoom, unlockPanZoom} from "./panzoom";
 import {pauseFileDragAndDrop, resumeFileDragAndDrop} from "../saveLoad";
+import {getTreePathOfElement} from "../globals/elements";
+import {getRootSubtree} from "../treeManipulation";
 
 export class Subtree {
     private readonly element: HTMLDivElement;
@@ -138,6 +140,10 @@ export class Subtree {
         return this.parsedTreePath;
     }
 
+    getTreePathString(): string {
+        return this.treePath;
+    }
+
     getParent(): Subtree | null {
         return this.parent;
     }
@@ -230,4 +236,12 @@ export class Subtree {
             removeDragHighlight();
         });
     }
+}
+
+export function existingSubtreeFromElement(element: HTMLDivElement): Subtree | null {
+    if (element.classList.contains('subtree')) {
+        const treePathString = getTreePathOfElement(element);
+        return getRootSubtree()?.getChildFromPath(parseTreePath(treePathString))! ?? null;
+    }
+    return null;
 }

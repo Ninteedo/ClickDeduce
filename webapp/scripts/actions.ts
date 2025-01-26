@@ -1,5 +1,12 @@
-import {getSelectedLanguage, getSelectedMode} from "./utils";
-import {disableInputs, enableInputs, lastNodeString, reloadCurrentTree, updateTree} from "./treeManipulation";
+import {getSelectedLanguage, getSelectedMode, parseTreePath} from "./utils";
+import {
+    disableInputs,
+    enableInputs,
+    getRootSubtree,
+    lastNodeString,
+    reloadCurrentTree,
+    updateTree
+} from "./treeManipulation";
 import {nextFocusElement, setFocusElement} from "./interface";
 import {postProcessActionNew, postStartNodeBlankNew} from "./serverRequest";
 import {getNodeStringFromPath} from "./utility/parseNodeString";
@@ -7,6 +14,7 @@ import {getTreePathOfElement} from "./globals/elements";
 import {getContextMenuSelectedElement} from "./components/contextMenu";
 import {displayError} from "./components/displayError";
 import {centerTree} from "./components/panzoom";
+import {addSubtreeEditor} from "./components/subtreeEditor";
 
 let copyCache: string | null = null;
 
@@ -185,6 +193,11 @@ export function copyTreeNode(treePath: string): void {
 
 export function contextMenuCopy(): void {
     copyTreeNode(getContextMenuSelectedTreePath());
+}
+
+export function contextMenuEdit(): void {
+    const subtree = getRootSubtree()!.getChildFromPath(parseTreePath(getContextMenuSelectedTreePath()));
+    if (subtree) addSubtreeEditor(subtree);
 }
 
 /**

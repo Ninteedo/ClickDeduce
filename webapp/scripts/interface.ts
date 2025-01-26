@@ -69,24 +69,24 @@ export function setNextFocusElement(input: AbstractTreeInput): void {
 export function handleTabPressed(e: KeyboardEvent): void {
     if (e.key === 'Tab' && (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement)) {
         e.preventDefault();
-        const activeInputPaths: string[] = getActiveInputs().map(input => input.getTreePath());
         const targetOuterPath: string = getTreePathOfElement(e.target);
-        let activeElemIndex = activeInputPaths.indexOf(targetOuterPath);
-        if (e.shiftKey) {
-            activeElemIndex -= 1;
-        } else {
-            activeElemIndex += 1;
-        }
-        if (activeElemIndex < 0) {
-            activeElemIndex = getActiveInputs().length - 1;
-        } else if (activeElemIndex >= getActiveInputs().length) {
-            activeElemIndex = 0;
-        }
         e.target.dispatchEvent(new Event('blur'));
-        nextFocusElement = getActiveInputs()[activeElemIndex];
-        nextFocusElement.focus();
-        nextFocusElement = null;
+        handleTabPressedFromPath(targetOuterPath, e.shiftKey ? -1 : 1);
     }
+}
+
+export function handleTabPressedFromPath(treePath: string, change: number): void {
+    const activeInputPaths: string[] = getActiveInputs().map(input => input.getTreePath());
+    let activeElemIndex = activeInputPaths.indexOf(treePath);
+    activeElemIndex += change;
+    if (activeElemIndex < 0) {
+        activeElemIndex = getActiveInputs().length - 1;
+    } else if (activeElemIndex >= getActiveInputs().length) {
+        activeElemIndex = 0;
+    }
+    nextFocusElement = getActiveInputs()[activeElemIndex];
+    nextFocusElement.focus();
+    nextFocusElement = null;
 }
 
 /**

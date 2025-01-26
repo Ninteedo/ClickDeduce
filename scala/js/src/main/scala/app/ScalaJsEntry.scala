@@ -185,4 +185,21 @@ object ScalaJsEntry {
       case _ => default
     }
   }
+
+  @JSExportTopLevel("exprText")
+  def exprText(langName: String, nodeString: String, treePathString: String): String = {
+    val lang = getLanguage(langName)
+    Node.read(lang, nodeString) match {
+      case Some(node: ExprNodeParent) =>
+        val treePath = Node.readPathString(treePathString)
+        node.findChild(treePath) match {
+          case Some(child: ExprNodeParent) =>
+            val expr = child.getExpr
+            val exprText = expr.toText
+            exprText.asPlainText
+          case _ => ""
+        }
+      case _ => ""
+    }
+  }
 }

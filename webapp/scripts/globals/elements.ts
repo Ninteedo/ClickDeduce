@@ -46,6 +46,12 @@ export function getDeleteButton(): HTMLButtonElement {
     return deleteButton;
 }
 
+export function getContextMenuEditButton(): HTMLButtonElement {
+    const editButton = document.getElementById('edit-button') as HTMLButtonElement;
+    if (!editButton) throw new Error('Edit button not found');
+    return editButton;
+}
+
 export function getZoomToFitButton(): HTMLButtonElement {
     const zoomToFitButton = document.getElementById('zoom-to-fit') as HTMLButtonElement;
     if (!zoomToFitButton) throw new Error('Zoom to fit button not found');
