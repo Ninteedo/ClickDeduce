@@ -4,9 +4,6 @@ import {createLiteralInput} from "./literalInput";
 import {createExprSelector, replaceDisabledSelectInputs} from "./customExprSelector";
 import {AbstractTreeInput} from "./abstractTreeInput";
 import {RuleAnnotation} from "./ruleAnnotation";
-import {runAction} from "../actions";
-import {lockPanZoom, unlockPanZoom} from "./panzoom";
-import {pauseFileDragAndDrop, resumeFileDragAndDrop} from "../saveLoad";
 import {getTreePathOfElement} from "../globals/elements";
 import {getRootSubtree} from "../treeManipulation";
 
@@ -80,7 +77,6 @@ export class Subtree {
             this.disableInputs();
         }
         replaceDisabledSelectInputs(this.nodeElement);
-        this.setupDragAndDrop();
     }
 
     private addHoverListeners(): void {
@@ -173,68 +169,6 @@ export class Subtree {
 
     getRuleAnnotation(): RuleAnnotation {
         return this.ruleAnnotation;
-    }
-
-    private setupDragAndDrop(): void {
-        this.element.setAttribute('draggable', 'true');
-
-        const DRAG_HIGHLIGHT_CLASS = 'drag-highlight';
-        const addDragHighlight = () => this.element.classList.add(DRAG_HIGHLIGHT_CLASS);
-        const removeDragHighlight = () => this.element.classList.remove(DRAG_HIGHLIGHT_CLASS);
-
-        // const clickAndHoldTime = 500;
-        // let mouseDownStartTime: number | null = null;
-        // this.element.addEventListener('mousedown', event => {
-        //     event.stopPropagation();
-        //     mouseDownStartTime = new Date().getTime();
-        //     setTimeout(() => {
-        //         if (mouseDownStartTime && new Date().getTime() - mouseDownStartTime >= clickAndHoldTime) {
-        //             console.log('dispatching dragstart');
-        //             this.element.dispatchEvent(new DragEvent('dragstart', { bubbles: true, dataTransfer: new DataTransfer() }));
-        //         }
-        //     }, clickAndHoldTime);
-        // })
-        // this.element.addEventListener('mouseup', () => {
-        //     mouseDownStartTime = null;
-        // });
-
-
-        this.element.addEventListener('dragstart', event => {
-            event.stopPropagation();
-            console.log('dragstart', 'path', this.treePath);
-            lockPanZoom();
-            pauseFileDragAndDrop();
-            event.dataTransfer!.setData('text/plain', this.treePath);
-            event.dataTransfer!.effectAllowed = 'move';
-        });
-        this.element.addEventListener('dragend', () => {
-            unlockPanZoom();
-            resumeFileDragAndDrop();
-        });
-        this.element.addEventListener('drop', event => {
-            event.preventDefault();
-            event.stopPropagation();
-
-            console.log(event.dataTransfer);
-
-            const sourceTreePath = event.dataTransfer!.getData('text/plain');
-
-            if (sourceTreePath === this.treePath) {
-                return;
-            }
-
-            console.log('dropped', sourceTreePath, 'onto', this.treePath);
-            runAction("MoveAction", this.treePath, [sourceTreePath]);
-        });
-        this.element.addEventListener('dragover', event => {
-            event.preventDefault();
-            event.stopPropagation();
-            addDragHighlight();
-        });
-        this.element.addEventListener('dragleave', event => {
-            event.preventDefault();
-            removeDragHighlight();
-        });
     }
 }
 
