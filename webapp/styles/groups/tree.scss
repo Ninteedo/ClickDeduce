@@ -82,11 +82,15 @@
   justify-content: space-between;
 
   .expr, .type {
-    :not(.expr-selector-container) {
-      div {
-        display: inline;
-      }
+    display: inline;
+    span, div {
+      display: inline;
     }
+    //:not(.expr-selector-container) {
+    //  div {
+    //    display: inline;
+    //  }
+    //}
   }
 
   div.scoped-variables {
