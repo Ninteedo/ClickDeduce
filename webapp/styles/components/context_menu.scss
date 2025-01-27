@@ -9,29 +9,34 @@
   z-index: 1000;
 }
 
-#custom-context-menu ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+#custom-context-menu {
+  user-select: none;
 
-  li {
-    padding: 10px;
-    text-align: left;
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
 
-    &:not([disabled]) {
-      cursor: pointer;
-      &:hover {
-        background-color: colours.$highlighted-tree;
+    li {
+      padding: 10px;
+      text-align: left;
+
+      &:not([disabled]) {
+        cursor: pointer;
+
+        &:hover {
+          background-color: colours.$highlighted-tree;
+        }
       }
-    }
 
-    &[disabled] {
-      background-color: colours.$disabled-input;
-      cursor: not-allowed;
-    }
+      &[disabled] {
+        background-color: colours.$disabled-input;
+        cursor: not-allowed;
+      }
 
-    &:not(:first-child) {
-      border-top: 1px solid colours.$context-menu-border;
+      &:not(:first-child) {
+        border-top: 1px solid colours.$context-menu-border;
+      }
     }
   }
 }
