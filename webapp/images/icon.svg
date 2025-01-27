@@ -1,14 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32">
     <style>
-        .cursor {
+        .main {
             fill: #1a1a1a;
-            stroke: #f8f8f2;
             stroke-width: 1;
+            font-family: 'Times New Roman';
         }
     </style>
-<!--    <rect x="0" y="0" width="32" height="32" fill="none" stroke="#f8f8f2" stroke-width="1" />-->
     <g transform="translate(2, 7)">
-        <text x="0" y="14" font-size="16" fill="#f8f8f2">λ⇓ </text>
-        <path d="M 20 2 l 8 10 h -3 l 2 4 l -3 1 l -2 -4 l -2 1 z" class="cursor" transform="translate(0, 0)" />
+        <ellipse cx="14" cy="9" rx="16" ry="10" fill="#f8f8f2" />
+        <text x="0" y="14" font-size="16" class="main">λ⇓ </text>
+        <path d="M 20 2 l 8 10 h -3 l 2 4 l -3 1 l -2 -4 l -2 1 z" class="main" transform="translate(0, 0)" />
     </g>
 </svg>
