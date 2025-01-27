@@ -261,7 +261,10 @@ class LData extends LRec {
   private def formatLeft(e: ConvertableText): ConvertableText = MultiElement(TextElement("left"), BracketedElement(e))
 
   case class Left(e: Expr, rightType: Type) extends Expr {
-    override def evalInner(env: ValueEnv): Value = LeftV(e.eval(env), rightType)
+    override def evalInner(env: ValueEnv): Value = e.eval(env) match {
+      case v if v.isError => v
+      case v              => LeftV(v, rightType)
+    }
 
     override def typeCheckInner(tEnv: TypeEnv): Type = UnionType(e.typeCheck(tEnv), rightType)
 
@@ -294,7 +297,10 @@ class LData extends LRec {
   private def formatRight(e: ConvertableText): ConvertableText = MultiElement(TextElement("right"), BracketedElement(e))
 
   case class Right(leftType: Type, e: Expr) extends Expr {
-    override def evalInner(env: ValueEnv): Value = RightV(leftType, e.eval(env))
+    override def evalInner(env: ValueEnv): Value = e.eval(env) match {
+      case v if v.isError => v
+      case v              => RightV(leftType, v)
+    }
 
     override def typeCheckInner(tEnv: TypeEnv): Type = UnionType(leftType, e.typeCheck(tEnv))
 
