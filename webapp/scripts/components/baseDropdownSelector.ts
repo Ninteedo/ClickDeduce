@@ -63,7 +63,7 @@ export class BaseDropdownSelector implements AbstractTreeInput {
     }
 
     private setupOptionListeners(): void {
-        this.options.forEach(this.setupOptionListener);
+        this.options.forEach(option => this.setupOptionListener(option));
     }
 
     protected setupOptionListener(option: DropdownOption): void {
