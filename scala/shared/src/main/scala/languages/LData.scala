@@ -685,6 +685,16 @@ class LData extends LRec {
 
     override protected def primitive: Parser[Expr] =
       pair | fst | snd | letPair | left | right | caseSwitch | super.primitive
+
+//    override protected def tightNonLRec: Parser[Expr] = fst | snd | left | right | super.tightNonLRec
+
+    override def funcType: Parser[Type] = unionType ~ "->" ~ funcType ^^ { case l ~ _ ~ r => Func(l, r) } | unionType
+
+    protected def unionType: Parser[Type] = pairType ~ "+" ~ unionType ^^ { case l ~ _ ~ r => UnionType(l, r) } | pairType
+
+    protected def pairType: Parser[Type] = typPrimitive ~ ("*" | "×") ~ pairType ^^ { case l ~ _ ~ r => PairType(l, r) } | typPrimitive
+
+    override def typ: Parser[Type] = funcType
   }
 
   override protected val exprParser: ExprParser = new LDataParser

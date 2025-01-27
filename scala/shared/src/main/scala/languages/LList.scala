@@ -384,9 +384,9 @@ class LList extends LPoly {
 
     override protected def primitive: Parser[Expr] = nil | caseList | super.primitive
 
-    override protected def typ: Parser[Type] = super.typ | "(?i)list".r ~ "[" ~ typ ~ "]" ^^ {
+    override protected def typPrimitive: Parser[Type] = "(?i)list".r ~ "[" ~ typ ~ "]" ^^ {
       case _ ~ _ ~ typ ~ _ => ListType(typ)
-    }
+    } | super.typPrimitive
   }
 
   override protected val exprParser: ExprParser = new LListParser

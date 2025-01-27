@@ -94,6 +94,22 @@ class ExprParseTest extends AnyFunSuite, TableDrivenPropertyChecks {
     ))
   }
 
+  test("can parse LData expressions") {
+    val l = LData
+    testParses(l, List(
+      ("(4, 5)", l.Pair(l.Num(4), l.Num(5))),
+      ("fst(true, -23)", l.Fst(l.Pair(l.Bool(true), l.Num(-23)))),
+      ("snd x", l.Snd(l.Var("x"))),
+      ("\\x: int * bool. fst x", l.Lambda("x", l.PairType(l.IntType(), l.BoolType()), l.Fst(l.Var("x")))),
+      ("\\x: int * bool + int. fst x", l.Lambda("x", l.UnionType(l.PairType(l.IntType(), l.BoolType()), l.IntType()), l.Fst(l.Var("x")))),
+      ("\\x: int + bool * int. fst x", l.Lambda("x", l.UnionType(l.IntType(), l.PairType(l.BoolType(), l.IntType())), l.Fst(l.Var("x")))),
+      ("\\x: int * bool + int -> bool * bool. fst x", l.Lambda("x",
+        l.Func(l.UnionType(l.PairType(l.IntType(), l.BoolType()), l.IntType()), l.PairType(l.BoolType(), l.BoolType())),
+        l.Fst(l.Var("x")))),
+      ("\\x: int * bool. (fst x) + (snd x)", l.Lambda("x", l.PairType(l.IntType(), l.BoolType()), l.Plus(l.Fst(l.Var("x")), l.Snd(l.Var("x")))))
+    ))
+  }
+
   test("can parse LList expressions") {
     val l = LList
     testParses(l, List(

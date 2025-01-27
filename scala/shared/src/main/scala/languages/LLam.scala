@@ -342,10 +342,6 @@ class LLam extends LLet {
         case v ~ None ~ _ ~ e    => Lambda(v, defaultType, e)
       }
 
-    protected def typ: Parser[Type] = typPrimitive ~ "->" ~ typ ^^ {
-      case t1 ~ _ ~ t2 => Func(t1, t2)
-    } | typPrimitive
-
     protected def typPrimitive: Parser[Type] =
       "(?i)int".r ^^ {_ => IntType()} |
       "(?i)bool".r ^^ {_ => BoolType()} |
@@ -359,6 +355,12 @@ class LLam extends LLet {
     override protected def primitive: Parser[Expr] = lambda | super.primitive
 
     override def expr: Parser[Expr] = applyExpr
+
+    protected def funcType: Parser[Type] = typPrimitive ~ "->" ~ typ ^^ {
+      case t1 ~ _ ~ t2 => Func(t1, t2)
+    } | typPrimitive
+
+    protected def typ: Parser[Type] = funcType
   }
 
   override protected val exprParser: ExprParser = new LLamParser
