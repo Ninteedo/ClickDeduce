@@ -87,6 +87,7 @@ class ExprParseTest extends AnyFunSuite, TableDrivenPropertyChecks {
       ("lambda myBool: bool. if myBool then 1 else -1", l.Lambda("myBool", l.BoolType(), l.IfThenElse(l.Var("myBool"), l.Num(1), l.Num(-1)))),
       ("\\x. x * 2", l.Lambda("x", BlankTypeDropDown(l), l.Times(l.Var("x"), l.Num(2)))),
       ("(\\x: int. x + 1) 5", l.Apply(l.Lambda("x", l.IntType(), l.Plus(l.Var("x"), l.Num(1))), l.Num(5))),
+      ("(λx: int. x + 1) 5", l.Apply(l.Lambda("x", l.IntType(), l.Plus(l.Var("x"), l.Num(1))), l.Num(5))),
       ("f x y", l.Apply(l.Apply(l.Var("f"), l.Var("x")), l.Var("y"))),
       ("f (x y)", l.Apply(l.Var("f"), l.Apply(l.Var("x"), l.Var("y")))),
       ("f (x y) z", l.Apply(l.Apply(l.Var("f"), l.Apply(l.Var("x"), l.Var("y"))), l.Var("z")))
