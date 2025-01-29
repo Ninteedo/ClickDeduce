@@ -1,5 +1,6 @@
 package convertors
 
+import convertors.text.Symbols
 import languages.ClickDeduceLanguage
 import languages.env.{Env, TypeEnv, ValueEnv}
 import languages.terms.Term
@@ -19,8 +20,12 @@ class HTMLConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConve
         case _           =>
       }
     }
-    envCounter = -1
-    outerNodeToHTML(node, 0).toString
+    val startingEnvIndex = node match {
+      case n: ExprNodeParent => if n.getEnv(mode).isEmpty then -1 else 0
+      case _ => -1
+    }
+    envCounter = startingEnvIndex
+    outerNodeToHTML(node, startingEnvIndex).toString
   }
 
   private def outerNodeToHTML(node: OuterNode, envIndex: Int): HTML = node match {
@@ -32,14 +37,14 @@ class HTMLConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConve
     val isAxiom = node.getVisibleChildren(mode).isEmpty
 
     val newEnvIndex = if (node.hasUpdatedEnv(mode)) {
-      envCounter += 1
-      envCounter - 1
+      nextEnvIndex
     } else {
       envIndex
     }
 
     div(
       cls := f"${ClassDict.SUBTREE} ${if (isAxiom) ClassDict.AXIOM else ""} ${phantomClassName(node)}".strip,
+      data("env-index") := newEnvIndex,
       data("tree-path") := node.treePathString,
       fullExprBottomDiv(node, envIndex),
       if (isAxiom)
@@ -57,6 +62,12 @@ class HTMLConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConve
     div(cls := ClassDict.NODE, envDiv(node, envIndex, typeMode = false), exprDiv(node), resultDiv(node))
 
   private var envCounter: Int = 0
+
+  private def nextEnvIndex: Int = {
+    val res = envCounter
+    envCounter += 1
+    res
+  }
 
   private def envDiv(node: OuterNode, envIndex: Int, typeMode: Boolean): HTML = {
     def parseEnv(
@@ -92,7 +103,8 @@ class HTMLConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConve
 
     if (parentEnv.isDefined && parentEnv.get.nonEmpty) {
       val parsedParentEnv = parseEnv(parentEnv.get.asInstanceOf[Env[Term]], valueTooltips = false)
-      val envLabel = span("σ", sub(envIndex), if (typeMode) sup(raw("τ")) else raw(""))
+      val envChar = if (mode == DisplayMode.TypeCheck) Symbols.gamma.asPlainText else Symbols.sigma.asPlainText
+      val envLabel = span(envChar, sub(envIndex), if (typeMode) sup(raw("τ")) else raw(""))
       val miniParent = span(cls := ClassDict.TOOLTIP, envLabel, div(cls := ClassDict.TOOLTIP_TEXT, formatEnv(parsedParentEnv)))
 
       if (parsedEnv.nonEmpty) span(miniParent, " + ", formatEnv(parsedEnv), delimiter) else span(miniParent, delimiter)

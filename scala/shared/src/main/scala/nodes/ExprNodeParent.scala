@@ -83,7 +83,7 @@ abstract class ExprNodeParent(lang: AbstractNodeLanguage) extends OuterNode {
   def hasUpdatedEnv(mode: DisplayMode): Boolean = {
     val env = getEnv(mode)
     val parentEnv = getParent.map(_.getEnv(mode))
-    !parentEnv.contains(env)
+    !parentEnv.contains(env) || (parentEnv.isEmpty && env.nonEmpty)
   }
 
   override def getParent: Option[ExprNodeParent] = {

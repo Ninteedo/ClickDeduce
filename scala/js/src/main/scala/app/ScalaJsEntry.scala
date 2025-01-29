@@ -169,13 +169,11 @@ object ScalaJsEntry {
             node.findChild(treePath) match {
               case Some(child: ExprNodeParent) =>
                 val mode = DisplayMode.fromString(modeName)
-                val env = child.getEnv(mode)
                 val newChild = ExprNode.fromExpr(lang, expr)
 
-                newChild.overrideEnv(env, mode)
-                if (mode == DisplayMode.Edit || mode == DisplayMode.Evaluation) {
-                  newChild.overrideEnv(TypeEnv.fromValueEnv(env.asInstanceOf[ValueEnv]), DisplayMode.TypeCheck)
-                }
+                DisplayMode.values.foreach(mode => {
+                  newChild.overrideEnv(child.getEnv(mode), mode)
+                })
 
                 HTMLConvertor(lang, mode).convert(newChild)
               case _ => default
