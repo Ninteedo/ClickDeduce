@@ -337,9 +337,9 @@ class LLam extends LLet {
     override protected def keywords: Set[String] = super.keywords ++ Set("int", "bool")
 
     protected def lambda: Parser[Lambda] =
-      ("\\" | "lambda" | "λ") ~> ident ~ (":" ~> typ).? ~ "." ~ expr ^^ {
-        case v ~ Some(t) ~ _ ~ e => Lambda(v, t, e)
-        case v ~ None ~ _ ~ e    => Lambda(v, defaultType, e)
+      ("\\" | "lambda" | "λ") ~> ident ~ (":" ~> typ).? ~ ("." ~> expr) ^^ {
+        case v ~ Some(t) ~ e => Lambda(v, t, e)
+        case v ~ None ~ e    => Lambda(v, defaultType, e)
       }
 
     protected def typPrimitive: Parser[Type] =
@@ -356,8 +356,8 @@ class LLam extends LLet {
 
     override def expr: Parser[Expr] = applyExpr
 
-    protected def funcType: Parser[Type] = typPrimitive ~ "->" ~ typ ^^ {
-      case t1 ~ _ ~ t2 => Func(t1, t2)
+    protected def funcType: Parser[Type] = typPrimitive ~ ("->" ~> typ) ^^ {
+      case t1 ~ t2 => Func(t1, t2)
     } | typPrimitive
 
     protected def typ: Parser[Type] = funcType

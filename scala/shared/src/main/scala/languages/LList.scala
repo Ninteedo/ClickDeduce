@@ -363,15 +363,13 @@ class LList extends LPoly {
   protected class LListParser extends LPolyParser {
     private val nilRegex = "(?i)nil".r
 
-    private def nil: Parser[ListNil] = nilRegex ~ "[" ~ typ ~ "]" ^^ {
-      case _ ~ _ ~ typ ~ _ => ListNil(typ)
-    } | (nilRegex ~ (":" ~> typ) ^^ {
-      case _ ~ typ => ListNil(typ)
-    }) | nilRegex ^^ (_ => ListNil(defaultType))
+    private def nil: Parser[ListNil] = nilRegex ~> ("[" ~> typ <~ "]") ^^ (ListNil(_)) |
+      (nilRegex ~> (":" ~> typ) ^^ (ListNil(_))) |
+      nilRegex ^^ (_ => ListNil(defaultType))
 
-    private def caseList: Parser[CaseList] = "case" ~ "list" ~ expr ~ "of" ~ "{" ~ "(?i)nil".r ~ "=>" ~ expr ~
-      ";" ~ ident ~ "::" ~ ident ~ "=>" ~ expr ~ "}" ^^ {
-      case _ ~ _ ~ list ~ _ ~ _ ~ _ ~ _ ~ nilCase ~ _ ~ headVar ~ _ ~ tailVar ~ _ ~ consCase ~ _ =>
+    private def caseList: Parser[CaseList] = "case" ~ "list" ~> expr ~ ("of" ~ "{" ~ "(?i)nil".r ~ "=>" ~> expr) ~
+      ";" ~ ident ~ "::" ~ ident ~ "=>" ~ expr <~ "}" ^^ {
+      case list ~ nilCase ~ _ ~ headVar ~ _ ~ tailVar ~ _ ~ consCase =>
         CaseList(list, nilCase, LiteralIdentifierBind(headVar), LiteralIdentifierBind(tailVar), consCase)
     }
 
@@ -382,9 +380,7 @@ class LList extends LPoly {
 
     override protected def primitive: Parser[Expr] = nil | super.primitive
 
-    override protected def typPrimitive: Parser[Type] = "(?i)list".r ~ "[" ~ typ ~ "]" ^^ {
-      case _ ~ _ ~ typ ~ _ => ListType(typ)
-    } | super.typPrimitive
+    override protected def typPrimitive: Parser[Type] = "(?i)list".r ~ "[" ~> typ <~ "]" ^^ (ListType(_)) | super.typPrimitive
   }
 
   override protected val exprParser: ExprParser = new LListParser

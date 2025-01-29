@@ -251,8 +251,8 @@ class LPoly extends LData {
   }
 
   protected class LPolyParser extends LDataParser {
-    private def polyExpr: Parser[Expr] = Symbols.lambdaUpper.asPlainText ~> ident ~ "." ~ expr ^^ {
-      case v ~ _ ~ e => Poly(LiteralIdentifierBind(v), e)
+    private def polyExpr: Parser[Expr] = Symbols.lambdaUpper.asPlainText ~> ident ~ ("." ~> expr) ^^ {
+      case v ~ e => Poly(LiteralIdentifierBind(v), e)
     }
 
     private def applyTypeExpr: Parser[Expr => Expr] = "[" ~> typ <~ "]" ^^ { t => (e: Expr) => ApplyType(e, t) }
@@ -268,8 +268,8 @@ class LPoly extends LData {
 
     private def typeVar: Parser[TypeVar] = ident ^^ { TypeVar(_) }
 
-    private def polyType: Parser[Type] = Symbols.forall.asPlainText ~> ident ~ "." ~ typ ^^ {
-      case v ~ _ ~ t => PolyType(TypeVar(v), t)
+    private def polyType: Parser[Type] = Symbols.forall.asPlainText ~> ident ~ ("." ~> typ) ^^ {
+      case v ~ t => PolyType(TypeVar(v), t)
     }
 
     override def typ: Parser[Type] = polyType | super.typ

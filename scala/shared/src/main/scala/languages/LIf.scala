@@ -317,10 +317,10 @@ class LIf extends LArith {
   }
 
   protected class LIfParser extends LArithParser {
-    protected def bool: Parser[Expr] = "(?i)true".r ^^^ Bool(true) | "(?i)false".r ^^^ Bool(false)
+    private def bool: Parser[Expr] = "(?i)true".r ^^^ Bool(true) | "(?i)false".r ^^^ Bool(false)
 
-    protected def ifThenElse: Parser[Expr] = "if" ~> expr ~ "then" ~ expr ~ "else" ~ expr ^^ {
-      case cond ~ _ ~ thenExpr ~ _ ~ elseExpr => IfThenElse(cond, thenExpr, elseExpr)
+    private def ifThenElse: Parser[Expr] = ("if" ~> expr) ~ ("then" ~> expr) ~ ("else" ~> expr) ^^ {
+      case cond ~ thenExpr ~ elseExpr => IfThenElse(cond, thenExpr, elseExpr)
     }
 
     override protected def primitive: Parser[Expr] = bool | super.primitive

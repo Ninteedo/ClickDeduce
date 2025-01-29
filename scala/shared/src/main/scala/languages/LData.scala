@@ -664,23 +664,24 @@ class LData extends LRec {
   protected class LDataParser extends LRecParser {
     override protected def keywords: Set[String] = super.keywords ++ Set("fst", "snd", "left", "right", "pair", "case", "of")
 
-    private def pair: Parser[Pair] = "(" ~ expr ~ "," ~ expr ~ ")" ^^ { case _ ~ e1 ~ _ ~ e2 ~ _ => Pair(e1, e2) }
+    private def pair: Parser[Pair] = "(" ~> (expr <~ ",") ~ expr <~ ")" ^^ { case e1 ~ e2 => Pair(e1, e2) }
 
-    private def fst: Parser[Fst] = "fst" ~ expr ^^ { case _ ~ e => Fst(e) }
+    private def fst: Parser[Fst] = "fst" ~> expr ^^ (Fst(_))
 
-    private def snd: Parser[Snd] = "snd" ~ expr ^^ { case _ ~ e => Snd(e) }
+    private def snd: Parser[Snd] = "snd" ~> expr ^^ (Snd(_))
 
-    private def letPair: Parser[LetPair] = "let" ~ "pair" ~ ident ~ ident ~ "=" ~ expr ~ "in" ~ expr ^^ {
-      case _ ~ _ ~ x ~ y ~ _ ~ assign ~ _ ~ bound => LetPair(LiteralIdentifierBind(x), LiteralIdentifierBind(y), assign, bound)
+    private def letPair: Parser[LetPair] = "let" ~ "pair" ~> ident ~ ident ~ ("=" ~> expr) ~ ("in" ~> expr) ^^ {
+      case x ~ y ~ assign ~ bound => LetPair(LiteralIdentifierBind(x), LiteralIdentifierBind(y), assign, bound)
     }
 
-    private def left: Parser[Left] = "left" ~ expr ^^ { case _ ~ e => Left(e, defaultType) }
+    private def left: Parser[Left] = "left" ~> expr ^^ (Left(_, defaultType))
 
-    private def right: Parser[Right] = "right" ~ expr ^^ { case _ ~ e => Right(defaultType, e) }
+    private def right: Parser[Right] = "right" ~> expr ^^ (Right(defaultType, _))
 
-    private def caseSwitch: Parser[CaseSwitch] = "case" ~ expr ~ "of" ~ "{" ~ "left" ~ ident ~ "=>" ~ expr ~ ";" ~ "right" ~ ident ~ "=>" ~ expr ~ "}" ^^ {
-      case _ ~ e ~ _ ~ _ ~ _ ~ x ~ _ ~ lExpr ~ _ ~ _ ~ y ~ _ ~ rExpr ~ _ =>
-        CaseSwitch(e, x, y, lExpr, rExpr)
+    private def caseSwitch: Parser[CaseSwitch] = {
+      ("case" ~> expr <~ "of") ~ ("{" ~ "left" ~> ident) ~ ("=>" ~> expr <~ ";") ~ ("right" ~> ident) ~ ("=>" ~> expr <~ "}") ^^ {
+        case e ~ x ~ lExpr ~ y ~ rExpr => CaseSwitch(e, x, y, lExpr, rExpr)
+      }
     }
 
     override protected def primitive: Parser[Expr] =
@@ -688,7 +689,7 @@ class LData extends LRec {
 
 //    override protected def tightNonLRec: Parser[Expr] = fst | snd | left | right | super.tightNonLRec
 
-    override def funcType: Parser[Type] = unionType ~ "->" ~ funcType ^^ { case l ~ _ ~ r => Func(l, r) } | unionType
+    override protected def funcType: Parser[Type] = unionType ~ "->" ~ funcType ^^ { case l ~ _ ~ r => Func(l, r) } | unionType
 
     protected def unionType: Parser[Type] = pairType ~ "+" ~ unionType ^^ { case l ~ _ ~ r => UnionType(l, r) } | pairType
 

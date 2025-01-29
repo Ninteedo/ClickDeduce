@@ -119,7 +119,8 @@ class ExprParseTest extends AnyFunSuite, TableDrivenPropertyChecks {
       ("\\x: int * bool + int -> bool * bool. fst x", l.Lambda("x",
         l.Func(l.UnionType(l.PairType(l.IntType(), l.BoolType()), l.IntType()), l.PairType(l.BoolType(), l.BoolType())),
         l.Fst(l.Var("x")))),
-      ("\\x: int * bool. (fst x) + (snd x)", l.Lambda("x", l.PairType(l.IntType(), l.BoolType()), l.Plus(l.Fst(l.Var("x")), l.Snd(l.Var("x")))))
+      ("\\x: int * bool. (fst x) + (snd x)", l.Lambda("x", l.PairType(l.IntType(), l.BoolType()), l.Plus(l.Fst(l.Var("x")), l.Snd(l.Var("x"))))),
+      ("case 4 of { left x => 1 + x ; right y => y * 2 }", l.CaseSwitch(l.Num(4), "x", "y", l.Plus(l.Num(1), l.Var("x")), l.Times(l.Var("y"), l.Num(2)))),
     ))
   }
 
