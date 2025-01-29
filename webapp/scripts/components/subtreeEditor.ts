@@ -46,6 +46,7 @@ export class SubtreeEditor {
     }
 
     private onInput(): void {
+        this.input.style.width = (this.input.value.length + 1) + 'ch';
         const parseHtml = getExprParsePreviewHtml(
             getCurrentLanguage(),
             this.getValue(),

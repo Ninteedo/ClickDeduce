@@ -319,6 +319,7 @@ class LArith extends ClickDeduceLanguage {
 
     override protected def exprOperators: List[ExprOperator] = List(
       BasicBinaryOperator("*", Times.apply, 6, Associativity.Left),
+      BasicBinaryOperator("×", Times.apply, 6, Associativity.Left),
       BasicBinaryOperator("+", Plus.apply, 5, Associativity.Left),
     )
   }

@@ -2,5 +2,10 @@
   position: absolute;
 
   bottom: 100%;
+  left: 0;
   transform: translateY(1rem);
+
+  & > input {
+    min-width: 16ch;
+  }
 }

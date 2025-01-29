@@ -4,7 +4,7 @@ import scalatags.Text.TypedTag
 import scalatags.Text.all.{disabled, readonly}
 
 case class HtmlElement(html: TypedTag[String], nonHtml: ConvertableText) extends ConvertableText {
-  override def asPlainText: String = html.toString
+  override def asPlainText: String = nonHtml.asPlainText
 
   override def asHtml: TypedTag[String] = html
 

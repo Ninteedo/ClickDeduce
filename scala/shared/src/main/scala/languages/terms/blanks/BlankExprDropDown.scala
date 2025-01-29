@@ -14,5 +14,5 @@ case class BlankExprDropDown(lang: AbstractNodeLanguage) extends NotImplementedE
 
   override val needsBrackets: Boolean = false
 
-  override def toText: ConvertableText = HtmlElement(lang.exprClassListDropdownHtml, TextElement("Unselected Expression"))
+  override def toText: ConvertableText = HtmlElement(lang.exprClassListDropdownHtml, TextElement("_"))
 }

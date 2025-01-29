@@ -1,3 +1,5 @@
+import {Subtree} from "./subtree";
+
 export class ParsePreview {
     private readonly previewDiv: HTMLDivElement;
     private readonly PARSE_PREVIEW_CLASS = 'parse-preview';
@@ -11,6 +13,7 @@ export class ParsePreview {
 
     show(html: string): void {
         this.previewDiv.innerHTML = html;
+        new Subtree(this.previewDiv.querySelector('.subtree')!, null);
         this.previewDiv.classList.add(this.VISIBLE_CLASS);
     }
 
