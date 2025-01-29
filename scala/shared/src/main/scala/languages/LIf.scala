@@ -323,9 +323,13 @@ class LIf extends LArith {
       case cond ~ _ ~ thenExpr ~ _ ~ elseExpr => IfThenElse(cond, thenExpr, elseExpr)
     }
 
-    override protected def level4Parse: Parser[(Expr, Expr) => Expr] = "==" ^^^ {Equal(_, _)} | "<" ^^^ {LessThan(_, _)}
+    override protected def primitive: Parser[Expr] = bool | super.primitive
 
-    override protected def primitive: Parser[Expr] = bool | ifThenElse | super.primitive
+    override protected def exprOperators: List[ExprOperator] = super.exprOperators ++ List(
+      BasicBinaryOperator("==", Equal.apply, 4, Associativity.Left),
+      BasicBinaryOperator("<", LessThan.apply, 4, Associativity.Left),
+      SpecialParser(ifThenElse, 1),
+    )
   }
 
   override protected val exprParser: ExprParser = new LIfParser

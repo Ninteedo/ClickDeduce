@@ -315,31 +315,12 @@ class LArith extends ClickDeduceLanguage {
 
     protected def primitive: Parser[Expr] = num | blank | "(" ~> expr <~ ")"
 
-    private def level6: Parser[Expr] = chainl1(primitive, level6Parse)
+    override def expr: Parser[Expr] = precedenceParser(primitive, exprOperators)
 
-    private def level5: Parser[Expr] = chainl1(level6, level5Parse)
-
-    private def level4: Parser[Expr] = chainl1(level5, level4Parse)
-
-    protected def level3: Parser[Expr] = chainl1(level4, level3Parse)
-
-    protected def level2: Parser[Expr] = chainl1(level3, level2Parse)
-
-    private def level1: Parser[Expr] = chainl1(level2, level1Parse)
-
-    protected def level6Parse: Parser[(Expr, Expr) => Expr] = "*" ^^^ {Times(_, _)}
-
-    protected def level5Parse: Parser[(Expr, Expr) => Expr] = "+" ^^^ {Plus(_, _)}
-
-    protected def level4Parse: Parser[(Expr, Expr) => Expr] = failure("No level 4 operators")
-
-    protected def level3Parse: Parser[(Expr, Expr) => Expr] = failure("No level 3 operators")
-
-    protected def level2Parse: Parser[(Expr, Expr) => Expr] = failure("No level 2 operators")
-
-    protected def level1Parse: Parser[(Expr, Expr) => Expr] = failure("No level 1 operators")
-
-    override def expr: Parser[Expr] = level1
+    override protected def exprOperators: List[ExprOperator] = List(
+      BasicBinaryOperator("*", Times.apply, 6, Associativity.Left),
+      BasicBinaryOperator("+", Plus.apply, 5, Associativity.Left),
+    )
   }
 
   override protected val exprParser: ExprParser = new LArithParser

@@ -79,6 +79,18 @@ class ExprParseTest extends AnyFunSuite, TableDrivenPropertyChecks {
     ))
   }
 
+  test("can parse LLet expressions") {
+    val l = LLet
+    testParses(l, List(
+      ("x", l.Var("x")),
+      ("this_is_my_2nd_variable", l.Var("this_is_my_2nd_variable")),
+      ("x + y", l.Plus(l.Var("x"), l.Var("y"))),
+      ("let x = 3248 in x", l.Let("x", l.Num(3248), l.Var("x"))),
+      ("let x = 2 in let y = 3 in x + y", l.Let("x", l.Num(2), l.Let("y", l.Num(3), l.Plus(l.Var("x"), l.Var("y"))))),
+      ("let x = let y = 2 in y + y in let z = 3 in x * z", l.Let("x", l.Let("y", l.Num(2), l.Plus(l.Var("y"), l.Var("y"))), l.Let("z", l.Num(3), l.Times(l.Var("x"), l.Var("z"))))),
+    ))
+  }
+
   test("can parse LLam expressions") {
     val l = LLam
     testParses(l, List(
@@ -86,6 +98,7 @@ class ExprParseTest extends AnyFunSuite, TableDrivenPropertyChecks {
       ("\\x: InT. x + 1", l.Lambda("x", l.IntType(), l.Plus(l.Var("x"), l.Num(1)))),
       ("lambda myBool: bool. if myBool then 1 else -1", l.Lambda("myBool", l.BoolType(), l.IfThenElse(l.Var("myBool"), l.Num(1), l.Num(-1)))),
       ("\\x. x * 2", l.Lambda("x", BlankTypeDropDown(l), l.Times(l.Var("x"), l.Num(2)))),
+      ("f x", l.Apply(l.Var("f"), l.Var("x"))),
       ("(\\x: int. x + 1) 5", l.Apply(l.Lambda("x", l.IntType(), l.Plus(l.Var("x"), l.Num(1))), l.Num(5))),
       ("(λx: int. x + 1) 5", l.Apply(l.Lambda("x", l.IntType(), l.Plus(l.Var("x"), l.Num(1))), l.Num(5))),
       ("f x y", l.Apply(l.Apply(l.Var("f"), l.Var("x")), l.Var("y"))),
@@ -109,6 +122,14 @@ class ExprParseTest extends AnyFunSuite, TableDrivenPropertyChecks {
       ("\\x: int * bool. (fst x) + (snd x)", l.Lambda("x", l.PairType(l.IntType(), l.BoolType()), l.Plus(l.Fst(l.Var("x")), l.Snd(l.Var("x")))))
     ))
   }
+
+//  test("can parse LPoly expressions") {
+//    val l = LPoly
+//    testParses(l, List(
+//      ("ΛA. 2", l.Poly("A", l.Num(2))),
+//      ("f[int]", l.ApplyType(l.Var("f"), l.IntType()))
+//    ))
+//  }
 
   test("can parse LList expressions") {
     val l = LList

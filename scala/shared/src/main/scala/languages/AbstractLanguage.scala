@@ -75,6 +75,71 @@ trait AbstractLanguage {
 
   protected trait ExprParser extends JavaTokenParsers {
     def expr: Parser[Expr]
+
+    protected trait ExprOperator {
+      def precedence: Int
+    }
+
+    protected case class BasicBinaryOperator(
+      op: String,
+      apply: (Expr, Expr) => Expr,
+      precedence: Int,
+      associativity: Associativity
+    ) extends ExprOperator
+
+    case class SpecialParser(parser: Parser[Expr], precedence: Int) extends ExprOperator
+
+    case class LeftRecursiveOperator(
+      parser: Parser[Expr => Expr],
+      precedence: Int
+    ) extends ExprOperator
+
+    protected enum Associativity {
+      case Left, Right
+    }
+
+    protected def exprOperators: List[ExprOperator] = List.empty
+
+    protected def precedenceParser(base: Parser[Expr], operators: List[ExprOperator]): Parser[Expr] = {
+      if (operators.isEmpty) base
+      else {
+        val groupedByPrecedence = operators.groupBy(_.precedence).toList.sortBy(-_._1)
+        groupedByPrecedence.foldLeft(base) {
+          case (acc, (_, ops)) =>
+            val leftAssocOps = ops.collect { case b: BasicBinaryOperator if b.associativity == Associativity.Left => b }
+            val rightAssocOps = ops.collect { case b: BasicBinaryOperator if b.associativity == Associativity.Right => b }
+            val leftRecursiveParsers = ops.collect { case l: LeftRecursiveOperator => l.parser }
+            val specialParsers = ops.collect { case s: SpecialParser => s.parser }
+
+            val leftParser = if (leftAssocOps.isEmpty) acc else {
+              val opParser = leftAssocOps.map { case BasicBinaryOperator(op, fn, _, _) => op ^^^ fn }.reduce(_ | _)
+              acc ~ rep(opParser ~ acc) ^^ { case start ~ rest =>
+                rest.foldLeft(start) { case (lhs, fn ~ rhs) => fn(lhs, rhs) }
+              }
+            }
+
+            val rightParser = if (rightAssocOps.isEmpty) leftParser else {
+              val opParser = rightAssocOps.map { case BasicBinaryOperator(op, fn, _, _) => op ^^^ fn }.reduce(_ | _)
+              acc ~ opt(opParser ~ precedenceParser(acc, rightAssocOps)) ^^ {
+                case lhs ~ Some(fn ~ rhs) => fn(lhs, rhs)
+                case lhs ~ None => lhs
+              }
+            }
+
+            val leftRecursiveParser = if (leftRecursiveParsers.isEmpty) rightParser else {
+              rightParser ~ rep(leftRecursiveParsers.reduce(_ | _)) ^^ {
+                case base ~ transformations => transformations.foldLeft(base)((expr, transform) => transform(expr))
+              }
+            }
+
+            val specialParser = if (specialParsers.isEmpty) leftRecursiveParser else {
+              leftRecursiveParser | specialParsers.reduce(_ | _)
+            }
+
+            specialParser
+        }
+      }
+    }
   }
 
   protected val exprParser: ExprParser

@@ -375,14 +375,12 @@ class LList extends LPoly {
         CaseList(list, nilCase, LiteralIdentifierBind(headVar), LiteralIdentifierBind(tailVar), consCase)
     }
 
-    private def cons: Parser[Expr] = level3 ~ ("::" ~> expr).? ^^ {
-      case head ~ Some(tail) => Cons(head, tail)
-      case head ~ None => head
-    }
+    override protected def exprOperators: List[ExprOperator] = super.exprOperators ++ List(
+      BasicBinaryOperator("::", Cons.apply, 1, Associativity.Right),
+      SpecialParser(caseList, 1)
+    )
 
-    override protected def level2: Parser[Expr] = cons
-
-    override protected def primitive: Parser[Expr] = nil | caseList | super.primitive
+    override protected def primitive: Parser[Expr] = nil | super.primitive
 
     override protected def typPrimitive: Parser[Type] = "(?i)list".r ~ "[" ~ typ ~ "]" ^^ {
       case _ ~ _ ~ typ ~ _ => ListType(typ)

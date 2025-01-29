@@ -254,16 +254,20 @@ class LLet extends LIf {
     protected def keywords: Set[String] = Set(
       "let", "in", "if", "then", "else", "true", "false"
     )
-    
+
     private lazy val keywordsCache: Set[String] = keywords
 
-    protected def varP: Parser[Expr] = ident.filter(!keywordsCache.contains(_)) ^^ {Var(_)}
+    private def varParse: Parser[Expr] = ident.filter(!keywordsCache.contains(_)) ^^ {Var(_)}
 
     protected def let: Parser[Expr] = "let" ~> ident ~ ("=" ~> expr) ~ ("in" ~> expr) ^^ {
       case v ~ assign ~ bound => Let(v, assign, bound)
     }
 
-    override protected def primitive: Parser[Expr] = super.primitive | let | varP
+    override protected def primitive: Parser[Expr] = super.primitive | varParse
+
+    override protected def exprOperators: List[ExprOperator] = super.exprOperators ++ List(
+      SpecialParser(let, 1)
+    )
   }
 
   override protected val exprParser: ExprParser = new LLetParser
