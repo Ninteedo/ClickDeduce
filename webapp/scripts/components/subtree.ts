@@ -4,9 +4,11 @@ import {createLiteralInput} from "./literalInput";
 import {createExprSelector, replaceDisabledSelectInputs} from "./customExprSelector";
 import {AbstractTreeInput} from "./abstractTreeInput";
 import {RuleAnnotation} from "./ruleAnnotation";
+import {runAction} from "../actions";
+import {lockPanZoom, unlockPanZoom} from "./panzoom";
+import {pauseFileDragAndDrop, resumeFileDragAndDrop} from "../saveLoad";
 import {getTreePathOfElement} from "../globals/elements";
 import {getRootSubtree} from "../treeManipulation";
-import {getNodeStringFromPath} from "../utility/parseNodeString";
 
 export class Subtree {
     private readonly element: HTMLDivElement;
@@ -57,9 +59,11 @@ export class Subtree {
         if (this.argsElement && this.argsElement.children) {
             Array.from(this.argsElement!.children!).forEach(element => {
                 if (element.classList.contains('subtree')) {
-                    const subNodePath = element.getAttribute(this.DATA_TREE_PATH)!;
-                    const subNodePathHead = subNodePath.split('-')[0];
-                    const subNodeString = getNodeStringFromPath(subNodePathHead, this.nodeString);
+                    const subNodeString = element.getAttribute('data-node-string')!;
+                    // const subNodePath = element.getAttribute(this.DATA_TREE_PATH)!;
+                    // const subNodePathHead = subNodePath.split('-')[0];
+                    // console.log(this.nodeString);
+                    // const subNodeString = getNodeStringFromPath(subNodePathHead, this.nodeString);
                     this.children.push(new Subtree(element as HTMLDivElement, this, subNodeString));
                 }
             });
@@ -85,6 +89,7 @@ export class Subtree {
             this.disableInputs();
         }
         replaceDisabledSelectInputs(this.nodeElement);
+        this.setupDragAndDrop();
     }
 
     private addHoverListeners(): void {
@@ -179,6 +184,10 @@ export class Subtree {
         return this.allInputs;
     }
 
+    disableAllInputs(): void {
+        this.allInputs.forEach(input => input.disable());
+    }
+
     getRuleAnnotation(): RuleAnnotation {
         return this.ruleAnnotation;
     }
@@ -188,6 +197,74 @@ export class Subtree {
         const clone = new Subtree(newElement, keepParent ? this.parent : null, this.nodeString);
         clone.removeHighlight();
         return clone;
+    }
+
+    private setupDragAndDrop(): void {
+        // this.element.setAttribute('draggable', 'true');
+
+        const DRAG_HIGHLIGHT_CLASS = 'drag-highlight';
+        const addDragHighlight = () => this.element.classList.add(DRAG_HIGHLIGHT_CLASS);
+        const removeDragHighlight = () => this.element.classList.remove(DRAG_HIGHLIGHT_CLASS);
+
+        // const clickAndHoldTime = 500;
+        // let mouseDownStartTime: number | null = null;
+        // this.element.addEventListener('mousedown', event => {
+        //     event.stopPropagation();
+        //     mouseDownStartTime = new Date().getTime();
+        //     setTimeout(() => {
+        //         if (mouseDownStartTime && new Date().getTime() - mouseDownStartTime >= clickAndHoldTime) {
+        //             console.log('dispatching dragstart');
+        //             this.element.dispatchEvent(new DragEvent('dragstart', { bubbles: true, dataTransfer: new DataTransfer() }));
+        //         }
+        //     }, clickAndHoldTime);
+        // })
+        // this.element.addEventListener('mouseup', () => {
+        //     mouseDownStartTime = null;
+        // });
+
+
+        this.element.addEventListener('dragstart', event => {
+            event.stopPropagation();
+            console.log('dragstart', 'path', this.treePath);
+            lockPanZoom();
+            pauseFileDragAndDrop();
+            event.dataTransfer!.setData('text/plain', this.treePath);
+            event.dataTransfer!.effectAllowed = 'move';
+        });
+        this.element.addEventListener('dragend', () => {
+            unlockPanZoom();
+            resumeFileDragAndDrop();
+        });
+        this.element.addEventListener('drop', event => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            console.log(event.dataTransfer);
+
+            const sourceTreePath = event.dataTransfer!.getData('text/plain');
+            if (sourceTreePath) {
+                if (sourceTreePath === this.treePath) {
+                    return;
+                }
+                console.log('dropped', sourceTreePath, 'onto', this.treePath);
+                runAction("MoveAction", this.treePath, [sourceTreePath]);
+            } else {
+                const nodeString = event.dataTransfer!.getData('plain/subtreeNodeString');
+                if (nodeString) {
+                    console.log('dropped subtree', nodeString, 'onto', this.treePath);
+                    runAction("PasteAction", this.treePath, [nodeString]);
+                }
+            }
+        });
+        this.element.addEventListener('dragover', event => {
+            event.preventDefault();
+            event.stopPropagation();
+            addDragHighlight();
+        });
+        this.element.addEventListener('dragleave', event => {
+            event.preventDefault();
+            removeDragHighlight();
+        });
     }
 }
 

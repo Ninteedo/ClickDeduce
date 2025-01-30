@@ -52,6 +52,12 @@ export function getContextMenuEditButton(): HTMLButtonElement {
     return editButton;
 }
 
+export function getContextMenuSendToToolboxButton(): HTMLButtonElement {
+    const sendToToolboxButton = document.getElementById('send-to-toolbox-button') as HTMLButtonElement;
+    if (!sendToToolboxButton) throw new Error('Send to toolbox button not found');
+    return sendToToolboxButton;
+}
+
 export function getZoomToFitButton(): HTMLButtonElement {
     const zoomToFitButton = document.getElementById('zoom-to-fit') as HTMLButtonElement;
     if (!zoomToFitButton) throw new Error('Zoom to fit button not found');

@@ -1,5 +1,13 @@
 @use "../abstracts/colours";
 
+#tree-and-toolbox {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  flex-direction: row;
+}
+
 #tree-container {
   border: colours.$input-outline solid 1px;
   background-color: colours.$tree-background;
@@ -21,6 +29,32 @@
   width: max-content;
   overflow: visible;
   white-space: nowrap;
+}
+
+#subtree-toolbox {
+  display: flex;
+  flex-direction: column;
+
+  max-width: 20%;
+
+
+  background-color: colours.$tree-background;
+  border: colours.$input-outline solid 1px;
+
+  align-items: center;
+  justify-items: flex-start;
+  gap: 0.5rem;
+
+  overflow: clip;
+  white-space: nowrap;
+
+  user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+
+  & > * {
+    flex-shrink: 1;
+  }
 }
 
 .subtree {

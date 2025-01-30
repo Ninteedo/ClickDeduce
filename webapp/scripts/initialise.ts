@@ -4,6 +4,7 @@ import {
     contextMenuCopy,
     contextMenuEdit,
     contextMenuPaste,
+    contextMenuSendToToolbox,
     doStartNodeBlank,
     exampleLiteralChanged,
     handleLiteralChanged,
@@ -17,6 +18,7 @@ import {setupExampleSelector} from "./components/customExprSelector";
 import {loadTree, saveTree} from "./saveLoad";
 import {
     getContextMenuEditButton,
+    getContextMenuSendToToolboxButton,
     getContextMenuZoomToFitButton,
     getCopyButton,
     getDeleteButton,
@@ -62,6 +64,7 @@ function setupButtons(): void {
     getPasteButton().addEventListener('click', contextMenuPaste);
     getCopyButton().addEventListener('click', contextMenuCopy);
     getContextMenuEditButton().addEventListener('click', contextMenuEdit);
+    getContextMenuSendToToolboxButton().addEventListener('click', contextMenuSendToToolbox);
     getDeleteButton().addEventListener('click', (e) => clearTreeNode(e));
     getZoomToFitButton().addEventListener('click', zoomToFit);
     getContextMenuZoomToFitButton().addEventListener('click', zoomToFit);

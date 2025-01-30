@@ -15,6 +15,7 @@ import {getContextMenuSelectedElement} from "./components/contextMenu";
 import {displayError} from "./components/displayError";
 import {centerTree} from "./components/panzoom";
 import {addSubtreeEditor} from "./components/subtreeEditor";
+import {addSubtreeToToolbox} from "./components/SubtreeToolbox";
 
 let copyCache: string | null = null;
 
@@ -198,6 +199,11 @@ export function contextMenuCopy(): void {
 export function contextMenuEdit(): void {
     const subtree = getRootSubtree()!.getChildFromPath(parseTreePath(getContextMenuSelectedTreePath()));
     if (subtree) addSubtreeEditor(subtree);
+}
+
+export function contextMenuSendToToolbox(): void {
+    const subtree = getRootSubtree()!.getChildFromPath(parseTreePath(getContextMenuSelectedTreePath()));
+    if (subtree) addSubtreeToToolbox(subtree);
 }
 
 /**

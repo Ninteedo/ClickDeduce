@@ -3,6 +3,7 @@ import {lastNodeString} from "../treeManipulation";
 /**
  * Finds the substring of the node string at the given path.
  * @param path the tree path to the node, integers separated by dashes
+ * @param nodeString starting node string, uses lastNodeString if not provided
  */
 export function getNodeStringFromPath(path: string, nodeString: string | undefined = undefined): string {
     /**
