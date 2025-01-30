@@ -8,7 +8,7 @@ import {
     closeContextMenu,
     getHighlightElement,
     openContextMenu
-} from "./components/contextMenu";
+} from "./components/contextMenu/contextMenu";
 
 export let nextFocusElement: AbstractTreeInput | null = null;
 

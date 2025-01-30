@@ -6,7 +6,8 @@ import {getExprSelectors} from "../treeManipulation";
 import {vitest} from "vitest";
 import {DropdownOption} from "../components/baseDropdownSelector";
 import {getLangSelector, getTreePathOfElement} from "../globals/elements";
-import {getActiveContextMenu, SubtreeContextMenu} from "../components/contextMenu";
+import {getActiveContextMenu} from "../components/contextMenu/contextMenu";
+import {SubtreeContextMenu} from "../components/contextMenu/SubtreeContextMenu";
 
 export function slightDelay(delay: number = 10): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, delay));

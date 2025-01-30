@@ -1,5 +1,5 @@
 import {parseTreePath} from "../utils";
-import {getContextMenuSelectedElement} from "./contextMenu";
+import {getContextMenuSelectedElement} from "./contextMenu/contextMenu";
 import {createLiteralInput} from "./literalInput";
 import {createExprSelector, replaceDisabledSelectInputs} from "./customExprSelector";
 import {AbstractTreeInput} from "./abstractTreeInput";

@@ -16,7 +16,7 @@ import {initialise} from "../initialise";
 import {doStartNodeBlank, startNodeBlank} from "../actions";
 import {ClickDeduceResponseError} from "../ClickDeduceResponseError";
 import {getErrorDiv} from "../globals/elements";
-import {getActiveContextMenu} from "../components/contextMenu";
+import {getActiveContextMenu} from "../components/contextMenu/contextMenu";
 
 const indexHtml = loadIndexHtmlTemplate();
 
