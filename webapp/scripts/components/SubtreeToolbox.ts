@@ -6,8 +6,6 @@ class SubtreeToolbox {
     private readonly entries: ToolboxEntry[];
     private newEntryCount: number = 0;
 
-    // private readonly DRAG_HIGHLIGHT_CLASS = 'drag-highlight';
-
     constructor(container: HTMLDivElement) {
         this.container = container;
         this.entries = [];
@@ -20,12 +18,24 @@ class SubtreeToolbox {
     }
 
     addSubtree(subtree: Subtree): void {
-        this.entries.push(new ToolboxEntry(subtree, `Subtree ${++this.newEntryCount}`));
+        this.entries.push(new ToolboxEntry(subtree, this.newEntryCount++));
         this.updateContents();
+    }
+
+    removeEntry(entry: ToolboxEntry): void {
+        const index = this.entries.indexOf(entry);
+        if (index === -1) throw new Error('Entry not found');
+        this.entries.splice(index, 1);
+        this.updateContents();
+        entry.getElement().remove();
     }
 
     getElement(): HTMLDivElement {
         return this.container;
+    }
+
+    getEntryWithID(id: number): ToolboxEntry | undefined {
+        return this.entries.find(entry => entry.getID() === id);
     }
 
     // private setUpDropZone(): void {
@@ -60,18 +70,19 @@ export function addSubtreeToToolbox(subtree: Subtree): void {
     getSubtreeToolbox().addSubtree(subtree.copy());
 }
 
-class ToolboxEntry {
-    private subtree: Subtree;
-    private name: string;
+export class ToolboxEntry {
+    private readonly subtree: Subtree;
+    private readonly id: number
 
     private readonly element: HTMLDivElement;
 
-    constructor(subtree: Subtree, name: string) {
+    constructor(subtree: Subtree, id: number) {
         this.subtree = subtree;
-        this.name = name;
+        this.id = id;
 
         this.element = document.createElement('div');
         this.element.classList.add('toolbox-entry');
+        this.element.setAttribute('data-id', id.toString());
         this.element.appendChild(subtree.getElement());
 
         this.setUpDrag();
@@ -91,16 +102,16 @@ class ToolboxEntry {
         return this.subtree;
     }
 
-    getName(): string {
-        return this.name;
-    }
-
     getElement(): HTMLDivElement {
         return this.element;
     }
 
     update(): void {
         this.autoScale();
+    }
+
+    getID(): number {
+        return this.id;
     }
 
     private autoScale(): void {

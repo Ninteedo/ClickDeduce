@@ -28,6 +28,16 @@ export function hasClassOrParentHasClass(element: HTMLElement, className: string
         (!!element.parentElement && hasClassOrParentHasClass(element.parentElement, className));
 }
 
+export function ancestorWithClass(element: HTMLElement, className: string): HTMLElement | null {
+    if (element.classList.contains(className)) {
+        return element;
+    } else if (element.parentElement) {
+        return ancestorWithClass(element.parentElement, className);
+    } else {
+        return null;
+    }
+}
+
 export function parseTreePath(treePath: string): number[] {
     return treePath.split('-').map((s) => parseInt(s)).filter((n) => !isNaN(n));
 }

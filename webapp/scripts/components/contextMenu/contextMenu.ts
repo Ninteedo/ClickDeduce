@@ -1,7 +1,9 @@
-import {hasClassOrParentHasClass, parseTreePath} from "../../utils";
+import {ancestorWithClass, hasClassOrParentHasClass, parseTreePath} from "../../utils";
 import {getRootSubtree} from "../../treeManipulation";
 import {SubtreeContextMenu} from "./SubtreeContextMenu";
 import {AbstractContextMenu} from "./AbstractContextMenu";
+import {getSubtreeToolbox} from "../SubtreeToolbox";
+import {ToolboxContextMenu} from "./ToolboxContextMenu";
 
 let contextMenuSelectedElement: HTMLElement | null = null;
 
@@ -10,6 +12,18 @@ let contextMenuSelectedElement: HTMLElement | null = null;
  * @param e the mouse event
  */
 export function openContextMenu(e: MouseEvent): void {
+    const toolboxEntryElement = ancestorWithClass(e.target as HTMLElement, 'toolbox-entry');
+    if (toolboxEntryElement) {
+        const toolboxEntry = getSubtreeToolbox().getEntryWithID(parseInt(toolboxEntryElement.getAttribute('data-id')!));
+        if (toolboxEntry) {
+            e.preventDefault();
+            closeContextMenu();
+            activeContextMenu = new ToolboxContextMenu(e, toolboxEntry);
+            contextMenuSelectedElement = toolboxEntryElement;
+            return;
+        }
+    }
+
     const highlightElement = getHighlightElementFromEvent(e);
 
     if (!highlightElement || hasClassOrParentHasClass(highlightElement, 'phantom')) {
