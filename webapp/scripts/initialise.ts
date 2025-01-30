@@ -1,32 +1,15 @@
 import '../styles/main.sass';
-import {
-    clearTreeNode,
-    contextMenuCopy,
-    contextMenuEdit,
-    contextMenuPaste,
-    contextMenuSendToToolbox,
-    doStartNodeBlank,
-    exampleLiteralChanged,
-    handleLiteralChanged,
-    resetCopyCache,
-    startNodeBlank
-} from "./actions";
+import {doStartNodeBlank, exampleLiteralChanged, handleLiteralChanged, resetCopyCache, startNodeBlank} from "./actions";
 import {redo, resetTreeManipulation, undo, updateTextInputWidth} from "./treeManipulation";
 import {handleTabPressed, resetInterfaceGlobals, toggleControls} from "./interface";
 import {loadImages} from "./imageLoading";
 import {setupExampleSelector} from "./components/customExprSelector";
 import {loadTree, saveTree} from "./saveLoad";
 import {
-    getContextMenuEditButton,
-    getContextMenuSendToToolboxButton,
-    getContextMenuZoomToFitButton,
-    getCopyButton,
-    getDeleteButton,
     getExportCloseButton,
     getExportCopyButton,
     getExportLatexButton,
     getLoadButton,
-    getPasteButton,
     getRedoButton,
     getSaveButton,
     getShortcutsLink,
@@ -61,13 +44,7 @@ export function initialise(skipImages: boolean = false): void {
 function setupButtons(): void {
     getUndoButton().addEventListener('click', undo);
     getRedoButton().addEventListener('click', redo);
-    getPasteButton().addEventListener('click', contextMenuPaste);
-    getCopyButton().addEventListener('click', contextMenuCopy);
-    getContextMenuEditButton().addEventListener('click', contextMenuEdit);
-    getContextMenuSendToToolboxButton().addEventListener('click', contextMenuSendToToolbox);
-    getDeleteButton().addEventListener('click', (e) => clearTreeNode(e));
     getZoomToFitButton().addEventListener('click', zoomToFit);
-    getContextMenuZoomToFitButton().addEventListener('click', zoomToFit);
     getSaveButton().addEventListener('click', saveTree);
     getLoadButton().addEventListener('click', loadTree);
     getExportLatexButton().addEventListener('click', exportLaTeX);

@@ -16,6 +16,7 @@ import {initialise} from "../initialise";
 import {doStartNodeBlank, startNodeBlank} from "../actions";
 import {ClickDeduceResponseError} from "../ClickDeduceResponseError";
 import {getErrorDiv} from "../globals/elements";
+import {getActiveContextMenu} from "../components/contextMenu";
 
 const indexHtml = loadIndexHtmlTemplate();
 
@@ -34,7 +35,8 @@ describe("context menu behaves correctly", () => {
     });
 
     test("context menu is initially hidden", () => {
-        expect(document.getElementById('custom-context-menu')?.style.display).toEqual('none');
+        expect(getActiveContextMenu()).toBeFalsy();
+        expect(document.getElementById('custom-context-menu')).toBeFalsy();
     });
 
     test("right-clicking an element causes the context menu to appear", () => {
@@ -52,8 +54,10 @@ describe("context menu behaves correctly", () => {
     test("the context menu disappears when clicking away", () => {
         const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
         contextMenuSelect(element);
-        leftClickOn(document.querySelector('[data-tree-path=""]'))
-        expect(document.getElementById('custom-context-menu')?.style.display).toEqual('none');
+        expect(getActiveContextMenu()).toBeTruthy();
+        leftClickOn(document.querySelector('[data-tree-path=""]'));
+        expect(getActiveContextMenu()).toBeFalsy();
+        expect(document.getElementById('custom-context-menu')).toBeFalsy();
     });
 
     test("right-clicking another element when the context menu is out causes the context menu to disappear", () => {
@@ -63,21 +67,21 @@ describe("context menu behaves correctly", () => {
         const element2 = document.querySelector('[data-tree-path="1"]') as HTMLElement;
         contextMenuSelect(element2);
 
-        expect(document.getElementById('custom-context-menu')?.style.display).toEqual('none');
+        expect(document.getElementById('custom-context-menu')).toBeFalsy();
     });
 
     test("right-clicking the context menu causes the context menu to disappear", () => {
         const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
         contextMenuSelect(element);
         contextMenuSelect(document.getElementById('custom-context-menu'));
-        expect(document.getElementById('custom-context-menu')?.style.display).toEqual('none');
+        expect(document.getElementById('custom-context-menu')).toBeFalsy();
     });
 
     test("right-clicking on the selected element again causes the context menu to disappear", () => {
         const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
         contextMenuSelect(element);
         contextMenuSelect(element);
-        expect(document.getElementById('custom-context-menu')?.style.display).toEqual('none');
+        expect(document.getElementById('custom-context-menu')).toBeFalsy();
     });
 });
 

@@ -6,6 +6,7 @@ import {getExprSelectors} from "../treeManipulation";
 import {vitest} from "vitest";
 import {DropdownOption} from "../components/baseDropdownSelector";
 import {getLangSelector, getTreePathOfElement} from "../globals/elements";
+import {getActiveContextMenu, SubtreeContextMenu} from "../components/contextMenu";
 
 export function slightDelay(delay: number = 10): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, delay));
@@ -121,4 +122,10 @@ export function getTabbableElements(allowSelect: boolean = false): HTMLElement[]
 
 export function basicMocks(): void {
     Element.prototype.scrollIntoView = vitest.fn();
+}
+
+export function getActiveSubtreeContextMenu(): SubtreeContextMenu {
+    const activeContextMenu = getActiveContextMenu();
+    if (!(activeContextMenu instanceof SubtreeContextMenu)) throw new Error('Active context menu is not a SubtreeContextMenu');
+    return activeContextMenu;
 }

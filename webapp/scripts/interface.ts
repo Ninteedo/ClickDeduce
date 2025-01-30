@@ -2,7 +2,7 @@ import {copyTreeNode, deleteTreeNode, pasteTreeNode} from "./actions";
 import {getActiveInputs, redo, undo} from "./treeManipulation";
 import {compareTreePaths} from "./utils";
 import {AbstractTreeInput} from "./components/abstractTreeInput";
-import {getContextMenu, getControlsDiv, getToggleControlsButton, getTreePathOfElement} from "./globals/elements";
+import {getControlsDiv, getToggleControlsButton, getTreePathOfElement} from "./globals/elements";
 import {
     clearContextMenuSelectedElement,
     closeContextMenu,
@@ -22,8 +22,6 @@ export function resetInterfaceGlobals(): void {
 
     document.addEventListener('contextmenu', openContextMenu);
     document.addEventListener('click', closeContextMenu);
-
-    getContextMenu().style.display = 'none';
 }
 
 /**

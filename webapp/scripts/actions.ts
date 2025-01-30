@@ -1,21 +1,11 @@
-import {getSelectedLanguage, getSelectedMode, parseTreePath} from "./utils";
-import {
-    disableInputs,
-    enableInputs,
-    getRootSubtree,
-    lastNodeString,
-    reloadCurrentTree,
-    updateTree
-} from "./treeManipulation";
+import {getSelectedLanguage, getSelectedMode} from "./utils";
+import {disableInputs, enableInputs, lastNodeString, reloadCurrentTree, updateTree} from "./treeManipulation";
 import {nextFocusElement, setFocusElement} from "./interface";
 import {postProcessActionNew, postStartNodeBlankNew} from "./serverRequest";
 import {getNodeStringFromPath} from "./utility/parseNodeString";
 import {getTreePathOfElement} from "./globals/elements";
-import {getContextMenuSelectedElement} from "./components/contextMenu";
 import {displayError} from "./components/displayError";
 import {centerTree} from "./components/panzoom";
-import {addSubtreeEditor} from "./components/subtreeEditor";
-import {addSubtreeToToolbox} from "./components/SubtreeToolbox";
 
 let copyCache: string | null = null;
 
@@ -172,38 +162,10 @@ export function deleteTreeNode(treePath: string): void {
 }
 
 /**
- * Clears the selected subtree.
- *
- * Executes the DeleteAction.
- *
- * @param event the triggering event
- */
-export function clearTreeNode(event: Event): void {
-    event.preventDefault();
-    if (getContextMenuSelectedElement()) {
-        deleteTreeNode(getContextMenuSelectedTreePath());
-    }
-}
-
-/**
  * Copies the node string of the selected subtree to the copy cache.
  */
 export function copyTreeNode(treePath: string): void {
     copyCache = getNodeStringFromPath(treePath);
-}
-
-export function contextMenuCopy(): void {
-    copyTreeNode(getContextMenuSelectedTreePath());
-}
-
-export function contextMenuEdit(): void {
-    const subtree = getRootSubtree()!.getChildFromPath(parseTreePath(getContextMenuSelectedTreePath()));
-    if (subtree) addSubtreeEditor(subtree);
-}
-
-export function contextMenuSendToToolbox(): void {
-    const subtree = getRootSubtree()!.getChildFromPath(parseTreePath(getContextMenuSelectedTreePath()));
-    if (subtree) addSubtreeToToolbox(subtree);
 }
 
 /**
@@ -218,14 +180,6 @@ export function pasteTreeNode(treePath: string): void {
     }
 }
 
-export function contextMenuPaste(): void {
-    pasteTreeNode(getContextMenuSelectedTreePath());
-}
-
 export function hasCopyCache(): boolean {
     return copyCache !== null;
-}
-
-function getContextMenuSelectedTreePath(): string {
-    return getTreePathOfElement(getContextMenuSelectedElement());
 }

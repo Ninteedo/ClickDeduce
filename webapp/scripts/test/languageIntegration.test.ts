@@ -4,6 +4,7 @@ import {
     basicMocks,
     changeLanguage,
     doLiteralEdit,
+    getActiveSubtreeContextMenu,
     getExprDropdownOptions,
     getLeftmostExprDropdown,
     loadIndexHtmlTemplate,
@@ -13,7 +14,7 @@ import {
 } from "./helper";
 import {CustomExprSelector} from "../components/customExprSelector";
 import {getExprSelectors} from "../treeManipulation";
-import {getCopyButton, getLangSelector, getPasteButton, getTree, getUndoButton} from "../globals/elements";
+import {getLangSelector, getTree, getUndoButton} from "../globals/elements";
 
 const indexHtml = loadIndexHtmlTemplate();
 
@@ -343,8 +344,7 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
         contextMenuSelect(element);
 
-        const deleteButton = document.getElementById('delete-button');
-        deleteButton?.click();
+        getActiveSubtreeContextMenu().deleteEntry.doClick();
 
         new Promise(resolve => setTimeout(resolve, 50));
 
@@ -356,13 +356,13 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
         contextMenuSelect(element);
 
-        getCopyButton().click();
+        getActiveSubtreeContextMenu().copyEntry.doClick();
 
         const initialTreeState = getTree().innerHTML;
 
         contextMenuSelect(element);
 
-        getPasteButton().click();
+        getActiveSubtreeContextMenu().pasteEntry.doClick();
 
         new Promise(resolve => setTimeout(resolve, 50));
 
@@ -373,12 +373,12 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         const element1 = document.querySelector('.subtree[data-tree-path="0"]') as HTMLElement;
         contextMenuSelect(element1);
 
-        getCopyButton().click();
+        getActiveSubtreeContextMenu().copyEntry.doClick();
 
         const element2 = document.querySelector('.subtree[data-tree-path="1"]') as HTMLElement;
         contextMenuSelect(element2);
 
-        getPasteButton().click();
+        getActiveSubtreeContextMenu().pasteEntry.doClick();
 
         new Promise(resolve => setTimeout(resolve, 50));
 
@@ -387,14 +387,14 @@ describe("delete, copy, and paste buttons behave correctly", () => {
 
     test("clicking paste after changing tree state makes the correct request to the server", () => {
         contextMenuSelect(document.querySelector('[data-tree-path="0"]'));
-        getCopyButton().click();
+        getActiveSubtreeContextMenu().copyEntry.doClick();
         new Promise(resolve => setTimeout(resolve, 50));
 
         getUndoButton().click();
         new Promise(resolve => setTimeout(resolve, 50));
 
         contextMenuSelect(document.querySelector('[data-tree-path=""]'));
-        getPasteButton().click();
+        getActiveSubtreeContextMenu().pasteEntry.doClick();
 
         new Promise(resolve => setTimeout(resolve, 50));
 

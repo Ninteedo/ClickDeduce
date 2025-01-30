@@ -4,7 +4,7 @@ import {createLiteralInput} from "./literalInput";
 import {createExprSelector, replaceDisabledSelectInputs} from "./customExprSelector";
 import {AbstractTreeInput} from "./abstractTreeInput";
 import {RuleAnnotation} from "./ruleAnnotation";
-import {runAction} from "../actions";
+import {copyTreeNode, deleteTreeNode, pasteTreeNode, runAction} from "../actions";
 import {lockPanZoom, unlockPanZoom} from "./panzoom";
 import {pauseFileDragAndDrop, resumeFileDragAndDrop} from "../saveLoad";
 import {getTreePathOfElement} from "../globals/elements";
@@ -265,6 +265,18 @@ export class Subtree {
             event.preventDefault();
             removeDragHighlight();
         });
+    }
+
+    deleteAction(): void {
+        deleteTreeNode(this.treePath);
+    }
+
+    copyToClipboard(): void {
+        copyTreeNode(this.treePath);
+    }
+
+    pasteAction(): void {
+        pasteTreeNode(this.treePath);
     }
 }
 

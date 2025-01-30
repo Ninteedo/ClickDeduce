@@ -4,6 +4,7 @@ import {
     basicMocks,
     contextMenuSelect,
     doLiteralEdit,
+    getActiveSubtreeContextMenu,
     getDropdownAt,
     getLeftmostExprDropdown,
     getLiteralInputAt,
@@ -20,7 +21,7 @@ import {
     getStartNodeBlankHistory
 } from "../serverRequest";
 import {getExprSelectors, getLiteralInputs} from "../treeManipulation";
-import {getCopyButton, getDeleteButton, getPasteButton, getUndoButton} from "../globals/elements";
+import {getUndoButton} from "../globals/elements";
 
 const indexHtml = loadIndexHtmlTemplate();
 
@@ -270,7 +271,7 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
         contextMenuSelect(element);
 
-        getDeleteButton().click();
+        getActiveSubtreeContextMenu().deleteEntry.doClick();
 
         checkActionExecuted(langSelectorLanguages[0], "edit", "DeleteAction",
             NS.TIMES_LEFT_FILLED_NUM_RIGHT_EMPTY, "0", []);
@@ -283,7 +284,7 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         contextMenuSelect(element);
 
         const initialRequestsReceived = getActionHistory().length;
-        getCopyButton().click();
+        getActiveSubtreeContextMenu().copyEntry.doClick();
         expect(getActionHistory().length).toEqual(initialRequestsReceived);
     });
 
@@ -292,16 +293,16 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
         contextMenuSelect(element);
         const initialRequestsReceived = getActionHistory().length;
-        getPasteButton().click();
+        getActiveSubtreeContextMenu().pasteEntry.doClick();
         expect(getActionHistory().length).toEqual(initialRequestsReceived);
     });
 
     test("clicking paste on same element after copying it makes the correct request to the server", () => {
         const element = document.querySelector('[data-tree-path="0"]') as HTMLElement;
         contextMenuSelect(element);
-        getCopyButton().click();
+        getActiveSubtreeContextMenu().copyEntry.doClick();
         contextMenuSelect(element);
-        getPasteButton().click();
+        getActiveSubtreeContextMenu().pasteEntry.doClick();
         checkActionExecuted(langSelectorLanguages[0], "edit", "PasteAction",
             NS.TIMES_LEFT_FILLED_NUM_RIGHT_EMPTY, "0", ["VariableNode(\"Num\", List(LiteralNode(LiteralInt(4))))"]);
     });
@@ -310,12 +311,12 @@ describe("delete, copy, and paste buttons behave correctly", () => {
         const element1 = document.querySelector('.subtree[data-tree-path="0"]') as HTMLElement;
         contextMenuSelect(element1);
 
-        getCopyButton().click();
+        getActiveSubtreeContextMenu().copyEntry.doClick();
 
         const element2 = document.querySelector('.subtree[data-tree-path="1"]') as HTMLElement;
         contextMenuSelect(element2);
 
-        getPasteButton().click();
+        getActiveSubtreeContextMenu().pasteEntry.doClick();
 
         checkActionExecuted(langSelectorLanguages[0], "edit", "PasteAction",
             NS.TIMES_LEFT_FILLED_NUM_RIGHT_EMPTY, "1", ["VariableNode(\"Num\", List(LiteralNode(LiteralInt(4))))"]);
@@ -323,12 +324,12 @@ describe("delete, copy, and paste buttons behave correctly", () => {
 
     test("clicking paste after changing tree state makes the correct request to the server", () => {
         contextMenuSelect(document.querySelector('[data-tree-path="0"]'));
-        getCopyButton().click();
+        getActiveSubtreeContextMenu().copyEntry.doClick();
 
         getUndoButton().click();
 
         contextMenuSelect(document.querySelector('[data-tree-path=""]'));
-        getPasteButton().click();
+        getActiveSubtreeContextMenu().pasteEntry.doClick();
 
         checkActionExecuted(langSelectorLanguages[0], "edit", "PasteAction",
             NS.TIMES_LEFT_NUM_RIGHT_EMPTY, "", ["VariableNode(\"Num\", List(LiteralNode(LiteralInt(4))))"]);

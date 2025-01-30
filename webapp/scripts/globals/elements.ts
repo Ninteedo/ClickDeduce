@@ -4,12 +4,6 @@ export function getBlocker(): HTMLElement {
     return blocker;
 }
 
-export function getContextMenu(): HTMLElement {
-    const menu = document.getElementById('custom-context-menu');
-    if (!menu) throw new Error('Context menu not found');
-    return menu;
-}
-
 export function getTreeContainer(): HTMLElement {
     const container = document.getElementById('tree-container');
     if (!container) throw new Error('Tree container not found');
@@ -28,45 +22,9 @@ export function getFirstSubtree(): HTMLDivElement {
     return rootSubtree as HTMLDivElement;
 }
 
-export function getPasteButton(): HTMLButtonElement {
-    const pasteButton = document.getElementById('paste-button') as HTMLButtonElement;
-    if (!pasteButton) throw new Error('Paste button not found');
-    return pasteButton;
-}
-
-export function getCopyButton(): HTMLButtonElement {
-    const copyButton = document.getElementById('copy-button') as HTMLButtonElement;
-    if (!copyButton) throw new Error('Copy button not found');
-    return copyButton;
-}
-
-export function getDeleteButton(): HTMLButtonElement {
-    const deleteButton = document.getElementById('delete-button') as HTMLButtonElement;
-    if (!deleteButton) throw new Error('Delete button not found');
-    return deleteButton;
-}
-
-export function getContextMenuEditButton(): HTMLButtonElement {
-    const editButton = document.getElementById('edit-button') as HTMLButtonElement;
-    if (!editButton) throw new Error('Edit button not found');
-    return editButton;
-}
-
-export function getContextMenuSendToToolboxButton(): HTMLButtonElement {
-    const sendToToolboxButton = document.getElementById('send-to-toolbox-button') as HTMLButtonElement;
-    if (!sendToToolboxButton) throw new Error('Send to toolbox button not found');
-    return sendToToolboxButton;
-}
-
 export function getZoomToFitButton(): HTMLButtonElement {
     const zoomToFitButton = document.getElementById('zoom-to-fit') as HTMLButtonElement;
     if (!zoomToFitButton) throw new Error('Zoom to fit button not found');
-    return zoomToFitButton;
-}
-
-export function getContextMenuZoomToFitButton(): HTMLButtonElement {
-    const zoomToFitButton = document.getElementById('zoom-button') as HTMLButtonElement;
-    if (!zoomToFitButton) throw new Error('Context menu zoom to fit button not found');
     return zoomToFitButton;
 }
 
