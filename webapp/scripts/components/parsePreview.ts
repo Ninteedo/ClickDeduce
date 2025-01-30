@@ -13,7 +13,8 @@ export class ParsePreview {
 
     show(html: string): void {
         this.previewDiv.innerHTML = html;
-        new Subtree(this.previewDiv.querySelector('.subtree')!, null);
+        const subtreeElement = this.previewDiv.querySelector('.subtree')!;
+        new Subtree(subtreeElement as HTMLDivElement, null, subtreeElement.getAttribute('data-node-string')!);
         this.previewDiv.classList.add(this.VISIBLE_CLASS);
     }
 

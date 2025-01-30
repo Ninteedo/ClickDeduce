@@ -44,8 +44,8 @@ class HTMLConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConve
 
     div(
       cls := f"${ClassDict.SUBTREE} ${if (isAxiom) ClassDict.AXIOM else ""} ${phantomClassName(node)}".strip,
-      data("env-index") := newEnvIndex,
       data("tree-path") := node.treePathString,
+      data("node-string") := node.toString,
       fullExprBottomDiv(node, envIndex),
       if (isAxiom)
         div(cls := ClassDict.ANNOTATION_AXIOM, node.exprName)

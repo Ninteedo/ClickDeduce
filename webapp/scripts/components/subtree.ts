@@ -6,11 +6,14 @@ import {AbstractTreeInput} from "./abstractTreeInput";
 import {RuleAnnotation} from "./ruleAnnotation";
 import {getTreePathOfElement} from "../globals/elements";
 import {getRootSubtree} from "../treeManipulation";
+import {getNodeStringFromPath} from "../utility/parseNodeString";
 
 export class Subtree {
     private readonly element: HTMLDivElement;
     private readonly parent: Subtree | null;
     private readonly children: Subtree[];
+
+    private readonly nodeString: string;
 
     private readonly treePath: string;
     private readonly parsedTreePath: number[];
@@ -29,9 +32,11 @@ export class Subtree {
     private readonly PHANTOM_CLASS = 'phantom';
     private readonly DATA_TREE_PATH = 'data-tree-path';
 
-    constructor(element: HTMLDivElement, parent: Subtree | null) {
+    constructor(element: HTMLDivElement, parent: Subtree | null, nodeString: string) {
         this.element = element;
         this.parent = parent;
+
+        this.nodeString = nodeString;
 
         this.treePath = this.element.getAttribute(this.DATA_TREE_PATH)!;
         this.parsedTreePath = parseTreePath(this.treePath);
@@ -52,7 +57,10 @@ export class Subtree {
         if (this.argsElement && this.argsElement.children) {
             Array.from(this.argsElement!.children!).forEach(element => {
                 if (element.classList.contains('subtree')) {
-                    this.children.push(new Subtree(element as HTMLDivElement, this));
+                    const subNodePath = element.getAttribute(this.DATA_TREE_PATH)!;
+                    const subNodePathHead = subNodePath.split('-')[0];
+                    const subNodeString = getNodeStringFromPath(subNodePathHead, this.nodeString);
+                    this.children.push(new Subtree(element as HTMLDivElement, this, subNodeString));
                 }
             });
         }
@@ -132,6 +140,10 @@ export class Subtree {
         return this.element;
     }
 
+    getNodeString(): string {
+        return this.nodeString;
+    }
+
     getTreePath(): number[] {
         return this.parsedTreePath;
     }
@@ -169,6 +181,13 @@ export class Subtree {
 
     getRuleAnnotation(): RuleAnnotation {
         return this.ruleAnnotation;
+    }
+
+    copy(keepParent: boolean = false): Subtree {
+        const newElement = this.element.cloneNode(true) as HTMLDivElement;
+        const clone = new Subtree(newElement, keepParent ? this.parent : null, this.nodeString);
+        clone.removeHighlight();
+        return clone;
     }
 }
 

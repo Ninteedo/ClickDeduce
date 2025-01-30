@@ -78,7 +78,7 @@ function loadLangSelector(): HTMLSelectElement {
 export function updateTree(newTreeHtml: string, newNodeString: string, modeName: string, lang: string, addToHistory: boolean = false): void {
     getTree().innerHTML = newTreeHtml;
     lastNodeString = newNodeString;
-    rootSubtree = new Subtree(getFirstSubtree(), null);
+    rootSubtree = new Subtree(getFirstSubtree(), null, newNodeString);
     if (addToHistory) {
         treeHistoryManager.addRecord({
             html: newTreeHtml,

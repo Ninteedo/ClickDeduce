@@ -4,7 +4,7 @@ import {lastNodeString} from "../treeManipulation";
  * Finds the substring of the node string at the given path.
  * @param path the tree path to the node, integers separated by dashes
  */
-export function getNodeStringFromPath(path: string): string {
+export function getNodeStringFromPath(path: string, nodeString: string | undefined = undefined): string {
     /**
      * Parses the node string and returns the arguments of the given node.
      * <p>
@@ -77,8 +77,11 @@ export function getNodeStringFromPath(path: string): string {
         return recurse(nextNodeString, remaining);
     }
 
-    if (!lastNodeString) {
-        throw new Error('No node string to get path from');
+    if (!nodeString) {
+        if (!lastNodeString) {
+            throw new Error('No node string to get path from');
+        }
+        nodeString = lastNodeString;
     }
-    return recurse(lastNodeString, path.split('-').map(s => parseInt(s)).filter(n => !isNaN(n)));
+    return recurse(nodeString, path.split('-').map(s => parseInt(s)).filter(n => !isNaN(n)));
 }
