@@ -46,7 +46,9 @@
 
   overflow-y: auto;
 
-  background-color: colours.$tree-background;
+  padding: 0.3rem;
+
+  background-color: colours.$toolbox-background;
   border: colours.$input-outline solid 1px;
 
   align-items: center;

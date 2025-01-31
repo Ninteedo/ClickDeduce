@@ -1,6 +1,6 @@
 import {copyTreeNode, deleteTreeNode, pasteTreeNode} from "./actions";
 import {getActiveInputs, redo, undo} from "./treeManipulation";
-import {compareTreePaths} from "./utils";
+import {compareTreePaths, parseTreePath} from "./utils";
 import {AbstractTreeInput} from "./components/abstractTreeInput";
 import {getControlsDiv, getToggleControlsButton, getTreePathOfElement} from "./globals/elements";
 import {
@@ -103,10 +103,35 @@ export function clearHighlight(): void {
  * If there is no input element in the subtree, will do nothing.
  */
 export function setFocusElement(path: string): void {
-    const focusedElement = getActiveInputs().find(input => compareTreePaths(path!, input.getTreePath()) <= 0);
-    if (focusedElement) {
-        focusedElement.focus();
+    let focusedElement = getActiveInputs().find(input => compareTreePaths(path, input.getTreePath()) <= 0);
+
+    if (!focusedElement) {
+        const parsedPath = parseTreePath(path);
+
+        function isBefore(a: number[], b: number[]): boolean {
+            let i = 0;
+            while (i < a.length && i < b.length) {
+                if (a[i] < b[i]) {
+                    return true;
+                } else if (a[i] > b[i]) {
+                    return false;
+                }
+                i++;
+            }
+            return true;
+        }
+
+        function findLast<T>(arr: T[], pred: (elem: T) => boolean): T | undefined {
+            for (let i = arr.length - 1; i >= 0; i--) {
+                if (pred(arr[i])) return arr[i];
+            }
+            return undefined;
+        }
+
+        focusedElement = findLast(getActiveInputs(), input => isBefore(parseTreePath(input.getTreePath()), parsedPath));
     }
+
+    focusedElement?.focus();
 }
 
 function setupValueTypeColourHighlightingCheckbox(): void {
@@ -140,7 +165,6 @@ export function toggleControls(): void {
         button.innerHTML = '&#9650;';
     } else {
         controls.classList.add(hiddenClass);
-        // up arrow
         button.innerHTML = '&#9660;';
     }
 }

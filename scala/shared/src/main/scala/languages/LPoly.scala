@@ -254,7 +254,7 @@ class LPoly extends LData {
     override val name: String = "Apply Type"
     override val description: String = "Apply a type to a polymorphic type abstraction." +
       " The expression must successfully type-check."
-    override val difficulty: Int = 3
+    override val difficulty: Int = 2
 
     override def checkFulfilled(expr: Expr): Boolean = {
       !expr.typeCheck().isError && checkCondition(

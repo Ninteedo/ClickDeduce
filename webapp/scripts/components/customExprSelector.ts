@@ -1,6 +1,6 @@
 import {getSelectedMode, hasClassOrParentHasClass} from "../utils";
 import {getCurrentLanguage, getCurrentNodeString} from "../treeManipulation";
-import {handleExprSelectorChoice, runAction} from "../actions";
+import {runAction} from "../actions";
 import {BaseDropdownSelector, DropdownOption} from "./baseDropdownSelector";
 import {getTree, getTreePathOfElement} from "../globals/elements";
 import {getExprParsePreviewHtml, parseExprText} from "../serverRequest";
@@ -94,8 +94,9 @@ export class CustomExprSelector extends BaseDropdownSelector {
         super.enterPressed();
     }
 
-    protected override postSelectOption(value: string) {
-        handleExprSelectorChoice(this.container, value);
+    protected override postSelectOption(value: string): void {
+        const actionName = this.isTypeSelector() ? "SelectTypeAction" : "SelectExprAction";
+        runAction(actionName, this.getTreePath(), value);
     }
 
     override disable() {

@@ -98,33 +98,6 @@ export function exampleLiteralChanged(textInput: HTMLInputElement): void {
     textInput.select();
 }
 
-export function handleExprSelectorChoice(selector: HTMLDivElement, value: string | null): void {
-    const input = selector.querySelector('.expr-selector-input') as HTMLInputElement;
-
-    if (value === null) throw new Error("Selected value is null");
-
-    let focusedTreePath: string | null = null;
-    if (nextFocusElement) {
-        focusedTreePath = nextFocusElement.getTreePath();
-    }
-
-    const kind = selector.getAttribute("data-kind");
-    let actionName: string;
-    if (kind === "type") {
-        actionName = "SelectTypeAction";
-    } else if (kind === "expr") {
-        actionName = "SelectExprAction";
-    } else {
-        throw new Error(`Unknown dropdown kind: ${kind}`);
-    }
-
-    input.value = value;
-    runAction(actionName, getTreePathOfElement(selector), value);
-
-    if (focusedTreePath === null) return;
-    setFocusElement(focusedTreePath);
-}
-
 /**
  * Runs the given action and updates the tree according to the server's response.
  * @param actionName the name of the action to run

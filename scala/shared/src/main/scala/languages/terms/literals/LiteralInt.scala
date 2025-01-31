@@ -1,7 +1,7 @@
 package languages.terms.literals
 
 import app.HTMLHelper
-import convertors.text.{ConvertableText, MathElement}
+import convertors.text.{ConvertableText, MathElement, NumberElement}
 import languages.env.{TypeEnv, ValueEnv}
 import scalatags.Text.TypedTag
 
@@ -13,7 +13,7 @@ import scalatags.Text.TypedTag
  *   The integer value.
  */
 case class LiteralInt(value: BigInt) extends Literal {
-  override def toText: ConvertableText = MathElement(getValue)
+  override def toText: ConvertableText = NumberElement(getValue)
 
   override def toHtmlInput(treePath: String, env: ValueEnv | TypeEnv): TypedTag[String] = HTMLHelper
     .literalInputBase(treePath, getValue, inputKind = "number", extraClasses = "integer")
