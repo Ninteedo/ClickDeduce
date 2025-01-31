@@ -514,6 +514,8 @@ class LData extends LRec {
   case class PairV(v1: Value, v2: Value) extends Value {
     override val typ: Type = PairType(v1.typ, v2.typ)
 
+    override val isError: Boolean = v1.isError || v2.isError
+
     override val needsBrackets: Boolean = false
 
     override def toText: ConvertableText = BracketedElement(
@@ -536,6 +538,8 @@ class LData extends LRec {
   case class LeftV(v: Value, rightType: Type) extends Value {
     override val typ: Type = UnionType(v.typ, rightType)
 
+    override val isError: Boolean = v.isError
+
     override val needsBrackets: Boolean = false
 
     override def toText: ConvertableText = MultiElement(TextElement("left"), BracketedElement(v.toText))
@@ -545,6 +549,8 @@ class LData extends LRec {
 
   case class RightV(leftType: Type, v: Value) extends Value {
     override val typ: Type = UnionType(leftType, v.typ)
+
+    override val isError: Boolean = v.isError
 
     override val needsBrackets: Boolean = false
 

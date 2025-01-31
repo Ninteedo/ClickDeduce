@@ -185,4 +185,29 @@ class LPolyTest extends TestTemplate {
     CreatePolyFunctionTask.checkFulfilled(Poly("T", Lambda("x", TypeVar("T"), Var("x")))) shouldBe true
     CreatePolyFunctionTask.checkFulfilled(Poly("T", Lambda("x", TypeVar("T"), IfThenElse(Var("x"), BlankExprDropDown(LPoly), BlankExprDropDown(LPoly))))) shouldBe false
   }
+
+  property("PolySwapPairFunctionTask is checked correctly") {
+    val pairSwapFunction = Poly("A", Poly("B", Lambda("p", PairType(TypeVar("A"), TypeVar("B")), Pair(Snd(Var("p")), Fst(Var("p"))))))
+    PolySwapPairFunctionTask.checkFulfilled(pairSwapFunction) shouldBe true
+  }
+
+  property("UnionFunctionApplicationTask is checked correctly") {
+    val unionFunctionApply = Poly("A", Poly("B", Poly("C",
+      Lambda("f", Func(TypeVar("A"), TypeVar("C")),
+        Lambda("g", Func(TypeVar("B"), TypeVar("C")),
+          Lambda("u", UnionType(TypeVar("A"), TypeVar("B")),
+            CaseSwitch(
+              Var("u"),
+              "a",
+              "b",
+              Apply(Var("f"), Var("a")),
+              Apply(Var("g"), Var("b"))
+            )
+          )
+        )
+      )
+    )))
+    unionFunctionApply.typeCheck() shouldEqual PolyType(TypeVar("A"), PolyType(TypeVar("B"), PolyType(TypeVar("C"), Func(Func(TypeVar("A"), TypeVar("C")), Func(Func(TypeVar("B"), TypeVar("C")), Func(UnionType(TypeVar("A"), TypeVar("B")), TypeVar("C")))))))
+    UnionFunctionApplicationTask.checkFulfilled(unionFunctionApply) shouldBe true
+  }
 }

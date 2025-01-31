@@ -203,7 +203,7 @@ class LPoly extends LData {
   }
 
   // tasks
-  setTasks(CreatePolyFunctionTask)
+  setTasks(CreatePolyFunctionTask, ApplyTypeTask, PolySwapPairFunctionTask, UnionFunctionApplicationTask)
 
   object CreatePolyFunctionTask extends Task {
     override val name: String = "Create a Polymorphic Function"
@@ -248,6 +248,118 @@ class LPoly extends LData {
         },
       ValueEnv.empty
     )
+  }
+
+  object ApplyTypeTask extends Task {
+    override val name: String = "Apply Type"
+    override val description: String = "Apply a type to a polymorphic type abstraction." +
+      " The expression must successfully type-check."
+    override val difficulty: Int = 3
+
+    override def checkFulfilled(expr: Expr): Boolean = {
+      !expr.typeCheck().isError && checkCondition(
+        expr,
+        { (expr, env) => expr.isInstanceOf[ApplyType] },
+        ValueEnv.empty
+      )
+    }
+  }
+
+  object PolySwapPairFunctionTask extends Task {
+    override val name: String = "Pair Swap Function"
+    override val description: String = "Implement a polymorphic function that swaps the elements of a pair, of any types." +
+      " Hint: it should begin with two Poly expressions to use as type variables for a lambda function." +
+      " It will be tested by applying the two types (first pair element type then second), followed by applying the pair."
+    override val difficulty: Int = 4
+
+    private val pairSwapCases: List[(Expr, Type, Type, Value)] = List(
+      (Pair(Num(1), Num(2)), IntType(), IntType(), PairV(NumV(2), NumV(1))),
+      (Pair(Num(10), Bool(true)), IntType(), BoolType(), PairV(BoolV(true), NumV(10))),
+      (Pair(Bool(false), Left(Num(3), BoolType())), BoolType(), UnionType(IntType(), BoolType()), PairV(LeftV(NumV(3), BoolType()), BoolV(false)))
+    )
+
+    override def checkFulfilled(expr: Expr): Boolean = {
+      !expr.typeCheck().isError && checkCondition(
+        expr,
+        { (expr, env) =>
+          expr match {
+            case e: Poly =>
+              pairSwapCases.forall((pair, t1, t2, expected) => {
+                val applied = Apply(ApplyType(ApplyType(e, t1), t2), pair)
+                val typeRes = applied.typeCheck(TypeEnv.fromValueEnv(env))
+                val evalRes = applied.eval(env)
+                val res = !applied.typeCheck(TypeEnv.fromValueEnv(env)).isError && applied.eval(env) == expected
+                println(s"Pair swap case: $pair, $t1, $t2, $expected, $typeRes, $evalRes, $res")
+                res
+              })
+            case _ => false
+          }
+        },
+        ValueEnv.empty
+      )
+    }
+  }
+
+  object UnionFunctionApplicationTask extends Task {
+    override val name: String = "Union Function Application"
+    override val description: String =
+      "Implement a polymorphic function that takes a union value (of any types) and a function for each of the left and right types, " +
+        "then applies the appropriate function." +
+        " The signature should be equivalent to (A → C) → (B → C) → (A + B) → C." +
+        " The types (A, B, C) will be applied first, followed by the functions and the union value."
+    override val difficulty: Int = 5
+
+    private val unionFunctionCases: List[(Expr, Type, Type, Type, Expr, Expr, Value)] = List(
+      (
+        Left(Num(46), BoolType()),
+        IntType(), BoolType(), IntType(),
+        Lambda("x", IntType(), Plus(Var("x"), Num(1))),
+        Lambda("x", BoolType(), IfThenElse(Var("x"), Num(-348), Num(4453))),
+        NumV(47)
+      ),
+      (
+        Right(IntType(), Bool(false)),
+        IntType(), BoolType(), IntType(),
+        Lambda("x", IntType(), Plus(Var("x"), Num(1))),
+        Lambda("x", BoolType(), IfThenElse(Var("x"), Num(-348), Num(4453))),
+        NumV(4453)
+      ),
+      (
+        Left(Pair(Num(8737), Num(1886)), PairType(IntType(), IntType())),
+        PairType(IntType(), IntType()), PairType(IntType(), IntType()), IntType(),
+        Lambda("p", PairType(IntType(), IntType()), Plus(Fst(Var("p")), Snd(Var("p")))),
+        Lambda("p", PairType(IntType(), IntType()), Times(Fst(Var("p")), Snd(Var("p")))),
+        NumV(10623)
+      ),
+      (
+        Right(PairType(IntType(), IntType()), Pair(Num(50), Num(100))),
+        PairType(IntType(), IntType()), PairType(IntType(), IntType()), IntType(),
+        Lambda("p", PairType(IntType(), IntType()), Plus(Fst(Var("p")), Snd(Var("p")))),
+        Lambda("p", PairType(IntType(), IntType()), Times(Fst(Var("p")), Snd(Var("p")))),
+        NumV(5000)
+      )
+    )
+
+    override def checkFulfilled(expr: Expr): Boolean = {
+      !expr.typeCheck().isError && checkCondition(
+        expr,
+        { (expr, env) =>
+          expr match {
+            case e: Poly =>
+              unionFunctionCases.forall((union, a, b, c, fa, fb, expected) => {
+                val applied = Apply(Apply(Apply(ApplyType(ApplyType(ApplyType(e, a), b), c), fa), fb), union)
+                val typeRes = applied.typeCheck(TypeEnv.fromValueEnv(env))
+                val evalRes = applied.eval(env)
+                val res = !applied.typeCheck(TypeEnv.fromValueEnv(env)).isError && applied.eval(env) == expected
+                println(s"Union function case: $union, $a, $b, $c, $fa, $fb, $expected, $typeRes, $evalRes, $res")
+                res
+              })
+            case _ => false
+          }
+        },
+        ValueEnv.empty
+      )
+    }
   }
 
   protected class LPolyParser extends LDataParser {
