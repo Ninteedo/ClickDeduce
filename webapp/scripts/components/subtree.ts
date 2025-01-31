@@ -225,7 +225,7 @@ export class Subtree {
 
         this.element.addEventListener('dragstart', event => {
             event.stopPropagation();
-            console.log('dragstart', 'path', this.treePath);
+            console.debug('dragstart', 'path', this.treePath);
             lockPanZoom();
             pauseFileDragAndDrop();
             event.dataTransfer!.setData('text/plain', this.treePath);
@@ -239,19 +239,19 @@ export class Subtree {
             event.preventDefault();
             event.stopPropagation();
 
-            console.log(event.dataTransfer);
+            console.debug(event.dataTransfer);
 
             const sourceTreePath = event.dataTransfer!.getData('text/plain');
             if (sourceTreePath) {
                 if (sourceTreePath === this.treePath) {
                     return;
                 }
-                console.log('dropped', sourceTreePath, 'onto', this.treePath);
+                console.debug('dropped', sourceTreePath, 'onto', this.treePath);
                 runAction("MoveAction", this.treePath, [sourceTreePath]);
             } else {
                 const nodeString = event.dataTransfer!.getData('plain/subtreeNodeString');
                 if (nodeString) {
-                    console.log('dropped subtree', nodeString, 'onto', this.treePath);
+                    console.debug('dropped subtree', nodeString, 'onto', this.treePath);
                     runAction("PasteAction", this.treePath, [nodeString]);
                 }
             }

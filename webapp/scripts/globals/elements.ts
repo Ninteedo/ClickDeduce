@@ -65,7 +65,7 @@ export function getTreePathOfElement(element: HTMLElement | null): string {
     if (element === null) throw new Error("Cannot get tree path of null");
     const treePath = element.getAttribute("data-tree-path");
     if (treePath === null) {
-        console.log(element.outerHTML);
+        console.debug(element.outerHTML);
         throw new Error("Element does not have a tree path");
     }
     return treePath;

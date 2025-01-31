@@ -7,7 +7,9 @@ export class ToolboxContextMenu extends AbstractContextMenu {
 
     constructor(event: MouseEvent, toolboxEntry: ToolboxEntry) {
         const entries = [
-            new ContextMenuEntry("Delete", () => getSubtreeToolbox().removeEntry(toolboxEntry))
+            new ContextMenuEntry("Delete", () => getSubtreeToolbox().removeEntry(toolboxEntry)),
+            new ContextMenuEntry("Move Up", () => getSubtreeToolbox().moveEntry(toolboxEntry, -1)),
+            new ContextMenuEntry("Move Down", () => getSubtreeToolbox().moveEntry(toolboxEntry, 1)),
         ];
 
         super(event, entries);

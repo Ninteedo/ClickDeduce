@@ -47,8 +47,6 @@ export abstract class AbstractContextMenu {
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
 
-        console.log(`menuWidth: ${menuWidth}, menuHeight: ${menuHeight}, viewportWidth: ${viewportWidth}, viewportHeight: ${viewportHeight}`);
-
         let left = event.pageX;
         let top = event.pageY;
 

@@ -143,7 +143,7 @@ export function runAction(actionName: string, treePath: string, extraArgs: any[]
     const extraArgsClean: any[] = Array.isArray(extraArgs) ? extraArgs : [extraArgs];
     try {
         const [newNodeString, newHtml] = postProcessActionNew(langName, modeName, actionName, lastNodeString, treePath, extraArgsClean);
-        console.log(newNodeString);
+        console.debug(newNodeString);
         updateTree(newHtml, newNodeString, modeName, langName, true);
 
         if (!doNotFocus && (!document.activeElement || document.activeElement.tagName === "BODY")) {
