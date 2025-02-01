@@ -3,6 +3,7 @@ package languages
 import convertors.*
 import convertors.text.*
 import languages.env.*
+import languages.env.Env.Variable
 import languages.previews.*
 import languages.terms.*
 import languages.terms.builders.*
@@ -23,9 +24,9 @@ class LList extends LPoly {
 
   // expressions
   case class ListNil(elTyp: Type) extends Expr {
-    override protected def evalInner(env: ValueEnv): Value = NilV(elTyp)
+    override protected def evalInner(env: ValueEnv): Value = NilV(elTyp.typeCheck(TypeEnv.fromValueEnv(env)))
 
-    override protected def typeCheckInner(tEnv: TypeEnv): Type = ListType(elTyp)
+    override protected def typeCheckInner(tEnv: TypeEnv): Type = ListType(elTyp.typeCheck(tEnv))
 
     override def toText: ConvertableText = nilSymbol
 
@@ -191,6 +192,9 @@ class LList extends LPoly {
   }
 
   object CaseList extends ExprCompanion {
+    def apply(list: Expr, nilCase: Expr, headVar: Variable, tailVar: Variable, consCase: Expr): CaseList =
+      CaseList(list, nilCase, LiteralIdentifierBind(headVar), LiteralIdentifierBind(tailVar), consCase)
+
     override def create(args: BuilderArgs): Option[Expr] = args match {
       case List(
             list: Expr,
@@ -325,7 +329,17 @@ class LList extends LPoly {
 
   // tasks
 
-  setTasks(CreateAListTask)
+  setTasks(CreateAListTask, MapIntListFunctionTask, PolyFilterFunctionTask)
+
+  private def listOf(elems: List[Expr], elType: Type): Expr = elems match {
+    case Nil          => ListNil(elType)
+    case head :: tail => Cons(head, listOf(tail, elType))
+  }
+
+  private def listValueOf(elems: List[Value], elType: Type): Value = elems match {
+    case Nil          => NilV(elType)
+    case head :: tail => ConsV(head, listValueOf(tail, elType))
+  }
 
   private object CreateAListTask extends Task {
     override val name: String = "Create a multi-element list"
@@ -355,6 +369,111 @@ class LList extends LPoly {
       )
 
       !expr.typeCheck().isError && checkList(expr)
+    }
+  }
+
+  private object MapIntListFunctionTask extends Task {
+    override val name: String = "Map Function for Integer Lists"
+
+    override val description: String = "Implement the map function for lists of integers." +
+      " The function should first take a function that maps an integer to another integer, and then a list of integers." +
+      " It should have a signature of (Int → Int) → List[Int] → List[Int]."
+
+    override val difficulty: Int = 3
+
+    private val testCases: List[(Lambda, List[Int], List[Int])] = List(
+      (Lambda("x", IntType(), Plus(Var("x"), Num(10))), List(4, 17, -237, 5661), List(14, 27, -227, 5671)),
+      (Lambda("number", IntType(), Times(Var("number"), Var("number"))), List(1, 2, 3, 4, 5), List(1, 4, 9, 16, 25)),
+      (Lambda("yep", IntType(), IfThenElse(Equal(Var("yep"), Num(42)), Num(1), Num(0))), List(42, 41, 42, 42, 43), List(1, 0, 1, 1, 0))
+    )
+
+    override def checkFulfilled(expr: Expr): Boolean = {
+      def checkMap(expr: Expr): Boolean = checkCondition(
+        expr,
+        { (expr, env) =>
+          testCases.forall((f, in, out) => {
+            val mapExpr = Apply(Apply(expr, f), listOf(in.map(Num(_)), IntType()))
+            !mapExpr.typeCheck(TypeEnv.fromValueEnv(env)).isError && mapExpr.eval(env) == listValueOf(out.map(NumV(_)), IntType())
+          })
+        },
+        ValueEnv.empty
+      )
+
+      !expr.typeCheck().isError && checkMap(expr)
+    }
+  }
+
+  object PolyFilterFunctionTask extends Task {
+    override val name: String = "Polymorphic Filter Function"
+
+    override val description: String = "Implement a polymorphic filter function for lists." +
+      " The function should be a polymorphic abstraction that accepts a function that maps an element to a boolean, and a list of elements." +
+      " It should have a signature of ΛT. (T → Bool) → List[T] → List[T]." +
+      " The returned list should contain only the elements for which the function returns true, in the same order as in the input list."
+
+    override val difficulty: Int = 4
+
+    private val testCases: List[(Type, Lambda, Expr, Value)] = List(
+      (
+        IntType(),
+        Lambda("x", IntType(), Equal(Var("x"), Num(475672))),
+        listOf(List(Num(475672), Num(3847), Num(0), Num(475672)), IntType()),
+        listValueOf(List(NumV(475672), NumV(475672)), IntType())
+      ),
+      (
+        IntType(),
+        Lambda("y", IntType(), LessThan(Var("y"), Num(0))),
+        listOf(List(Num(-1), Num(0), Num(1), Num(-2), Num(2)), IntType()),
+        listValueOf(List(NumV(-1), NumV(-2)), IntType())
+      ),
+      (
+        PairType(IntType(), IntType()),
+        Lambda("p", PairType(IntType(), IntType()), Equal(Fst(Var("p")), Snd(Var("p")))),
+        listOf(List(
+          Pair(Num(1), Num(1)),
+          Pair(Num(1), Num(2)),
+          Pair(Num(2), Num(2)),
+          Pair(Num(2), Num(1)),
+          Pair(Num(3), Num(3)),
+          Pair(Num(3), Num(4)),
+          Pair(Num(4), Num(3)),
+          Pair(Num(4), Num(4)),
+          Pair(Num(5), Num(5)),
+          Pair(Num(5), Num(6)),
+          Pair(Num(6), Num(5)),
+          Pair(Num(6), Num(6))),
+          PairType(IntType(), IntType())),
+        listValueOf(List(
+          PairV(NumV(1), NumV(1)),
+          PairV(NumV(2), NumV(2)),
+          PairV(NumV(3), NumV(3)),
+          PairV(NumV(4), NumV(4)),
+          PairV(NumV(5), NumV(5)),
+          PairV(NumV(6), NumV(6))),
+          PairType(IntType(), IntType()))
+      )
+    )
+
+    override def checkFulfilled(expr: Expr): Boolean = {
+      def checkFilter(expr: Expr): Boolean = checkCondition(
+        expr,
+        { (expr, env) =>
+          testCases.forall((typ, f, in, out) => {
+            val filterExpr = Apply(Apply(ApplyType(expr, typ), f), in)
+            val typeCheckResult = filterExpr.typeCheck(TypeEnv.fromValueEnv(env))
+            val evalResult = filterExpr.eval(env)
+            println(expr)
+            println(typeCheckResult)
+            println(!typeCheckResult.isError)
+            println(evalResult)
+            println(evalResult == out)
+            !filterExpr.typeCheck(TypeEnv.fromValueEnv(env)).isError && filterExpr.eval(env) == out
+          })
+        },
+        ValueEnv.empty
+      )
+
+      !expr.typeCheck().isError && checkFilter(expr)
     }
   }
 
