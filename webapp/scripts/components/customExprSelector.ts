@@ -23,6 +23,7 @@ export class CustomExprSelector extends BaseDropdownSelector {
         this.setup();
         this.rulePreview = new RulePreview(container);
         this.parsePreview = new ParsePreview(container);
+        this.updateWidth();
     }
 
     private setup(): void {
@@ -61,7 +62,7 @@ export class CustomExprSelector extends BaseDropdownSelector {
     protected override updateDropdown(): void {
         super.updateDropdown();
 
-        this.input.style.width = `max(19ch, ${this.input.value.length + 1}ch)`;
+        this.updateWidth();
 
         const parseHtml = getExprParsePreviewHtml(
             getCurrentLanguage(),
@@ -111,6 +112,10 @@ export class CustomExprSelector extends BaseDropdownSelector {
 
     isTypeSelector(): boolean {
         return this.container.getAttribute('data-kind') === 'type';
+    }
+
+    private updateWidth(): void {
+        this.input.style.width = `max(${this.input.placeholder.length + 1}ch, ${this.input.value.length + 1}ch)`;
     }
 }
 
