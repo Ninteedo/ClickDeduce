@@ -1,4 +1,4 @@
-import {parseTreePath} from "../utils";
+import {getSelectedMode, parseTreePath} from "../utils";
 import {getContextMenuSelectedElement} from "./contextMenu/contextMenu";
 import {createLiteralInput} from "./literalInput";
 import {createExprSelector, replaceDisabledSelectInputs} from "./customExprSelector";
@@ -8,7 +8,8 @@ import {copyTreeNode, deleteTreeNode, pasteTreeNode, runAction} from "../actions
 import {lockPanZoom, unlockPanZoom} from "./panzoom";
 import {pauseFileDragAndDrop, resumeFileDragAndDrop} from "../saveLoad";
 import {getTreePathOfElement} from "../globals/elements";
-import {getRootSubtree} from "../treeManipulation";
+import {getCurrentLanguage, getRootSubtree} from "../treeManipulation";
+import {postProcessActionNew} from "../serverRequest";
 
 export class Subtree {
     private readonly element: HTMLDivElement;
@@ -193,7 +194,8 @@ export class Subtree {
     }
 
     copy(keepParent: boolean = false): Subtree {
-        const newElement = this.element.cloneNode(true) as HTMLDivElement;
+        const [, newHtml] = postProcessActionNew(getCurrentLanguage(), getSelectedMode(), "IdentityAction", this.nodeString, "", []);
+        const newElement = new DOMParser().parseFromString(newHtml, 'text/html').body.firstElementChild as HTMLDivElement;
         const clone = new Subtree(newElement, keepParent ? this.parent : null, this.nodeString);
         clone.removeHighlight();
         return clone;
