@@ -53,6 +53,9 @@
   padding: 0.3rem;
 
   background-color: colours.$toolbox-background;
+  background-image: url('webapp/images/toolbox.svg');
+  background-repeat: no-repeat;
+  background-size: contain;
   border: colours.$input-outline solid 1px;
 
   align-items: center;
