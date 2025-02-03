@@ -99,6 +99,6 @@ export function getExprParsePreviewHtml(
     modeName: string,
     nodeString: string,
     treePathString: string
-): string {
+): [number, string] {
     return exprParsePreviewHtml(langName, exprText, modeName, nodeString, treePathString);
 }

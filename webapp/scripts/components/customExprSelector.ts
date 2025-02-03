@@ -64,17 +64,18 @@ export class CustomExprSelector extends BaseDropdownSelector {
 
         this.updateWidth();
 
-        const parseHtml = getExprParsePreviewHtml(
+        const [errorIndex, res] = getExprParsePreviewHtml(
             getCurrentLanguage(),
             this.input.value,
             getSelectedMode(),
             getCurrentNodeString()!,
             this.getTreePath()
         );
-        if (parseHtml) {
-            this.parsePreview.show(parseHtml);
+        console.debug(errorIndex, res);
+        if (errorIndex < 0) {
+            this.parsePreview.show(res);
         } else {
-            this.parsePreview.hide();
+            this.parsePreview.showError(res, errorIndex);
         }
     }
 

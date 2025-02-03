@@ -10,7 +10,7 @@ class ExprParseTest extends AnyFunSuite, TableDrivenPropertyChecks {
   private def testParses(l: AbstractLanguage, cases: Seq[(String, Expr)]): Unit = {
     val table = Table(("text", "expr"), cases*)
     forAll(table) { (text, expr) =>
-      l.parseExpr(text) should be(Some(expr))
+      l.parseExpr(text) should be(Right(expr))
     }
   }
 
@@ -26,7 +26,7 @@ class ExprParseTest extends AnyFunSuite, TableDrivenPropertyChecks {
 
     forAll(numbers) { number =>
       val expr = l.parseExpr(number.toString)
-      expr should be(Some(l.Num(number)))
+      expr should be(Right(l.Num(number)))
     }
   }
 
@@ -143,7 +143,8 @@ class ExprParseTest extends AnyFunSuite, TableDrivenPropertyChecks {
       ("false :: nil: bool", l.Cons(l.Bool(false), l.ListNil(l.BoolType()))),
       ("1 :: 2 :: 3", l.Cons(l.Num(1), l.Cons(l.Num(2), l.Num(3)))),
       ("1 + 2 :: 3 + 4 :: 4 + 5", l.Cons(l.Plus(l.Num(1), l.Num(2)), l.Cons(l.Plus(l.Num(3), l.Num(4)), l.Plus(l.Num(4), l.Num(5))))),
-      ("1 :: 2 :: nil", l.Cons(l.Num(1), l.Cons(l.Num(2), l.ListNil(l.defaultType))))
+      ("1 :: 2 :: nil", l.Cons(l.Num(1), l.Cons(l.Num(2), l.ListNil(l.defaultType)))),
+      ("caselist xs of { Nil ⇒ Nil[B]; x :: xs ⇒ ((f x) :: ((map f) xs)) }", l.CaseList(l.Var("xs"), l.ListNil(l.TypeVar("B")), "x", "xs", l.Cons(l.Apply(l.Var("f"), l.Var("x")), l.Apply(l.Apply(l.Var("map"), l.Var("f")), l.Var("xs")))))
     ))
   }
 }

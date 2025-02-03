@@ -144,9 +144,10 @@ trait AbstractLanguage {
 
   protected val exprParser: ExprParser
 
-  def parseExpr(exprText: String): Option[Expr] = exprParser.parseAll(exprParser.expr, exprText) match {
-    case exprParser.Success(result, _) => Some(result)
-    case _                             => None
+  def parseExpr(exprText: String): Either[(String, Int), Expr] = exprParser.parseAll(exprParser.expr, exprText) match {
+    case exprParser.Success(result, _) => Right(result)
+    case exprParser.Failure(msg, next) => Left(msg, next.pos.column)
+    case exprParser.Error(msg, next)   => Left(msg, next.pos.column)
   }
 
   /** Get a type builder by name.

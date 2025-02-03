@@ -28,7 +28,7 @@ class LList extends LPoly {
 
     override protected def typeCheckInner(tEnv: TypeEnv): Type = ListType(elTyp.typeCheck(tEnv))
 
-    override def toText: ConvertableText = nilSymbol
+    override def toText: ConvertableText = MultiElement(nilSymbol, SquareBracketedElement(elTyp.toText))
 
     override val needsBrackets: Boolean = false
   }
@@ -480,14 +480,16 @@ class LList extends LPoly {
   // parser
 
   protected class LListParser extends LPolyParser {
+    override protected def keywords: Set[String] = super.keywords ++ Set("list", "caselist", "nil", "of")
+
     private val nilRegex = "(?i)nil".r
 
     private def nil: Parser[ListNil] = nilRegex ~> ("[" ~> typ <~ "]") ^^ (ListNil(_)) |
       (nilRegex ~> (":" ~> typ) ^^ (ListNil(_))) |
       nilRegex ^^ (_ => ListNil(defaultType))
 
-    private def caseList: Parser[CaseList] = "case" ~ "list" ~> expr ~ ("of" ~ "{" ~ "(?i)nil".r ~ "=>" ~> expr) ~
-      ";" ~ ident ~ "::" ~ ident ~ "=>" ~ expr <~ "}" ^^ {
+    private def caseList: Parser[CaseList] = "case" ~ "list" ~> expr ~ ("of" ~ "{" ~ "(?i)nil".r ~ ("=>" | "⇒") ~> expr) ~
+      ";" ~ ident ~ "::" ~ ident ~ ("=>" | "⇒") ~ expr <~ "}" ^^ {
       case list ~ nilCase ~ _ ~ headVar ~ _ ~ tailVar ~ _ ~ consCase =>
         CaseList(list, nilCase, LiteralIdentifierBind(headVar), LiteralIdentifierBind(tailVar), consCase)
     }

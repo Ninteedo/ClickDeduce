@@ -3,7 +3,6 @@ package app
 import actions.exceptions.ActionInvocationException
 import convertors.{DisplayMode, HTMLConvertor, LaTeXConvertor}
 import languages.*
-import languages.env.{TypeEnv, ValueEnv}
 import languages.terms.blanks.BlankExprDropDown
 import nodes.*
 import nodes.exceptions.NodeStringParseException
@@ -152,17 +151,27 @@ object ScalaJsEntry {
   @JSExportTopLevel("parseExpr")
   def parseExpr(langName: String, exprText: String): String = {
     getLanguage(langName).parseExpr(exprText) match {
-      case Some(expr) => expr.toString
-      case None => ""
+      case Right(expr) => expr.toString
+      case _ => ""
     }
   }
 
+  /**
+   * @return tuple of (error column (or -1), error message on failure or HTML preview on success)
+   */
   @JSExportTopLevel("exprParsePreviewHtml")
-  def exprParsePreviewHtml(langName: String, exprText: String, modeName: String, nodeString: String, treePathString: String): String = {
+  def exprParsePreviewHtml(
+    langName: String,
+    exprText: String,
+    modeName: String,
+    nodeString: String,
+    treePathString: String
+  ): js.Tuple2[Int, String] = {
     val lang = getLanguage(langName)
     val default = ""
     lang.parseExpr(exprText) match {
-      case Some(expr) =>
+      case Left(msg, col) => (col, msg)
+      case Right(expr) =>
         Node.read(lang, nodeString) match {
           case Some(node: ExprNodeParent) =>
             val treePath = Node.readPathString(treePathString)
@@ -175,12 +184,11 @@ object ScalaJsEntry {
                   newChild.overrideEnv(child.getEnv(mode), mode)
                 })
 
-                HTMLConvertor(lang, mode).convert(newChild)
-              case _ => default
+                (-1, HTMLConvertor(lang, mode).convert(newChild))
+              case _ => (-1, default)
             }
-          case _ => default
+          case _ => (-1, default)
         }
-      case _ => default
     }
   }
 

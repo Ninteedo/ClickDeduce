@@ -19,5 +19,8 @@ case class ParseExprAction(
     case other => throw new Exception(s"Invalid parse expression target: $other")
   }
 
-  private val parsedExpr: Option[Expr] = lang.parseExpr(exprText)
+  private val parsedExpr: Option[Expr] = lang.parseExpr(exprText) match {
+    case Right(expr: Expr) => Some(expr)
+    case Left(_) => None
+  }
 }

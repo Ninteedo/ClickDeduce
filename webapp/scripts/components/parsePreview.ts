@@ -18,6 +18,11 @@ export class ParsePreview {
         this.previewDiv.classList.add(this.VISIBLE_CLASS);
     }
 
+    showError(error: string, _errorIndex: number): void {
+        this.previewDiv.innerHTML = `<div class="error">${error}</div>`;
+        this.previewDiv.classList.add(this.VISIBLE_CLASS);
+    }
+
     hide(): void {
         this.previewDiv.classList.remove(this.VISIBLE_CLASS);
     }

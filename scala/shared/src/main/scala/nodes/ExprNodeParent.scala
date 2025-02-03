@@ -16,19 +16,52 @@ import nodes.exceptions.{DepthLimitExceededException, NodeParentWrongTypeExcepti
   * Has a depth limit to prevent infinite recursion.
   */
 abstract class ExprNodeParent(lang: AbstractNodeLanguage) extends OuterNode {
+  private var editValueResultCache: Option[Value] = None
   def getEditValueResult: Value = {
-    if (willDepthLimitBeExceeded()) StackOverflowErrorValue()
-    else getExpr.eval(getEditEnv)
+    if (editValueResultCache.isEmpty) {
+      editValueResultCache = Some(if (willDepthLimitBeExceeded()) StackOverflowErrorValue() else getExpr.eval(getEditEnv))
+    }
+    editValueResultCache.get
   }
+  private var valueCache: Option[Value] = None
   /** Evaluation result of the expression represented by this node.
    */
-  def getValue: Value = getExpr.eval(getEvalEnv)
+  def getValue: Value = {
+    if (valueCache.isEmpty) {
+      valueCache = Some(getExpr.eval(getEvalEnv))
+    }
+    valueCache.get
+  }
+  private var typeCache: Option[Type] = None
   /** Type-checking result of the expression represented by this node.
    */
-  def getType: Type = getExpr.typeCheck(getTypeEnv)
-  def getEditEnv: ValueEnv = editEnvOverride.getOrElse(getCorrectEnv(_.getChildrenBase, _.getEditEnv))
-  def getEvalEnv: ValueEnv = evalEnvOverride.getOrElse(getCorrectEnv(_.getChildrenEval, _.getEvalEnv))
-  def getTypeEnv: TypeEnv = typeEnvOverride.getOrElse(getCorrectEnv(_.getChildrenTypeCheck, _.getTypeEnv))
+  def getType: Type = {
+    if (typeCache.isEmpty) {
+      typeCache = Some(getExpr.typeCheck(getTypeEnv))
+    }
+    typeCache.get
+  }
+  private var editEnvCache: Option[ValueEnv] = None
+  def getEditEnv: ValueEnv = {
+    if (editEnvCache.isEmpty) {
+      editEnvCache = Some(editEnvOverride.getOrElse(getCorrectEnv(_.getChildrenBase, _.getEditEnv)))
+    }
+    editEnvCache.get
+  }
+  private var evalEnvCache: Option[ValueEnv] = None
+  def getEvalEnv: ValueEnv = {
+    if (evalEnvCache.isEmpty) {
+      evalEnvCache = Some(evalEnvOverride.getOrElse(getCorrectEnv(_.getChildrenEval, _.getEvalEnv)))
+    }
+    evalEnvCache.get
+  }
+  private var typeEnvCache: Option[TypeEnv] = None
+  def getTypeEnv: TypeEnv = {
+    if (typeEnvCache.isEmpty) {
+      typeEnvCache = Some(typeEnvOverride.getOrElse(getCorrectEnv(_.getChildrenTypeCheck, _.getTypeEnv)))
+    }
+    typeEnvCache.get
+  }
   /** The name of the expression represented by this node.
    */
   val exprName: String
@@ -80,10 +113,15 @@ abstract class ExprNodeParent(lang: AbstractNodeLanguage) extends OuterNode {
    */
   def getExpr: Expr
 
+  private var hasUpdatedEnvCache: Map[DisplayMode, Boolean] = Map()
+
   def hasUpdatedEnv(mode: DisplayMode): Boolean = {
-    val env = getEnv(mode)
-    val parentEnv = getParent.map(_.getEnv(mode))
-    !parentEnv.contains(env) || (parentEnv.isEmpty && env.nonEmpty)
+    if (!hasUpdatedEnvCache.contains(mode)) {
+      val env = getEnv(mode)
+      val parentEnv = getParent.map(_.getEnv(mode))
+      hasUpdatedEnvCache += mode -> (!parentEnv.contains(env) || (parentEnv.isEmpty && env.nonEmpty))
+    }
+    hasUpdatedEnvCache(mode)
   }
 
   override def getParent: Option[ExprNodeParent] = {
@@ -132,10 +170,13 @@ abstract class ExprNodeParent(lang: AbstractNodeLanguage) extends OuterNode {
   private var evalEnvOverride: Option[ValueEnv] = None
   private var typeEnvOverride: Option[TypeEnv] = None
 
-  def overrideEnv(env: ValueEnv | TypeEnv, mode: DisplayMode): Unit = mode match {
-    case DisplayMode.Edit => editEnvOverride = Some(env.asInstanceOf[ValueEnv])
-    case DisplayMode.Evaluation => evalEnvOverride = Some(env.asInstanceOf[ValueEnv])
-    case DisplayMode.TypeCheck => typeEnvOverride = Some(env.asInstanceOf[TypeEnv])
+  def overrideEnv(env: ValueEnv | TypeEnv, mode: DisplayMode): Unit = {
+    resetCaches()
+    mode match {
+      case DisplayMode.Edit => editEnvOverride = Some(env.asInstanceOf[ValueEnv])
+      case DisplayMode.Evaluation => evalEnvOverride = Some(env.asInstanceOf[ValueEnv])
+      case DisplayMode.TypeCheck => typeEnvOverride = Some(env.asInstanceOf[TypeEnv])
+    }
   }
 
   private def getCorrectEnv[T](
@@ -181,4 +222,15 @@ abstract class ExprNodeParent(lang: AbstractNodeLanguage) extends OuterNode {
   }
 
   private def getPhantomDepth: Int = phantomDepth.getOrElse(0)
+
+  private def resetCaches(): Unit = {
+    editValueResultCache = None
+    valueCache = None
+    typeCache = None
+    editEnvCache = None
+    evalEnvCache = None
+    typeEnvCache = None
+    hasUpdatedEnvCache = Map()
+    visibleChildrenCache.clear()
+  }
 }
