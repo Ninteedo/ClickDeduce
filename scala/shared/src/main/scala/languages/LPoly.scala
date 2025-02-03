@@ -169,8 +169,6 @@ class LPoly extends LData {
     override def toText: ConvertableText = MultiElement(
       Symbols.lambdaUpper,
       typeVar.toTextBracketed,
-      SpaceAfter(MathElement.period),
-      e.toTextBracketed
     )
   }
 
