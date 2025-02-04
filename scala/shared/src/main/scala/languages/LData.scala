@@ -677,15 +677,18 @@ class LData extends LRec {
     private def snd: Parser[Snd] = "snd" ~> expr ^^ (Snd(_))
 
     private def letPair: Parser[LetPair] = "let" ~ "pair" ~> ident ~ ident ~ ("=" ~> expr) ~ ("in" ~> expr) ^^ {
-      case x ~ y ~ assign ~ bound => LetPair(LiteralIdentifierBind(x), LiteralIdentifierBind(y), assign, bound)
+      case x ~ y ~ assign ~ bound => LetPair(x, y, assign, bound)
     }
 
     private def left: Parser[Left] = "left" ~> expr ^^ (Left(_, defaultType))
 
     private def right: Parser[Right] = "right" ~> expr ^^ (Right(defaultType, _))
 
+    protected def doubleRightArrow: Parser[String] = "⇒" | "=>"
+
     private def caseSwitch: Parser[CaseSwitch] = {
-      ("case" ~> expr <~ "of") ~ ("{" ~ "left" ~> ident) ~ ("=>" ~> expr <~ ";") ~ ("right" ~> ident) ~ ("=>" ~> expr <~ "}") ^^ {
+      ("case" ~> expr <~ "of") ~ ("{" ~ "left" ~> ident) ~ (doubleRightArrow ~> expr <~ ";") ~
+        ("right" ~> ident) ~ (doubleRightArrow ~> expr <~ "}") ^^ {
         case e ~ x ~ lExpr ~ y ~ rExpr => CaseSwitch(e, x, y, lExpr, rExpr)
       }
     }
@@ -693,13 +696,11 @@ class LData extends LRec {
     override protected def primitive: Parser[Expr] =
       pair | fst | snd | letPair | left | right | caseSwitch | super.primitive
 
-//    override protected def tightNonLRec: Parser[Expr] = fst | snd | left | right | super.tightNonLRec
-
-    override protected def funcType: Parser[Type] = unionType ~ "->" ~ funcType ^^ { case l ~ _ ~ r => Func(l, r) } | unionType
+    override protected def funcType: Parser[Type] = unionType ~ singleRightArrow ~ funcType ^^ { case l ~ _ ~ r => Func(l, r) } | unionType
 
     protected def unionType: Parser[Type] = pairType ~ "+" ~ unionType ^^ { case l ~ _ ~ r => UnionType(l, r) } | pairType
 
-    protected def pairType: Parser[Type] = typPrimitive ~ ("*" | "×") ~ pairType ^^ { case l ~ _ ~ r => PairType(l, r) } | typPrimitive
+    protected def pairType: Parser[Type] = typPrimitive ~ times ~ pairType ^^ { case l ~ _ ~ r => PairType(l, r) } | typPrimitive
 
     override def typ: Parser[Type] = funcType
   }

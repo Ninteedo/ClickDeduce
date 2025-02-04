@@ -124,13 +124,13 @@ class ExprParseTest extends AnyFunSuite, TableDrivenPropertyChecks {
     ))
   }
 
-//  test("can parse LPoly expressions") {
-//    val l = LPoly
-//    testParses(l, List(
-//      ("ΛA. 2", l.Poly("A", l.Num(2))),
-//      ("f[int]", l.ApplyType(l.Var("f"), l.IntType()))
-//    ))
-//  }
+  test("can parse LPoly expressions") {
+    val l = LPoly
+    testParses(l, List(
+      ("ΛA. 2", l.Poly("A", l.Num(2))),
+      ("f[int]", l.ApplyType(l.Var("f"), l.IntType()))
+    ))
+  }
 
   test("can parse LList expressions") {
     val l = LList

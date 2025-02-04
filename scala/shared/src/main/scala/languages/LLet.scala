@@ -49,7 +49,7 @@ class LLet extends LIf {
       case _                => None
     }
 
-    override val aliases: List[String] = List("Variable", "X")
+    override val aliases: List[String] = List("Variable", "Lookup")
 
     override lazy val rulePreview: Option[RulePreview] = RulePreviewBuilder()
       .addTypeCheckRule(

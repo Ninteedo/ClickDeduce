@@ -488,8 +488,8 @@ class LList extends LPoly {
       (nilRegex ~> (":" ~> typ) ^^ (ListNil(_))) |
       nilRegex ^^ (_ => ListNil(defaultType))
 
-    private def caseList: Parser[CaseList] = "case" ~ "list" ~> expr ~ ("of" ~ "{" ~ "(?i)nil".r ~ ("=>" | "⇒") ~> expr) ~
-      ";" ~ ident ~ "::" ~ ident ~ ("=>" | "⇒") ~ expr <~ "}" ^^ {
+    private def caseList: Parser[CaseList] = "case" ~ "list" ~> expr ~ ("of" ~ "{" ~ "(?i)nil".r ~ doubleRightArrow ~> expr) ~
+      ";" ~ ident ~ "::" ~ ident ~ doubleRightArrow ~ expr <~ "}" ^^ {
       case list ~ nilCase ~ _ ~ headVar ~ _ ~ tailVar ~ _ ~ consCase =>
         CaseList(list, nilCase, LiteralIdentifierBind(headVar), LiteralIdentifierBind(tailVar), consCase)
     }

@@ -8,6 +8,10 @@ div#tasks.control-group {
   margin-left: auto;
   margin-right: 0;
 
+  &.fulfilled {
+    background-color: colours.$success-background;
+  }
+
   div.task {
     border: 1px solid colours.$input-outline;
     border-radius: 0.2rem;

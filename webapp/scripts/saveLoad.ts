@@ -7,6 +7,7 @@ import {
 } from "./treeManipulation";
 import {getSelectedMode} from "./utils";
 import {displayError} from "./components/displayError";
+import {markHasUsedLangSelector} from "./attention";
 
 const fileInput: HTMLInputElement = document.createElement('input');
 
@@ -87,6 +88,9 @@ function loadFromFile(reader: FileReader): void {
         const json = JSON.parse(contents);
         if (!json.nodeString || !json.lang || !json.mode) {
             throw new Error('Provided file did not contain required tree data');
+        }
+        if (json.lang !== getCurrentLanguage()) {
+            markHasUsedLangSelector();
         }
         setCurrentLanguage(json.lang);
         setSelectedMode(json.mode);

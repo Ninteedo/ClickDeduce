@@ -16,4 +16,8 @@
   &:not(.show) {
     opacity: 0;
   }
+
+  .error {
+    color: colours.$red;
+  }
 }

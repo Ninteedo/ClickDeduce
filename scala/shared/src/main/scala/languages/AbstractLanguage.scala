@@ -81,7 +81,7 @@ trait AbstractLanguage {
     }
 
     protected case class BasicBinaryOperator(
-      op: String,
+      op: Parser[String],
       apply: (Expr, Expr) => Expr,
       precedence: Int,
       associativity: Associativity

@@ -72,6 +72,12 @@ class TaskManager {
         if (getLangSelector().selectedIndex === 0 && allFulfilled) {
             markHasCompletedFirstLangTasks();
         }
+
+        if (allFulfilled) {
+            this.tasksDiv.classList.add(FULFILLED_CLASS);
+        } else {
+            this.tasksDiv.classList.remove(FULFILLED_CLASS);
+        }
     }
 
     createTaskElement({name, description, difficulty}: Task): HTMLDivElement {

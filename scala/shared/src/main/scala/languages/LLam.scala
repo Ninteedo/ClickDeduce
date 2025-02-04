@@ -356,7 +356,9 @@ class LLam extends LLet {
 
     override def expr: Parser[Expr] = applyExpr
 
-    protected def funcType: Parser[Type] = typPrimitive ~ ("->" ~> typ) ^^ {
+    protected def singleRightArrow: Parser[String] = "->" | "→"
+
+    protected def funcType: Parser[Type] = typPrimitive ~ (singleRightArrow ~> typ) ^^ {
       case t1 ~ t2 => Func(t1, t2)
     } | typPrimitive
 

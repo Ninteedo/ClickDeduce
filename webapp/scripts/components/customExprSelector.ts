@@ -71,10 +71,9 @@ export class CustomExprSelector extends BaseDropdownSelector {
             getCurrentNodeString()!,
             this.getTreePath()
         );
-        console.debug(errorIndex, res);
         if (errorIndex < 0) {
             this.parsePreview.show(res);
-        } else {
+        } else if (this.input.value) {
             this.parsePreview.showError(res, errorIndex);
         }
     }
