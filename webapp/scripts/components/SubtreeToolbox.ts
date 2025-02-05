@@ -116,7 +116,7 @@ export class ToolboxEntry {
             event.dataTransfer?.setData('plain/subtreeNodeString', this.subtree.getNodeString());
             pauseFileDragAndDrop();
         });
-        this.element.addEventListener('dragend', event => {
+        this.element.addEventListener('dragend', () => {
             resumeFileDragAndDrop();
         });
     }

@@ -203,8 +203,9 @@ export class Subtree {
 
     copy(keepParent: boolean = false): Subtree {
         const [, newHtml] = postProcessActionNew(getCurrentLanguage(), getSelectedMode(), "IdentityAction", this.nodeString, "", []);
-        const newElement = new DOMParser().parseFromString(newHtml, 'text/html').body.firstElementChild as HTMLDivElement;
-        const clone = new Subtree(newElement, keepParent ? this.parent : null, this.nodeString);
+        const newElement = document.createElement('div');
+        newElement.innerHTML = newHtml;
+        const clone = new Subtree(newElement.firstElementChild as HTMLDivElement, keepParent ? this.parent : null, this.nodeString);
         clone.removeHighlight();
         return clone;
     }

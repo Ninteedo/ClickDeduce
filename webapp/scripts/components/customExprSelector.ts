@@ -190,10 +190,15 @@ export function createExprSelector(select: HTMLSelectElement): CustomExprSelecto
         placeholderText = 'Enter Type...';
         kind = 'type';
     }
-    select.outerHTML = createExprSelectorHTML(treePath, kind, placeholderText, options);
-
-    const newSelector = getTree().querySelector(`.expr-selector-container[data-tree-path="${treePath}"]`) as HTMLDivElement;
-    return setupTermSelector(newSelector);
+    const newSelect = document.createElement('div');
+    newSelect.innerHTML = createExprSelectorHTML(treePath, kind, placeholderText, options);
+    const replacement = newSelect.firstElementChild;
+    if (!(replacement instanceof HTMLDivElement)) {
+        console.debug(replacement);
+        throw new Error(`Expected an HTMLDivElement, got: ${replacement}`);
+    }
+    select.replaceWith(replacement);
+    return setupTermSelector(replacement);
 }
 
 export function replaceDisabledSelectInputs(element: HTMLElement | undefined = undefined): void {
