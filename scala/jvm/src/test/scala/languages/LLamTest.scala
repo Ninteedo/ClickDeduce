@@ -6,8 +6,6 @@ import languages.LLam.*
 import languages.env.*
 import languages.terms.*
 import languages.terms.blanks.{BlankExprDropDown, BlankTypeDropDown}
-import languages.terms.builders.*
-import languages.terms.errors.*
 import languages.terms.exprs.Expr
 import languages.terms.literals.*
 import languages.terms.types.Type
@@ -73,7 +71,7 @@ class LLamTest extends TestTemplate {
     val leftExpressions: List[Expr] = List(
       Num(4),
       Bool(false),
-      IfThenElse(Apply(incrementFunction, Num(4)), Num(2), Num(3)),
+      IfThenElse(Bool(true), Apply(incrementFunction, Num(4)), Num(3)),
       Apply(incrementFunction, Num(8))
     )
     leftExpressions.foreach { l =>

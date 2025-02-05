@@ -268,7 +268,8 @@ class LIf extends LArith {
 
   private object SimpleBoolTask extends Task {
     override val name: String = "Enter a Boolean"
-    override val description: String = "Boolean values must be typed in as either \"True\" or \"False\", case insensitive."
+    override val description: String = "After selecting a Bool expression, it will appear as a checkbox." +
+      " Unchecked is false, checked is true."
     override val difficulty: Int = 1
 
     override def checkFulfilled(expr: Expr): Boolean = expr match {
@@ -302,7 +303,8 @@ class LIf extends LArith {
   private object IfAndComparisonTask extends Task {
     override val name: String = "Use an If and a comparison inside a condition"
     override val description: String = "Create an if statement with a comparison and another if statement inside the condition. " +
-      "The expression must successfully type check."
+      "The expression must successfully type check." +
+      " Note that you can type in the expression directly within the expression selector, then press enter to use the parsed result."
     override val difficulty: Int = 3
 
     override def checkFulfilled(expr: Expr): Boolean = {
@@ -319,7 +321,7 @@ class LIf extends LArith {
   protected class LIfParser extends LArithParser {
     private def bool: Parser[Expr] = "(?i)true".r ^^^ Bool(true) | "(?i)false".r ^^^ Bool(false)
 
-    private def ifThenElse: Parser[Expr] = ("if" ~> expr) ~ ("then" ~> expr) ~ ("else" ~> expr) ^^ {
+    private def ifThenElse: Parser[Expr] = ("(?i)if".r ~> expr) ~ ("(?i)then".r ~> expr) ~ ("(?i)else".r ~> expr) ^^ {
       case cond ~ thenExpr ~ elseExpr => IfThenElse(cond, thenExpr, elseExpr)
     }
 
@@ -328,7 +330,8 @@ class LIf extends LArith {
     override protected def exprOperators: List[ExprOperator] = super.exprOperators ++ List(
       BasicBinaryOperator("==", Equal.apply, 4, Associativity.Left),
       BasicBinaryOperator("<", LessThan.apply, 4, Associativity.Left),
-      SpecialParser(ifThenElse, 1),
+      BasicBinaryOperator(">", (e1, e2) => LessThan(e2, e1), 4, Associativity.Left),
+      SpecialParser(ifThenElse, 2),
     )
   }
 

@@ -23,11 +23,13 @@ class LLam extends LLet {
   // expressions
   case class Apply(e1: Expr, e2: Expr) extends Expr {
     override def evalInner(env: ValueEnv): Value = e1.eval(env) match {
+      case v1 if v1.isError  => v1
       case v1: FunctionValue => v1.evalApply(e2.eval(env))
       case v1                => ApplyToNonFunctionError(v1)
     }
 
     override def typeCheckInner(tEnv: TypeEnv): Type = e1.typeCheck(tEnv) match {
+      case t1 if t1.isError => t1
       case t1: FunctionType => t1.typeOfApply(e2.typeCheck(tEnv))
       case t1               => ApplyToNonFunctionErrorType(t1)
     }
@@ -169,7 +171,11 @@ class LLam extends LLet {
 
     override val isError: Boolean = in.isError || out.isError
 
-    override def typeCheck(tEnv: TypeEnv): Type = Func(in.typeCheck(tEnv), out.typeCheck(tEnv))
+    override def typeCheck(tEnv: TypeEnv): Type = (in.typeCheck(tEnv), out.typeCheck(tEnv)) match {
+      case (t1, _) if t1.isError => t1
+      case (_, t2) if t2.isError => t2
+      case (t1, t2)              => Func(t1, t2)
+    }
 
     override def toText: ConvertableText = formatFuncType(in.toTextBracketed, out.toTextBracketed)
   }

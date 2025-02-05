@@ -49,12 +49,19 @@ class LRec extends LLam {
       f,
       guardValidIdentifierType(
         v, {
-          val properInType = inType.typeCheck(tEnv)
-          val properOutType = outType.typeCheck(tEnv)
-          val extendedTEnv = tEnv + (f -> Func(properInType, properOutType)) + (v -> properInType)
-          val determinedOutType = e.typeCheck(extendedTEnv).typeCheck(extendedTEnv)
-          if (properOutType == determinedOutType) Func(properInType, determinedOutType)
-          else RecursiveFunctionExpressionOutTypeMismatch(properOutType, determinedOutType)
+          (inType.typeCheck(tEnv), outType.typeCheck(tEnv)) match {
+            case (t1, _) if t1.isError => t1
+            case (_, t2) if t2.isError => t2
+            case (properInType, properOutType) =>
+              val extendedTEnv = tEnv + (f -> Func(properInType, properOutType)) + (v -> properInType)
+              e.typeCheck(extendedTEnv).typeCheck(extendedTEnv) match {
+                case t if t.isError => t
+                case determinedOutType =>
+                  if properOutType == determinedOutType
+                  then Func(properInType, determinedOutType)
+                  else RecursiveFunctionExpressionOutTypeMismatch(properOutType, determinedOutType)
+              }
+          }
         }
       )
     )
@@ -195,8 +202,9 @@ class LRec extends LLam {
     override val name: String = "Implement the Factorial Function"
     override val description: String =
       "Implement the recursive factorial function. It should return 1 for n=0, and is not required to handle negative" +
-        " numbers. The function name does not matter. The expression must successfully type-check."
-    override val difficulty: Int = 5
+        " numbers. The recursive function name does not matter. The expression must successfully type-check." +
+        " The type of the function is Int -> Int."
+    override val difficulty: Int = 4
 
     override def checkFulfilled(expr: Expr): Boolean = {
       val factorialTable = Map(0 -> 1, 1 -> 1, 2 -> 2, 3 -> 6, 4 -> 24, 5 -> 120, 6 -> 720)

@@ -462,11 +462,6 @@ class LList extends LPoly {
             val filterExpr = Apply(Apply(ApplyType(expr, typ), f), in)
             val typeCheckResult = filterExpr.typeCheck(TypeEnv.fromValueEnv(env))
             val evalResult = filterExpr.eval(env)
-            println(expr)
-            println(typeCheckResult)
-            println(!typeCheckResult.isError)
-            println(evalResult)
-            println(evalResult == out)
             !filterExpr.typeCheck(TypeEnv.fromValueEnv(env)).isError && filterExpr.eval(env) == out
           })
         },

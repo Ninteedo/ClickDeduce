@@ -284,11 +284,7 @@ class LPoly extends LData {
             case e: Poly =>
               pairSwapCases.forall((pair, t1, t2, expected) => {
                 val applied = Apply(ApplyType(ApplyType(e, t1), t2), pair)
-                val typeRes = applied.typeCheck(TypeEnv.fromValueEnv(env))
-                val evalRes = applied.eval(env)
-                val res = !applied.typeCheck(TypeEnv.fromValueEnv(env)).isError && applied.eval(env) == expected
-                println(s"Pair swap case: $pair, $t1, $t2, $expected, $typeRes, $evalRes, $res")
-                res
+                !applied.typeCheck(TypeEnv.fromValueEnv(env)).isError && applied.eval(env) == expected
               })
             case _ => false
           }
@@ -346,11 +342,7 @@ class LPoly extends LData {
             case e: Poly =>
               unionFunctionCases.forall((union, a, b, c, fa, fb, expected) => {
                 val applied = Apply(Apply(Apply(ApplyType(ApplyType(ApplyType(e, a), b), c), fa), fb), union)
-                val typeRes = applied.typeCheck(TypeEnv.fromValueEnv(env))
-                val evalRes = applied.eval(env)
-                val res = !applied.typeCheck(TypeEnv.fromValueEnv(env)).isError && applied.eval(env) == expected
-                println(s"Union function case: $union, $a, $b, $c, $fa, $fb, $expected, $typeRes, $evalRes, $res")
-                res
+                !applied.typeCheck(TypeEnv.fromValueEnv(env)).isError && applied.eval(env) == expected
               })
             case _ => false
           }

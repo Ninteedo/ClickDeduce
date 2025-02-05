@@ -137,7 +137,7 @@ trait AbstractLanguage {
             }
 
             specialParser
-        }
+        } | failure("Could not parse expression")
       }
     }
   }
