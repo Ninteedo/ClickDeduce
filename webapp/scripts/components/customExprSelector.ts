@@ -15,7 +15,7 @@ export class CustomExprSelector extends BaseDropdownSelector {
     private readonly button: HTMLButtonElement;
 
     protected readonly rulePreview: RulePreview;
-    protected readonly parsePreview: ParsePreview;
+    protected readonly parsePreview: ParsePreview | undefined;
 
     constructor(container: HTMLDivElement) {
         const dropdown = container.querySelector('.expr-selector-dropdown') as HTMLDivElement;
@@ -25,7 +25,8 @@ export class CustomExprSelector extends BaseDropdownSelector {
 
         const parseOptionElement = document.createElement('li');
         parseOptionElement.innerText = 'Parsed...';
-        options.push(new ParseDropdownOption(parseOptionElement, container.getAttribute('data-tree-path')!));
+        const parseDropdownOption = new ParseDropdownOption(parseOptionElement, container.getAttribute('data-tree-path')!);
+        options.push(parseDropdownOption);
 
         dropdownList.replaceChildren(...options.map(option => option.element));
 
@@ -38,7 +39,11 @@ export class CustomExprSelector extends BaseDropdownSelector {
         this.button = container.querySelector('.expr-selector-button') as HTMLButtonElement;
         this.setup();
         this.rulePreview = new RulePreview(container);
-        this.parsePreview = new ParsePreview(container);
+        if (!this.isTypeSelector()) {
+            this.parsePreview = new ParsePreview(container);
+        } else {
+            parseDropdownOption.disable();
+        }
         this.updateWidth();
     }
 
@@ -91,26 +96,28 @@ export class CustomExprSelector extends BaseDropdownSelector {
 
         this.updateWidth();
 
-        const [errorIndex, res] = getExprParsePreviewHtml(
-            getCurrentLanguage(),
-            this.input.value,
-            getSelectedMode(),
-            getCurrentNodeString()!,
-            this.getTreePath()
-        );
-        if (errorIndex < 0) {
-            this.parsePreview.show(res);
-        } else if (this.input.value) {
-            this.parsePreview.showError(res, errorIndex);
-        } else {
-            this.parsePreview.hide();
+        if (this.parsePreview) {
+            const [errorIndex, res] = getExprParsePreviewHtml(
+                getCurrentLanguage(),
+                this.input.value,
+                getSelectedMode(),
+                getCurrentNodeString()!,
+                this.getTreePath()
+            );
+            if (errorIndex < 0) {
+                this.parsePreview.show(res);
+            } else if (this.input.value) {
+                this.parsePreview.showError(res, errorIndex);
+            } else {
+                this.parsePreview.hide();
+            }
         }
     }
 
     protected override handleBlur(): void {
         super.handleBlur();
         this.rulePreview.hide();
-        this.parsePreview.hide();
+        this.parsePreview?.hide();
     }
 
     protected override postSelectOption(option: DropdownOption): void {
@@ -146,12 +153,16 @@ export class CustomExprSelector extends BaseDropdownSelector {
 class ParseDropdownOption extends DropdownOption {
     private readonly treePath: string;
 
+    private disabled: boolean = false;
+
     constructor(element: HTMLLIElement, treePath: string) {
         super(element);
         this.treePath = treePath;
     }
 
     override shouldShow(filter: string): boolean {
+        if (this.disabled) return false;
+
         const [errorIndex, res] = getExprParsePreviewHtml(
             getCurrentLanguage(),
             filter,
@@ -160,6 +171,10 @@ class ParseDropdownOption extends DropdownOption {
             this.treePath
         );
         return errorIndex < 0 && res.length > 0;
+    }
+
+    disable(): void {
+        this.disabled = true;
     }
 }
 
