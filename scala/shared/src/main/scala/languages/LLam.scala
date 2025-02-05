@@ -13,6 +13,7 @@ import languages.terms.literals.*
 import languages.terms.types.Type
 import languages.terms.values.Value
 import scalatags.Text
+import scalatags.Text.TypedTag
 import scalatags.Text.all.*
 
 import scala.collection.immutable.List
@@ -232,6 +233,11 @@ class LLam extends LLet {
     override val typ: Type = ApplyToNonFunctionErrorType(value.typ)
   }
 
+  /**
+   * A value that is used as a placeholder for a context where the actual value is not known.
+   * <p>This is used so that abstractions can be edited in-place, since the actual value is not known.</p>
+   * @param typ The type of the value
+   */
   case class HiddenValue(override val typ: Type) extends Value {
     override def isPlaceholder: Boolean = true
 
@@ -240,6 +246,8 @@ class LLam extends LLet {
     override val isError: Boolean = true
 
     override def toText: ConvertableText = TextElement("?")
+
+    override lazy val valueText: TypedTag[String] = div(typ.valueText, cls := ClassDict.VALUE_TYPE)
   }
 
   object HiddenValue extends ValueCompanion {}

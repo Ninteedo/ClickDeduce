@@ -115,7 +115,7 @@ class HTMLConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConve
   private def formatEnv(env: Iterable[(String, TypedTag[String])]): TypedTag[String] = {
     val variablesHtml: Option[HTML] =
       if (env.isEmpty) None
-      else Some(div(raw(env.map((k, v) => s"$k &rarr; $v").mkString("[", ", ", "]"))))
+      else Some(div(raw(env.map((k, v) => s"$k = $v").mkString("[", ", ", "]"))))
     div(cls := ClassDict.SCOPED_VARIABLES, variablesHtml)
   }
 
