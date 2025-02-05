@@ -12,6 +12,10 @@
 }
 
 #guide {
+  max-width: 65ch;
+  margin: 0 auto;
+  padding-bottom: 2rem;
+
   h1, h2, h3, h4, h5, h6, p {
     margin-bottom: 0;
   }
