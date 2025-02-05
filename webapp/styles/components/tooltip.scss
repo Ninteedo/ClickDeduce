@@ -11,12 +11,21 @@
     padding: 2px 3px;
     position: absolute;
     z-index: 1;
-    bottom: 125%;
+    bottom: 100%;
     left: 0;
-    margin-left: -60px;
+    white-space: normal;
+    word-wrap: anywhere;
+    width: max-content;
+    max-width: 60ch;
     opacity: 0;
     transition: opacity 0.3s;
     box-shadow: 1px 1px 2px 0 rgba(0, 0, 0, 0.3);
+    //max-width: 61ch;
+    overflow-x: auto;
+
+    .scoped-variables > div {
+      white-space: nowrap;
+    }
   }
 
   &:hover .tooltip-text {
