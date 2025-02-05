@@ -30,6 +30,7 @@ export class Subtree {
     private readonly ruleAnnotation: RuleAnnotation;
 
     private readonly isPhantom: boolean;
+    private readonly phantomIndicator: HTMLDivElement | undefined;
 
     private readonly HIGHLIGHT_CLASS = 'highlight';
     private readonly PHANTOM_CLASS = 'phantom';
@@ -48,6 +49,11 @@ export class Subtree {
         this.argsElement = this.element.querySelector('.args') as HTMLDivElement | null;
 
         this.isPhantom = this.getParent()?.isPhantom || this.element.classList.contains(this.PHANTOM_CLASS) || false;
+        if (this.isPhantom) {
+            this.phantomIndicator = document.createElement('div');
+            this.phantomIndicator.classList.add('phantom-indicator');
+            this.element.appendChild(this.phantomIndicator);
+        }
 
         const literalInputs = Array.from(this.nodeElement.querySelectorAll("input.literal[data-tree-path]:not([disabled])"))
             .map(input => createLiteralInput(input as HTMLInputElement));
@@ -61,10 +67,6 @@ export class Subtree {
             Array.from(this.argsElement!.children!).forEach(element => {
                 if (element.classList.contains('subtree')) {
                     const subNodeString = element.getAttribute('data-node-string')!;
-                    // const subNodePath = element.getAttribute(this.DATA_TREE_PATH)!;
-                    // const subNodePathHead = subNodePath.split('-')[0];
-                    // console.log(this.nodeString);
-                    // const subNodeString = getNodeStringFromPath(subNodePathHead, this.nodeString);
                     this.children.push(new Subtree(element as HTMLDivElement, this, subNodeString));
                 }
             });
@@ -74,9 +76,9 @@ export class Subtree {
 
         let ruleAnnotationElement;
         if (this.argsElement) {
-            ruleAnnotationElement = this.argsElement.lastElementChild;
+            ruleAnnotationElement = this.argsElement.querySelector('.annotation-new');
         } else {
-            ruleAnnotationElement = this.element.lastElementChild;
+            ruleAnnotationElement = this.element.querySelector('.annotation-axiom');
         }
         this.ruleAnnotation = new RuleAnnotation(ruleAnnotationElement as HTMLDivElement, this);
 
@@ -132,10 +134,16 @@ export class Subtree {
 
     addHighlight(): void {
         this.element.classList.add(this.HIGHLIGHT_CLASS);
+        if (this.phantomIndicator) {
+            this.phantomIndicator.classList.add(this.HIGHLIGHT_CLASS);
+        }
     }
 
     removeHighlight(): void {
         this.element.classList.remove(this.HIGHLIGHT_CLASS);
+        if (this.phantomIndicator) {
+            this.phantomIndicator.classList.remove(this.HIGHLIGHT_CLASS);
+        }
     }
 
     hasHighlight(): boolean {

@@ -130,6 +130,20 @@
     }
   }
 
+  .phantom-indicator {
+    display: none;
+    content: url("webapp/images/phantom.svg");
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1.5em;
+    height: 1.5em;
+
+    &.highlight {
+      display: block;
+    }
+  }
+
   &.drag-highlight {
     border: 2px dashed colours.$green;
     background-color: colours.$highlighted-tree;
