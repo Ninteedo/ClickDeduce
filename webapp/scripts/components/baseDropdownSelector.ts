@@ -11,12 +11,11 @@ export class BaseDropdownSelector implements AbstractTreeInput {
     protected readonly SELECTOR_FOCUS_CLASS = 'focused';
     protected readonly DROPDOWN_VISIBLE_CLASS = 'show';
 
-    constructor(container: HTMLDivElement, inputSelector: string, dropdownSelector: string, optionsSelector: string) {
+    constructor(container: HTMLDivElement, input: HTMLInputElement, dropdown: HTMLDivElement, options: DropdownOption[]) {
         this.container = container;
-        this.input = container.querySelector(inputSelector) as HTMLInputElement;
-        this.dropdown = container.querySelector(dropdownSelector) as HTMLDivElement;
-        this.options = Array.from(this.dropdown.querySelectorAll(optionsSelector))
-            .map(option => new DropdownOption(option as HTMLLIElement));
+        this.input = input;
+        this.dropdown = dropdown;
+        this.options = options;
 
         this.container.classList.add('dropdown-selector-container');
         this.dropdown.classList.add('dropdown');
@@ -74,27 +73,31 @@ export class BaseDropdownSelector implements AbstractTreeInput {
     }
 
     protected selectOption(option: DropdownOption): void {
-        this.input.value = option.getValue();
-        this.input.dispatchEvent(new Event('input'));
-        this.hideDropdown();
-        this.input.dispatchEvent(new Event('change'));
-        this.postSelectOption(option.getValue());
+        if (option instanceof NameDropdownOption) {
+            this.input.value = option.getValue();
+            this.input.dispatchEvent(new Event('input'));
+            this.hideDropdown();
+            this.input.dispatchEvent(new Event('change'));
+            this.postSelectOption(option);
+        }
     }
 
     enterValue(value: string): void {
         this.input.value = value;
         this.updateDropdown();
+        const option = this.getSelectedOption();
         this.hideDropdown();
-        // this.input.dispatchEvent(new Event('change'));
-        this.postSelectOption(value);
+        if (option) {
+            this.postSelectOption(option);
+        }
     }
 
-    protected postSelectOption(_value: string): void {}
+    protected postSelectOption(_option: DropdownOption): void {}
 
     protected updateDropdown(): void {
         const filterText = this.input.value.toLowerCase();
         this.options.forEach(option => {
-            option.matchesFilter(filterText) ? option.show() : option.hide();
+            option.shouldShow(filterText) ? option.show() : option.hide();
         });
         this.highlightOption(0);
     }
@@ -153,10 +156,6 @@ export class BaseDropdownSelector implements AbstractTreeInput {
     }
 
     private highlightOption(index: number): void {
-        if (!this.isDropdownVisible()) {
-            this.showDropdown();
-        }
-
         const options = this.getVisibleOptions();
         options.forEach(option => option.removeHighlight());
         const option = options[index];
@@ -207,7 +206,7 @@ export class BaseDropdownSelector implements AbstractTreeInput {
     }
 }
 
-export class DropdownOption {
+export abstract class DropdownOption {
     public readonly element: HTMLLIElement;
 
     protected readonly OPTION_HIDDEN_CLASS = 'hidden';
@@ -215,7 +214,6 @@ export class DropdownOption {
 
     constructor(option: HTMLLIElement) {
         this.element = option;
-        this.element.querySelectorAll('.tooltip').forEach(tooltipDiv => stripTooltip(tooltipDiv));
     }
 
     public show(): void {
@@ -243,6 +241,15 @@ export class DropdownOption {
         return this.element.classList.contains(this.OPTION_HIGHLIGHT_CLASS);
     }
 
+    public abstract shouldShow(inputValue: string): boolean;
+}
+
+export class NameDropdownOption extends DropdownOption {
+    constructor(option: HTMLLIElement) {
+        super(option);
+        this.element.querySelectorAll('.tooltip').forEach(tooltipDiv => stripTooltip(tooltipDiv));
+    }
+
     public getFilterText(): string {
         return this.element.getAttribute('data-filter') ?? this.element.getAttribute('data-value') ?? this.element.innerText ?? this.element.innerHTML;
     }
@@ -251,7 +258,7 @@ export class DropdownOption {
         return this.element.getAttribute('data-aliases')?.split(',') || [];
     }
 
-    public matchesFilter(filter: string): boolean {
+    public override shouldShow(filter: string): boolean {
         return this.getFilterText().toLowerCase().includes(filter)
             || this.getAliases().some(alias => alias.toLowerCase().includes(filter));
     }

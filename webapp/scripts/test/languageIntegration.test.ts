@@ -91,7 +91,7 @@ describe('start node function has correct effect', () => {
         pressStartNodeButton();
         expect(document.querySelectorAll('.subtree.axiom')).toHaveLength(1);
         expect(document.querySelectorAll('input.expr-selector-input')).toHaveLength(1);
-        expect(document.querySelectorAll('.expr-selector-dropdown > ul > li')).toHaveLength(3);
+        expect(document.querySelectorAll('.expr-selector-dropdown > ul > li')).toHaveLength(4);
         expect(document.querySelectorAll('.annotation-axiom')).toHaveLength(1);
     });
 });

@@ -1,6 +1,6 @@
 import {handleTabPressed, setNextFocusElement} from "../interface";
 import {handleLiteralChanged} from "../actions";
-import {BaseDropdownSelector} from "./baseDropdownSelector";
+import {BaseDropdownSelector, NameDropdownOption} from "./baseDropdownSelector";
 import {AbstractTreeInput} from "./abstractTreeInput";
 import {getTree, getTreePathOfElement} from "../globals/elements";
 
@@ -174,7 +174,12 @@ class LiteralIdentifierLookupInput extends LiteralInput {
         super(input);
         const container = input.parentElement as HTMLDivElement;
 
-        new BaseDropdownSelector(container, 'input', 'div.dropdown', 'li');
+        new BaseDropdownSelector(
+            container,
+            container.querySelector('input')!,
+            container.querySelector('div.dropdown')!,
+            Array.from(container.querySelectorAll('div.dropdown li')).map(option => new NameDropdownOption(option as HTMLLIElement))
+        );
     }
 }
 

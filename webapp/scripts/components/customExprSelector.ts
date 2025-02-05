@@ -1,9 +1,9 @@
-import {getSelectedMode, hasClassOrParentHasClass} from "../utils";
+import {getSelectedMode} from "../utils";
 import {getCurrentLanguage, getCurrentNodeString} from "../treeManipulation";
 import {runAction} from "../actions";
-import {BaseDropdownSelector, DropdownOption} from "./baseDropdownSelector";
+import {BaseDropdownSelector, DropdownOption, NameDropdownOption} from "./baseDropdownSelector";
 import {getTree, getTreePathOfElement} from "../globals/elements";
-import {getExprParsePreviewHtml, parseExprText} from "../serverRequest";
+import {getExprParsePreviewHtml} from "../serverRequest";
 import {RulePreview} from "./rulePreview";
 import {ParsePreview} from "./parsePreview";
 
@@ -18,7 +18,23 @@ export class CustomExprSelector extends BaseDropdownSelector {
     protected readonly parsePreview: ParsePreview;
 
     constructor(container: HTMLDivElement) {
-        super(container, '.expr-selector-input', '.expr-selector-dropdown', 'ul > li');
+        const dropdown = container.querySelector('.expr-selector-dropdown') as HTMLDivElement;
+        const dropdownList = dropdown.querySelector('ul') as HTMLUListElement;
+        const options: DropdownOption[] = Array.from(dropdownList.querySelectorAll('li'))
+            .map(option => new NameDropdownOption(option as HTMLLIElement));
+
+        const parseOptionElement = document.createElement('li');
+        parseOptionElement.innerText = 'Parsed...';
+        options.push(new ParseDropdownOption(parseOptionElement, container.getAttribute('data-tree-path')!));
+
+        dropdownList.replaceChildren(...options.map(option => option.element));
+
+        super(
+            container,
+            container.querySelector('.expr-selector-input')!,
+            dropdown,
+            options
+        );
         this.button = container.querySelector('.expr-selector-button') as HTMLButtonElement;
         this.setup();
         this.rulePreview = new RulePreview(container);
@@ -33,9 +49,11 @@ export class CustomExprSelector extends BaseDropdownSelector {
 
     override setupOptionListener(option: DropdownOption): void {
         super.setupOptionListener(option);
-        option.element.addEventListener('mouseenter', () => {
-            this.rulePreview.show(option.getValue());
-        });
+        if (option instanceof NameDropdownOption) {
+            option.element.addEventListener('mouseenter', () => {
+                this.rulePreview.show(option.getValue());
+            });
+        }
     }
 
     protected override showDropdown(): void {
@@ -51,7 +69,16 @@ export class CustomExprSelector extends BaseDropdownSelector {
 
     protected override setOptionHighlight(option: DropdownOption): void {
         super.setOptionHighlight(option);
-        this.rulePreview.show(option.getValue());
+        if (option instanceof NameDropdownOption) {
+            this.rulePreview.show(option.getValue());
+        }
+    }
+
+    protected selectOption(option: DropdownOption): void {
+        super.selectOption(option);
+        if (option instanceof ParseDropdownOption) {
+            this.postSelectOption(option);
+        }
     }
 
     protected override clearOptionHighlight(): void {
@@ -75,6 +102,8 @@ export class CustomExprSelector extends BaseDropdownSelector {
             this.parsePreview.show(res);
         } else if (this.input.value) {
             this.parsePreview.showError(res, errorIndex);
+        } else {
+            this.parsePreview.hide();
         }
     }
 
@@ -84,20 +113,15 @@ export class CustomExprSelector extends BaseDropdownSelector {
         this.parsePreview.hide();
     }
 
-    protected override enterPressed(): void {
-        if (!this.getSelectedOption()) {
-            const parsedExpr = parseExprText(getCurrentLanguage(), this.input.value);
-            if (parsedExpr) {
-                runAction("ParseExprAction", this.getTreePath(), this.input.value);
-                return;
-            }
+    protected override postSelectOption(option: DropdownOption): void {
+        if (option instanceof NameDropdownOption) {
+            const actionName = this.isTypeSelector() ? "SelectTypeAction" : "SelectExprAction";
+            runAction(actionName, this.getTreePath(), option.getValue());
+        } else if (option instanceof ParseDropdownOption) {
+            runAction("ParseExprAction", this.getTreePath(), this.input.value);
+        } else {
+            throw new Error(`Unexpected option type: ${option}`);
         }
-        super.enterPressed();
-    }
-
-    protected override postSelectOption(value: string): void {
-        const actionName = this.isTypeSelector() ? "SelectTypeAction" : "SelectExprAction";
-        runAction(actionName, this.getTreePath(), value);
     }
 
     override disable() {
@@ -119,25 +143,24 @@ export class CustomExprSelector extends BaseDropdownSelector {
     }
 }
 
+class ParseDropdownOption extends DropdownOption {
+    private readonly treePath: string;
 
-let exprSelectors: CustomExprSelector[] = [];
+    constructor(element: HTMLLIElement, treePath: string) {
+        super(element);
+        this.treePath = treePath;
+    }
 
-
-export function replaceSelectInputs(): CustomExprSelector[] {
-    exprSelectors = [];
-
-    const selectInputs: NodeListOf<HTMLSelectElement> = getTree().querySelectorAll(
-        'select.expr-dropdown[data-tree-path]:not([disabled]), select.type-dropdown[data-tree-path]:not([disabled])'
-    );
-    selectInputs.forEach(select => {
-        if (!hasClassOrParentHasClass(select, 'phantom')) {
-            exprSelectors.push(createExprSelector(select));
-        }
-    });
-
-    replaceDisabledSelectInputs();
-
-    return exprSelectors;
+    override shouldShow(filter: string): boolean {
+        const [errorIndex, res] = getExprParsePreviewHtml(
+            getCurrentLanguage(),
+            filter,
+            getSelectedMode(),
+            getCurrentNodeString()!,
+            this.treePath
+        );
+        return errorIndex < 0 && res.length > 0;
+    }
 }
 
 export function createExprSelector(select: HTMLSelectElement): CustomExprSelector {
@@ -208,10 +231,14 @@ class ExampleExprSelector extends CustomExprSelector {
         this.output = output;
     }
 
-    protected override postSelectOption(value: string) {
-        this.output.textContent = value;
-        this.input.focus();
-        this.container.classList.add(this.SELECTOR_FOCUS_CLASS);
+    protected override postSelectOption(option: DropdownOption) {
+        if (option instanceof NameDropdownOption) {
+            this.output.textContent = option.getValue();
+            this.input.focus();
+            this.container.classList.add(this.SELECTOR_FOCUS_CLASS);
+        } else {
+            throw new Error(`Unexpected option type: ${option}`);
+        }
     }
 
     private clearOutput() {
