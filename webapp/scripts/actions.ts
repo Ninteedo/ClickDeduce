@@ -1,6 +1,6 @@
 import {getSelectedLanguage, getSelectedMode} from "./utils";
 import {disableInputs, enableInputs, lastNodeString, reloadCurrentTree, updateTree} from "./treeManipulation";
-import {getNextFocusElement, setFocusElement, setNextFocusElement} from "./interface";
+import {getNextFocusTreePath, setFocusElement, setNextFocusElement} from "./interface";
 import {postProcessActionNew, postStartNodeBlankNew} from "./serverRequest";
 import {getNodeStringFromPath} from "./utility/parseNodeString";
 import {getTreePathOfElement} from "./globals/elements";
@@ -47,22 +47,7 @@ function parseLiteralValue(inputElement: HTMLInputElement): string {
 export function handleLiteralChanged(textInput: HTMLInputElement, doNotFocus: boolean = false): void {
     const literalValue: string = parseLiteralValue(textInput);
     const treePath: string = getTreePathOfElement(textInput);
-
-    let focusedTreePath: string | null = null;
-    if (getNextFocusElement() != null) {
-        focusedTreePath = getNextFocusElement()!.getTreePath();
-    }
-
     runAction("EditLiteralAction", treePath, literalValue, doNotFocus);
-
-    if (focusedTreePath == null || doNotFocus) return;
-    let focusedElement: HTMLElement | null = document.querySelector(`input[data-tree-path="${focusedTreePath}"]`);
-    if (focusedElement && focusedElement instanceof HTMLElement) {
-        focusedElement.focus();
-        if (focusedElement instanceof HTMLInputElement) {
-            focusedElement.select();
-        }
-    }
 }
 
 export function exampleLiteralChanged(textInput: HTMLInputElement): void {
@@ -118,8 +103,9 @@ export function runAction(actionName: string, treePath: string, extraArgs: any[]
         const [newNodeString, newHtml] = postProcessActionNew(langName, modeName, actionName, lastNodeString, treePath, extraArgsClean);
         updateTree(newHtml, newNodeString, modeName, langName, true);
 
-        if (getNextFocusElement()) {
-            setFocusElement(getNextFocusElement()!.getTreePath());
+        const focusPath = getNextFocusTreePath();
+        if (focusPath !== null) {
+            setFocusElement(focusPath);
             setNextFocusElement(null);
         } else if (!doNotFocus && (!document.activeElement || document.activeElement.tagName === "BODY")) {
             setFocusElement(treePath);

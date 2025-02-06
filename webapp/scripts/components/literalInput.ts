@@ -1,4 +1,4 @@
-import {findInputFromElement, handleTabPressed, setNextFocusElement} from "../interface";
+import {findTreePathFromElement, handleTabPressed, setNextFocusElement, setNextFocusTreePath} from "../interface";
 import {handleLiteralChanged} from "../actions";
 import {BaseDropdownSelector, NameDropdownOption} from "./baseDropdownSelector";
 import {AbstractTreeInput} from "./abstractTreeInput";
@@ -86,9 +86,9 @@ export class LiteralInput implements AbstractTreeInput {
 
     protected onBlurred(event: FocusEvent | undefined = undefined): void {
         if (event && event.relatedTarget instanceof HTMLElement) {
-            setNextFocusElement(findInputFromElement(event.relatedTarget));
+            setNextFocusTreePath(findTreePathFromElement(event.relatedTarget));
         }
-        this.handleInputChanged();
+        this.handleInputChanged(true);
     }
 
     private handleInputChanged(doNotFocus: boolean = false): void {

@@ -63,12 +63,17 @@ export function getExportCloseButton(): HTMLButtonElement {
  */
 export function getTreePathOfElement(element: HTMLElement | null): string {
     if (element === null) throw new Error("Cannot get tree path of null");
-    const treePath = element.getAttribute("data-tree-path");
+    const treePath = getTreePathOfElementOptional(element);
     if (treePath === null) {
         console.debug(element.outerHTML);
         throw new Error("Element does not have a tree path");
     }
     return treePath;
+}
+
+export function getTreePathOfElementOptional(element: HTMLElement | null): string | null {
+    if (element === null) return null;
+    return element.getAttribute("data-tree-path");
 }
 
 export function getUndoButton(): HTMLButtonElement {

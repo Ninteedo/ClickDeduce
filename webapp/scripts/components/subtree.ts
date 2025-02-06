@@ -82,6 +82,8 @@ export class Subtree {
         }
         this.ruleAnnotation = new RuleAnnotation(ruleAnnotationElement as HTMLDivElement, this);
 
+        this.element.tabIndex = 0;
+
         this.doSetup();
     }
 

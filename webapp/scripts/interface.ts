@@ -1,25 +1,28 @@
 import {copyTreeNode, deleteTreeNode, pasteTreeNode} from "./actions";
-import {getActiveInputs, getRootSubtree, redo, undo} from "./treeManipulation";
-import {compareTreePaths, hasClassOrParentHasClass, parseTreePath} from "./utils";
+import {getActiveInputs, redo, undo} from "./treeManipulation";
+import {compareTreePaths, parseTreePath} from "./utils";
 import {AbstractTreeInput} from "./components/abstractTreeInput";
-import {getControlsDiv, getToggleControlsButton, getTreePathOfElement} from "./globals/elements";
+import {
+    getControlsDiv,
+    getToggleControlsButton,
+    getTreePathOfElement,
+    getTreePathOfElementOptional
+} from "./globals/elements";
 import {
     clearContextMenuSelectedElement,
     closeContextMenu,
     getHighlightElement,
     openContextMenu
 } from "./components/contextMenu/contextMenu";
-import {LiteralInput} from "./components/literalInput";
-import {CustomExprSelector} from "./components/customExprSelector";
 
-let nextFocusElement: AbstractTreeInput | null = null;
+let nextFocusPath: string | null = null;
 
 /**
  * Resets the global variables used by the interface code.
  */
 export function resetInterfaceGlobals(): void {
     clearContextMenuSelectedElement();
-    nextFocusElement = null;
+    nextFocusPath = null;
     setupValueTypeColourHighlightingCheckbox();
 
     document.addEventListener('contextmenu', openContextMenu);
@@ -58,12 +61,16 @@ function globalHandleKeyDown(e: KeyboardEvent): void {
 
 document.addEventListener('keydown', globalHandleKeyDown);
 
-export function setNextFocusElement(input: AbstractTreeInput | null): void {
-    nextFocusElement = input;
+export function setNextFocusElement(input: AbstractTreeInput  | null): void {
+    nextFocusPath = input?.getTreePath() ?? null;
 }
 
-export function getNextFocusElement(): AbstractTreeInput | null {
-    return nextFocusElement;
+export function setNextFocusTreePath(path: string | null): void {
+    nextFocusPath = path;
+}
+
+export function getNextFocusTreePath(): string | null {
+    return nextFocusPath;
 }
 
 /**
@@ -174,28 +181,38 @@ export function toggleControls(): void {
     }
 }
 
-export function findInputFromElement(element: HTMLElement): AbstractTreeInput | null {
-    if (!hasClassOrParentHasClass(element, 'subtree')) return null;
-
+export function findTreePathFromElement(element: HTMLElement): string | null {
     let curr: HTMLElement | null = element;
-    while (curr && !(curr.classList.contains('literal') || curr.classList.contains('dropdown-selector-container') || curr.classList.contains('subtree'))) {
+    while (curr) {
+        const treePath = getTreePathOfElementOptional(curr);
+        if (treePath !== null) return treePath;
         curr = curr.parentElement;
     }
-    if (!curr) return null;
-
-    if (curr.classList.contains('literal')) {
-        const treePath = curr.getAttribute('data-tree-path');
-        if (!treePath) return null;
-        return getRootSubtree()?.getAllInputs().find(input => input instanceof LiteralInput && input.getTreePath() === treePath) ?? null;
-    } else if (curr.classList.contains('dropdown-selector-container')) {
-        const treePath = curr.getAttribute('data-tree-path');
-        if (!treePath) return null;
-        return getRootSubtree()?.getAllInputs().find(input => input instanceof CustomExprSelector && input.getTreePath() === treePath) ?? null;
-    } else if (curr.classList.contains('subtree')) {
-        const treePath = curr.getAttribute('data-tree-path');
-        if (!treePath) return null;
-        return getRootSubtree()?.getChildFromPath(parseTreePath(treePath))?.getPrimaryInput() ?? null;
-    } else {
-        return null;
-    }
+    return null;
 }
+
+// export function findInputFromElement(element: HTMLElement): AbstractTreeInput | null {
+//     if (!hasClassOrParentHasClass(element, 'subtree')) return null;
+//
+//     let curr: HTMLElement | null = element;
+//     while (curr && !(curr.classList.contains('literal') || curr.classList.contains('dropdown-selector-container') || curr.classList.contains('subtree'))) {
+//         curr = curr.parentElement;
+//     }
+//     if (!curr) return null;
+//
+//     if (curr.classList.contains('literal')) {
+//         const treePath = curr.getAttribute('data-tree-path');
+//         if (!treePath) return null;
+//         return getRootSubtree()?.getAllInputs().find(input => input instanceof LiteralInput && input.getTreePath() === treePath) ?? null;
+//     } else if (curr.classList.contains('dropdown-selector-container')) {
+//         const treePath = curr.getAttribute('data-tree-path');
+//         if (!treePath) return null;
+//         return getRootSubtree()?.getAllInputs().find(input => input instanceof CustomExprSelector && input.getTreePath() === treePath) ?? null;
+//     } else if (curr.classList.contains('subtree')) {
+//         const treePath = curr.getAttribute('data-tree-path');
+//         if (!treePath) return null;
+//         return getRootSubtree()?.getChildFromPath(parseTreePath(treePath))?.getPrimaryInput() ?? null;
+//     } else {
+//         return null;
+//     }
+// }
