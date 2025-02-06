@@ -8,6 +8,9 @@
     <option name="classpathModifications">
       <list />
     </option>
+    <option name="envFilePaths">
+      <list />
+    </option>
     <option name="envs">
       <map />
     </option>
@@ -28,12 +31,14 @@
         <option value="languages.NodeSpec" />
         <option value="languages.LaTeXTest" />
         <option value="languages.LDataTest" />
+        <option value="languages.LListTest" />
         <option value="languages.LPolyTest" />
         <option value="languages.ActionSpec" />
         <option value="languages.LArithTest" />
         <option value="languages.NodeHTMLSpec" />
         <option value="languages.NodeTreeTest" />
         <option value="languages.ReadExprTest" />
+        <option value="languages.ExprParseTest" />
         <option value="languages.ComplexExpressionsTest" />
       </list>
     </option>
