@@ -4,6 +4,7 @@ import {SubtreeContextMenu} from "./SubtreeContextMenu";
 import {AbstractContextMenu} from "./AbstractContextMenu";
 import {getSubtreeToolbox} from "../SubtreeToolbox";
 import {ToolboxContextMenu} from "./ToolboxContextMenu";
+import {PhantomContextMenu} from "./PhantomContextMenu";
 
 let contextMenuSelectedElement: HTMLElement | null = null;
 
@@ -26,8 +27,12 @@ export function openContextMenu(e: MouseEvent): void {
 
     const highlightElement = getHighlightElementFromEvent(e);
 
-    if (!highlightElement || hasClassOrParentHasClass(highlightElement, 'phantom')) {
+    if (!highlightElement) {
         closeContextMenu();
+    } else if (hasClassOrParentHasClass(highlightElement, 'phantom')) {
+        e.preventDefault();
+        closeContextMenu();
+        activeContextMenu = new PhantomContextMenu(e);
     } else {
         const subtree = getRootSubtree()?.getChildFromPath(parseTreePath(highlightElement.getAttribute('data-tree-path')!));
         if (subtree) {
