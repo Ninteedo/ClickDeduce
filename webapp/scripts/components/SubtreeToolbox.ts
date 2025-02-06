@@ -86,7 +86,7 @@ export function getSubtreeToolbox(): SubtreeToolbox {
 }
 
 export function addSubtreeToToolbox(subtree: Subtree): void {
-    getSubtreeToolbox().addSubtree(subtree.copy());
+    getSubtreeToolbox().addSubtree(subtree.copy(false, "edit"));
 }
 
 export class ToolboxEntry {

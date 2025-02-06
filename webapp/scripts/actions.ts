@@ -111,10 +111,10 @@ export function runAction(actionName: string, treePath: string, extraArgs: any[]
     }
     disableInputs();
 
-    const modeName: string = getSelectedMode();
-    const langName: string = getSelectedLanguage();
-    const extraArgsClean: any[] = Array.isArray(extraArgs) ? extraArgs : [extraArgs];
     try {
+        const modeName: string = getSelectedMode();
+        const langName: string = getSelectedLanguage();
+        const extraArgsClean: any[] = Array.isArray(extraArgs) ? extraArgs : [extraArgs]
         const [newNodeString, newHtml] = postProcessActionNew(langName, modeName, actionName, lastNodeString, treePath, extraArgsClean);
         console.debug(newNodeString);
         updateTree(newHtml, newNodeString, modeName, langName, true);

@@ -197,8 +197,10 @@ export class Subtree {
         return this.ruleAnnotation;
     }
 
-    copy(keepParent: boolean = false): Subtree {
-        const [, newHtml] = postProcessActionNew(getCurrentLanguage(), getSelectedMode(), "IdentityAction", this.nodeString, "", []);
+    copy(keepParent: boolean = false, mode: string | undefined = undefined): Subtree {
+        const selectedMode = mode ?? getSelectedMode();
+
+        const [, newHtml] = postProcessActionNew(getCurrentLanguage(), selectedMode, "IdentityAction", this.nodeString, "", []);
         const newElement = document.createElement('div');
         newElement.innerHTML = newHtml;
         const clone = new Subtree(newElement.firstElementChild as HTMLDivElement, keepParent ? this.parent : null, this.nodeString);

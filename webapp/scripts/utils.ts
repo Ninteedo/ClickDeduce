@@ -1,10 +1,15 @@
 /**
  * Get the value of the selected mode radio button.
  */
-export function getSelectedMode(): string {
+export function getSelectedMode(): "edit" | "type-check" | "eval" {
     const selectedRadio = document.querySelector('input[name="mode"]:checked') as HTMLInputElement | null;
     if (selectedRadio) {
-        return selectedRadio.value;
+        const value = selectedRadio.value;
+        if (value === "edit" || value === "type-check" || value === "eval") {
+            return value;
+        } else {
+            throw new Error(`Invalid mode selected: "${value}"`);
+        }
     }
     throw new Error("No mode selected");
 }
