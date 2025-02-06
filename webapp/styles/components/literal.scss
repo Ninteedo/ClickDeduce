@@ -1,15 +1,10 @@
 div.literal-checkbox-container {
   input[type="checkbox"].literal.boolean {
-    background-size: 100% 100%;
+    //background-size: 100% 100%;
     background-repeat: no-repeat;
-
-    &:not(:checked) {
-      background-image: url("webapp/images/false.svg");
-    }
-
-    &:checked {
-      background-image: url("webapp/images/true.svg");
-    }
+    background-size: contain;
+    max-width: 1em;
+    max-height: 1em;
 
     &::before {
       opacity: 0;

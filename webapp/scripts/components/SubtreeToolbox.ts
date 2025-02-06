@@ -1,5 +1,7 @@
 import {Subtree} from "./subtree";
 import {pauseFileDragAndDrop, resumeFileDragAndDrop} from "../saveLoad";
+// @ts-ignore
+import ToolboxSvg from '../../images/toolbox.svg';
 
 class SubtreeToolbox {
     private readonly container: HTMLDivElement;
@@ -13,6 +15,7 @@ class SubtreeToolbox {
         this.container = container;
         this.entries = [];
         this.updateContents();
+        this.container.style.backgroundImage = `url("${ToolboxSvg}")`;
     }
 
     private updateContents(): void {

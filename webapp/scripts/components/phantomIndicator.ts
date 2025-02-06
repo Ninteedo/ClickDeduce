@@ -1,3 +1,6 @@
+// @ts-ignore
+import PhantomSvg from '../../images/phantom.svg';
+
 const VISIBLE_CLASS = 'visible';
 
 export class PhantomIndicator {
@@ -6,6 +9,7 @@ export class PhantomIndicator {
     constructor() {
         this.element = document.createElement('div');
         this.element.classList.add('phantom-indicator');
+        this.element.style.content = `url("${PhantomSvg}")`;
     }
 
     public show(): void {

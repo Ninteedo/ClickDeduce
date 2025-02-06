@@ -3,6 +3,10 @@ import {handleLiteralChanged} from "../actions";
 import {BaseDropdownSelector, NameDropdownOption} from "./baseDropdownSelector";
 import {AbstractTreeInput} from "./abstractTreeInput";
 import {getTree, getTreePathOfElement} from "../globals/elements";
+// @ts-ignore
+import TrueSvg from '../../images/true.svg';
+// @ts-ignore
+import FalseSvg from '../../images/false.svg';
 
 export class LiteralInput implements AbstractTreeInput {
     protected readonly input: HTMLInputElement;
@@ -91,7 +95,7 @@ export class LiteralInput implements AbstractTreeInput {
         this.handleInputChanged(true);
     }
 
-    private handleInputChanged(doNotFocus: boolean = false): void {
+    protected handleInputChanged(doNotFocus: boolean = false): void {
         if (this.getValue() === this.initialValue) return;
         handleLiteralChanged(this.input, doNotFocus);
     }
@@ -186,8 +190,22 @@ class LiteralIdentifierLookupInput extends LiteralInput {
 }
 
 class LiteralBoolInput extends LiteralInput {
+    constructor(input: HTMLInputElement) {
+        super(input);
+        this.input.addEventListener('change', () => {
+            this.updateImage();
+            this.handleInputChanged();
+        });
+        this.updateImage();
+    }
+
     public override getValue(): string {
         return this.input.checked ? 'true' : 'false';
+    }
+
+    private updateImage(): void {
+        const svg = this.input.checked ? TrueSvg : FalseSvg;
+        this.input.style.content = `url("${svg}")`;
     }
 }
 
