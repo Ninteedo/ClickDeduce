@@ -249,7 +249,7 @@ class LArith extends ClickDeduceLanguage {
   case class UnexpectedArgType(override val message: String) extends TypeError
 
   // tasks
-  setTasks(SelectAnyExprTask, EnterANumberTask, BasicArithmeticTask)
+  setTasks(SelectAnyExprTask, PositiveIntegerTask, NegativeIntegerTask, BasicArithmeticTask)
 
   private object SelectAnyExprTask extends Task {
     override val name: String = "Select an expression"
@@ -261,7 +261,7 @@ class LArith extends ClickDeduceLanguage {
     override def checkFulfilled(expr: Expr): Boolean = !expr.isInstanceOf[BlankExprDropDown]
   }
 
-  private object EnterANumberTask extends Task {
+  private object PositiveIntegerTask extends Task {
     override val name: String = "Enter a positive integer"
     override val description: String = "Select a Num expression and enter a positive integer into its text box."
     override val difficulty: Int = 1
@@ -271,6 +271,24 @@ class LArith extends ClickDeduceLanguage {
         expr,
         cond = {
           case Num(LiteralInt(n)) => n > 0
+          case _                  => false
+        }
+      )
+
+      checkNum(expr)
+    }
+  }
+
+  private object NegativeIntegerTask extends Task {
+    override val name: String = "Enter a negative integer"
+    override val description: String = "Select a Num expression and enter a negative integer into its text box."
+    override val difficulty: Int = 1
+
+    override def checkFulfilled(expr: Expr): Boolean = {
+      def checkNum(expr: Expr): Boolean = checkCondition(
+        expr,
+        cond = {
+          case Num(LiteralInt(n)) => n < 0
           case _                  => false
         }
       )

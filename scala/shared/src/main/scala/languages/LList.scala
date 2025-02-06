@@ -373,7 +373,7 @@ class LList extends LPoly {
   }
 
   private object MapIntListFunctionTask extends Task {
-    override val name: String = "Map Function for Integer Lists"
+    override val name: String = "Map function for integer lists"
 
     override val description: String = "Implement the map function for lists of integers." +
       " The function should first take a function that maps an integer to another integer, and then a list of integers." +
@@ -404,7 +404,7 @@ class LList extends LPoly {
   }
 
   object PolyFilterFunctionTask extends Task {
-    override val name: String = "Polymorphic Filter Function"
+    override val name: String = "Polymorphic filter function"
 
     override val description: String = "Implement a polymorphic filter function for lists." +
       " The function should be a polymorphic abstraction that accepts a function that maps an element to a boolean, and a list of elements." +

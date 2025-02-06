@@ -204,7 +204,7 @@ class LPoly extends LData {
   setTasks(CreatePolyFunctionTask, ApplyTypeTask, PolySwapPairFunctionTask, UnionFunctionApplicationTask)
 
   object CreatePolyFunctionTask extends Task {
-    override val name: String = "Create a Polymorphic Function"
+    override val name: String = "Create a polymorphic function"
     override val description: String =
       "Use the Poly expression to create a type variable which is then used as the input type for a lambda function." +
         " The function must use the input variable." +
@@ -249,7 +249,7 @@ class LPoly extends LData {
   }
 
   object ApplyTypeTask extends Task {
-    override val name: String = "Apply Type"
+    override val name: String = "Apply type"
     override val description: String = "Apply a type to a polymorphic type abstraction." +
       " The expression must successfully type-check."
     override val difficulty: Int = 2
@@ -264,7 +264,7 @@ class LPoly extends LData {
   }
 
   object PolySwapPairFunctionTask extends Task {
-    override val name: String = "Pair Swap Function"
+    override val name: String = "Pair swap function"
     override val description: String = "Implement a polymorphic function that swaps the elements of a pair, of any types." +
       " Hint: it should begin with two Poly expressions to use as type variables for a lambda function." +
       " It will be tested by applying the two types (first pair element type then second), followed by applying the pair."
@@ -295,7 +295,7 @@ class LPoly extends LData {
   }
 
   object UnionFunctionApplicationTask extends Task {
-    override val name: String = "Union Function Application"
+    override val name: String = "Union function application"
     override val description: String =
       "Implement a polymorphic function that takes a union value (of any types) and a function for each of the left and right types, " +
         "then applies the appropriate function." +

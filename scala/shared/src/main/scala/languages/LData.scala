@@ -599,7 +599,7 @@ class LData extends LRec {
   setTasks(DefinePairDifferentTypesTask, UseCaseSwitchTask, UnionFunctionWithNumber2Task)
 
   private object DefinePairDifferentTypesTask extends Task {
-    override val name: String = "Define a Pair with Different Types"
+    override val name: String = "Define a Pair with different types"
     override val description: String =
       "Define a pair with different types for the left and right elements. The expression must successfully type-check."
     override val difficulty: Int = 2
@@ -618,7 +618,7 @@ class LData extends LRec {
   }
 
   private object UseCaseSwitchTask extends Task {
-    override val name: String = "Use a Case Switch Expression"
+    override val name: String = "Use a Case Switch expression"
     override val description: String =
       "Use a case switch expression to handle a union type. The expression must successfully type-check."
     override val difficulty: Int = 3

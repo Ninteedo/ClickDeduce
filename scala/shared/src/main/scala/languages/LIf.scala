@@ -264,7 +264,7 @@ class LIf extends LArith {
   }
 
   // tasks
-  setTasks(SimpleBoolTask, IfStatementTask, IfAndComparisonTask)
+  setTasks(SimpleBoolTask, IfThenElseTask, IfAndComparisonTask)
 
   private object SimpleBoolTask extends Task {
     override val name: String = "Enter a Boolean"
@@ -278,11 +278,11 @@ class LIf extends LArith {
     }
   }
 
-  private object IfStatementTask extends Task {
-    override val name: String = "Create an If Statement"
-    override val description: String = "Create an if statement, filling out its condition and both possible subexpressions. " +
-      "During evaluation, only the matching one is evaluated. " +
-      "The condition must be a boolean expression, and the subexpressions must have the same type."
+  private object IfThenElseTask extends Task {
+    override val name: String = "Create an If-Then-Else expression"
+    override val description: String = "Create an if-then-else expression, filling out its condition and both possible subexpressions. " +
+      "During evaluation, only the matching one is evaluated - this can be seen by changing the view mode. " +
+      "The condition must be a boolean expression (either Bool, Equal, or LessThan), and the subexpressions must have the same type."
     override val difficulty: Int = 2
 
     override def checkFulfilled(expr: Expr): Boolean = {
