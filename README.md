@@ -5,6 +5,10 @@ The guide page can be found at [clickdeduce.rgh.dev/guide](https://clickdeduce.r
 
 To view the API docs, visit [clickdeduce.rgh.dev/api](https://clickdeduce.rgh.dev/api).
 
+## Demo
+
+![Demo](webapp/images/demo.gif)
+
 ## Development
 
 ### Requirements
