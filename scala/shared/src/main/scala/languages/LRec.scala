@@ -223,7 +223,9 @@ class LRec extends LLam {
   }
 
   protected class LRecParser extends LLamParser {
-    protected def rec: Parser[Rec] = "rec" ~> ident ~ ("(" ~> ident <~ ":") ~ typ ~ ")" ~ ":" ~ typ ~ "." ~ expr ^^ {
+    override protected def keywords: Set[String] = super.keywords + "rec"
+
+    private def rec: Parser[Rec] = "rec" ~> ident ~ ("(" ~> ident <~ ":") ~ typ ~ ")" ~ ":" ~ typ ~ "." ~ expr ^^ {
       case f ~ v ~ inType ~ _ ~ _ ~ outType ~ _ ~ e => Rec(f, v, inType, outType, e)
     }
 

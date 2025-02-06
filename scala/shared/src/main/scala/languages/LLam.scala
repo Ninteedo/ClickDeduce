@@ -274,7 +274,7 @@ class LLam extends LLet {
   }
 
   object IntToBoolFunctionTask extends Task {
-    override val name: String = "Define a function that converts Int to Bool"
+    override val name: String = "Condition that an integer is equal to 39"
     override val description: String =
       "Define a Lambda function that takes an Int and returns a Bool. " +
         "The function should return true if the input is exactly 39, and false otherwise. " +
@@ -361,7 +361,7 @@ class LLam extends LLet {
       "(?i)bool".r ^^ {_ => BoolType()} |
       "(" ~> typ <~ ")"
 
-    protected def applyExpr: Parser[Expr] = rep1(super.expr) ^^ {
+    private def applyExpr: Parser[Expr] = rep1(super.expr) ^^ {
       case first :: rest => rest.foldLeft(first)(Apply.apply)
       case Nil => throw new IllegalArgumentException("applyExpr: empty list")
     }

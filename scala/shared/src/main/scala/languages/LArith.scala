@@ -315,7 +315,7 @@ class LArith extends ClickDeduceLanguage {
 
     protected def primitive: Parser[Expr] = num | blank | "(" ~> expr <~ ")"
 
-    override def expr: Parser[Expr] = precedenceParser(primitive, exprOperators)
+    override def expr: Parser[Expr] = precedenceParser(primitive, exprOperators) | failure("Could not parse expression")
 
     protected def times: Parser[String] = "*" | "×"
 
