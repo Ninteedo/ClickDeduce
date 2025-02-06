@@ -133,13 +133,14 @@
   .phantom-indicator {
     display: none;
     content: url("webapp/images/phantom.svg");
+    background: none;
     position: absolute;
     top: 0;
     left: 0;
     width: 1.5em;
     height: 1.5em;
 
-    &.highlight {
+    &.visible {
       display: block;
     }
   }

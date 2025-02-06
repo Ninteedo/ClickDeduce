@@ -10,6 +10,7 @@ import {pauseFileDragAndDrop, resumeFileDragAndDrop} from "../saveLoad";
 import {getTreePathOfElement} from "../globals/elements";
 import {getCurrentLanguage, getRootSubtree} from "../treeManipulation";
 import {postProcessActionNew} from "../serverRequest";
+import {PhantomIndicator} from "./phantomIndicator";
 
 export class Subtree {
     private readonly element: HTMLDivElement;
@@ -30,7 +31,7 @@ export class Subtree {
     private readonly ruleAnnotation: RuleAnnotation;
 
     private readonly isPhantom: boolean;
-    private readonly phantomIndicator: HTMLDivElement | undefined;
+    private readonly phantomIndicator: PhantomIndicator | undefined;
 
     private readonly HIGHLIGHT_CLASS = 'highlight';
     private readonly PHANTOM_CLASS = 'phantom';
@@ -50,9 +51,8 @@ export class Subtree {
 
         this.isPhantom = this.getParent()?.isPhantom || this.element.classList.contains(this.PHANTOM_CLASS) || false;
         if (this.isPhantom) {
-            this.phantomIndicator = document.createElement('div');
-            this.phantomIndicator.classList.add('phantom-indicator');
-            this.element.appendChild(this.phantomIndicator);
+            this.phantomIndicator = new PhantomIndicator();
+            this.element.appendChild(this.phantomIndicator.element);
         }
 
         const literalInputs = Array.from(this.nodeElement.querySelectorAll("input.literal[data-tree-path]:not([disabled])"))
@@ -134,16 +134,12 @@ export class Subtree {
 
     addHighlight(): void {
         this.element.classList.add(this.HIGHLIGHT_CLASS);
-        if (this.phantomIndicator) {
-            this.phantomIndicator.classList.add(this.HIGHLIGHT_CLASS);
-        }
+        this.phantomIndicator?.show();
     }
 
     removeHighlight(): void {
         this.element.classList.remove(this.HIGHLIGHT_CLASS);
-        if (this.phantomIndicator) {
-            this.phantomIndicator.classList.remove(this.HIGHLIGHT_CLASS);
-        }
+        this.phantomIndicator?.hide();
     }
 
     hasHighlight(): boolean {
