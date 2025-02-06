@@ -1,6 +1,6 @@
 import {copyTreeNode, deleteTreeNode, pasteTreeNode} from "./actions";
-import {getActiveInputs, redo, undo} from "./treeManipulation";
-import {compareTreePaths, parseTreePath} from "./utils";
+import {getActiveInputs, getRootSubtree, redo, undo} from "./treeManipulation";
+import {compareTreePaths, hasClassOrParentHasClass, parseTreePath} from "./utils";
 import {AbstractTreeInput} from "./components/abstractTreeInput";
 import {getControlsDiv, getToggleControlsButton, getTreePathOfElement} from "./globals/elements";
 import {
@@ -9,8 +9,10 @@ import {
     getHighlightElement,
     openContextMenu
 } from "./components/contextMenu/contextMenu";
+import {LiteralInput} from "./components/literalInput";
+import {CustomExprSelector} from "./components/customExprSelector";
 
-export let nextFocusElement: AbstractTreeInput | null = null;
+let nextFocusElement: AbstractTreeInput | null = null;
 
 /**
  * Resets the global variables used by the interface code.
@@ -56,8 +58,12 @@ function globalHandleKeyDown(e: KeyboardEvent): void {
 
 document.addEventListener('keydown', globalHandleKeyDown);
 
-export function setNextFocusElement(input: AbstractTreeInput): void {
+export function setNextFocusElement(input: AbstractTreeInput | null): void {
     nextFocusElement = input;
+}
+
+export function getNextFocusElement(): AbstractTreeInput | null {
+    return nextFocusElement;
 }
 
 /**
@@ -82,9 +88,8 @@ export function handleTabPressedFromPath(treePath: string, change: number): void
     } else if (activeElemIndex >= getActiveInputs().length) {
         activeElemIndex = 0;
     }
-    nextFocusElement = getActiveInputs()[activeElemIndex];
-    nextFocusElement.focus();
-    nextFocusElement = null;
+    getActiveInputs()[activeElemIndex].focus();
+    setNextFocusElement(null);
 }
 
 /**
@@ -166,5 +171,31 @@ export function toggleControls(): void {
     } else {
         controls.classList.add(hiddenClass);
         button.innerHTML = '&#9660;';
+    }
+}
+
+export function findInputFromElement(element: HTMLElement): AbstractTreeInput | null {
+    if (!hasClassOrParentHasClass(element, 'subtree')) return null;
+
+    let curr: HTMLElement | null = element;
+    while (curr && !(curr.classList.contains('literal') || curr.classList.contains('dropdown-selector-container') || curr.classList.contains('subtree'))) {
+        curr = curr.parentElement;
+    }
+    if (!curr) return null;
+
+    if (curr.classList.contains('literal')) {
+        const treePath = curr.getAttribute('data-tree-path');
+        if (!treePath) return null;
+        return getRootSubtree()?.getAllInputs().find(input => input instanceof LiteralInput && input.getTreePath() === treePath) ?? null;
+    } else if (curr.classList.contains('dropdown-selector-container')) {
+        const treePath = curr.getAttribute('data-tree-path');
+        if (!treePath) return null;
+        return getRootSubtree()?.getAllInputs().find(input => input instanceof CustomExprSelector && input.getTreePath() === treePath) ?? null;
+    } else if (curr.classList.contains('subtree')) {
+        const treePath = curr.getAttribute('data-tree-path');
+        if (!treePath) return null;
+        return getRootSubtree()?.getChildFromPath(parseTreePath(treePath))?.getPrimaryInput() ?? null;
+    } else {
+        return null;
     }
 }

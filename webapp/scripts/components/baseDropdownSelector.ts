@@ -1,4 +1,4 @@
-import {handleTabPressed, setNextFocusElement} from "../interface";
+import {handleTabPressed} from "../interface";
 import {stripTooltip} from "../utils";
 import {AbstractTreeInput} from "./abstractTreeInput";
 
@@ -175,7 +175,6 @@ export class BaseDropdownSelector implements AbstractTreeInput {
     protected enterPressed(): void {
         const highlighted = this.getSelectedOption();
         if (highlighted) {
-            setNextFocusElement(this);
             this.selectOption(highlighted);
         }
     }

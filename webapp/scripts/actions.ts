@@ -1,6 +1,6 @@
 import {getSelectedLanguage, getSelectedMode} from "./utils";
 import {disableInputs, enableInputs, lastNodeString, reloadCurrentTree, updateTree} from "./treeManipulation";
-import {nextFocusElement, setFocusElement} from "./interface";
+import {getNextFocusElement, setFocusElement, setNextFocusElement} from "./interface";
 import {postProcessActionNew, postStartNodeBlankNew} from "./serverRequest";
 import {getNodeStringFromPath} from "./utility/parseNodeString";
 import {getTreePathOfElement} from "./globals/elements";
@@ -49,8 +49,8 @@ export function handleLiteralChanged(textInput: HTMLInputElement, doNotFocus: bo
     const treePath: string = getTreePathOfElement(textInput);
 
     let focusedTreePath: string | null = null;
-    if (nextFocusElement != null) {
-        focusedTreePath = nextFocusElement.getTreePath();
+    if (getNextFocusElement() != null) {
+        focusedTreePath = getNextFocusElement()!.getTreePath();
     }
 
     runAction("EditLiteralAction", treePath, literalValue, doNotFocus);
@@ -116,10 +116,12 @@ export function runAction(actionName: string, treePath: string, extraArgs: any[]
         const langName: string = getSelectedLanguage();
         const extraArgsClean: any[] = Array.isArray(extraArgs) ? extraArgs : [extraArgs]
         const [newNodeString, newHtml] = postProcessActionNew(langName, modeName, actionName, lastNodeString, treePath, extraArgsClean);
-        console.debug(newNodeString);
         updateTree(newHtml, newNodeString, modeName, langName, true);
 
-        if (!doNotFocus && (!document.activeElement || document.activeElement.tagName === "BODY")) {
+        if (getNextFocusElement()) {
+            setFocusElement(getNextFocusElement()!.getTreePath());
+            setNextFocusElement(null);
+        } else if (!doNotFocus && (!document.activeElement || document.activeElement.tagName === "BODY")) {
             setFocusElement(treePath);
         }
     } catch (e) {

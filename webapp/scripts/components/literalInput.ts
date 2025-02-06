@@ -1,4 +1,4 @@
-import {handleTabPressed, setNextFocusElement} from "../interface";
+import {findInputFromElement, handleTabPressed, setNextFocusElement} from "../interface";
 import {handleLiteralChanged} from "../actions";
 import {BaseDropdownSelector, NameDropdownOption} from "./baseDropdownSelector";
 import {AbstractTreeInput} from "./abstractTreeInput";
@@ -56,9 +56,8 @@ export class LiteralInput implements AbstractTreeInput {
 
     private setupEventListeners(): void {
         this.input.addEventListener('input', () => this.onInput());
-        this.input.addEventListener('change', () => this.handleInputChanged());
         this.input.addEventListener('focus', () => this.onFocused());
-        this.input.addEventListener('blur', () => this.onBlurred());
+        this.input.addEventListener('blur', event => this.onBlurred(event));
         this.input.addEventListener('keydown', event => this.handleKeydown(event));
     }
 
@@ -85,8 +84,11 @@ export class LiteralInput implements AbstractTreeInput {
 
     }
 
-    protected onBlurred(): void {
-        this.handleInputChanged(true);
+    protected onBlurred(event: FocusEvent | undefined = undefined): void {
+        if (event && event.relatedTarget instanceof HTMLElement) {
+            setNextFocusElement(findInputFromElement(event.relatedTarget));
+        }
+        this.handleInputChanged();
     }
 
     private handleInputChanged(doNotFocus: boolean = false): void {
@@ -187,13 +189,6 @@ class LiteralBoolInput extends LiteralInput {
     public override getValue(): string {
         return this.input.checked ? 'true' : 'false';
     }
-}
-
-export function createLiteralInputs(): LiteralInput[] {
-    return Array.from(document.querySelectorAll('input.literal[data-tree-path]:not([disabled])')).map((input: Element) => {
-        if (!(input instanceof HTMLInputElement)) throw new Error('Expected input to be an HTMLInputElement');
-        return createLiteralInput(input);
-    });
 }
 
 export function createLiteralInput(input: HTMLInputElement): LiteralInput {

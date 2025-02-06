@@ -112,13 +112,12 @@ export class Subtree {
     }
 
     private addClickListeners(): void {
-        const input = this.nodeElement.querySelector('input:not([disabled])');
-        if (input instanceof HTMLInputElement) {
+        const input = this.getPrimaryInput();
+        if (input) {
             this.element.addEventListener('click', event => {
                 if (!this.hasHighlight()) return;
                 event.preventDefault();
                 input.focus();
-                input.select();
             });
             this.element.querySelectorAll('input').forEach(input => {
                 input.addEventListener('click', event => {
@@ -126,6 +125,10 @@ export class Subtree {
                 });
             })
         }
+    }
+
+    public getPrimaryInput(): AbstractTreeInput | null {
+        return (this.inputs.length > 0 && this.inputs[0]) || null;
     }
 
     private disableInputs(): void {
