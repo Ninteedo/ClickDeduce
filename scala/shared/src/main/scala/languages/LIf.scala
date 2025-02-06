@@ -141,6 +141,42 @@ class LIf extends LArith {
       case Nil                      => Some(LessThan(defaultExpr, defaultExpr))
       case _                        => None
     }
+
+    override lazy val rulePreview: Option[RulePreview] = RulePreviewBuilder()
+      .addTypeCheckRule(
+        TypeCheckRuleBuilder()
+          .setConclusion(
+            MultiElement(TermCommons.e(1), MathElement.lessThan.spacesAround, TermCommons.e(2)),
+            BoolType().toText
+          )
+          .addAssumption(TermCommons.e(1), Symbols.tau)
+          .addAssumption(TermCommons.e(2), Symbols.tau)
+      )
+      .addEvaluationRule(
+        EvalRuleBuilder()
+          .setConclusion(
+            MultiElement(TermCommons.e(1), MathElement.lessThan.spacesAround, TermCommons.e(2)),
+            TextElement("true")
+          )
+          .addAssumption(TermCommons.e(1), TermCommons.v(1))
+          .addAssumption(TermCommons.e(2), TermCommons.v(2))
+          .addAssumption(
+            EvalRulePart(MultiElement(TermCommons.v(1), MathElement.lessThan.spacesAround, TermCommons.v(2)))
+          )
+      )
+      .addEvaluationRule(
+        EvalRuleBuilder()
+          .setConclusion(
+            MultiElement(TermCommons.e(1), MathElement.lessThan.spacesAround, TermCommons.e(2)),
+            TextElement("false")
+          )
+          .addAssumption(TermCommons.e(1), TermCommons.v(1))
+          .addAssumption(TermCommons.e(2), TermCommons.v(2))
+          .addAssumption(
+            EvalRulePart(MultiElement(TermCommons.v(1), MathElement.greaterThanEqual.spacesAround, TermCommons.v(2)))
+          )
+      )
+      .buildOption
   }
 
   private def formatIfThenElse(cond: ConvertableText, thenExpr: ConvertableText, elseExpr: ConvertableText): ConvertableText =

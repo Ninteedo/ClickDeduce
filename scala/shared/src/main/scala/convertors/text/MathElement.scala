@@ -24,4 +24,5 @@ object MathElement {
   val colon: ConvertableText = TextElement(":")
   val period: ConvertableText = TextElement(".")
   val lessThan: ConvertableText = MathElement("<")
+  val greaterThanEqual: ConvertableText = MathElement("≥")
 }
