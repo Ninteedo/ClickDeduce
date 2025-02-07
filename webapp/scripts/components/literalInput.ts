@@ -78,10 +78,14 @@ export class LiteralInput implements AbstractTreeInput {
         if (evt.key === 'Tab') {
             handleTabPressed(evt);
         } else if (evt.key === 'Enter') {
-            setNextFocusElement(this);
             evt.preventDefault();
-            handleLiteralChanged(this.input);
+            this.enterPressed();
         }
+    }
+
+    protected enterPressed(): void {
+        setNextFocusElement(this);
+        this.handleInputChanged();
     }
 
     protected onFocused(): void {
@@ -206,6 +210,11 @@ class LiteralBoolInput extends LiteralInput {
     private updateImage(): void {
         const svg = this.input.checked ? TrueSvg : FalseSvg;
         this.input.style.content = `url("${svg}")`;
+    }
+
+    protected override enterPressed() {
+        this.input.checked = !this.input.checked;
+        super.enterPressed();
     }
 }
 

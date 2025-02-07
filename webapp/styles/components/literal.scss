@@ -3,8 +3,11 @@ div.literal-checkbox-container {
     //background-size: 100% 100%;
     background-repeat: no-repeat;
     background-size: contain;
-    max-width: 1em;
-    max-height: 1em;
+    //max-width: 1em;
+    width: 1.4rem;
+    height: 1.4rem;
+    aspect-ratio: 1/1;
+    margin-right: 0;
 
     &::before {
       opacity: 0;
