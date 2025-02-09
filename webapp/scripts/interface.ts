@@ -1,7 +1,6 @@
 import {copyTreeNode, deleteTreeNode, pasteTreeNode} from "./actions";
-import {getActiveInputs, redo, undo} from "./treeManipulation";
+import {redo, undo} from "./treeManipulation";
 import {compareTreePaths, parseTreePath} from "./utils";
-import {AbstractTreeInput} from "./components/abstractTreeInput";
 import {
     getControlsDiv,
     getToggleControlsButton,
@@ -14,15 +13,15 @@ import {
     getHighlightElement,
     openContextMenu
 } from "./components/contextMenu/contextMenu";
-
-let nextFocusPath: string | null = null;
+import {setNextFocusTreePath} from "./focus";
+import {getActiveInputs} from "./activeInputs";
 
 /**
  * Resets the global variables used by the interface code.
  */
 export function resetInterfaceGlobals(): void {
     clearContextMenuSelectedElement();
-    nextFocusPath = null;
+    setNextFocusTreePath(null);
     setupValueTypeColourHighlightingCheckbox();
 
     document.addEventListener('contextmenu', openContextMenu);
@@ -60,44 +59,6 @@ function globalHandleKeyDown(e: KeyboardEvent): void {
 }
 
 document.addEventListener('keydown', globalHandleKeyDown);
-
-export function setNextFocusElement(input: AbstractTreeInput  | null): void {
-    nextFocusPath = input?.getTreePath() ?? null;
-}
-
-export function setNextFocusTreePath(path: string | null): void {
-    nextFocusPath = path;
-}
-
-export function getNextFocusTreePath(): string | null {
-    return nextFocusPath;
-}
-
-/**
- * Changes the focus to the next input element when TAB is pressed.
- * @param e the keydown event
- */
-export function handleTabPressed(e: KeyboardEvent): void {
-    if (e.key === 'Tab' && (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement)) {
-        e.preventDefault();
-        const targetOuterPath: string = getTreePathOfElement(e.target);
-        e.target.dispatchEvent(new Event('blur'));
-        handleTabPressedFromPath(targetOuterPath, e.shiftKey ? -1 : 1);
-    }
-}
-
-export function handleTabPressedFromPath(treePath: string, change: number): void {
-    const activeInputPaths: string[] = getActiveInputs().map(input => input.getTreePath());
-    let activeElemIndex = activeInputPaths.indexOf(treePath);
-    activeElemIndex += change;
-    if (activeElemIndex < 0) {
-        activeElemIndex = getActiveInputs().length - 1;
-    } else if (activeElemIndex >= getActiveInputs().length) {
-        activeElemIndex = 0;
-    }
-    getActiveInputs()[activeElemIndex].focus();
-    setNextFocusElement(null);
-}
 
 /**
  * Clears the highlight from the currently highlighted element.

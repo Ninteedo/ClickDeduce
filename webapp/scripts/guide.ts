@@ -1,6 +1,6 @@
-import {getCurrentLanguage} from "./treeManipulation";
 // @ts-ignore
 import DemoGif from "../images/demo.gif";
+import {getCurrentLanguage} from "./langSelector";
 
 export function setupGuide(): void {
     console.debug("Setting up guide");

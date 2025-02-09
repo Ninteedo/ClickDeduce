@@ -1,13 +1,8 @@
-import {
-    getCurrentLanguage,
-    lastNodeString,
-    loadTreeFromString,
-    setCurrentLanguage,
-    setSelectedMode
-} from "./treeManipulation";
+import {lastNodeString, loadTreeFromString, setSelectedMode} from "./treeManipulation";
 import {getSelectedMode} from "./utils";
 import {displayError} from "./components/displayError";
 import {markHasUsedLangSelector} from "./attention";
+import {getCurrentLanguage, setCurrentLanguage} from "./langSelector";
 
 const fileInput: HTMLInputElement = document.createElement('input');
 

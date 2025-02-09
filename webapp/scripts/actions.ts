@@ -1,11 +1,12 @@
 import {getSelectedLanguage, getSelectedMode} from "./utils";
-import {disableInputs, enableInputs, lastNodeString, reloadCurrentTree, updateTree} from "./treeManipulation";
-import {getNextFocusTreePath, setFocusElement, setNextFocusElement} from "./interface";
+import {lastNodeString, reloadCurrentTree, updateTree} from "./treeManipulation";
 import {postProcessActionNew, postStartNodeBlankNew} from "./serverRequest";
 import {getNodeStringFromPath} from "./utility/parseNodeString";
 import {getTreePathOfElement} from "./globals/elements";
 import {displayError} from "./components/displayError";
 import {centerTree} from "./components/panzoom";
+import {getNextFocusTreePath, setFocusElement, setNextFocusElement} from "./focus";
+import {disableInputs, enableInputs} from "./activeInputs";
 
 let copyCache: string | null = null;
 

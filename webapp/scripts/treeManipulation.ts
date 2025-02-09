@@ -1,22 +1,14 @@
 import {runAction} from "./actions";
-import {getLangSelectorNew} from "./serverRequest";
-import {CustomExprSelector} from "./components/customExprSelector";
-import {updateTaskList} from "./tasks";
-import {LiteralInput} from "./components/literalInput";
+import {updateTaskList} from "./components/tasks/taskManager";
 import {resumeFileDragAndDrop, setupFileDragAndDrop, setupFileInput} from "./saveLoad";
-import {AbstractTreeInput} from "./components/abstractTreeInput";
-import {markHasUsedLangSelector} from "./attention";
 import TreeHistoryManager from "./components/TreeHistoryManager";
 import {getFirstSubtree, getRedoButton, getTree, getUndoButton} from "./globals/elements";
 import {isAutoZoomEnabled, unlockPanZoom, zoomToFit} from "./components/panzoom";
 import {Subtree} from "./components/subtree";
+import {loadLangSelector, setCurrentLanguage} from "./langSelector";
+import {modeRadios, setModeRadios, updateActiveInputsList} from "./activeInputs";
 
 let treeHistoryManager: TreeHistoryManager;
-
-let modeRadios: HTMLInputElement[];
-let langSelector: HTMLSelectElement;
-
-let activeInputs: AbstractTreeInput[] = [];
 
 let rootSubtree: Subtree | null = null;
 
@@ -28,43 +20,20 @@ export let lastNodeString: string | null = null;
 export function resetTreeManipulation(): void {
     treeHistoryManager = new TreeHistoryManager(getUndoButton(), getRedoButton());
 
-    activeInputs = [];
     lastNodeString = null;
     rootSubtree = null;
 
-    modeRadios = Array.from(document.querySelectorAll('input[name="mode"]'));
+    setModeRadios(Array.from(document.querySelectorAll('input[name="mode"]')));
     for (const radio of modeRadios) {
         radio.addEventListener('change', () => {
             runAction("IdentityAction", "");
         });
     }
 
-    langSelector = loadLangSelector();
+    loadLangSelector();
 
     setupFileInput();
     setupFileDragAndDrop();
-}
-
-/**
- * Loads the language selector HTML from the server and adds it to the DOM.
- */
-function loadLangSelector(): HTMLSelectElement {
-    const langSelectorContainer: HTMLElement | null = document.getElementById('lang-selector-div');
-
-    if (!(langSelectorContainer instanceof HTMLDivElement)) {
-        throw new Error("Could not find lang-selector-div");
-    }
-
-    langSelectorContainer.innerHTML = getLangSelectorNew();
-    const langSelector: HTMLElement | null = document.getElementById('lang-selector');
-    if (!(langSelector instanceof HTMLSelectElement)) throw new Error('Language selector not found');
-    langSelector.selectedIndex = 0;
-    langSelector.addEventListener('change', () => {
-        markHasUsedLangSelector();
-        runAction("IdentityAction", "");
-    });
-
-    return langSelector;
 }
 
 
@@ -119,30 +88,6 @@ function makeOrphanedInputsReadOnly(): void {
 }
 
 /**
- * Updates the list of inputs which the user can use.
- *
- * Also adds event listeners to the inputs.
- */
-function updateActiveInputsList(): void {
-    activeInputs = getRootSubtree()!.getAllInputs();
-    activeInputs.sort((a, b) => {
-        return a.getTreePath().localeCompare(b.getTreePath(), undefined, {numeric: true, sensitivity: 'base'});
-    });
-}
-
-export function getActiveInputs(): AbstractTreeInput[] {
-    return activeInputs;
-}
-
-export function getLiteralInputs(): LiteralInput[] {
-    return getActiveInputs().filter(input => input instanceof LiteralInput) as LiteralInput[];
-}
-
-export function getExprSelectors(): CustomExprSelector[] {
-    return getActiveInputs().filter(input => input instanceof CustomExprSelector) as CustomExprSelector[];
-}
-
-/**
  * Undoes the last change to the tree.
  */
 export function undo(): void {
@@ -174,59 +119,10 @@ export function setSelectedMode(mode: string): void {
     });
 }
 
-let reEnableInputsId: number = 0;
-
-function incrementReEnableInputsId(): void {
-    reEnableInputsId = (reEnableInputsId + 1) % 1000;
-}
-
-export function disableInputs(): void {
-    activeInputs.forEach(input => input.disable());
-    modeRadios.forEach(radio => radio.setAttribute('disabled', "true"));
-    langSelector.setAttribute('disabled', "true");
-    getTree().querySelectorAll('.expr-selector-button').forEach(button => button.setAttribute('disabled', "true"));
-
-    // re-enable inputs after 5 seconds
-    incrementReEnableInputsId();
-    const currentId = reEnableInputsId;
-    setTimeout(() => {
-        if (currentId === reEnableInputsId) {
-            enableInputs();
-        }
-    }, 5000);
-}
-
-export function enableInputs(): void {
-    incrementReEnableInputsId();
-    activeInputs.forEach(input => input.enable());
-    modeRadios.forEach(radio => {
-        radio.removeAttribute('disabled');
-    });
-    langSelector.removeAttribute('disabled');
-    getTree().querySelectorAll('.expr-selector-button').forEach(button => button.removeAttribute('disabled'));
-    resumeFileDragAndDrop();
-    unlockPanZoom();
-}
-
 export function loadTreeFromString(nodeString: string): void {
     lastNodeString = nodeString;
     runAction("IdentityAction", "");
     zoomToFit();
-}
-
-export function getCurrentLanguage(): string {
-    if (!langSelector) {
-        langSelector = document.getElementById('lang-selector') as HTMLSelectElement;
-    }
-    return langSelector.value;
-}
-
-export function setCurrentLanguage(lang: string | number): void {
-    if (typeof lang === 'number') {
-        langSelector.selectedIndex = lang;
-    } else {
-        langSelector.value = lang;
-    }
 }
 
 export function getCurrentNodeString(): string | null {

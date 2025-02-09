@@ -1,4 +1,4 @@
-import {handleTabPressed} from "../interface";
+import {handleTabPressed} from "../focus";
 import {stripTooltip} from "../utils";
 import {AbstractTreeInput} from "./abstractTreeInput";
 
@@ -50,7 +50,7 @@ export class BaseDropdownSelector implements AbstractTreeInput {
 
     protected setupListeners(): void {
         this.input.addEventListener('input', () => this.updateDropdown());
-        this.input.addEventListener('keydown', (evt) => this.handleKeydown(evt));
+        this.input.addEventListener('keydown', event => this.handleKeydown(event));
         this.input.addEventListener('focus', () => this.showDropdown());
         this.input.addEventListener('blur', () => this.handleBlur());
 

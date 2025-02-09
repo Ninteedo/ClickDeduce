@@ -1,11 +1,12 @@
 import {getSelectedMode} from "../utils";
-import {getCurrentLanguage, getCurrentNodeString} from "../treeManipulation";
+import {getCurrentNodeString} from "../treeManipulation";
 import {runAction} from "../actions";
 import {BaseDropdownSelector, DropdownOption, NameDropdownOption} from "./baseDropdownSelector";
 import {getTree, getTreePathOfElement} from "../globals/elements";
 import {getExprParsePreviewHtml} from "../serverRequest";
 import {RulePreview} from "./rulePreview";
 import {ParsePreview} from "./parsePreview";
+import {getCurrentLanguage} from "../langSelector";
 
 const UP_ARROW = '&#9650;';
 const DOWN_ARROW = '&#9660;';

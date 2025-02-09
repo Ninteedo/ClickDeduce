@@ -1,7 +1,7 @@
 import '../styles/main.sass';
 import {doStartNodeBlank, exampleLiteralChanged, handleLiteralChanged, resetCopyCache, startNodeBlank} from "./actions";
 import {redo, resetTreeManipulation, undo, updateTextInputWidth} from "./treeManipulation";
-import {handleTabPressed, resetInterfaceGlobals, toggleControls} from "./interface";
+import {resetInterfaceGlobals, toggleControls} from "./interface";
 import {loadImages} from "./imageLoading";
 import {setupExampleSelector} from "./components/customExprSelector";
 import {loadTree, saveTree} from "./saveLoad";
@@ -22,6 +22,7 @@ import {setUpPanZoom, zoomToFit} from "./components/panzoom";
 import {closeExportOutput, copyExportOutput, exportLaTeX} from "./components/latexOutput";
 import {showShortcutsDialog} from "./components/shortcutsModal";
 import {setupGuide} from "./guide";
+import {handleTabPressed} from "./focus";
 
 /**
  * Sets up the global variables and initialises the panzoom instance.

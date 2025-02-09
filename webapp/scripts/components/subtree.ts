@@ -1,6 +1,5 @@
 import {getSelectedMode, parseTreePath} from "../utils";
 import {getContextMenuSelectedElement} from "./contextMenu/contextMenu";
-import {createLiteralInput} from "./literalInput";
 import {createExprSelector, replaceDisabledSelectInputs} from "./customExprSelector";
 import {AbstractTreeInput} from "./abstractTreeInput";
 import {RuleAnnotation} from "./ruleAnnotation";
@@ -8,9 +7,11 @@ import {copyTreeNode, deleteTreeNode, pasteTreeNode, runAction} from "../actions
 import {lockPanZoom, unlockPanZoom} from "./panzoom";
 import {pauseFileDragAndDrop, resumeFileDragAndDrop} from "../saveLoad";
 import {getTreePathOfElement} from "../globals/elements";
-import {getCurrentLanguage, getRootSubtree} from "../treeManipulation";
+import {getRootSubtree} from "../treeManipulation";
 import {postProcessActionNew} from "../serverRequest";
 import {PhantomIndicator} from "./phantomIndicator";
+import {createLiteralInput} from "./literalInput/createLiteralInput";
+import {getCurrentLanguage} from "../langSelector";
 
 export class Subtree {
     private readonly element: HTMLDivElement;

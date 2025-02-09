@@ -1,10 +1,11 @@
 import {Subtree} from "./subtree";
 import {getExprParsePreviewHtml, getExprText} from "../serverRequest";
-import {getCurrentLanguage, getCurrentNodeString} from "../treeManipulation";
+import {getCurrentNodeString} from "../treeManipulation";
 import {runAction} from "../actions";
 import {ParsePreview} from "./parsePreview";
 import {getSelectedMode} from "../utils";
-import {handleTabPressedFromPath} from "../interface";
+import {getCurrentLanguage} from "../langSelector";
+import {handleTabPressedFromPath} from "../focus";
 
 export class SubtreeEditor {
     private readonly subtree: Subtree;

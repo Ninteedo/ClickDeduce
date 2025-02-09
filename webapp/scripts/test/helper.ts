@@ -2,12 +2,12 @@ import fs from "fs";
 import path from "path";
 import {handleLiteralChanged, startNodeBlank} from "../actions";
 import {CustomExprSelector} from "../components/customExprSelector";
-import {getExprSelectors} from "../treeManipulation";
 import {vitest} from "vitest";
 import {DropdownOption} from "../components/baseDropdownSelector";
 import {getLangSelector, getTreePathOfElement} from "../globals/elements";
 import {getActiveContextMenu} from "../components/contextMenu/contextMenu";
 import {SubtreeContextMenu} from "../components/contextMenu/SubtreeContextMenu";
+import {getExprSelectors} from "../activeInputs";
 
 export function slightDelay(delay: number = 10): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, delay));

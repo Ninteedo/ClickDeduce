@@ -1,17 +1,12 @@
-import {checkTaskFulfilled, getTasksList} from "./serverRequest";
-import {markHasCompletedFirstLangTasks} from "./attention";
-import {getLangSelector} from "./globals/elements";
+import {checkTaskFulfilled, getTasksList} from "../../serverRequest";
+import {markHasCompletedFirstLangTasks} from "../../attention";
+import {getLangSelector} from "../../globals/elements";
+import {Task} from "./task";
 
 const FULFILLED_CLASS = "fulfilled";
 const TASK_CLASS = "task";
 const DESCRIPTION_CLASS = "description";
 const HIDDEN_CLASS = "hidden";
-
-export interface Task {
-    name: string;
-    description: string;
-    difficulty: number;
-}
 
 export function updateTaskList(lang: string, nodeString: string): void {
     getTaskManager().updateTaskList(lang, nodeString);

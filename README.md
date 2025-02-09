@@ -26,6 +26,14 @@ sbt update
 npm install
 ```
 
+### Development Server
+
+To start the development server, run the following command:
+
+```bash
+npm run dev
+```
+
 ### Project Layout
 
 Project source files are present in [the shared Scala code directory](scala/shared/src/main/scala) for the Scala code

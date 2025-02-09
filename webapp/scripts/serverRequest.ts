@@ -9,7 +9,8 @@ import {
     processAction,
     startNodeBlank
 } from "scalajs:main.js";
-import {Task} from "./tasks";
+
+import {Task} from "./components/tasks/task";
 
 let actionHistory: {
     langName: string;

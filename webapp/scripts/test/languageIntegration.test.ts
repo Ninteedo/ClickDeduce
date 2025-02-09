@@ -13,8 +13,8 @@ import {
     slightDelay
 } from "./helper";
 import {CustomExprSelector} from "../components/customExprSelector";
-import {getExprSelectors} from "../treeManipulation";
 import {getLangSelector, getTree, getUndoButton} from "../globals/elements";
+import {getExprSelectors} from "../activeInputs";
 
 const indexHtml = loadIndexHtmlTemplate();
 

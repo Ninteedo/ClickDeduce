@@ -1,5 +1,6 @@
 import {getRulePreview} from "../serverRequest";
-import {getCurrentLanguage} from "../treeManipulation";
+
+import {getCurrentLanguage} from "../langSelector";
 
 export class RulePreview {
     private readonly previewDiv: HTMLDivElement;

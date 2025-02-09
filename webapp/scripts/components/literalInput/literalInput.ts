@@ -1,12 +1,13 @@
-import {findTreePathFromElement, handleTabPressed, setNextFocusElement, setNextFocusTreePath} from "../interface";
-import {handleLiteralChanged} from "../actions";
-import {BaseDropdownSelector, NameDropdownOption} from "./baseDropdownSelector";
-import {AbstractTreeInput} from "./abstractTreeInput";
-import {getTree, getTreePathOfElement} from "../globals/elements";
+import {findTreePathFromElement} from "../../interface";
+import {handleLiteralChanged} from "../../actions";
+import {AbstractTreeInput} from "../abstractTreeInput";
+import {getTree, getTreePathOfElement} from "../../globals/elements";
 // @ts-ignore
-import TrueSvg from '../../images/true.svg';
+import TrueSvg from '../../../images/true.svg';
 // @ts-ignore
-import FalseSvg from '../../images/false.svg';
+import FalseSvg from '../../../images/false.svg';
+import {LiteralPlaceholder} from "./literalPlaceholder";
+import {handleTabPressed, setNextFocusElement, setNextFocusTreePath} from "../../focus";
 
 export class LiteralInput implements AbstractTreeInput {
     protected readonly input: HTMLInputElement;
@@ -79,11 +80,11 @@ export class LiteralInput implements AbstractTreeInput {
             handleTabPressed(evt);
         } else if (evt.key === 'Enter') {
             evt.preventDefault();
-            this.enterPressed();
+            this.submit();
         }
     }
 
-    protected enterPressed(): void {
+    public submit(): void {
         setNextFocusElement(this);
         this.handleInputChanged();
     }
@@ -137,95 +138,5 @@ export class LiteralInput implements AbstractTreeInput {
         const div = document.createElement('div');
         div.innerHTML = html;
         return div;
-    }
-}
-
-class LiteralPlaceholder {
-    private readonly placeholder: HTMLDivElement;
-    private readonly originInput: LiteralInput;
-
-    constructor(placeholder: HTMLDivElement, originInput: LiteralInput) {
-        this.placeholder = placeholder;
-        this.originInput = originInput;
-
-        this.setupEventListeners();
-    }
-
-    private setupEventListeners(): void {
-        this.placeholder.addEventListener('mouseover', () => this.originInput.addGuideHighlight());
-        this.placeholder.addEventListener('mouseout', () => this.originInput.removeGuideHighlight());
-    }
-
-    public setContent(content: HTMLElement): void {
-        this.placeholder.innerHTML = '';
-        this.placeholder.appendChild(content);
-    }
-}
-
-class LiteralIntInput extends LiteralInput {
-    protected override onInit() {
-        this.input.type = 'text';
-    }
-
-    protected override onInput(): void {
-        super.onInput();
-        const original = this.getValue();
-        const onlyDigits = original.replace(/[^0-9]/g, '');
-        if (original.startsWith('-')) {
-            this.setValue('-' + onlyDigits);
-        } else {
-            this.setValue(onlyDigits);
-        }
-    }
-}
-
-class LiteralIdentifierLookupInput extends LiteralInput {
-    constructor(input: HTMLInputElement) {
-        super(input);
-        const container = input.parentElement as HTMLDivElement;
-
-        new BaseDropdownSelector(
-            container,
-            container.querySelector('input')!,
-            container.querySelector('div.dropdown')!,
-            Array.from(container.querySelectorAll('div.dropdown li')).map(option => new NameDropdownOption(option as HTMLLIElement))
-        );
-    }
-}
-
-class LiteralBoolInput extends LiteralInput {
-    constructor(input: HTMLInputElement) {
-        super(input);
-        this.input.addEventListener('change', () => {
-            this.updateImage();
-            this.handleInputChanged();
-        });
-        this.updateImage();
-    }
-
-    public override getValue(): string {
-        return this.input.checked ? 'true' : 'false';
-    }
-
-    private updateImage(): void {
-        const svg = this.input.checked ? TrueSvg : FalseSvg;
-        this.input.style.content = `url("${svg}")`;
-    }
-
-    protected override enterPressed() {
-        this.input.checked = !this.input.checked;
-        super.enterPressed();
-    }
-}
-
-export function createLiteralInput(input: HTMLInputElement): LiteralInput {
-    if (input.classList.contains('identifier-lookup')) {
-        return new LiteralIdentifierLookupInput(input);
-    } else if (input.classList.contains('integer')) {
-        return new LiteralIntInput(input);
-    } else if (input.type === 'checkbox') {
-        return new LiteralBoolInput(input);
-    } else {
-        return new LiteralInput(input);
     }
 }

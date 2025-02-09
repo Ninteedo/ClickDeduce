@@ -20,8 +20,8 @@ import {
     getActionHistory,
     getStartNodeBlankHistory
 } from "../serverRequest";
-import {getExprSelectors, getLiteralInputs} from "../treeManipulation";
 import {getUndoButton} from "../globals/elements";
+import {getExprSelectors, getLiteralInputs} from "../activeInputs";
 
 const indexHtml = loadIndexHtmlTemplate();
 
