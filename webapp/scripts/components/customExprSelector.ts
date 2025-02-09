@@ -152,6 +152,14 @@ export class CustomExprSelector extends BaseDropdownSelector {
     private updateWidth(): void {
         this.input.style.width = `max(${this.input.placeholder.length + 1}ch, ${this.input.value.length + 1}ch)`;
     }
+
+    public addGuideHighlight(): void {
+        this.container.classList.add('guide-highlight');
+    }
+
+    public removeGuideHighlight(): void {
+        this.container.classList.remove('guide-highlight');
+    }
 }
 
 class ParseDropdownOption extends DropdownOption {
@@ -205,7 +213,7 @@ export function createExprSelector(select: HTMLSelectElement): CustomExprSelecto
     return setupTermSelector(replacement);
 }
 
-export function replaceDisabledSelectInputs(element: HTMLElement | undefined = undefined): void {
+export function replaceDisabledSelectInputs(element: HTMLElement | undefined = undefined, exprSelector: CustomExprSelector): void {
     if (!element) {
         element = getTree();
     }
@@ -214,14 +222,21 @@ export function replaceDisabledSelectInputs(element: HTMLElement | undefined = u
         'select.expr-dropdown:disabled, select.type-dropdown:disabled, .phantom select.expr-dropdown, .phantom select.type-dropdown'
     );
 
-    function createDisabledSelectHTML(select: HTMLSelectElement, treePath: string): string {
+    function createDisabledSelectHTML(select: HTMLSelectElement, treePath: string): HTMLDivElement {
         const kind = select.classList.contains('expr-dropdown') ? 'Expression' : 'Type';
-        return `<div class="expr-selector-placeholder" data-tree-path="${treePath}">Unspecified ${kind}</div>`;
+        const placeholder = document.createElement('div');
+        placeholder.classList.add('expr-selector-placeholder');
+        placeholder.setAttribute('data-tree-path', treePath);
+        placeholder.innerText = `Unspecified ${kind}`;
+        return placeholder;
     }
 
     selectInputs.forEach(select => {
         const treePath = getTreePathOfElement(select);
-        select.outerHTML = createDisabledSelectHTML(select, treePath);
+        if (treePath !== exprSelector.getTreePath()) return;
+        const replacement = createDisabledSelectHTML(select, treePath);
+        select.replaceWith(replacement);
+        new ExprSelectorPlaceholder(replacement, exprSelector);
     });
 }
 
@@ -278,4 +293,27 @@ class ExampleExprSelector extends CustomExprSelector {
 
 export function setupExampleSelector(termSelectorContainer: HTMLDivElement): void {
     new ExampleExprSelector(termSelectorContainer, document.getElementById("expr-selector-output") as HTMLDivElement);
+}
+
+class ExprSelectorPlaceholder {
+    private readonly placeholder: HTMLDivElement;
+    private readonly origin: CustomExprSelector;
+
+    constructor(placeholder: HTMLDivElement, origin: CustomExprSelector) {
+        this.placeholder = placeholder;
+        this.origin = origin;
+
+        this.setupEventListeners();
+        this.placeholder.classList.add('placeholder');
+    }
+
+    private setupEventListeners(): void {
+        this.placeholder.addEventListener('mouseover', () => this.origin.addGuideHighlight());
+        this.placeholder.addEventListener('mouseout', () => this.origin.removeGuideHighlight());
+        this.placeholder.addEventListener('click', event => {
+            event.preventDefault();
+            event.stopPropagation();
+            this.origin.focus()
+        });
+    }
 }

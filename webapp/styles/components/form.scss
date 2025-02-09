@@ -20,11 +20,6 @@ form {
     color: colours.$disabled-input-text;
     cursor: not-allowed;
   }
-
-  &.guide-highlight {
-    background-color: colours.$highlighted-input;
-    color: colours.$highlighted-input-text;
-  }
 }
 
 input[type='text'] {

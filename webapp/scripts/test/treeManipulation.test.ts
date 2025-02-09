@@ -223,7 +223,7 @@ describe("phantom inputs are made read-only and disabled", () => {
 
     test("phantom inputs are made read-only and disabled", () => {
         const literalInputs = document.querySelectorAll(literalSelector);
-        expect(literalInputs).toHaveLength(2);
+        expect(literalInputs).toHaveLength(1);
         literalInputs.forEach(input => {
             expect(input.getAttributeNames()).toContain('readonly');
             expect(input.getAttributeNames()).toContain('disabled');

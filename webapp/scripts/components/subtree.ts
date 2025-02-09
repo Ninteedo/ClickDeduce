@@ -1,6 +1,6 @@
 import {getSelectedMode, parseTreePath} from "../utils";
 import {getContextMenuSelectedElement} from "./contextMenu/contextMenu";
-import {createExprSelector, replaceDisabledSelectInputs} from "./customExprSelector";
+import {createExprSelector, CustomExprSelector, replaceDisabledSelectInputs} from "./customExprSelector";
 import {AbstractTreeInput} from "./abstractTreeInput";
 import {RuleAnnotation} from "./ruleAnnotation";
 import {copyTreeNode, deleteTreeNode, pasteTreeNode, runAction} from "../actions";
@@ -61,6 +61,9 @@ export class Subtree {
         const exprSelectors = Array.from(
             this.nodeElement.querySelectorAll("select.expr-dropdown[data-tree-path]:not([disabled]), select.type-dropdown[data-tree-path]:not([disabled])"))
             .map(select => createExprSelector(select as HTMLSelectElement));
+        exprSelectors.forEach(selector => {
+            this.replaceExprSelectorPlaceholders(selector);
+        })
         this.inputs = (literalInputs as AbstractTreeInput[]).concat(exprSelectors);
 
         this.children = [];
@@ -94,7 +97,6 @@ export class Subtree {
         if (this.isPhantom) {
             this.disableInputs();
         }
-        replaceDisabledSelectInputs(this.nodeElement);
         this.setupDragAndDrop();
     }
 
@@ -128,6 +130,11 @@ export class Subtree {
                 });
             })
         }
+    }
+
+    private replaceExprSelectorPlaceholders(selector: CustomExprSelector): void {
+        replaceDisabledSelectInputs(this.nodeElement, selector);
+        this.getParent()?.replaceExprSelectorPlaceholders(selector);
     }
 
     public getPrimaryInput(): AbstractTreeInput | null {

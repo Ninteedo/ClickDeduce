@@ -4,13 +4,5 @@
 
 div.expr-selector-container {
   display: inline-flex !important;
-}
-
-div.expr-selector-placeholder {
-  border: colours.$input-outline solid 1px;
-  border-radius: 3px;
-  padding: 0 2px;
-  background-color: colours.$disabled-input;
-  color: colours.$disabled-input-text;
-  cursor: not-allowed;
+  border-radius: 0.2rem;
 }
