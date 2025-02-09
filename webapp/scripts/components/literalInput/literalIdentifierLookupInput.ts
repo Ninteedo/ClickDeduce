@@ -1,5 +1,6 @@
 import {BaseDropdownSelector, DropdownOption, NameDropdownOption} from "../baseDropdownSelector";
 import {LiteralInput} from "./literalInput";
+import {ClassDict} from "../../globals/classDict";
 
 class IdentifierDropdownSelector extends BaseDropdownSelector {
     private readonly identInput: LiteralIdentifierLookupInput;
@@ -29,8 +30,9 @@ export class LiteralIdentifierLookupInput extends LiteralInput {
         new IdentifierDropdownSelector(
             container,
             container.querySelector('input')!,
-            container.querySelector('div.dropdown')!,
-            Array.from(container.querySelectorAll('div.dropdown li')).map(option => new NameDropdownOption(option as HTMLLIElement)),
+            container.querySelector(`div.${ClassDict.DROPDOWN}`)!,
+            Array.from(container.querySelectorAll(`div.${ClassDict.DROPDOWN} li`))
+                .map(option => new NameDropdownOption(option as HTMLLIElement)),
             this
         );
     }

@@ -6,6 +6,7 @@ import {ParsePreview} from "./parsePreview";
 import {getSelectedMode} from "../utils";
 import {getCurrentLanguage} from "../langSelector";
 import {handleTabPressedFromPath} from "../focus";
+import {ClassDict} from "../globals/classDict";
 
 export class SubtreeEditor {
     private readonly subtree: Subtree;
@@ -19,7 +20,7 @@ export class SubtreeEditor {
 
         const exprText = getExprText(getCurrentLanguage(), getCurrentNodeString()!, this.subtree.getTreePathString());
         this.container = document.createElement('div');
-        this.container.classList.add('subtree-expr-editor');
+        this.container.classList.add(ClassDict.SUBTREE_EXPR_EDITOR);
 
         this.input = document.createElement('input');
         this.input.type = 'text';

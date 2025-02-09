@@ -7,6 +7,7 @@ import {getExprParsePreviewHtml} from "../serverRequest";
 import {RulePreview} from "./rulePreview";
 import {ParsePreview} from "./parsePreview";
 import {getCurrentLanguage} from "../langSelector";
+import {ClassDict} from "../globals/classDict";
 
 const UP_ARROW = '&#9650;';
 const DOWN_ARROW = '&#9660;';
@@ -19,7 +20,7 @@ export class CustomExprSelector extends BaseDropdownSelector {
     protected readonly parsePreview: ParsePreview | undefined;
 
     constructor(container: HTMLDivElement, enableParsing: boolean = true) {
-        const dropdown = container.querySelector('.expr-selector-dropdown') as HTMLDivElement;
+        const dropdown = container.querySelector(`.${ClassDict.EXPR_SELECTOR_DROPDOWN}`) as HTMLDivElement;
         const dropdownList = dropdown.querySelector('ul') as HTMLUListElement;
         const options: DropdownOption[] = Array.from(dropdownList.querySelectorAll('li'))
             .map(option => new NameDropdownOption(option as HTMLLIElement));
@@ -36,11 +37,11 @@ export class CustomExprSelector extends BaseDropdownSelector {
 
         super(
             container,
-            container.querySelector('.expr-selector-input')!,
+            container.querySelector(`.${ClassDict.EXPR_SELECTOR_INPUT}`)!,
             dropdown,
             options
         );
-        this.button = container.querySelector('.expr-selector-button') as HTMLButtonElement;
+        this.button = container.querySelector(`.${ClassDict.EXPR_SELECTOR_BUTTON}`) as HTMLButtonElement;
         this.setup();
         this.rulePreview = new RulePreview(container);
         if (!this.isTypeSelector() && enableParsing) {
@@ -137,12 +138,12 @@ export class CustomExprSelector extends BaseDropdownSelector {
 
     override disable() {
         super.disable();
-        this.button.setAttribute('disabled', 'true');
+        this.button.disabled = true;
     }
 
     override enable() {
         super.enable();
-        this.button.removeAttribute('disabled');
+        this.button.disabled = false;
     }
 
     isTypeSelector(): boolean {
@@ -154,11 +155,11 @@ export class CustomExprSelector extends BaseDropdownSelector {
     }
 
     public addGuideHighlight(): void {
-        this.container.classList.add('guide-highlight');
+        this.container.classList.add(ClassDict.GUIDE_HIGHLIGHT);
     }
 
     public removeGuideHighlight(): void {
-        this.container.classList.remove('guide-highlight');
+        this.container.classList.remove(ClassDict.GUIDE_HIGHLIGHT);
     }
 }
 
@@ -195,7 +196,7 @@ export function createExprSelector(select: HTMLSelectElement): CustomExprSelecto
     const treePath = getTreePathOfElement(select);
     let placeholderText: string;
     let kind: string;
-    if (select.classList.contains('expr-dropdown')) {
+    if (select.classList.contains(ClassDict.EXPR_DROPDOWN)) {
         placeholderText = 'Enter Expression...';
         kind = 'expr';
     } else {
@@ -223,9 +224,9 @@ export function replaceDisabledSelectInputs(element: HTMLElement | undefined = u
     );
 
     function createDisabledSelectHTML(select: HTMLSelectElement, treePath: string): HTMLDivElement {
-        const kind = select.classList.contains('expr-dropdown') ? 'Expression' : 'Type';
+        const kind = select.classList.contains(ClassDict.EXPR_DROPDOWN) ? 'Expression' : 'Type';
         const placeholder = document.createElement('div');
-        placeholder.classList.add('expr-selector-placeholder');
+        placeholder.classList.add(ClassDict.EXPR_SELECTOR_PLACEHOLDER);
         placeholder.setAttribute('data-tree-path', treePath);
         placeholder.innerText = `Unspecified ${kind}`;
         return placeholder;
@@ -242,10 +243,10 @@ export function replaceDisabledSelectInputs(element: HTMLElement | undefined = u
 
 function createExprSelectorHTML(treePath: string, kind: string, placeholderText: string, options: HTMLOptionElement[]): string {
     const optionsList: string[] = options.map(createExprSelectorOptionHtml);
-    return `<div class="expr-selector-container" data-tree-path="${treePath}" data-kind="${kind}">
-              <input type="text" class="expr-selector-input" placeholder="${placeholderText}" data-tree-path="${treePath}" />
-              <button class="expr-selector-button">${UP_ARROW}</button>
-              <div class="expr-selector-dropdown">
+    return `<div class="${ClassDict.EXPR_SELECTOR_CONTAINER}" data-tree-path="${treePath}" data-kind="${kind}">
+              <input type="text" class="${ClassDict.EXPR_SELECTOR_INPUT}" placeholder="${placeholderText}" data-tree-path="${treePath}" />
+              <button class="${ClassDict.EXPR_SELECTOR_BUTTON}">${UP_ARROW}</button>
+              <div class="${ClassDict.EXPR_SELECTOR_DROPDOWN}">
                 <ul>
                 ${optionsList.join('')}
                 </ul>
@@ -274,7 +275,7 @@ class ExampleExprSelector extends CustomExprSelector {
         if (option instanceof NameDropdownOption) {
             this.output.textContent = option.getValue();
             this.input.focus();
-            this.container.classList.add(this.SELECTOR_FOCUS_CLASS);
+            this.container.classList.add(ClassDict.FOCUSED);
         } else {
             throw new Error(`Unexpected option type: ${option}`);
         }
@@ -304,7 +305,7 @@ class ExprSelectorPlaceholder {
         this.origin = origin;
 
         this.setupEventListeners();
-        this.placeholder.classList.add('placeholder');
+        this.placeholder.classList.add(ClassDict.PLACEHOLDER);
     }
 
     private setupEventListeners(): void {

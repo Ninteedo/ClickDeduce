@@ -2,14 +2,14 @@ import {Subtree} from "./subtree";
 import {pauseFileDragAndDrop, resumeFileDragAndDrop} from "../saveLoad";
 // @ts-ignore
 import ToolboxSvg from '../../images/toolbox.svg';
+import {DisplayMode} from "../globals/displayMode";
+import {ClassDict} from "../globals/classDict";
 
 class SubtreeToolbox {
     private readonly container: HTMLDivElement;
 
     private readonly entries: ToolboxEntry[];
     private newEntryCount: number = 0;
-
-    private readonly HIDDEN_CLASS = 'hidden';
 
     constructor(container: HTMLDivElement) {
         this.container = container;
@@ -20,12 +20,12 @@ class SubtreeToolbox {
 
     private updateContents(): void {
         if (this.entries.length > 0) {
-            this.container.classList.remove(this.HIDDEN_CLASS);
+            this.container.classList.remove(ClassDict.HIDDEN);
             const newChildren: HTMLDivElement[] = this.entries.map(entry => entry.getElement());
             this.container.replaceChildren(...newChildren);
             this.entries.forEach(entry => entry.update());
         } else {
-            this.container.classList.add(this.HIDDEN_CLASS);
+            this.container.classList.add(ClassDict.HIDDEN);
         }
     }
 
@@ -89,7 +89,7 @@ export function getSubtreeToolbox(): SubtreeToolbox {
 }
 
 export function addSubtreeToToolbox(subtree: Subtree): void {
-    getSubtreeToolbox().addSubtree(subtree.copy(false, "edit"));
+    getSubtreeToolbox().addSubtree(subtree.copy(false, DisplayMode.EDIT));
 }
 
 export class ToolboxEntry {
@@ -103,7 +103,7 @@ export class ToolboxEntry {
         this.id = id;
 
         this.element = document.createElement('div');
-        this.element.classList.add('toolbox-entry');
+        this.element.classList.add(ClassDict.TOOLBOX_ENTRY);
         this.element.setAttribute('data-id', id.toString());
         this.element.appendChild(subtree.getElement());
 

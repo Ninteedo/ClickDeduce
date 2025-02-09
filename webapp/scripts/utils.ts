@@ -1,14 +1,22 @@
+import {DisplayMode} from "./globals/displayMode";
+import {ClassDict} from "./globals/classDict";
+
 /**
  * Get the value of the selected mode radio button.
  */
-export function getSelectedMode(): "edit" | "type-check" | "eval" {
+export function getSelectedMode(): DisplayMode {
     const selectedRadio = document.querySelector('input[name="mode"]:checked') as HTMLInputElement | null;
     if (selectedRadio) {
         const value = selectedRadio.value;
-        if (value === "edit" || value === "type-check" || value === "eval") {
-            return value;
-        } else {
-            throw new Error(`Invalid mode selected: "${value}"`);
+        switch (value) {
+            case "edit":
+                return DisplayMode.EDIT;
+            case "type-check":
+                return DisplayMode.TYPECHECK;
+            case "eval":
+                return DisplayMode.EVAL;
+            default:
+                throw new Error(`Invalid mode selected: "${value}"`);
         }
     }
     throw new Error("No mode selected");
@@ -66,6 +74,6 @@ export function compareTreePaths(path1: string, path2: string): number {
 }
 
 export function stripTooltip(tooltipElement: Element): void {
-    tooltipElement.classList.remove('tooltip');
-    tooltipElement.querySelector('.tooltip-text')?.remove();
+    tooltipElement.classList.remove(ClassDict.TOOLTIP);
+    tooltipElement.querySelector(`.${ClassDict.TOOLTIP_TEXT}`)?.remove();
 }

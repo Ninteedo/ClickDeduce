@@ -3,6 +3,7 @@ import {getSelectedMode} from "./utils";
 import {displayError} from "./components/displayError";
 import {markHasUsedLangSelector} from "./attention";
 import {getCurrentLanguage, setCurrentLanguage} from "./langSelector";
+import {ClassDict} from "./globals/classDict";
 
 const fileInput: HTMLInputElement = document.createElement('input');
 
@@ -45,7 +46,7 @@ export function setupFileDragAndDrop(): void {
         return;
     }
 
-    const highlightClass: string = 'file-drag-highlight';
+    const highlightClass: string = ClassDict.FILE_DRAG_HIGHLIGHT;
     const addHighlight = () => treeContainer.classList.add(highlightClass);
     const removeHighlight = () => treeContainer.classList.remove(highlightClass);
 

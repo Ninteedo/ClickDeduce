@@ -5,6 +5,7 @@ import {AbstractContextMenu} from "./AbstractContextMenu";
 import {getSubtreeToolbox} from "../SubtreeToolbox";
 import {ToolboxContextMenu} from "./ToolboxContextMenu";
 import {PhantomContextMenu} from "./PhantomContextMenu";
+import {ClassDict} from "../../globals/classDict";
 
 let contextMenuSelectedElement: HTMLElement | null = null;
 
@@ -13,7 +14,7 @@ let contextMenuSelectedElement: HTMLElement | null = null;
  * @param e the mouse event
  */
 export function openContextMenu(e: MouseEvent): void {
-    const toolboxEntryElement = ancestorWithClass(e.target as HTMLElement, 'toolbox-entry');
+    const toolboxEntryElement = ancestorWithClass(e.target as HTMLElement, ClassDict.TOOLBOX_ENTRY);
     if (toolboxEntryElement) {
         const toolboxEntry = getSubtreeToolbox().getEntryWithID(parseInt(toolboxEntryElement.getAttribute('data-id')!));
         if (toolboxEntry) {
@@ -29,7 +30,7 @@ export function openContextMenu(e: MouseEvent): void {
 
     if (!highlightElement) {
         closeContextMenu();
-    } else if (hasClassOrParentHasClass(highlightElement, 'phantom')) {
+    } else if (hasClassOrParentHasClass(highlightElement, ClassDict.PHANTOM)) {
         e.preventDefault();
         closeContextMenu();
         activeContextMenu = new PhantomContextMenu(e);
@@ -59,8 +60,8 @@ export function closeContextMenu(): void {
  * If the element is a phantom element, or no element is highlighted, returns null.
  */
 export function getHighlightElement(): HTMLElement | null {
-    const res = document.querySelector('.highlight');
-    if (res instanceof HTMLElement && !hasClassOrParentHasClass(res, 'phantom')) {
+    const res = document.querySelector(`.${ClassDict.HIGHLIGHT}`);
+    if (res instanceof HTMLElement && !hasClassOrParentHasClass(res, ClassDict.PHANTOM)) {
         return res;
     }
     return null;
@@ -72,7 +73,7 @@ function getHighlightElementFromEvent(e: Event): HTMLElement | null {
         target = null;
     }
 
-    while (target instanceof HTMLElement && !target.classList.contains('highlight')) {
+    while (target instanceof HTMLElement && !target.classList.contains(ClassDict.HIGHLIGHT)) {
         target = target.parentElement;
     }
 

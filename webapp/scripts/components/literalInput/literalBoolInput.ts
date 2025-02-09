@@ -1,4 +1,6 @@
+// @ts-ignore
 import TrueSvg from "../../../images/true.svg";
+// @ts-ignore
 import FalseSvg from "../../../images/false.svg";
 import {LiteralInput} from "./literalInput";
 

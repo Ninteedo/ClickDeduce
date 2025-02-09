@@ -1,6 +1,7 @@
 import {handleTabPressed} from "../focus";
 import {stripTooltip} from "../utils";
 import {AbstractTreeInput} from "./abstractTreeInput";
+import {ClassDict} from "../globals/classDict";
 
 export class BaseDropdownSelector implements AbstractTreeInput {
     protected readonly container: HTMLDivElement;
@@ -8,17 +9,14 @@ export class BaseDropdownSelector implements AbstractTreeInput {
     protected readonly dropdown: HTMLDivElement;
     readonly options: DropdownOption[];
 
-    protected readonly SELECTOR_FOCUS_CLASS = 'focused';
-    protected readonly DROPDOWN_VISIBLE_CLASS = 'show';
-
     constructor(container: HTMLDivElement, input: HTMLInputElement, dropdown: HTMLDivElement, options: DropdownOption[]) {
         this.container = container;
         this.input = input;
         this.dropdown = dropdown;
         this.options = options;
 
-        this.container.classList.add('dropdown-selector-container');
-        this.dropdown.classList.add('dropdown');
+        this.container.classList.add(ClassDict.DROPDOWN_SELECTOR_CONTAINER);
+        this.dropdown.classList.add(ClassDict.DROPDOWN);
 
         this.setupListeners();
     }
@@ -134,20 +132,20 @@ export class BaseDropdownSelector implements AbstractTreeInput {
 
     protected showDropdown(): void {
         if (this.isDropdownVisible()) return;
-        this.dropdown.classList.add(this.DROPDOWN_VISIBLE_CLASS);
+        this.dropdown.classList.add(ClassDict.SHOW);
         this.dropdown.scrollTop = 0;
-        this.container.classList.add(this.SELECTOR_FOCUS_CLASS);
+        this.container.classList.add(ClassDict.FOCUSED);
         this.updateDropdown();
     }
 
     protected hideDropdown(): void {
         if (!this.isDropdownVisible()) return;
-        this.dropdown.classList.remove(this.DROPDOWN_VISIBLE_CLASS);
-        this.container.classList.remove(this.SELECTOR_FOCUS_CLASS);
+        this.dropdown.classList.remove(ClassDict.SHOW);
+        this.container.classList.remove(ClassDict.FOCUSED);
     }
 
     private isDropdownVisible(): boolean {
-        return this.dropdown.classList.contains(this.DROPDOWN_VISIBLE_CLASS);
+        return this.dropdown.classList.contains(ClassDict.SHOW);
     }
 
     private moveHighlight(offset: number): void {
@@ -210,36 +208,33 @@ export class BaseDropdownSelector implements AbstractTreeInput {
 export abstract class DropdownOption {
     public readonly element: HTMLLIElement;
 
-    protected readonly OPTION_HIDDEN_CLASS = 'hidden';
-    protected readonly OPTION_HIGHLIGHT_CLASS = 'highlight';
-
-    constructor(option: HTMLLIElement) {
+    protected constructor(option: HTMLLIElement) {
         this.element = option;
     }
 
     public show(): void {
-        this.element.classList.remove(this.OPTION_HIDDEN_CLASS);
+        this.element.classList.remove(ClassDict.HIDDEN);
     }
 
     public hide(): void {
-        this.element.classList.add(this.OPTION_HIDDEN_CLASS);
+        this.element.classList.add(ClassDict.HIDDEN);
     }
 
     public highlight(): void {
-        this.element.classList.add(this.OPTION_HIGHLIGHT_CLASS);
+        this.element.classList.add(ClassDict.HIGHLIGHT);
         this.element.scrollIntoView({block: 'nearest'});
     }
 
     public removeHighlight(): void {
-        this.element.classList.remove(this.OPTION_HIGHLIGHT_CLASS);
+        this.element.classList.remove(ClassDict.HIGHLIGHT);
     }
 
     public isHidden(): boolean {
-        return this.element.classList.contains(this.OPTION_HIDDEN_CLASS);
+        return this.element.classList.contains(ClassDict.HIDDEN);
     }
 
     public isHighlighted(): boolean {
-        return this.element.classList.contains(this.OPTION_HIGHLIGHT_CLASS);
+        return this.element.classList.contains(ClassDict.HIGHLIGHT);
     }
 
     public abstract shouldShow(inputValue: string): boolean;
@@ -248,7 +243,7 @@ export abstract class DropdownOption {
 export class NameDropdownOption extends DropdownOption {
     constructor(option: HTMLLIElement) {
         super(option);
-        this.element.querySelectorAll('.tooltip').forEach(tooltipDiv => stripTooltip(tooltipDiv));
+        this.element.querySelectorAll(`.${ClassDict.TOOLTIP}`).forEach(tooltipDiv => stripTooltip(tooltipDiv));
     }
 
     public getFilterText(): string {

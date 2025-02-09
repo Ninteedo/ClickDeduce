@@ -1,16 +1,15 @@
 import {getLangSelector} from "./globals/elements";
-
-const ATTENTION_CLASS = 'attention';
+import {ClassDict} from "./globals/classDict";
 
 let hasUsedLangSelector: boolean = false;
 let hasCompletedFirstLangTasks: boolean = false;
 
 export function setAttention(element: HTMLElement): void {
-    element.classList.add(ATTENTION_CLASS);
+    element.classList.add(ClassDict.ATTENTION);
 }
 
 export function removeAttention(element: HTMLElement): void {
-    element.classList.remove(ATTENTION_CLASS);
+    element.classList.remove(ClassDict.ATTENTION);
 }
 
 export function attentionByCondition(condition: boolean, element: HTMLElement): void {

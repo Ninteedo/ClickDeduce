@@ -1,3 +1,5 @@
+import {ClassDict} from "./classDict";
+
 export function getBlocker(): HTMLElement {
     const blocker = document.getElementById('blocker');
     if (!blocker) throw new Error('Blocker not found');
@@ -17,7 +19,7 @@ export function getTree(): HTMLDivElement {
 }
 
 export function getFirstSubtree(): HTMLDivElement {
-    const rootSubtree = document.querySelector('.subtree[data-tree-path=""]');
+    const rootSubtree = document.querySelector(`.${ClassDict.SUBTREE}[data-tree-path=""]`);
     if (!rootSubtree) throw new Error('Root subtree not found');
     return rootSubtree as HTMLDivElement;
 }

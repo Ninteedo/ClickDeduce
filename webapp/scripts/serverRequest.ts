@@ -11,6 +11,7 @@ import {
 } from "scalajs:main.js";
 
 import {Task} from "./components/tasks/task";
+import {DisplayMode} from "./globals/displayMode";
 
 let actionHistory: {
     langName: string;
@@ -57,7 +58,7 @@ export function postStartNodeBlankNew(selectedLanguage: string): [string, string
 
 export function postProcessActionNew(
     langName: string,
-    modeName: string,
+    modeName: DisplayMode,
     actionName: string,
     nodeString: string,
     treePath: string,
@@ -97,7 +98,7 @@ export function getExprText(langName: string, nodeString: string, treePathString
 export function getExprParsePreviewHtml(
     langName: string,
     exprText: string,
-    modeName: string,
+    modeName: DisplayMode,
     nodeString: string,
     treePathString: string
 ): [number, string] {

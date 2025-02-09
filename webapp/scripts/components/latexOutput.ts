@@ -4,6 +4,7 @@ import {getBlocker} from "../globals/elements";
 import {Modal} from "./modal";
 // @ts-ignore
 import {convertToLaTeX} from "scalajs:main.js";
+import {ClassDict} from "../globals/classDict";
 
 let latexModal: Modal | null = null;
 
@@ -37,9 +38,9 @@ function showExportOutput(title: string, output: string, description: string | n
     if (outputDescription) {
         if (description) {
             outputDescription.textContent = description;
-            outputDescription.classList.add('visible');
+            outputDescription.classList.add(ClassDict.VISIBLE);
         } else {
-            outputDescription.classList.remove('visible');
+            outputDescription.classList.remove(ClassDict.VISIBLE);
         }
     }
     getLatexModal().show();

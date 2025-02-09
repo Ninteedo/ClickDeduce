@@ -12,6 +12,8 @@ import {postProcessActionNew} from "../serverRequest";
 import {PhantomIndicator} from "./phantomIndicator";
 import {createLiteralInput} from "./literalInput/createLiteralInput";
 import {getCurrentLanguage} from "../langSelector";
+import {DisplayMode} from "../globals/displayMode";
+import {ClassDict} from "../globals/classDict";
 
 export class Subtree {
     private readonly element: HTMLDivElement;
@@ -34,8 +36,6 @@ export class Subtree {
     private readonly isPhantom: boolean;
     private readonly phantomIndicator: PhantomIndicator | undefined;
 
-    private readonly HIGHLIGHT_CLASS = 'highlight';
-    private readonly PHANTOM_CLASS = 'phantom';
     private readonly DATA_TREE_PATH = 'data-tree-path';
 
     constructor(element: HTMLDivElement, parent: Subtree | null, nodeString: string) {
@@ -50,16 +50,16 @@ export class Subtree {
         this.nodeElement = this.element.querySelector('.node') as HTMLDivElement;
         this.argsElement = this.element.querySelector('.args') as HTMLDivElement | null;
 
-        this.isPhantom = this.getParent()?.isPhantom || this.element.classList.contains(this.PHANTOM_CLASS) || false;
+        this.isPhantom = this.getParent()?.isPhantom || this.element.classList.contains(ClassDict.PHANTOM) || false;
         if (this.isPhantom) {
             this.phantomIndicator = new PhantomIndicator();
             this.element.appendChild(this.phantomIndicator.element);
         }
 
-        const literalInputs = Array.from(this.nodeElement.querySelectorAll("input.literal[data-tree-path]:not([disabled])"))
+        const literalInputs = Array.from(this.nodeElement.querySelectorAll(`input.${ClassDict.LITERAL}[data-tree-path]:not([disabled])`))
             .map(input => createLiteralInput(input as HTMLInputElement));
         const exprSelectors = Array.from(
-            this.nodeElement.querySelectorAll("select.expr-dropdown[data-tree-path]:not([disabled]), select.type-dropdown[data-tree-path]:not([disabled])"))
+            this.nodeElement.querySelectorAll(`select.${ClassDict.EXPR_DROPDOWN}[data-tree-path]:not([disabled]), select.${ClassDict.TYPE_DROPDOWN}[data-tree-path]:not([disabled])`))
             .map(select => createExprSelector(select as HTMLSelectElement));
         exprSelectors.forEach(selector => {
             this.replaceExprSelectorPlaceholders(selector);
@@ -69,7 +69,7 @@ export class Subtree {
         this.children = [];
         if (this.argsElement && this.argsElement.children) {
             Array.from(this.argsElement!.children!).forEach(element => {
-                if (element.classList.contains('subtree')) {
+                if (element.classList.contains(ClassDict.SUBTREE)) {
                     const subNodeString = element.getAttribute('data-node-string')!;
                     this.children.push(new Subtree(element as HTMLDivElement, this, subNodeString));
                 }
@@ -80,9 +80,9 @@ export class Subtree {
 
         let ruleAnnotationElement;
         if (this.argsElement) {
-            ruleAnnotationElement = Array.from(this.argsElement.children).find(child => child.classList.contains('annotation-new'));
+            ruleAnnotationElement = Array.from(this.argsElement.children).find(child => child.classList.contains(ClassDict.ANNOTATION_NEW));
         } else {
-            ruleAnnotationElement = this.element.querySelector('.annotation-axiom');
+            ruleAnnotationElement = this.element.querySelector(`.${ClassDict.ANNOTATION_AXIOM}`);
         }
         this.ruleAnnotation = new RuleAnnotation(ruleAnnotationElement as HTMLDivElement, this);
 
@@ -146,17 +146,17 @@ export class Subtree {
     }
 
     addHighlight(): void {
-        this.element.classList.add(this.HIGHLIGHT_CLASS);
+        this.element.classList.add(ClassDict.HIGHLIGHT);
         this.phantomIndicator?.show();
     }
 
     removeHighlight(): void {
-        this.element.classList.remove(this.HIGHLIGHT_CLASS);
+        this.element.classList.remove(ClassDict.HIGHLIGHT);
         this.phantomIndicator?.hide();
     }
 
     hasHighlight(): boolean {
-        return this.element.classList.contains(this.HIGHLIGHT_CLASS);
+        return this.element.classList.contains(ClassDict.HIGHLIGHT);
     }
 
     getElement(): HTMLDivElement {
@@ -210,7 +210,7 @@ export class Subtree {
         return this.ruleAnnotation;
     }
 
-    copy(keepParent: boolean = false, mode: string | undefined = undefined): Subtree {
+    copy(keepParent: boolean = false, mode: DisplayMode | undefined = undefined): Subtree {
         const selectedMode = mode ?? getSelectedMode();
 
         const [, newHtml] = postProcessActionNew(getCurrentLanguage(), selectedMode, "IdentityAction", this.nodeString, "", []);
@@ -303,7 +303,7 @@ export class Subtree {
 }
 
 export function existingSubtreeFromElement(element: HTMLDivElement): Subtree | null {
-    if (element.classList.contains('subtree')) {
+    if (element.classList.contains(ClassDict.SUBTREE)) {
         const treePathString = getTreePathOfElement(element);
         return getRootSubtree()?.getChildFromPath(parseTreePath(treePathString))! ?? null;
     }

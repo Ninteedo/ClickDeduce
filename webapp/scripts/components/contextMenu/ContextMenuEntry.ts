@@ -1,3 +1,5 @@
+import {ClassDict} from "../../globals/classDict";
+
 /**
  * An entry in a context menu, which can be clicked to perform an action.
  */
@@ -12,7 +14,7 @@ export class ContextMenuEntry {
      */
     constructor(text: string, onClick: () => void, disabled: boolean = false) {
         this.element = document.createElement('li');
-        this.element.classList.add('context-menu-entry');
+        this.element.classList.add(ClassDict.CONTEXT_MENU_ENTRY);
         this.element.textContent = text;
         this.element.addEventListener('click', onClick);
         if (disabled) {

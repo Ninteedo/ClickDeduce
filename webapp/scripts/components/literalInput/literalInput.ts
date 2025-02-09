@@ -8,6 +8,7 @@ import TrueSvg from '../../../images/true.svg';
 import FalseSvg from '../../../images/false.svg';
 import {LiteralPlaceholder} from "./literalPlaceholder";
 import {handleTabPressed, setNextFocusElement, setNextFocusTreePath} from "../../focus";
+import {ClassDict} from "../../globals/classDict";
 
 export class LiteralInput implements AbstractTreeInput {
     protected readonly input: HTMLInputElement;
@@ -16,7 +17,6 @@ export class LiteralInput implements AbstractTreeInput {
     protected readonly initialValue: string;
 
     protected readonly MIN_WIDTH: number = 2;
-    private readonly GUIDE_HIGHLIGHT_CLASS: string = 'guide-highlight';
 
     constructor(input: HTMLInputElement) {
         this.input = input;
@@ -54,7 +54,7 @@ export class LiteralInput implements AbstractTreeInput {
     }
 
     private createLinkedPlaceholders(): LiteralPlaceholder[] {
-        return Array.from(getTree().querySelectorAll(`.literal`))
+        return Array.from(getTree().querySelectorAll(`.${ClassDict.LITERAL}`))
             .filter((elem: Element) => elem.getAttribute('data-origin') === this.treePath)
             .map((elem: Element) => new LiteralPlaceholder(elem as HTMLDivElement, this));
     }
@@ -126,15 +126,15 @@ export class LiteralInput implements AbstractTreeInput {
     }
 
     public addGuideHighlight(): void {
-        this.input.classList.add(this.GUIDE_HIGHLIGHT_CLASS);
+        this.input.classList.add(ClassDict.GUIDE_HIGHLIGHT);
     }
 
     public removeGuideHighlight(): void {
-        this.input.classList.remove(this.GUIDE_HIGHLIGHT_CLASS);
+        this.input.classList.remove(ClassDict.GUIDE_HIGHLIGHT);
     }
 
     protected getPlaceholderContent(): HTMLElement {
-        const html = `<input class="literal" type="text" value="${this.getValue()}" readonly disabled/>`;
+        const html = `<input class="${ClassDict.LITERAL}" type="text" value="${this.getValue()}" readonly disabled/>`;
         const div = document.createElement('div');
         div.innerHTML = html;
         return div;

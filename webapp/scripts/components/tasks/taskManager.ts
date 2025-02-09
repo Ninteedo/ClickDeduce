@@ -2,11 +2,7 @@ import {checkTaskFulfilled, getTasksList} from "../../serverRequest";
 import {markHasCompletedFirstLangTasks} from "../../attention";
 import {getLangSelector} from "../../globals/elements";
 import {Task} from "./task";
-
-const FULFILLED_CLASS = "fulfilled";
-const TASK_CLASS = "task";
-const DESCRIPTION_CLASS = "description";
-const HIDDEN_CLASS = "hidden";
+import {ClassDict} from "../../globals/classDict";
 
 export function updateTaskList(lang: string, nodeString: string): void {
     getTaskManager().updateTaskList(lang, nodeString);
@@ -22,7 +18,7 @@ function getTaskManager(): TaskManager {
 }
 
 function isFulfilled(taskDiv: HTMLDivElement): boolean {
-    return taskDiv.classList.contains(FULFILLED_CLASS);
+    return taskDiv.classList.contains(ClassDict.FULFILLED);
 }
 
 class TaskManager {
@@ -69,15 +65,15 @@ class TaskManager {
         }
 
         if (allFulfilled) {
-            this.tasksDiv.classList.add(FULFILLED_CLASS);
+            this.tasksDiv.classList.add(ClassDict.FULFILLED);
         } else {
-            this.tasksDiv.classList.remove(FULFILLED_CLASS);
+            this.tasksDiv.classList.remove(ClassDict.FULFILLED);
         }
     }
 
     createTaskElement({name, description, difficulty}: Task): HTMLDivElement {
         const taskDiv = document.createElement("div");
-        taskDiv.classList.add(TASK_CLASS);
+        taskDiv.classList.add(ClassDict.TASK);
         taskDiv.setAttribute("data-task-name", name);
 
         const stars = "★".repeat(difficulty);
@@ -87,22 +83,22 @@ class TaskManager {
         taskDiv.appendChild(taskName);
 
         const taskDescription = document.createElement("p");
-        taskDescription.classList.add(DESCRIPTION_CLASS);
+        taskDescription.classList.add(ClassDict.DESCRIPTION);
         taskDescription.textContent = description;
         taskDiv.appendChild(taskDescription);
 
         if (this.fulfilledTasks.includes(name)) {
-            taskDiv.classList.add(FULFILLED_CLASS);
+            taskDiv.classList.add(ClassDict.FULFILLED);
             taskDescription.style.maxHeight = "0";
         }
 
         taskDiv.addEventListener("mouseenter", () => {
-            if (taskDiv.classList.contains(FULFILLED_CLASS)) {
+            if (taskDiv.classList.contains(ClassDict.FULFILLED)) {
                 taskDescription.style.maxHeight = taskDescription.scrollHeight + "px";
             }
         });
         taskDiv.addEventListener("mouseleave", () => {
-            if (taskDiv.classList.contains(FULFILLED_CLASS)) {
+            if (taskDiv.classList.contains(ClassDict.FULFILLED)) {
                 taskDescription.style.maxHeight = "0";
             }
         });
@@ -114,9 +110,9 @@ class TaskManager {
         this.tasksDiv.innerHTML = "";
 
         if (this.currentTasks.length === 0) {
-            this.tasksDiv.classList.add(HIDDEN_CLASS);
+            this.tasksDiv.classList.add(ClassDict.HIDDEN);
         } else {
-            this.tasksDiv.classList.remove(HIDDEN_CLASS);
+            this.tasksDiv.classList.remove(ClassDict.HIDDEN);
             for (const task of this.currentTasks) {
                 this.tasksDiv.appendChild(this.createTaskElement(task));
             }
@@ -127,8 +123,8 @@ class TaskManager {
         for (const task of this.currentTasks) {
             const taskDiv = this.tasksDiv.querySelector(`[data-task-name="${task.name}"]`);
             if (taskDiv && this.fulfilledTasks.includes(task.name) && taskDiv instanceof HTMLDivElement && !isFulfilled(taskDiv)) {
-                taskDiv.classList.add(FULFILLED_CLASS);
-                const taskDescription = taskDiv.querySelector(".description");
+                taskDiv.classList.add(ClassDict.FULFILLED);
+                const taskDescription = taskDiv.querySelector(`.${ClassDict.DESCRIPTION}`);
                 if (taskDescription instanceof HTMLElement) {
                     taskDescription.style.maxHeight = taskDescription.scrollHeight + "px";
                     setTimeout(() => taskDescription.style.maxHeight = "0", 0);

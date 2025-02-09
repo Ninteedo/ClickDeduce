@@ -1,4 +1,5 @@
 import {ContextMenuEntry} from "./ContextMenuEntry";
+import {ClassDict} from "../../globals/classDict";
 
 /**
  * A context menu that can be opened on a right-click event.
@@ -17,7 +18,7 @@ export abstract class AbstractContextMenu {
     protected constructor(event: MouseEvent, entries: ContextMenuEntry[] = []) {
         this.container = document.createElement('div');
         this.container.id = 'custom-context-menu';
-        this.container.classList.add('custom-menu')
+        this.container.classList.add(ClassDict.CUSTOM_MENU)
         this.listElement = document.createElement('ul');
         this.container.appendChild(this.listElement);
         this.entries = entries;

@@ -15,6 +15,7 @@ import {
 } from "./components/contextMenu/contextMenu";
 import {setNextFocusTreePath} from "./focus";
 import {getActiveInputs} from "./activeInputs";
+import {ClassDict} from "./globals/classDict";
 
 /**
  * Resets the global variables used by the interface code.
@@ -66,7 +67,7 @@ document.addEventListener('keydown', globalHandleKeyDown);
  * Also clears the contextMenuSelectedElement.
  */
 export function clearHighlight(): void {
-    document.querySelector('.highlight')?.classList.remove('highlight');
+    document.querySelector(`.${ClassDict.HIGHLIGHT}`)?.classList.remove(ClassDict.HIGHLIGHT);
     clearContextMenuSelectedElement();
 }
 
@@ -118,12 +119,11 @@ function setupValueTypeColourHighlightingCheckbox(): void {
 
 function toggleValueTypeColourHighlighting(newState: boolean): void {
     const body = document.querySelector('body');
-    const className = 'value-highlighting-enabled';
     if (!body) throw new Error('Body element not found');
     if (newState) {
-        body.classList.add(className);
+        body.classList.add(ClassDict.VALUE_HIGHLIGHTING_ENABLED);
     } else {
-        body.classList.remove(className);
+        body.classList.remove(ClassDict.VALUE_HIGHLIGHTING_ENABLED);
     }
 }
 
@@ -131,13 +131,11 @@ export function toggleControls(): void {
     const button = getToggleControlsButton();
     const controls = getControlsDiv();
 
-    const hiddenClass = 'hidden';
-
-    if (controls.classList.contains(hiddenClass)) {
-        controls.classList.remove(hiddenClass);
+    if (controls.classList.contains(ClassDict.HIDDEN)) {
+        controls.classList.remove(ClassDict.HIDDEN);
         button.innerHTML = '&#9650;';
     } else {
-        controls.classList.add(hiddenClass);
+        controls.classList.add(ClassDict.HIDDEN);
         button.innerHTML = '&#9660;';
     }
 }

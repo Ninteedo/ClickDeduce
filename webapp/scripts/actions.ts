@@ -7,6 +7,7 @@ import {displayError} from "./components/displayError";
 import {centerTree} from "./components/panzoom";
 import {getNextFocusTreePath, setFocusElement, setNextFocusElement} from "./focus";
 import {disableInputs, enableInputs} from "./activeInputs";
+import {ClassDict} from "./globals/classDict";
 
 let copyCache: string | null = null;
 
@@ -56,26 +57,26 @@ export function exampleLiteralChanged(textInput: HTMLInputElement): void {
 
     const exampleLiteralOuter = document.getElementById('example-literal-outer');
     if (!exampleLiteralOuter) throw new Error('Could not find example-literal-outer');
-    const outputDiv = exampleLiteralOuter.querySelector('.eval-result') as HTMLDivElement;
+    const outputDiv = exampleLiteralOuter.querySelector(`.${ClassDict.EVAL_RESULT}`) as HTMLDivElement;
 
     if (literalValue.match(/^\d+$/)) {
         outputDiv.innerHTML = `
-        <span class="tooltip">
+        <span class="${ClassDict.TOOLTIP}">
           <div>
-            <div class="value"><span>${literalValue}</span></div>
+            <div class="${ClassDict.VALUE}"><span>${literalValue}</span></div>
             <span>: </span>
-            <div class="value-type"><span>Int</span></div>
+            <div class="${ClassDict.VALUE_TYPE}"><span>Int</span></div>
           </div>
-          <div class="tooltip-text">
+          <div class="${ClassDict.TOOLTIP_TEXT}">
             NumV(${literalValue}): IntType()
           </div>
         </span>
         `;
     } else {
         outputDiv.innerHTML = `
-        <span class="tooltip">
-          <div class="error-origin">error!</div>
-          <div class="tooltip-text">Num can only accept LiteralInt, not ${literalValue}</div>
+        <span class="${ClassDict.TOOLTIP}">
+          <div class="${ClassDict.ERROR_ORIGIN}">error!</div>
+          <div class="${ClassDict.TOOLTIP_TEXT}">Num can only accept LiteralInt, not ${literalValue}</div>
         </span>
         `;
     }
@@ -98,8 +99,8 @@ export function runAction(actionName: string, treePath: string, extraArgs: any[]
     disableInputs();
 
     try {
-        const modeName: string = getSelectedMode();
-        const langName: string = getSelectedLanguage();
+        const modeName = getSelectedMode();
+        const langName = getSelectedLanguage();
         const extraArgsClean: any[] = Array.isArray(extraArgs) ? extraArgs : [extraArgs]
         const [newNodeString, newHtml] = postProcessActionNew(langName, modeName, actionName, lastNodeString, treePath, extraArgsClean);
         updateTree(newHtml, newNodeString, modeName, langName, true);

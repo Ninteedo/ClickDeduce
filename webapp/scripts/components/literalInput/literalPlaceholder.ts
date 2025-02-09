@@ -1,4 +1,5 @@
 import {LiteralInput} from "./literalInput";
+import {ClassDict} from "../../globals/classDict";
 
 export class LiteralPlaceholder {
     private readonly placeholder: HTMLDivElement;
@@ -11,7 +12,7 @@ export class LiteralPlaceholder {
                 replacement.setAttribute(attr.name, attr.value);
             }
             replacement.innerText = placeholder.value;
-            replacement.classList.add('placeholder');
+            replacement.classList.add(ClassDict.PLACEHOLDER);
             placeholder.replaceWith(replacement);
             placeholder = replacement;
         }

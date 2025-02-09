@@ -1,4 +1,5 @@
 import {getErrorDiv} from "../globals/elements";
+import {ClassDict} from "../globals/classDict";
 
 let errorTimeoutId: number = 0;
 
@@ -17,14 +18,14 @@ export function displayError(error: any): void {
     console.error(error);
     const errorDiv = getErrorDiv();
     errorDiv.textContent = error.message;
-    errorDiv.classList.add('fade-in');
-    errorDiv.classList.remove('fade-out');
+    errorDiv.classList.add(ClassDict.FADE_IN);
+    errorDiv.classList.remove(ClassDict.FADE_OUT);
 
     incrementErrorTimeoutId();
     let myTimeoutId = errorTimeoutId;
     setTimeout(() => {
         if (myTimeoutId !== errorTimeoutId) return;
-        errorDiv.classList.add('fade-out');
-        errorDiv.classList.remove('fade-in');
+        errorDiv.classList.add(ClassDict.FADE_OUT);
+        errorDiv.classList.remove(ClassDict.FADE_IN);
     }, 5000);
 }
