@@ -121,6 +121,9 @@
     font-size: 0.75rem;
     color: colours.$comment;
 
+    padding: 0.1rem;
+    transform: translateY(0.4rem);
+
     &.annotation-axiom {
       align-self: end;
     }

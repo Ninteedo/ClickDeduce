@@ -77,7 +77,7 @@ export class Subtree {
 
         let ruleAnnotationElement;
         if (this.argsElement) {
-            ruleAnnotationElement = this.argsElement.querySelector('.annotation-new');
+            ruleAnnotationElement = Array.from(this.argsElement.children).find(child => child.classList.contains('annotation-new'));
         } else {
             ruleAnnotationElement = this.element.querySelector('.annotation-axiom');
         }
