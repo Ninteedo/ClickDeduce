@@ -1,6 +1,7 @@
 // @ts-ignore
 import DemoGif from "../images/demo.gif";
 import {getCurrentLanguage} from "./langSelector";
+import {IdDict} from "./globals/idDict";
 
 export function setupGuide(): void {
     console.debug("Setting up guide");
@@ -8,15 +9,15 @@ export function setupGuide(): void {
     if (getCurrentLanguage() !== "LArith") {
         throw new Error("Expected current language to be LArith");
     }
-    (document.getElementById("guide-demo-gif") as HTMLImageElement).src = DemoGif;
+    (document.getElementById(IdDict.GUIDE_DEMO_GIF) as HTMLImageElement).src = DemoGif;
 }
 
 function addDummyLangSelector(): void {
     const langSelectorDiv = document.createElement('div');
-    langSelectorDiv.id = "lang-selector-div";
+    langSelectorDiv.id = IdDict.LANG_SELECTOR_DIV;
     langSelectorDiv.style.display = "none";
     const langSelector = document.createElement('select');
-    langSelector.id = "lang-selector";
+    langSelector.id = IdDict.LANG_SELECTOR;
     langSelectorDiv.appendChild(langSelector);
     const lArithOption = document.createElement('option');
     lArithOption.value = "LArith";

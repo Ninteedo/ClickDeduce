@@ -1,5 +1,6 @@
 import panzoom, {PanZoom} from "panzoom";
 import {getFirstSubtree, getTree, getTreeContainer} from "../globals/elements";
+import {IdDict} from "../globals/idDict";
 
 let panzoomInstance: PanZoom;
 
@@ -50,7 +51,7 @@ export function setUpPanZoom(tree: HTMLDivElement): void {
 }
 
 function getAutoZoomCheckbox(): HTMLInputElement {
-    return document.getElementById('auto-zoom-toggle') as HTMLInputElement;
+    return document.getElementById(IdDict.AUTO_ZOOM_TOGGLE) as HTMLInputElement;
 }
 
 export function centerTree(): void {

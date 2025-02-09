@@ -8,6 +8,7 @@ import {centerTree} from "./components/panzoom";
 import {getNextFocusTreePath, setFocusElement, setNextFocusElement} from "./focus";
 import {disableInputs, enableInputs} from "./activeInputs";
 import {ClassDict} from "./globals/classDict";
+import {IdDict} from "./globals/idDict";
 
 let copyCache: string | null = null;
 
@@ -55,7 +56,7 @@ export function handleLiteralChanged(textInput: HTMLInputElement, doNotFocus: bo
 export function exampleLiteralChanged(textInput: HTMLInputElement): void {
     const literalValue: string = textInput.value;
 
-    const exampleLiteralOuter = document.getElementById('example-literal-outer');
+    const exampleLiteralOuter = document.getElementById(IdDict.EXAMPLE_LITERAL_OUTER);
     if (!exampleLiteralOuter) throw new Error('Could not find example-literal-outer');
     const outputDiv = exampleLiteralOuter.querySelector(`.${ClassDict.EVAL_RESULT}`) as HTMLDivElement;
 

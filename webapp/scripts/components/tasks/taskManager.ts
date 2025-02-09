@@ -3,6 +3,7 @@ import {markHasCompletedFirstLangTasks} from "../../attention";
 import {getLangSelector} from "../../globals/elements";
 import {Task} from "./task";
 import {ClassDict} from "../../globals/classDict";
+import {IdDict} from "../../globals/idDict";
 
 export function updateTaskList(lang: string, nodeString: string): void {
     getTaskManager().updateTaskList(lang, nodeString);
@@ -29,7 +30,7 @@ class TaskManager {
     private readonly tasksDiv: HTMLDivElement;
 
     constructor() {
-        this.tasksDiv = document.getElementById("tasks") as HTMLDivElement;
+        this.tasksDiv = document.getElementById(IdDict.TASKS) as HTMLDivElement;
         if (!this.tasksDiv) {
             throw new Error("No tasks div found");
         }

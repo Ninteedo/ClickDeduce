@@ -22,6 +22,7 @@ import {
 } from "../serverRequest";
 import {getUndoButton} from "../globals/elements";
 import {getExprSelectors, getLiteralInputs} from "../activeInputs";
+import {IdDict} from "../globals/idDict";
 
 const indexHtml = loadIndexHtmlTemplate();
 
@@ -66,7 +67,7 @@ describe("start new node button behaves correctly", () => {
     });
 
     test("the request made respects the selected language", () => {
-        const langSelector = document.getElementById('lang-selector') as HTMLSelectElement;
+        const langSelector = document.getElementById(IdDict.LANG_SELECTOR) as HTMLSelectElement;
         langSelector.selectedIndex = 1;
         langSelector.dispatchEvent(new Event('change'));
         pressStartNodeButton();
@@ -77,7 +78,7 @@ describe("start new node button behaves correctly", () => {
     test("changing the selected language causes an identity action", () => {
         pressStartNodeButton();
 
-        const langSelector = document.getElementById('lang-selector') as HTMLSelectElement;
+        const langSelector = document.getElementById(IdDict.LANG_SELECTOR) as HTMLSelectElement;
         console.log(langSelector.selectedIndex);
         langSelector.selectedIndex = 1;
         langSelector.dispatchEvent(new Event('change'));
@@ -342,34 +343,34 @@ describe("mode radio buttons behave correctly", () => {
     });
 
     test("the initial mode is edit", () => {
-        expect(document.getElementById('edit-mode-radio')?.getAttributeNames()).toContain('checked');
+        expect(document.getElementById(IdDict.EDIT_MODE_RADIO)?.getAttributeNames()).toContain('checked');
     });
 
     test("clicking the type-check mode button makes the correct request to the server", () => {
-        document.getElementById('type-check-mode-radio')?.click();
+        document.getElementById(IdDict.TYPE_MODE_RADIO)?.click();
 
         checkActionExecuted(langSelectorLanguages[0], "type-check", "IdentityAction",
             "ExprChoiceNode()", "", []);
     });
 
     test("clicking the eval mode button makes the correct request to the server", () => {
-        document.getElementById('eval-mode-radio')?.click();
+        document.getElementById(IdDict.EVAL_MODE_RADIO)?.click();
 
         checkActionExecuted(langSelectorLanguages[0], "eval", "IdentityAction",
             "ExprChoiceNode()", "", []);
     });
 
     test("clicking the edit mode button makes the correct request to the server", () => {
-        document.getElementById('type-check-mode-radio')?.click();
+        document.getElementById(IdDict.TYPE_MODE_RADIO)?.click();
 
-        document.getElementById('edit-mode-radio')?.click();
+        document.getElementById(IdDict.EDIT_MODE_RADIO)?.click();
 
         checkActionExecuted(langSelectorLanguages[0], "edit", "IdentityAction",
             "ExprChoiceNode()", "", []);
     });
 
     test("after selecting a mode, future requests are made with that mode", () => {
-        document.getElementById('type-check-mode-radio')?.click();
+        document.getElementById(IdDict.TYPE_MODE_RADIO)?.click();
 
         selectExprOption(getLeftmostExprDropdown(), "Num");
 

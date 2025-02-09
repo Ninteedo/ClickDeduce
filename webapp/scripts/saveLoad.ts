@@ -4,6 +4,7 @@ import {displayError} from "./components/displayError";
 import {markHasUsedLangSelector} from "./attention";
 import {getCurrentLanguage, setCurrentLanguage} from "./langSelector";
 import {ClassDict} from "./globals/classDict";
+import {IdDict} from "./globals/idDict";
 
 const fileInput: HTMLInputElement = document.createElement('input');
 
@@ -40,7 +41,7 @@ export function setupFileInput(): void {
 }
 
 export function setupFileDragAndDrop(): void {
-    const treeContainer = document.getElementById('tree-container');
+    const treeContainer = document.getElementById(IdDict.TREE_CONTAINER);
     if (!treeContainer) {
         console.error('Tree container not found');
         return;

@@ -4,6 +4,7 @@ import {pauseFileDragAndDrop, resumeFileDragAndDrop} from "../saveLoad";
 import ToolboxSvg from '../../images/toolbox.svg';
 import {DisplayMode} from "../globals/displayMode";
 import {ClassDict} from "../globals/classDict";
+import {IdDict} from "../globals/idDict";
 
 class SubtreeToolbox {
     private readonly container: HTMLDivElement;
@@ -81,7 +82,7 @@ let subtreeToolbox: SubtreeToolbox | null;
 
 export function getSubtreeToolbox(): SubtreeToolbox {
     if (!subtreeToolbox) {
-        const container = document.getElementById('subtree-toolbox');
+        const container = document.getElementById(IdDict.SUBTREE_TOOLBOX);
         if (!(container instanceof HTMLDivElement)) throw new Error('Subtree toolbox container not found');
         subtreeToolbox = new SubtreeToolbox(container);
     }

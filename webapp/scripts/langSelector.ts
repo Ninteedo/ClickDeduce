@@ -1,6 +1,7 @@
 import {getLangSelectorNew} from "./serverRequest";
 import {markHasUsedLangSelector} from "./attention";
 import {runAction} from "./actions";
+import {IdDict} from "./globals/idDict";
 
 let langSelector: HTMLSelectElement;
 
@@ -8,14 +9,14 @@ let langSelector: HTMLSelectElement;
  * Loads the language selector HTML from the server and adds it to the DOM.
  */
 export function loadLangSelector(): void {
-    const langSelectorContainer: HTMLElement | null = document.getElementById('lang-selector-div');
+    const langSelectorContainer: HTMLElement | null = document.getElementById(IdDict.LANG_SELECTOR_DIV);
 
     if (!(langSelectorContainer instanceof HTMLDivElement)) {
         throw new Error("Could not find lang-selector-div");
     }
 
     langSelectorContainer.innerHTML = getLangSelectorNew();
-    const langSelectorElement: HTMLElement | null = document.getElementById('lang-selector');
+    const langSelectorElement: HTMLElement | null = document.getElementById(IdDict.LANG_SELECTOR);
     if (!(langSelectorElement instanceof HTMLSelectElement)) throw new Error('Language selector not found');
     langSelectorElement.selectedIndex = 0;
     langSelectorElement.addEventListener('change', () => {
@@ -28,7 +29,7 @@ export function loadLangSelector(): void {
 
 export function getCurrentLanguage(): string {
     if (!langSelector) {
-        langSelector = document.getElementById('lang-selector') as HTMLSelectElement;
+        langSelector = document.getElementById(IdDict.LANG_SELECTOR) as HTMLSelectElement;
     }
     return langSelector.value;
 }

@@ -1,11 +1,12 @@
 import {getBlocker} from "../globals/elements";
 import {Modal} from "./modal";
+import {IdDict} from "../globals/idDict";
 
 let shortcutModal: Modal | null = null;
 
 function getShortcutModal(): Modal {
     if (!shortcutModal) {
-        const shortcutsDialog = document.getElementById('shortcuts-dialog');
+        const shortcutsDialog = document.getElementById(IdDict.SHORTCUTS_DIALOG);
         if (!(shortcutsDialog instanceof HTMLDivElement)) {
             throw new Error('Shortcuts dialog not found');
         }
@@ -28,7 +29,7 @@ function getShortcutMap(): Map<string, string> {
 }
 
 export function showShortcutsDialog(): void {
-    const shortcutsDialogContents = document.getElementById('shortcuts-dialog-contents');
+    const shortcutsDialogContents = document.getElementById(IdDict.SHORTCUTS_DIALOG_CONTENTS);
     if (!shortcutsDialogContents) {
         throw new Error('Shortcuts dialog contents not found');
     }

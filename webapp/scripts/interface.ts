@@ -16,6 +16,7 @@ import {
 import {setNextFocusTreePath} from "./focus";
 import {getActiveInputs} from "./activeInputs";
 import {ClassDict} from "./globals/classDict";
+import {IdDict} from "./globals/idDict";
 
 /**
  * Resets the global variables used by the interface code.
@@ -109,7 +110,7 @@ export function setFocusElement(path: string): void {
 }
 
 function setupValueTypeColourHighlightingCheckbox(): void {
-    const valueTypeColourCheckbox = document.getElementById('value-highlighting-toggle') as HTMLInputElement;
+    const valueTypeColourCheckbox = document.getElementById(IdDict.VALUE_HIGHLIGHTING_TOGGLE) as HTMLInputElement;
     valueTypeColourCheckbox.checked = true;
     valueTypeColourCheckbox.addEventListener('change', () => {
         toggleValueTypeColourHighlighting(valueTypeColourCheckbox.checked);

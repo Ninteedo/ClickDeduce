@@ -15,6 +15,7 @@ import {
 import {CustomExprSelector} from "../components/customExprSelector";
 import {getLangSelector, getTree, getUndoButton} from "../globals/elements";
 import {getExprSelectors} from "../activeInputs";
+import {IdDict} from "../globals/idDict";
 
 const indexHtml = loadIndexHtmlTemplate();
 
@@ -26,7 +27,7 @@ beforeEach(() => {
 
 describe('lang selector is correctly initialised on load', () => {
     function getLangSelectorDiv(): HTMLElement {
-        const langSelectorDiv = document.getElementById('lang-selector-div');
+        const langSelectorDiv = document.getElementById(IdDict.LANG_SELECTOR_DIV);
         if (!langSelectorDiv) throw new Error('lang-selector-div not found');``
         return langSelectorDiv;
     }

@@ -23,10 +23,6 @@ export function loadIndexHtmlTemplate(): string {
     return loadHtmlTemplate('index');
 }
 
-export function getStartNodeButton() {
-    return document.getElementById('start-node-button');
-}
-
 export function pressStartNodeButton() {
     startNodeBlank();
 }

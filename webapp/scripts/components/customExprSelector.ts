@@ -8,6 +8,7 @@ import {RulePreview} from "./rulePreview";
 import {ParsePreview} from "./parsePreview";
 import {getCurrentLanguage} from "../langSelector";
 import {ClassDict} from "../globals/classDict";
+import {IdDict} from "../globals/idDict";
 
 const UP_ARROW = '&#9650;';
 const DOWN_ARROW = '&#9660;';
@@ -293,7 +294,7 @@ class ExampleExprSelector extends CustomExprSelector {
 }
 
 export function setupExampleSelector(termSelectorContainer: HTMLDivElement): void {
-    new ExampleExprSelector(termSelectorContainer, document.getElementById("expr-selector-output") as HTMLDivElement);
+    new ExampleExprSelector(termSelectorContainer, document.getElementById(IdDict.EXPR_SELECTOR_OUTPUT) as HTMLDivElement);
 }
 
 class ExprSelectorPlaceholder {

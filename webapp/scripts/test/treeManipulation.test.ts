@@ -17,6 +17,7 @@ import {
 import * as NS from "../../test_resources/node_strings";
 import {getNodeStringFromPath} from "../utility/parseNodeString";
 import {getRedoButton, getTree, getUndoButton} from "../globals/elements";
+import {IdDict} from "../globals/idDict";
 
 const indexHtml = loadHtmlTemplate('index');
 
@@ -217,7 +218,7 @@ describe("phantom inputs are made read-only and disabled", () => {
         selectExprOption(getDropdownAt("1"), "Num");
         doLiteralEdit(getLiteralInputAt("1-0"), "28");
 
-        document.getElementById("eval-mode-radio")?.click();
+        document.getElementById(IdDict.EVAL_MODE_RADIO)?.click();
         slightDelay();
     });
 

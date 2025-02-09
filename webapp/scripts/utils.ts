@@ -1,5 +1,6 @@
 import {DisplayMode} from "./globals/displayMode";
 import {ClassDict} from "./globals/classDict";
+import {IdDict} from "./globals/idDict";
 
 /**
  * Get the value of the selected mode radio button.
@@ -26,7 +27,7 @@ export function getSelectedMode(): DisplayMode {
  * Get the value of the selected language from the language selector.
  */
 export function getSelectedLanguage(): string {
-    const langSelector: HTMLSelectElement = document.getElementById('lang-selector') as HTMLSelectElement;
+    const langSelector: HTMLSelectElement = document.getElementById(IdDict.LANG_SELECTOR) as HTMLSelectElement;
     return langSelector.value;
 }
 
