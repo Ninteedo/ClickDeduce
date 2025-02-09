@@ -2,11 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>ClickDeduce Guide</title>
+  <title>Guide | ClickDeduce</title>
+  <link rel="icon" href="/assets/icon-NAw2AqmD.svg" type="image/svg+xml">
   <script>
     let prevLiteralValue = '';
 
     document.addEventListener('DOMContentLoaded', function () {
+      setupGuide();
       const exampleSelector = document.getElementById('example-selector');
       setupExampleSelector(exampleSelector);
 
@@ -27,8 +29,8 @@
       });
     });
   </script>
-  <script type="module" crossorigin src="/assets/initialise-BAmiQXxM.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/initialise-BS68ULpQ.css">
+  <script type="module" crossorigin src="/assets/initialise-CfRunx_K.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/initialise-2XBWiQ7W.css">
 </head>
 <body id="guide">
 <h1>ClickDeduce Guide</h1>
@@ -48,12 +50,13 @@
   </li>
   <li>
     <b>Values</b>:
-    The result of evaluating an <i>expression</i> that cannot be evaluated further. Examples: <code>NumV</code>.
+    The result of evaluating an <i>expression</i> that cannot be evaluated further.
+    Example: <code>NumV</code>.
   </li>
   <li>
     <b>Types</b>:
     The result of type-checking an <i>expression</i>, the kind of value that an <i>expression</i> would evaluate to.
-    Examples: <code>IntType</code>.
+    Example: <code>IntType</code>.
   </li>
   <li>
     <b>Literals</b>:
@@ -73,6 +76,7 @@
 <p>
   You can <b>pan and zoom</b> the tree by <b>dragging and scrolling</b>.
 </p>
+<img id="guide-demo-gif" title="Interface demonstration"/>
 <h4>Selecting Expressions</h4>
 <p>
   To select an expression, click on the "<code>Enter Expression...</code>" text box and type in the
@@ -163,6 +167,19 @@
     Displays the evaluation result.
   </li>
 </ul>
+<h3>Tasks</h3>
+<p>
+  To the right of the main controls is a list of tasks for the selected language.
+  They are designed to introduce you to features of the languages.
+  Completing an expression that matches the condition described in the task will mark it as completed, turning it green.
+  Try to complete some of the tasks for a language before moving on to the next one.
+</p>
+<h3>Toolbox</h3>
+<p>
+  While creating different expressions, you may want to reuse parts of them later.
+  The "Send to Toolbox" button in the context menu will add the selected expression to the toolbox.
+  Later, you can drag expressions from the toolbox into the tree to reuse them.
+</p>
 
 <a href="/">Back to ClickDeduce</a>
 </body>
