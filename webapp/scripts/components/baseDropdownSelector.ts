@@ -133,6 +133,7 @@ export class BaseDropdownSelector implements AbstractTreeInput {
     }
 
     protected showDropdown(): void {
+        if (this.isDropdownVisible()) return;
         this.dropdown.classList.add(this.DROPDOWN_VISIBLE_CLASS);
         this.dropdown.scrollTop = 0;
         this.container.classList.add(this.SELECTOR_FOCUS_CLASS);
@@ -140,6 +141,7 @@ export class BaseDropdownSelector implements AbstractTreeInput {
     }
 
     protected hideDropdown(): void {
+        if (!this.isDropdownVisible()) return;
         this.dropdown.classList.remove(this.DROPDOWN_VISIBLE_CLASS);
         this.container.classList.remove(this.SELECTOR_FOCUS_CLASS);
     }

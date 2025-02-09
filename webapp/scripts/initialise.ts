@@ -21,6 +21,7 @@ import {
 import {setUpPanZoom, zoomToFit} from "./components/panzoom";
 import {closeExportOutput, copyExportOutput, exportLaTeX} from "./components/latexOutput";
 import {showShortcutsDialog} from "./components/shortcutsModal";
+import {setupGuide} from "./guide";
 
 /**
  * Sets up the global variables and initialises the panzoom instance.
@@ -73,3 +74,4 @@ function setupButtons(): void {
 (window as any).setupExampleSelector = setupExampleSelector;
 (window as any).exampleLiteralChanged = exampleLiteralChanged;
 (window as any).updateTextInputWidth = updateTextInputWidth;
+(window as any).setupGuide = setupGuide;

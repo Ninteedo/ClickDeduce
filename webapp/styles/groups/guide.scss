@@ -14,9 +14,19 @@
 #guide {
   max-width: 65ch;
   margin: 0 auto;
-  padding-bottom: 2rem;
+  padding: 0 1rem 2rem 1rem;
 
-  h1, h2, h3, h4, h5, h6, p {
-    margin-bottom: 0;
+  box-shadow: colours.$input-outline 0 0 1rem 1rem;
+
+  max-height: none;
+  height: auto;
+
+  h1, h2, h3, h4, h5, h6 {
+    margin-bottom: 1rem;
+    margin-top: 0;
+  }
+
+  p, ul {
+    margin: 0 0 0.5em 0;
   }
 }

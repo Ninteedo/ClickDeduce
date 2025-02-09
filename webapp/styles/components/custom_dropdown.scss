@@ -5,7 +5,11 @@
   position: relative;
 
   &.focused {
-    box-shadow: -1px 0 2px 1px colours.$foreground, 0 -1px 2px 1px colours.$foreground, 1px 0 2px 1px colours.$foreground, 0 1px 2px 1px colours.$foreground;
+    box-shadow:
+      -1px 0 2px 1px colours.$foreground,
+      0 -1px 2px 1px colours.$foreground,
+      1px 0 2px 1px colours.$foreground,
+      0 1px 2px 1px colours.$foreground;
     border-radius: 3px;
   }
 
@@ -16,7 +20,7 @@
     }
   }
 
-  input[type="text"]:not(.identifier-lookup, [disabled]) {
+  input[type="text"]:not(.identifier-lookup, [disabled]), .expr-selector-input {
     margin: 0;
     border-radius: 3px 0 0 3px;
     outline: none;

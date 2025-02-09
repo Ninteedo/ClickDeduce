@@ -49,7 +49,11 @@ export function resetTreeManipulation(): void {
  * Loads the language selector HTML from the server and adds it to the DOM.
  */
 function loadLangSelector(): HTMLSelectElement {
-    const langSelectorContainer: HTMLDivElement = document.getElementById('lang-selector-div') as HTMLDivElement;
+    const langSelectorContainer: HTMLElement | null = document.getElementById('lang-selector-div');
+
+    if (!(langSelectorContainer instanceof HTMLDivElement)) {
+        throw new Error("Could not find lang-selector-div");
+    }
 
     langSelectorContainer.innerHTML = getLangSelectorNew();
     const langSelector: HTMLElement | null = document.getElementById('lang-selector');
@@ -211,11 +215,18 @@ export function loadTreeFromString(nodeString: string): void {
 }
 
 export function getCurrentLanguage(): string {
+    if (!langSelector) {
+        langSelector = document.getElementById('lang-selector') as HTMLSelectElement;
+    }
     return langSelector.value;
 }
 
-export function setCurrentLanguage(lang: string): void {
-    langSelector.value = lang;
+export function setCurrentLanguage(lang: string | number): void {
+    if (typeof lang === 'number') {
+        langSelector.selectedIndex = lang;
+    } else {
+        langSelector.value = lang;
+    }
 }
 
 export function getCurrentNodeString(): string | null {

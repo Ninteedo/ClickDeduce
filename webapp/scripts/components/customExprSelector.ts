@@ -17,16 +17,19 @@ export class CustomExprSelector extends BaseDropdownSelector {
     protected readonly rulePreview: RulePreview;
     protected readonly parsePreview: ParsePreview | undefined;
 
-    constructor(container: HTMLDivElement) {
+    constructor(container: HTMLDivElement, enableParsing: boolean = true) {
         const dropdown = container.querySelector('.expr-selector-dropdown') as HTMLDivElement;
         const dropdownList = dropdown.querySelector('ul') as HTMLUListElement;
         const options: DropdownOption[] = Array.from(dropdownList.querySelectorAll('li'))
             .map(option => new NameDropdownOption(option as HTMLLIElement));
 
-        const parseOptionElement = document.createElement('li');
-        parseOptionElement.innerText = 'Parsed...';
-        const parseDropdownOption = new ParseDropdownOption(parseOptionElement, container.getAttribute('data-tree-path')!);
-        options.push(parseDropdownOption);
+        let parseDropdownOption: ParseDropdownOption | undefined;
+        if (enableParsing) {
+            const parseOptionElement = document.createElement('li');
+            parseOptionElement.innerText = 'Parsed...';
+            parseDropdownOption = new ParseDropdownOption(parseOptionElement, container.getAttribute('data-tree-path')!);
+            options.push(parseDropdownOption);
+        }
 
         dropdownList.replaceChildren(...options.map(option => option.element));
 
@@ -39,9 +42,9 @@ export class CustomExprSelector extends BaseDropdownSelector {
         this.button = container.querySelector('.expr-selector-button') as HTMLButtonElement;
         this.setup();
         this.rulePreview = new RulePreview(container);
-        if (!this.isTypeSelector()) {
+        if (!this.isTypeSelector() && enableParsing) {
             this.parsePreview = new ParsePreview(container);
-        } else {
+        } else if (parseDropdownOption) {
             parseDropdownOption.disable();
         }
         this.updateWidth();
@@ -247,7 +250,7 @@ class ExampleExprSelector extends CustomExprSelector {
     private readonly output: HTMLDivElement;
 
     constructor(container: HTMLDivElement, output: HTMLDivElement) {
-        super(container);
+        super(container, false);
         this.output = output;
     }
 
@@ -267,6 +270,7 @@ class ExampleExprSelector extends CustomExprSelector {
 
     protected override updateDropdown() {
         super.updateDropdown();
+        this.showDropdown();
         this.clearOutput();
     }
 }
