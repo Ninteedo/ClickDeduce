@@ -105,17 +105,17 @@ class HTMLConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConve
       val parsedParentEnv = parseEnv(parentEnv.get.asInstanceOf[Env[Term]], valueTooltips = false)
       val envChar = if (mode == DisplayMode.TypeCheck) Symbols.gamma.asPlainText else Symbols.sigma.asPlainText
       val envLabel = span(envChar, sub(envIndex), if (typeMode) sup(raw("τ")) else raw(""))
-      val miniParent = span(cls := ClassDict.TOOLTIP, envLabel, div(cls := ClassDict.TOOLTIP_TEXT, formatEnv(parsedParentEnv)))
+      val miniParent = span(cls := ClassDict.TOOLTIP, envLabel, div(cls := ClassDict.TOOLTIP_TEXT, formatEnv(parsedParentEnv, breaks = true)))
 
       if (parsedEnv.nonEmpty) span(miniParent, " + ", formatEnv(parsedEnv), delimiter) else span(miniParent, delimiter)
     } else if (parsedEnv.nonEmpty) span(formatEnv(parsedEnv), delimiter)
     else span()
   }
 
-  private def formatEnv(env: Iterable[(String, TypedTag[String])]): TypedTag[String] = {
+  private def formatEnv(env: Iterable[(String, TypedTag[String])], breaks: Boolean = false): TypedTag[String] = {
     val variablesHtml: Option[HTML] =
       if (env.isEmpty) None
-      else Some(div(raw(env.map((k, v) => s"$k = $v").mkString("[", ", ", "]"))))
+      else Some(div(raw(env.map((k, v) => s"$k = $v").mkString("[", if breaks then ",<br/>" else ", ", "]"))))
     div(cls := ClassDict.SCOPED_VARIABLES, variablesHtml)
   }
 
