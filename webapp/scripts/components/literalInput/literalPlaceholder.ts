@@ -26,7 +26,9 @@ export class LiteralPlaceholder {
     }
 
     private setupEventListeners(): void {
-        this.placeholder.addEventListener('mouseover', () => this.originInput.addGuideHighlight());
+        this.placeholder.addEventListener('mouseover', () => {
+            if (this.originInput.isEnabled()) this.originInput.addGuideHighlight();
+        });
         this.placeholder.addEventListener('mouseout', () => this.originInput.removeGuideHighlight());
         this.placeholder.addEventListener('click', event => {
             event.preventDefault();

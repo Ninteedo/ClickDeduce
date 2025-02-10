@@ -138,4 +138,8 @@ export class LiteralInput implements AbstractTreeInput {
         div.innerText = this.getValue();
         return div;
     }
+
+    public isEnabled(): boolean {
+        return !this.input.disabled;
+    }
 }
