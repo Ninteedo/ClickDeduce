@@ -1,4 +1,5 @@
 @use "../abstracts/colours";
+@use "../abstracts/no_user_select";
 
 .custom-menu {
   display: none;
@@ -10,7 +11,7 @@
 }
 
 #custom-context-menu {
-  user-select: none;
+  @include no_user_select.no_user-select;
 
   ul {
     list-style: none;

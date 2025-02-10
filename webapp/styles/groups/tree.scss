@@ -1,4 +1,5 @@
 @use "../abstracts/colours";
+@use "../abstracts/no_user_select";
 
 #tree-and-toolbox {
   max-width: 100vw;
@@ -64,9 +65,7 @@
 
   white-space: nowrap;
 
-  user-select: none;
-  -webkit-user-select: none;
-  -ms-user-select: none;
+  @include no_user_select.no-user-select;
 
   &.hidden {
     display: none;
@@ -199,6 +198,7 @@
   background-color: colours.$disabled-input;
   color: colours.$disabled-input-text;
   cursor: not-allowed;
+  @include no_user_select.no-user-select;
 }
 
 .value-highlighting-enabled {
