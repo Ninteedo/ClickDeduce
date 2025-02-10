@@ -281,7 +281,8 @@ class LArith extends ClickDeduceLanguage {
 
   private object NegativeIntegerTask extends Task {
     override val name: String = "Enter a negative integer"
-    override val description: String = "Select a Num expression and enter a negative integer into its text box."
+    override val description: String = "Select a Num expression and enter a negative integer into its text box." +
+      " There is no Minus expression, so you must use Plus with a negative number for subtraction."
     override val difficulty: Int = 1
 
     override def checkFulfilled(expr: Expr): Boolean = {
