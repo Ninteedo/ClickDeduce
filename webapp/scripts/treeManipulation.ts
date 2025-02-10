@@ -49,6 +49,7 @@ export function resetTreeManipulation(): void {
  * @param addToHistory whether to add this change to the history
  */
 export function updateTree(newTreeHtml: string, newNodeString: string, modeName: string, lang: string, addToHistory: boolean = false): void {
+    getTree().style.display = "none";
     getTree().innerHTML = newTreeHtml;
     lastNodeString = newNodeString;
     rootSubtree = new Subtree(getFirstSubtree(), null, newNodeString);
@@ -69,6 +70,8 @@ export function updateTree(newTreeHtml: string, newNodeString: string, modeName:
 
     resumeFileDragAndDrop();
     unlockPanZoom();
+
+    getTree().style.display = "";
 
     if (isAutoZoomEnabled()) zoomToFit();
 }

@@ -134,9 +134,8 @@ export class LiteralInput implements AbstractTreeInput {
     }
 
     protected getPlaceholderContent(): HTMLElement {
-        const html = `<input class="${ClassDict.LITERAL}" type="text" value="${this.getValue()}" readonly disabled/>`;
         const div = document.createElement('div');
-        div.innerHTML = html;
+        div.innerText = this.getValue();
         return div;
     }
 }

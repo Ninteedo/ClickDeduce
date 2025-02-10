@@ -11,7 +11,9 @@ export class LiteralPlaceholder {
             for (const attr of Array.from(placeholder.attributes)) {
                 replacement.setAttribute(attr.name, attr.value);
             }
-            replacement.innerText = placeholder.value;
+            const contentDiv = document.createElement('div');
+            contentDiv.innerText = placeholder.value;
+            replacement.appendChild(contentDiv);
             replacement.classList.add(ClassDict.PLACEHOLDER);
             placeholder.replaceWith(replacement);
             placeholder = replacement;
@@ -34,7 +36,6 @@ export class LiteralPlaceholder {
     }
 
     public setContent(content: HTMLElement): void {
-        this.placeholder.innerHTML = '';
-        this.placeholder.appendChild(content);
+        this.placeholder.replaceChildren(content);
     }
 }
