@@ -123,33 +123,33 @@ class LLet extends LIf {
   // errors
 
   case class UnknownVariableEvalError(v: Literal) extends EvalError {
-    override val message: String = s"Unknown variable identifier '$v'"
+    override val message: String = s"Unknown variable identifier '${v.getValue}'"
 
     override val typ: Type = UnknownVariableTypeError(v)
   }
 
   case class UnknownVariableTypeError(v: Literal) extends TypeError {
-    override val message: String = s"Unknown variable identifier '$v'"
+    override val message: String = s"Unknown variable identifier '${v.getValue}'"
   }
 
   case class VariableOnlyTypeError(v: Literal) extends TypeError {
-    override val message: String = s"Variable '$v' can only be used as a type"
+    override val message: String = s"Variable '${v.getValue}' can only be used as a type"
   }
 
   case class VariableOnlyEvalError(v: Literal) extends EvalError {
-    override val message: String = s"Variable '$v' can only be used as a type"
+    override val message: String = s"Variable '${v.getValue}' can only be used as a type"
 
     override val typ: Type = VariableOnlyTypeError(v)
   }
 
   case class InvalidIdentifierEvalError(v: Literal) extends EvalError {
-    override val message: String = s"Invalid identifier '$v'"
+    override val message: String = s"Invalid identifier '${v.getValue}'"
 
     override val typ: Type = InvalidIdentifierTypeError(v)
   }
 
   case class InvalidIdentifierTypeError(v: Literal) extends TypeError {
-    override val message: String = s"Invalid identifier '$v'"
+    override val message: String = s"Invalid identifier '${v.getValue}'"
   }
 
   // helpers
