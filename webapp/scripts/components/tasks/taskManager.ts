@@ -55,7 +55,7 @@ class TaskManager {
         }
 
         if (this.lastLang !== lang) {
-            this.newTasksDiv();
+            this.tasksDiv.replaceWith(this.newTasksDiv());
         } else {
             this.updateTasksDiv();
         }
@@ -107,17 +107,23 @@ class TaskManager {
         return taskDiv;
     }
 
-    newTasksDiv(): void {
-        this.tasksDiv.innerHTML = "";
+    newTasksDiv(): HTMLDivElement {
+        const newTasksDiv = document.createElement("div");
+        newTasksDiv.id = this.tasksDiv.id;
+        for (const cls of this.tasksDiv.classList) {
+            newTasksDiv.classList.add(cls);
+        }
 
         if (this.currentTasks.length === 0) {
-            this.tasksDiv.classList.add(ClassDict.HIDDEN);
+            newTasksDiv.classList.add(ClassDict.HIDDEN);
         } else {
-            this.tasksDiv.classList.remove(ClassDict.HIDDEN);
+            newTasksDiv.classList.remove(ClassDict.HIDDEN);
             for (const task of this.currentTasks) {
-                this.tasksDiv.appendChild(this.createTaskElement(task));
+                newTasksDiv.appendChild(this.createTaskElement(task));
             }
         }
+
+        return newTasksDiv;
     }
 
     updateTasksDiv(): void {
