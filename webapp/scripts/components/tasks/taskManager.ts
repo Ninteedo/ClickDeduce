@@ -27,7 +27,7 @@ class TaskManager {
     private fulfilledTasks: string[] = [];
     private lastLang: string | undefined = undefined;
 
-    private readonly tasksDiv: HTMLDivElement;
+    private tasksDiv: HTMLDivElement;
 
     constructor() {
         this.tasksDiv = document.getElementById(IdDict.TASKS) as HTMLDivElement;
@@ -55,7 +55,9 @@ class TaskManager {
         }
 
         if (this.lastLang !== lang) {
-            this.tasksDiv.replaceWith(this.newTasksDiv());
+            const replacement = this.newTasksDiv();
+            this.tasksDiv.replaceWith(replacement);
+            this.tasksDiv = replacement;
         } else {
             this.updateTasksDiv();
         }
@@ -118,9 +120,8 @@ class TaskManager {
             newTasksDiv.classList.add(ClassDict.HIDDEN);
         } else {
             newTasksDiv.classList.remove(ClassDict.HIDDEN);
-            for (const task of this.currentTasks) {
-                newTasksDiv.appendChild(this.createTaskElement(task));
-            }
+            const taskElements = this.currentTasks.map(task => this.createTaskElement(task));
+            newTasksDiv.append(...taskElements);
         }
 
         return newTasksDiv;

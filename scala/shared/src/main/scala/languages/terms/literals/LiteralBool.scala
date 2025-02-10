@@ -2,7 +2,7 @@ package languages.terms.literals
 
 import app.HTMLHelper
 import convertors.ClassDict
-import convertors.text.{ConvertableText, MathElement}
+import convertors.text.{ConvertableText, TextElement}
 import languages.env.{TypeEnv, ValueEnv}
 import scalatags.Text.TypedTag
 import scalatags.Text.all.*
@@ -13,7 +13,7 @@ import scalatags.Text.all.*
   *   The boolean value.
   */
 case class LiteralBool(value: Boolean) extends Literal {
-  override def toText: ConvertableText = MathElement(getValue)
+  override def toText: ConvertableText = TextElement(getValue)
 
   override def toHtmlInput(treePath: String, env: ValueEnv | TypeEnv): TypedTag[String] = div(
     cls := "literal-checkbox-container",
