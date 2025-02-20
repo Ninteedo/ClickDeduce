@@ -73,13 +73,29 @@ trait AbstractLanguage {
 
   def getExprRulePreview(name: String): Option[RulePreview] = exprBuilderManager.getRulePreview(name)
 
+  /**
+   * Parser for ClickDeduce expressions from user-entered text.
+   */
   protected trait ExprParser extends JavaTokenParsers {
+    /**
+     * Parse an expression.
+     */
     def expr: Parser[Expr]
 
+    /**
+     * Expression operator with precedence.
+     */
     protected trait ExprOperator {
       def precedence: Int
     }
 
+    /**
+     * Basic binary operator.
+     * @param op The operator parser.
+     * @param apply The function to apply the left and right expressions to.
+     * @param precedence The precedence of the operator.
+     * @param associativity The associativity (left or right) of the operator.
+     */
     protected case class BasicBinaryOperator(
       op: Parser[String],
       apply: (Expr, Expr) => Expr,
@@ -87,19 +103,45 @@ trait AbstractLanguage {
       associativity: Associativity
     ) extends ExprOperator
 
+    /**
+     * Operator that simply uses another parser.
+     * @param parser The parser to use.
+     * @param precedence The precedence of the parser.
+     */
     case class SpecialParser(parser: Parser[Expr], precedence: Int) extends ExprOperator
 
+    /**
+     * Left-recursive operator.
+     * <p>This is intended for expressions which start with parsing an expression, which would otherwise cause infinite recursion.</p>
+     * @param parser The parser to use.
+     * @param precedence The precedence of the parser.
+     */
     case class LeftRecursiveOperator(
       parser: Parser[Expr => Expr],
       precedence: Int
     ) extends ExprOperator
 
+    /**
+     * Associativity of an operator.
+     * <p>Left-associative operators are parsed as `(a op b) op c`,
+     * while right-associative operators are parsed as `a op (b op c)`.</p>
+     */
     protected enum Associativity {
       case Left, Right
     }
 
+    /**
+     * List of operators to include in the parser.
+     * @see [[precedenceParser]]
+     */
     protected def exprOperators: List[ExprOperator] = List.empty
 
+    /**
+     * Generate a parser respecting operator precedence and associativity.
+     * @param base The base parser.
+     * @param operators The list of operators to include.
+     * @return The parser.
+     */
     protected def precedenceParser(base: Parser[Expr], operators: List[ExprOperator]): Parser[Expr] = {
       if (operators.isEmpty) base
       else {
@@ -142,8 +184,16 @@ trait AbstractLanguage {
     }
   }
 
+  /**
+   * Instance of expression parser to use.
+   */
   protected val exprParser: ExprParser
 
+  /**
+   * Parse an expression from user-entered text.
+   * @param exprText The text to parse.
+   * @return either an error message and column number, or the parsed expression.
+   */
   def parseExpr(exprText: String): Either[(String, Int), Expr] = exprParser.parseAll(exprParser.expr, exprText) match {
     case exprParser.Success(result, _) => Right(result)
     case exprParser.Failure(msg, next) => Left(msg, next.pos.column)
