@@ -10,8 +10,8 @@
     <ScalaCodeStyleSettings>
       <option name="ALIGN_EXTENDS_WITH" value="1" />
       <option name="INDENT_FIRST_PARAMETER" value="false" />
-      <option name="FORMATTER" value="1" />
       <option name="CALL_PARAMETERS_NEW_LINE_AFTER_LPAREN" value="2" />
+      <option name="TRAILING_COMMA_MODE" value="TRAILING_COMMA_ADD_WHEN_MULTILINE" />
       <option name="TRAILING_COMMA_TUPLE_ENABLED" value="true" />
       <option name="TRAILING_COMMA_PATTERN_ARG_LIST_ENABLED" value="true" />
       <option name="TRAILING_COMMA_TYPE_PARAMS_ENABLED" value="true" />
@@ -87,6 +87,26 @@
       <option name="WRAP_FIRST_METHOD_IN_CALL_CHAIN" value="true" />
       <option name="KEEP_SIMPLE_BLOCKS_IN_ONE_LINE" value="true" />
       <option name="WRAP_LONG_LINES" value="true" />
+      <arrangement>
+        <groups>
+          <group>
+            <type>DEPENDENT_METHODS</type>
+            <order>BREADTH_FIRST</order>
+          </group>
+          <group>
+            <type>SCALA_KEEP_JAVA_GETTERS_SETTERS_TOGETHER</type>
+            <order>KEEP</order>
+          </group>
+          <group>
+            <type>SCALA_KEEP_SCALA_GETTERS_SETTERS_TOGETHER</type>
+            <order>KEEP</order>
+          </group>
+          <group>
+            <type>SCALA_SPLIT_BY_EXPRESSIONS</type>
+            <order>KEEP</order>
+          </group>
+        </groups>
+      </arrangement>
     </codeStyleSettings>
   </code_scheme>
 </component>
