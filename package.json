@@ -9,8 +9,8 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "@babel/core": "~7.26.0",
-    "@babel/preset-env": "~7.26.0",
+    "@babel/core": "~7.26.9",
+    "@babel/preset-env": "~7.26.9",
     "@panzoom/panzoom": "~4.6.0",
     "@scala-js/vite-plugin-scalajs": "^1.0.0",
     "babel-loader": "~9.2.1",
@@ -18,17 +18,17 @@
     "css-loader": "~7.1.2",
     "html-webpack-plugin": "~5.6.3",
     "jsdom": "~26.0.0",
-    "node-fetch": "~2.6.1",
-    "sass": "~1.83.4",
-    "sass-migrator": "^2.3.0",
-    "sass-loader": "~16.0.4",
+    "node-fetch": "~3.3.2",
+    "sass": "~1.85.1",
+    "sass-migrator": "^2.3.1",
+    "sass-loader": "~16.0.5",
     "style-loader": "~4.0.0",
     "tree-kill": "^1.2.2",
-    "ts-jest": "~29.1.1",
-    "ts-loader": "~9.5.1",
-    "typescript": "~5.7.3",
-    "vite": "^6.0.7",
-    "vitest": "^2.1.8"
+    "ts-jest": "~29.2.6",
+    "ts-loader": "~9.5.2",
+    "typescript": "^5.7.3",
+    "vite": "^6.2.0",
+    "vitest": "^3.0.7"
   },
   "dependencies": {
     "panzoom": "~9.4.3"
