@@ -267,15 +267,13 @@ class LArith extends ClickDeduceLanguage {
     override val difficulty: Int = 1
 
     override def checkFulfilled(expr: Expr): Boolean = {
-      def checkNum(expr: Expr): Boolean = checkCondition(
+      checkCondition(
         expr,
         cond = {
           case Num(LiteralInt(n)) => n > 0
           case _                  => false
         }
       )
-
-      checkNum(expr)
     }
   }
 
@@ -286,15 +284,13 @@ class LArith extends ClickDeduceLanguage {
     override val difficulty: Int = 1
 
     override def checkFulfilled(expr: Expr): Boolean = {
-      def checkNum(expr: Expr): Boolean = checkCondition(
+      checkCondition(
         expr,
         cond = {
           case Num(LiteralInt(n)) => n < 0
           case _                  => false
         }
       )
-
-      checkNum(expr)
     }
   }
 
@@ -324,13 +320,6 @@ class LArith extends ClickDeduceLanguage {
     protected def num: Parser[Num] = wholeNumber ^^ (n => Num(LiteralInt(BigInt(n))))
 
     protected def blank: Parser[BlankExprDropDown] = "_" ^^^ BlankExprDropDown(lang)
-
-    protected def chainl1(p: Parser[Expr], op: Parser[(Expr, Expr) => Expr]): Parser[Expr] = {
-      def rest(acc: Expr): Parser[Expr] =
-        ((op ~ p) ^^ { case f ~ x => f(acc, x) } flatMap rest) | success(acc)
-
-      p flatMap rest
-    }
 
     protected def primitive: Parser[Expr] = num | blank | "(" ~> expr <~ ")"
 

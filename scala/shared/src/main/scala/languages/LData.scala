@@ -698,9 +698,9 @@ class LData extends LRec {
 
     override protected def funcType: Parser[Type] = unionType ~ singleRightArrow ~ funcType ^^ { case l ~ _ ~ r => Func(l, r) } | unionType
 
-    protected def unionType: Parser[Type] = pairType ~ "+" ~ unionType ^^ { case l ~ _ ~ r => UnionType(l, r) } | pairType
+    private def unionType: Parser[Type] = pairType ~ "+" ~ unionType ^^ { case l ~ _ ~ r => UnionType(l, r) } | pairType
 
-    protected def pairType: Parser[Type] = typPrimitive ~ times ~ pairType ^^ { case l ~ _ ~ r => PairType(l, r) } | typPrimitive
+    private def pairType: Parser[Type] = typPrimitive ~ times ~ pairType ^^ { case l ~ _ ~ r => PairType(l, r) } | typPrimitive
 
     override def typ: Parser[Type] = funcType
   }
