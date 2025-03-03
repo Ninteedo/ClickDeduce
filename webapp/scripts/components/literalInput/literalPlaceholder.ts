@@ -12,7 +12,11 @@ export class LiteralPlaceholder {
                 replacement.setAttribute(attr.name, attr.value);
             }
             const contentDiv = document.createElement('div');
-            contentDiv.innerText = placeholder.value;
+            if (placeholder.value.trim().length > 0) {
+                contentDiv.innerText = placeholder.value;
+            } else {
+                contentDiv.innerHTML = '&nbsp;';
+            }
             replacement.appendChild(contentDiv);
             replacement.classList.add(ClassDict.PLACEHOLDER);
             placeholder.replaceWith(replacement);

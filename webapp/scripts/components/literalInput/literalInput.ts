@@ -135,7 +135,12 @@ export class LiteralInput implements AbstractTreeInput {
 
     protected getPlaceholderContent(): HTMLElement {
         const div = document.createElement('div');
-        div.innerText = this.getValue();
+        const value = this.getValue();
+        if (value.trim().length > 0) {
+            div.innerText = value;
+        } else {
+            div.innerHTML = '&nbsp;';
+        }
         return div;
     }
 
