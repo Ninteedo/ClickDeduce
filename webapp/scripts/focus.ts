@@ -79,3 +79,16 @@ export function setNextFocusTreePath(path: string | null): void {
 export function getNextFocusTreePath(): string | null {
     return nextFocusPath;
 }
+
+export function getFocusedElementTreePath(): string | null {
+    const active = document.activeElement;
+    if (!active || !active.hasAttribute('data-tree-path')) return null;
+    return active.getAttribute('data-tree-path')!;
+}
+
+export function getFocusedSubtreePath(): string | null {
+    const elPath = getFocusedElementTreePath();
+    if (!elPath) return null;
+    if (!elPath.includes('-')) return "";
+    return elPath.slice(0, elPath.lastIndexOf('-'));
+}

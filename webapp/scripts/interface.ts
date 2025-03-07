@@ -1,19 +1,14 @@
 import {copyTreeNode, deleteTreeNode, pasteTreeNode} from "./actions";
 import {redo, undo} from "./treeManipulation";
 import {compareTreePaths, parseTreePath} from "./utils";
-import {
-    getControlsDiv,
-    getToggleControlsButton,
-    getTreePathOfElement,
-    getTreePathOfElementOptional
-} from "./globals/elements";
+import {getControlsDiv, getToggleControlsButton, getTreePathOfElementOptional} from "./globals/elements";
 import {
     clearContextMenuSelectedElement,
     closeContextMenu,
     getHighlightElement,
     openContextMenu
 } from "./components/contextMenu/contextMenu";
-import {setNextFocusTreePath} from "./focus";
+import {getFocusedSubtreePath, setNextFocusTreePath} from "./focus";
 import {getActiveInputs} from "./activeInputs";
 import {ClassDict} from "./globals/classDict";
 import {IdDict} from "./globals/idDict";
@@ -35,11 +30,11 @@ export function resetInterfaceGlobals(): void {
  */
 function globalHandleKeyDown(e: KeyboardEvent): void {
     const highlightElement = getHighlightElement();
-    const highlightPath = highlightElement && highlightElement.hasAttribute('data-tree-path') ? getTreePathOfElement(highlightElement) : null;
+    const highlightPath: string | null = getFocusedSubtreePath() ?? getTreePathOfElementOptional(highlightElement);
 
-    const ctrl = e.ctrlKey || e.metaKey;
-    const shift = e.shiftKey;
-    const key = e.key.toUpperCase();
+    const ctrl: boolean = e.ctrlKey;
+    const shift: boolean = e.shiftKey;
+    const key: string = e.key.toUpperCase();
 
     if (ctrl && key === 'Z') {
         if (shift) {
