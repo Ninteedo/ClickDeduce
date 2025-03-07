@@ -11,7 +11,9 @@
  </div>
 </div>
 <div class="cover">
- <div class="doc"></div>
+ <div class="doc">
+  <p>Parser for ClickDeduce expressions from user-entered text.</p> 
+ </div>
  <section id="attributes">
   <h2 class="h500">Attributes</h2>
   <dl class="attributes">
@@ -109,8 +111,14 @@ node6 -> node1;
           <div>
            <div class="originInfo"></div>
            <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Associativity of an operator.</p> 
+            </div>
             <div class="cover">
-             <div class="doc"></div>
+             <div class="doc">
+              <p>Associativity of an operator.</p> 
+              <p>Left-associative operators are parsed as <code>(a op b) op c</code>, while right-associative operators are parsed as <code>a op (b op c)</code>.</p> 
+             </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
               <dt class="body-small">
@@ -161,8 +169,40 @@ node6 -> node1;
           <div>
            <div class="originInfo"></div>
            <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Basic binary operator.</p> 
+            </div>
             <div class="cover">
-             <div class="doc"></div>
+             <div class="doc">
+              <p>Basic binary operator.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               apply
+              </dt>
+              <dd class="body-medium">
+               <p>The function to apply the left and right expressions to.</p> 
+              </dd>
+              <dt class="body-small">
+               associativity
+              </dt>
+              <dd class="body-medium">
+               <p>The associativity (left or right) of the operator.</p> 
+              </dd>
+              <dt class="body-small">
+               op
+              </dt>
+              <dd class="body-medium">
+               <p>The operator parser.</p> 
+              </dd>
+              <dt class="body-small">
+               precedence
+              </dt>
+              <dd class="body-medium">
+               <p>The precedence of the operator.</p> 
+              </dd>
+             </dl>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
               <dt class="body-small">
@@ -213,8 +253,13 @@ node6 -> node1;
           <div>
            <div class="originInfo"></div>
            <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Expression operator with precedence.</p> 
+            </div>
             <div class="cover">
-             <div class="doc"></div>
+             <div class="doc">
+              <p>Expression operator with precedence.</p> 
+             </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
               <dt class="body-small">
@@ -269,8 +314,29 @@ node6 -> node1;
           <div>
            <div class="originInfo"></div>
            <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Left-recursive operator.</p> 
+            </div>
             <div class="cover">
-             <div class="doc"></div>
+             <div class="doc">
+              <p>Left-recursive operator.</p> 
+              <p>This is intended for expressions which start with parsing an expression, which would otherwise cause infinite recursion.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               parser
+              </dt>
+              <dd class="body-medium">
+               <p>The parser to use.</p> 
+              </dd>
+              <dt class="body-small">
+               precedence
+              </dt>
+              <dd class="body-medium">
+               <p>The precedence of the parser.</p> 
+              </dd>
+             </dl>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
               <dt class="body-small">
@@ -321,8 +387,28 @@ node6 -> node1;
           <div>
            <div class="originInfo"></div>
            <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Operator that simply uses another parser.</p> 
+            </div>
             <div class="cover">
-             <div class="doc"></div>
+             <div class="doc">
+              <p>Operator that simply uses another parser.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               parser
+              </dt>
+              <dd class="body-medium">
+               <p>The parser to use.</p> 
+              </dd>
+              <dt class="body-small">
+               precedence
+              </dt>
+              <dd class="body-medium">
+               <p>The precedence of the parser.</p> 
+              </dd>
+             </dl>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
               <dt class="body-small">
@@ -1094,9 +1180,28 @@ node6 -> node1;
         </div>
         <div class="documentableElement" id="expr-0">
          <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
             <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="AbstractLanguage$ExprParser.html#expr-0" t="n" class="documentableName ">expr</a>: <a href="../scala/util/parsing/combinator/Parsers$Parser.html" t="t">Parser</a>[<a href="terms/exprs/Expr.html" t="t">Expr</a>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Parse an expression.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Parse an expression.</p> 
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small"></dl>
+            </div>
            </div>
           </div>
          </div>
@@ -1111,18 +1216,89 @@ node6 -> node1;
         </div>
         <div class="documentableElement" id="exprOperators-0" data-f-visibility="protected">
          <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
             <span class="modifiers"><span t="k">protected </span></span><span class="kind"><span t="k">def </span></span><a href="AbstractLanguage$ExprParser.html#exprOperators-0" t="n" class="documentableName ">exprOperators</a>: <span data-unresolved-link="" t="t">List</span>[<a href="AbstractLanguage$ExprParser$ExprOperator.html" t="t">ExprOperator</a>]
            </div>
           </div>
          </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>List of operators to include in the parser.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>List of operators to include in the parser.</p> 
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               See also
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <div>
+                 <p><a href="AbstractLanguage$ExprParser.html#precedenceParser-9b2">precedenceParser</a></p> 
+                </div>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
         </div>
         <div class="documentableElement" id="precedenceParser-9b2" data-f-visibility="protected">
          <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
             <span class="modifiers"><span t="k">protected </span></span><span class="kind"><span t="k">def </span></span><a href="AbstractLanguage$ExprParser.html#precedenceParser-9b2" t="n" class="documentableName ">precedenceParser</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">base</span>: <a href="../scala/util/parsing/combinator/Parsers$Parser.html" t="t">Parser</a>[<a href="terms/exprs/Expr.html" t="t">Expr</a>], <span t="k"></span><span data-unresolved-link="" t="n">operators</span>: <span data-unresolved-link="" t="t">List</span>[<a href="AbstractLanguage$ExprParser$ExprOperator.html" t="t">ExprOperator</a>]): <a href="../scala/util/parsing/combinator/Parsers$Parser.html" t="t">Parser</a>[<a href="terms/exprs/Expr.html" t="t">Expr</a>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Generate a parser respecting operator precedence and associativity.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Generate a parser respecting operator precedence and associativity.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               base
+              </dt>
+              <dd class="body-medium">
+               <p>The base parser.</p> 
+              </dd>
+              <dt class="body-small">
+               operators
+              </dt>
+              <dd class="body-medium">
+               <p>The list of operators to include.</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p>The parser.</p> 
+              </dd>
+             </dl>
+            </div>
            </div>
           </div>
          </div>

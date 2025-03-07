@@ -13,7 +13,7 @@
 <div class="cover">
  <div class="doc">
   <p>Defines the abstract syntax tree structure.</p> 
-  <p>The abstract <span data-unresolved-link="" title="Problem linking Node: No DRI found for query">Node</span> class is the parent for all tree nodes.</p> 
+  <p>The abstract <a href="../nodes/Node.html">nodes.Node</a> class is the parent for all tree nodes.</p> 
  </div>
  <section id="attributes">
   <h2 class="h500">Attributes</h2>
@@ -223,8 +223,13 @@ node25 -> node12;
           <div>
            <div class="originInfo"></div>
            <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Parser for ClickDeduce expressions from user-entered text.</p> 
+            </div>
             <div class="cover">
-             <div class="doc"></div>
+             <div class="doc">
+              <p>Parser for ClickDeduce expressions from user-entered text.</p> 
+             </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
               <dt class="body-small">
@@ -294,11 +299,12 @@ node25 -> node12;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Function to load an <code>Expr</code> from a string. Input must be in the format produced by <code>Expr.toString</code></p> 
+             <p>Load an <code>Expr</code> from a string.</p> 
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Function to load an <code>Expr</code> from a string. Input must be in the format produced by <code>Expr.toString</code></p> 
+              <p>Load an <code>Expr</code> from a string.</p> 
+              <p>Input must be in the format produced by <code>Expr.toString</code></p> 
              </div>
              <h2 class="h200">Value parameters</h2>
              <dl class="attributes attributes-small">
@@ -637,10 +643,30 @@ node25 -> node12;
           <div>
            <div class="originInfo"></div>
            <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Parse an expression from user-entered text.</p> 
+            </div>
             <div class="cover">
-             <div class="doc"></div>
+             <div class="doc">
+              <p>Parse an expression from user-entered text.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               exprText
+              </dt>
+              <dd class="body-medium">
+               <p>The text to parse.</p> 
+              </dd>
+             </dl>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p>either an error message and column number, or the parsed expression.</p> 
+              </dd>
               <dt class="body-small">
                Inherited from:
               </dt>
@@ -755,36 +781,136 @@ node25 -> node12;
         </div>
         <div class="documentableElement" id="defaultExpr-0">
          <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
             <span class="modifiers"></span><span class="kind"><span t="k">val </span></span><a href="AbstractNodeLanguage.html#defaultExpr-0" t="n" class="documentableName ">defaultExpr</a>: <a href="terms/exprs/Expr.html" t="t">Expr</a>
            </div>
           </div>
          </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Default expression used where an expression needs to be filled in.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Default expression used where an expression needs to be filled in.</p> 
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               See also
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <div>
+                 <p><span data-unresolved-link="" title="Problem linking BlankExprDropDown: No DRI found for query">BlankExprDropDown</span></p> 
+                </div>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
         </div>
         <div class="documentableElement" id="defaultType-0">
          <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
             <span class="modifiers"></span><span class="kind"><span t="k">val </span></span><a href="AbstractNodeLanguage.html#defaultType-0" t="n" class="documentableName ">defaultType</a>: <a href="terms/types/Type.html" t="t">Type</a>
            </div>
           </div>
          </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Default type used where a type needs to be filled in.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Default type used where a type needs to be filled in.</p> 
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               See also
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <div>
+                 <p><span data-unresolved-link="" title="Problem linking BlankTypeDropDown: No DRI found for query">BlankTypeDropDown</span></p> 
+                </div>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
         </div>
         <div class="documentableElement" id="exprClassListDropdownHtml-0" data-f-keywords="lazy">
          <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
             <span class="modifiers"><span t="k">lazy </span></span><span class="kind"><span t="k">val </span></span><a href="AbstractNodeLanguage.html#exprClassListDropdownHtml-0" t="n" class="documentableName ">exprClassListDropdownHtml</a>: <span data-unresolved-link="" t="t">TypedTag</span>[<span data-unresolved-link="" t="t">String</span>]
            </div>
           </div>
          </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>The HTML for the expression class list dropdown.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>The HTML for the expression class list dropdown.</p> 
+              <p>A select element with an option for each expression builder.</p> 
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small"></dl>
+            </div>
+           </div>
+          </div>
+         </div>
         </div>
         <div class="documentableElement" id="typeClassListDropdownHtml-0" data-f-keywords="lazy">
          <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
             <span class="modifiers"><span t="k">lazy </span></span><span class="kind"><span t="k">val </span></span><a href="AbstractNodeLanguage.html#typeClassListDropdownHtml-0" t="n" class="documentableName ">typeClassListDropdownHtml</a>: <span data-unresolved-link="" t="t">TypedTag</span>[<span data-unresolved-link="" t="t">String</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>The HTML for the type class list dropdown.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>The HTML for the type class list dropdown.</p> 
+              <p>A select element with an option for each type builder.</p> 
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small"></dl>
+            </div>
            </div>
           </div>
          </div>
@@ -811,8 +937,13 @@ node25 -> node12;
           <div>
            <div class="originInfo"></div>
            <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Instance of expression parser to use.</p> 
+            </div>
             <div class="cover">
-             <div class="doc"></div>
+             <div class="doc">
+              <p>Instance of expression parser to use.</p> 
+             </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
               <dt class="body-small">
