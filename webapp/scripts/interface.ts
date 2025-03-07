@@ -27,8 +27,7 @@ export function resetInterfaceGlobals(): void {
  * Handles any keydown event on the document.
  */
 function globalHandleKeyDown(e: KeyboardEvent): void {
-    const highlightElement = getHighlightElement();
-    const highlightPath: string | null = getFocusedSubtreePath() ?? getTreePathOfElementOptional(highlightElement);
+    const activePath: string | null = getFocusedSubtreePath() ?? getTreePathOfElementOptional(getHighlightElement());
 
     const ctrl: boolean = e.ctrlKey;
     const shift: boolean = e.shiftKey;
@@ -40,15 +39,15 @@ function globalHandleKeyDown(e: KeyboardEvent): void {
         } else {
             undo();
         }
-    } else if (highlightPath !== null) {
+    } else if (activePath !== null) {
         if (ctrl && key === 'C') {
-            copyTreeNode(highlightPath);
+            copyTreeNode(activePath);
         } else if (ctrl && key === 'V') {
             e.preventDefault();
-            pasteTreeNode(highlightPath);
+            pasteTreeNode(activePath);
         } else if (ctrl && key === 'X') {
-            copyTreeNode(highlightPath);
-            deleteTreeNode(highlightPath);
+            copyTreeNode(activePath);
+            deleteTreeNode(activePath);
         }
     }
 }
