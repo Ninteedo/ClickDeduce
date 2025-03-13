@@ -183,11 +183,12 @@ abstract class ExprNodeParent(lang: AbstractNodeLanguage) extends OuterNode {
     childrenFunction: Expr => Env[T] => List[(Term, Env[T])],
     parentEnvFunction: ExprNodeParent => Env[T]
   ): Env[T] = getParent match {
-    case Some(value) =>
-      val parentEnv = parentEnvFunction(value)
-      val parentExpr = value.getExpr
+    case Some(parent) =>
+      val parentEnv = parentEnvFunction(parent)
+      val parentExpr = parent.getExpr
+      val myExpr = getExpr
       val parentChildren = childrenFunction(parentExpr)(parentEnv)
-      parentChildren.find(_._1 eq getExpr).map(_._2).getOrElse(parentEnv)
+      parentChildren.find(_._1 eq myExpr).map(_._2).getOrElse(parentEnv)
     case None => Env()
   }
 

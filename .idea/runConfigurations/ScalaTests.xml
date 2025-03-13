@@ -35,6 +35,7 @@
         <option value="languages.LPolyTest" />
         <option value="languages.ActionSpec" />
         <option value="languages.LArithTest" />
+        <option value="languages.LWhileTest" />
         <option value="languages.NodeHTMLSpec" />
         <option value="languages.NodeTreeTest" />
         <option value="languages.ReadExprTest" />
