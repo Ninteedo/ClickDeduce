@@ -13,13 +13,6 @@
     border-radius: 3px;
   }
 
-  &.guide-highlight {
-    input, button {
-      background-color: colours.$highlighted-input;
-      color: colours.$highlighted-input-text;
-    }
-  }
-
   input[type="text"]:not(.identifier-lookup, [disabled]), .expr-selector-input {
     margin: 0;
     border-radius: 3px 0 0 3px;
