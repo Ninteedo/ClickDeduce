@@ -37,6 +37,47 @@ class LWhile extends LList {
     }
   }
 
+  /**
+   * Helper function to ensure that an expression is a statement, returning an error if it is not.
+   * @param e The expression that should be a statement
+   * @param f The function to apply to the statement
+   * @param els The function to apply to the expression if it is not a statement (default: return an error)
+   * @tparam A The return type of the function
+   * @tparam B The return type of the error function
+   * @return The result of applying the function to the statement, or an error if the expression is not a statement
+   */
+  protected def stmtOnly[A, B](e: Expr, f: Stmt => A, els: Expr => B = NotAStmtError(_)): A | B = e match {
+    case stmt: Stmt => f(stmt)
+    case _ => els(e)
+  }
+
+  protected def stmtOnlyT[A, B](e: Expr, f: Stmt => A, els: Expr => B = NotAStmtTypeError(_)): A | B = e match {
+    case stmt: Stmt => f(stmt)
+    case _ => els(e)
+  }
+
+  /**
+   * Helper function to safely get the new environment from a statement.
+   * @param stmt The statement
+   * @param env The starting environment
+   * @param f The function to apply to the new environment
+   * @tparam A The return type of the function
+   * @return The result of applying the function to the new environment, or an error if the statement is not valid
+   */
+  protected def stmtNewEnv[A, B](stmt: Stmt, env: ValueEnv, f: ValueEnv => A, els: EvalError => B = identity): A | B = {
+    stmt.newEnv(env) match {
+      case env: ValueEnv => f(env)
+      case error: EvalError => els(error)
+    }
+  }
+
+  protected def stmtNewTEnv[A, B](stmt: Stmt, tEnv: TypeEnv, f: TypeEnv => A, els: TypeError => B = identity): A | B = {
+    stmt.newTEnv(tEnv) match {
+      case tEnv: TypeEnv => f(tEnv)
+      case error: TypeError => els(error)
+    }
+  }
+
   case class SkipStmt() extends Stmt {
     override def newEnv(env: ValueEnv): ValueEnv = env
 
@@ -50,49 +91,39 @@ class LWhile extends LList {
   }
 
   case class SeqStmt(stmtA: Expr, stmtB: Expr) extends Stmt {
-    override def newEnv(env: ValueEnv): ValueEnv | EvalError = (stmtA, stmtB) match {
-      case (stmtA: Stmt, stmtB: Stmt) =>
-        stmtA.newEnv(env) match {
-          case env: ValueEnv => stmtB.newEnv(env)
-          case error: EvalError => error
-        }
-      case (stmtA: Stmt, e) => NotAStmtError(e)
-      case (e, _) => NotAStmtError(e)
-    }
+    override def newEnv(env: ValueEnv): ValueEnv | EvalError = stmtOnly(stmtA, stmtA =>
+      stmtOnly(stmtB, stmtB =>
+        stmtNewEnv(stmtA, env, env =>
+          stmtB.newEnv(env)
+        )
+      )
+    )
 
-    override def newTEnv(tEnv: TypeEnv): TypeEnv | TypeError = (stmtA, stmtB) match {
-      case (stmtA: Stmt, stmtB: Stmt) =>
-        stmtA.newTEnv(tEnv) match {
-          case tEnv: TypeEnv => stmtB.newTEnv(tEnv)
-          case error: TypeError => error
-        }
-      case (stmtA: Stmt, e) => NotAStmtTypeError(e)
-      case (e, _) => NotAStmtTypeError(e)
-    }
+    override def newTEnv(tEnv: TypeEnv): TypeEnv | TypeError = stmtOnlyT(stmtA, stmtA =>
+      stmtOnlyT(stmtB, stmtB =>
+        stmtNewTEnv(stmtA, tEnv, tEnv =>
+          stmtB.newTEnv(tEnv)
+        )
+      )
+    )
 
     private def defaultChildren(env: ValueEnv): List[(Term, ValueEnv)] = {
-      List((stmtA, env), stmtA match {
-        case stmtA: Stmt => (stmtB, stmtA.newEnv(env) match {
-          case env: ValueEnv => env
-          case _ => env
-        })
-        case _ => (stmtB, env)
-      })
+      List((stmtA, env), (stmtB, stmtOnly(stmtA, stmtA =>
+        stmtNewEnv(stmtA, env, identity, _ => env),
+        _ => env)
+      ))
     }
 
     override def getChildrenBase(env: ValueEnv): List[(Term, ValueEnv)] = defaultChildren(env)
 
-    override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] = {
-      List((stmtA, tEnv), stmtA match {
-        case stmtA: Stmt => (stmtB, stmtA.newTEnv(tEnv) match {
-          case tEnv: TypeEnv => tEnv
-          case _ => tEnv
-        })
-        case _ => (stmtB, tEnv)
-      })
-    }
-
     override def getChildrenEval(env: ValueEnv): List[(Term, ValueEnv)] = defaultChildren(env)
+
+    override def getChildrenTypeCheck(tEnv: TypeEnv): List[(Term, TypeEnv)] = {
+      List((stmtA, tEnv), (stmtB, stmtOnlyT(stmtA, stmtA =>
+        stmtNewTEnv(stmtA, tEnv, identity, _ => tEnv),
+        _ => tEnv
+      )))
+    }
 
     override def toText: ConvertableText = MultiElement(
       stmtA.toText,
@@ -111,32 +142,21 @@ class LWhile extends LList {
 
   case class IfStmt(cond: Expr, stmtT: Expr, stmtF: Expr) extends Stmt {
     override def newEnv(env: ValueEnv): ValueEnv | EvalError = cond.eval(env) match {
-      case BoolV(true) => stmtT match {
-        case stmtT: Stmt => stmtT.newEnv(env)
-        case e => NotAStmtError(e)
-      }
-      case BoolV(false) => stmtF match {
-        case stmtF: Stmt => stmtF.newEnv(env)
-        case e => NotAStmtError(e)
-      }
+      case BoolV(true) => stmtOnly(stmtT, _.newEnv(env))
+      case BoolV(false) => stmtOnly(stmtF, _.newEnv(env))
       case v => TypeMismatchError("IfStmt", v.typ, BoolType())
     }
 
     override def newTEnv(tEnv: TypeEnv): TypeEnv | TypeError = cond.typeCheck(tEnv) match {
-      case BoolType() => (stmtT, stmtF) match {
-        case (stmtT: Stmt, stmtF: Stmt) =>
-          (stmtT.newTEnv(tEnv), stmtF.newTEnv(tEnv)) match {
-            case (tEnvT: TypeEnv, tEnvF: TypeEnv) =>
-              EnvType(tEnvT).matches(EnvType(tEnvF)) match {
-                case true => tEnvT
-                case false => TypeMismatchType(EnvType(tEnvT), EnvType(tEnvF))
-              }
-            case (error: TypeError, _) => error
-            case (_, error: TypeError) => error
-          }
-        case (stmtT: Stmt, e) => NotAStmtTypeError(e)
-        case (e, _) => NotAStmtTypeError(e)
-      }
+      case BoolType() => stmtOnlyT(stmtT, stmtT => stmtOnlyT(stmtF, stmtF =>
+        stmtNewTEnv(stmtT, tEnv, tEnvT => stmtNewTEnv(stmtF, tEnv, tEnvF =>
+          if EnvType(tEnvT).matches(EnvType(tEnvF)) then
+            tEnvT
+          else
+            TypeMismatchType(EnvType(tEnvT), EnvType(tEnvF))
+        ))
+      ))
+      case typ => TypeMismatchType(typ, BoolType())
     }
 
     override def toText: ConvertableText = MultiElement(
@@ -159,35 +179,28 @@ class LWhile extends LList {
 
   case class WhileStmt(cond: Expr, stmt: Expr) extends Stmt {
     override def newEnv(env: ValueEnv): ValueEnv | EvalError = cond.eval(env) match {
-      case BoolV(true) => stmt match {
-        case stmt: Stmt => stmt.newEnv(env) match {
-          case env: ValueEnv => WhileStmt(cond, stmt).newEnv(env)
-          case error: EvalError => error
-        }
-        case e => NotAStmtError(e)
-      }
+      case BoolV(true) =>
+        stmtOnly(stmt, stmt =>
+          stmtNewEnv(stmt, env, WhileStmt(cond, stmt).newEnv(_))
+        )
       case BoolV(false) => env
       case v => TypeMismatchError("WhileStmt", v.typ, BoolType())
     }
 
     override def newTEnv(tEnv: TypeEnv): TypeEnv | TypeError = cond.typeCheck(tEnv) match {
-      case BoolType() => stmt match {
-        case stmt: Stmt => stmt.newTEnv(tEnv)
-        case _ => NoStmtTypeError()
-      }
+      case BoolType() => stmtOnlyT(stmt, _.newTEnv(tEnv))
       case typ => TypeMismatchType(typ, BoolType())
     }
 
     override def getChildrenEval(env: ValueEnv): List[(Term, ValueEnv)] = {
       val default = super.getChildrenEval(env)
       cond.eval(env) match {
-        case BoolV(true) => stmt match {
-          case stmt: Stmt => stmt.newEnv(env) match {
-            case childEnv: ValueEnv => List((cond, env), (stmt, env), (this, childEnv))
-            case _ => default
-          }
-          case _ => default
-        }
+        case BoolV(true) => stmtOnly(stmt, stmt =>
+          stmtNewEnv(stmt, env, childEnv =>
+            List((cond, env), (stmt, env), (this, childEnv)),
+            _ => default),
+          _ => default
+        )
         case BoolV(false) => List((cond, env))
         case _ => default
       }
@@ -266,6 +279,34 @@ class LWhile extends LList {
   }
 
   setTasks()
+
+  protected class LWhileParser extends LListParser {
+    override def root: Parser[Expr] = stmt
+
+    protected def stmt: Parser[Stmt | Expr] = stmtSeqFactor
+
+    protected def stmtSeqFactor: Parser[Stmt | Expr] = stmtBase ~ ";" ~ stmtSeqFactor ^^ {
+      case stmtL ~ _ ~ stmtR => SeqStmt(stmtL, stmtR)
+    } | stmtBase
+
+    protected def stmtBase: Parser[Stmt | Expr] = skipStmt | whileStmt | ifStmt | assignStmt | super.expr
+
+    protected def whileStmt: Parser[WhileStmt] = "while" ~> expr ~ ("do" ~> stmt) ^^ {
+      case cond ~ stmt => WhileStmt(cond, stmt)
+    }
+
+    protected def assignStmt: Parser[AssignStmt] = ident ~ (":=" ~> expr) ^^ {
+      case v ~ e => AssignStmt(LiteralIdentifierBind(v), e)
+    }
+
+    protected def skipStmt: Parser[SkipStmt] = "skip" ^^^ { SkipStmt() }
+
+    protected def ifStmt: Parser[IfStmt] = "if" ~> expr ~ ("then" ~> stmt) ~ ("else" ~> stmt) ^^ {
+      case cond ~ stmtT ~ stmtF => IfStmt(cond, stmtT, stmtF)
+    }
+  }
+
+  override protected val exprParser: ExprParser = LWhileParser()
 }
 
 object LWhile extends LWhile

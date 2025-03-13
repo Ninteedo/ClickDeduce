@@ -82,6 +82,8 @@ trait AbstractLanguage {
      */
     def expr: Parser[Expr]
 
+    def root: Parser[Expr] = expr
+
     /**
      * Expression operator with precedence.
      */
@@ -194,7 +196,7 @@ trait AbstractLanguage {
    * @param exprText The text to parse.
    * @return either an error message and column number, or the parsed expression.
    */
-  def parseExpr(exprText: String): Either[(String, Int), Expr] = exprParser.parseAll(exprParser.expr, exprText) match {
+  def parseExpr(exprText: String): Either[(String, Int), Expr] = exprParser.parseAll(exprParser.root, exprText) match {
     case exprParser.Success(result, _) => Right(result)
     case exprParser.Failure(msg, next) => Left(msg, next.pos.column)
     case exprParser.Error(msg, next)   => Left(msg, next.pos.column)
