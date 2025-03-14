@@ -84,6 +84,8 @@ class LWhile extends LList {
     override def newTEnv(tEnv: TypeEnv): TypeEnv | TypeError = tEnv
 
     override def toText: ConvertableText = TextElement("skip")
+
+    override val needsBrackets: Boolean = false
   }
 
   object SkipStmt extends ExprCompanion {
@@ -149,23 +151,22 @@ class LWhile extends LList {
 
     override def newTEnv(tEnv: TypeEnv): TypeEnv | TypeError = cond.typeCheck(tEnv) match {
       case BoolType() => stmtOnlyT(stmtT, stmtT => stmtOnlyT(stmtF, stmtF =>
-        stmtNewTEnv(stmtT, tEnv, tEnvT => stmtNewTEnv(stmtF, tEnv, tEnvF =>
-          if EnvType(tEnvT).matches(EnvType(tEnvF)) then
-            tEnvT
-          else
-            TypeMismatchType(EnvType(tEnvT), EnvType(tEnvF))
-        ))
+        stmtNewTEnv(stmtT, tEnv, tEnvT =>
+          stmtNewTEnv(stmtF, tEnv, tEnvF =>
+            Env(tEnvT.toSet.intersect(tEnvF.toSet).toMap)  // overlap
+          )
+        )
       ))
       case typ => TypeMismatchType(typ, BoolType())
     }
 
     override def toText: ConvertableText = MultiElement(
       TextElement("if "),
-      cond.toText,
+      cond.toTextBracketed,
       TextElement(" then "),
-      stmtT.toText,
+      stmtT.toTextBracketed,
       TextElement(" else "),
-      stmtF.toText
+      stmtF.toTextBracketed
     )
   }
 
@@ -208,9 +209,9 @@ class LWhile extends LList {
 
     override def toText: ConvertableText = MultiElement(
       TextElement("while "),
-      cond.toText,
+      cond.toTextBracketed,
       TextElement(" do "),
-      stmt.toText
+      stmt.toTextBracketed
     )
   }
 
@@ -230,11 +231,13 @@ class LWhile extends LList {
     override def toText: ConvertableText = MultiElement(
       v.toText,
       TextElement(" := "),
-      e.toText
+      e.toTextBracketed
     )
   }
 
   object AssignStmt extends ExprCompanion {
+    def apply(v: String, e: Expr): AssignStmt = AssignStmt(LiteralIdentifierBind(v), e)
+
     override def create(args: BuilderArgs): Option[Expr] = args match {
       case List(v: LiteralIdentifierBind, e: Expr) => Some(AssignStmt(v, e))
       case Nil => Some(AssignStmt(LiteralIdentifierBind.default, defaultExpr))

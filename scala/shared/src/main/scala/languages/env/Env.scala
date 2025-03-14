@@ -42,12 +42,14 @@ case class Env[T](env: Map[Variable, T] = Map()) {
   def map[U](f: ((Variable, T)) => U): Iterable[U] = env.map(f)
 
   def mapToEnv[U](f: ((Variable, T)) => (Variable, U)): Env[U] = new Env(env.map(f))
-  
+
   def filterToEnv(f: ((Variable, T)) => Boolean): Env[T] = new Env(env.filter(f))
 
   def keys: Iterable[Variable] = env.keys
 
   def toMap: Map[Variable, T] = env
+
+  def toSet: Set[(Variable, T)] = env.toSet
 }
 
 /** Companion object for [[Env]].

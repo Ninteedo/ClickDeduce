@@ -31,4 +31,11 @@ class LWhileTest extends TestTemplate {
     )
     ExprNode.fromExpr(LWhile, stmt).willDepthLimitBeExceeded() shouldBe false
   }
+
+  property("IfStmt type-checks correctly") {
+    IfStmt(Bool(true), AssignStmt("x", Num(1)), AssignStmt("x", Num(2))).typeCheck() shouldBe EnvType(TypeEnv.empty + ("x" -> IntType()))
+    IfStmt(Bool(true), AssignStmt("x", Num(1)), AssignStmt("x", Bool(false))).typeCheck() shouldBe EnvType(TypeEnv.empty)
+    IfStmt(Bool(true), AssignStmt("x", Num(1)), AssignStmt("y", Num(2))).typeCheck() shouldBe EnvType(TypeEnv.empty)
+    IfStmt(Bool(false), AssignStmt("x", Num(1)), SeqStmt(AssignStmt("y", Bool(false)), AssignStmt("x", Num(-3)))).typeCheck() shouldBe EnvType(TypeEnv.empty + ("x" -> IntType()))
+  }
 }
