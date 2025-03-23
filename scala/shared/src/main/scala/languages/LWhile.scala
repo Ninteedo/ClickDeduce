@@ -18,9 +18,13 @@ class LWhile extends LList {
     IfStmt,
     WhileStmt,
     AssignStmt,
-    EnvValue,
   ))
 
+  /**
+   * A statement from the LWhile language.
+   * Instead of evaluating to a regular value, statements modify the environment.
+   * In practice, they are treated as expressions that evaluate to an [[EnvValue]].
+   */
   trait Stmt extends Expr {
     def newEnv(env: ValueEnv): ValueEnv | EvalError
 
@@ -245,6 +249,10 @@ class LWhile extends LList {
     }
   }
 
+  /**
+   * Value wrapping an environment, used as evaluation result for statements.
+   * @param env The value environment
+   */
   case class EnvValue(env: ValueEnv) extends Value {
     override val typ: Type = EnvType(TypeEnv.fromValueEnv(env))
 
@@ -256,8 +264,10 @@ class LWhile extends LList {
     override def valueTextShowType: Boolean = false
   }
 
-  object EnvValue extends ValueCompanion
-
+  /**
+   * Type wrapping an environment, used as type-checking result for statements.
+   * @param env The type environment
+   */
   case class EnvType(env: TypeEnv) extends Type {
     override val needsBrackets: Boolean = false
 
@@ -286,13 +296,13 @@ class LWhile extends LList {
   protected class LWhileParser extends LListParser {
     override def root: Parser[Expr] = stmt
 
-    protected def stmt: Parser[Stmt | Expr] = stmtSeqFactor
+    protected def stmt: Parser[Expr] = stmtSeqFactor
 
-    protected def stmtSeqFactor: Parser[Stmt | Expr] = stmtBase ~ ";" ~ stmtSeqFactor ^^ {
+    protected def stmtSeqFactor: Parser[Expr] = stmtBase ~ ";" ~ stmtSeqFactor ^^ {
       case stmtL ~ _ ~ stmtR => SeqStmt(stmtL, stmtR)
     } | stmtBase
 
-    protected def stmtBase: Parser[Stmt | Expr] = skipStmt | whileStmt | ifStmt | assignStmt | super.expr
+    protected def stmtBase: Parser[Expr] = skipStmt | whileStmt | ifStmt | assignStmt | super.expr
 
     protected def whileStmt: Parser[WhileStmt] = "while" ~> expr ~ ("do" ~> stmt) ^^ {
       case cond ~ stmt => WhileStmt(cond, stmt)
