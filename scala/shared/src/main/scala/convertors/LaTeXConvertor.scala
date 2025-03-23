@@ -1,39 +1,121 @@
 package convertors
 
-import convertors.text.*
 import languages.ClickDeduceLanguage
-import languages.env.{TypeEnv, ValueEnv}
 import nodes.*
 
 class LaTeXConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConvertor(lang, mode) {
   private type LaTeX = String
 
-  override def convert(node: OuterNode): Output = {
-    asProofTree(removeBlankLines(outerNodeToLaTeX(node.asInstanceOf[OuterNode])))
+  private var envCounter: Int = 0
+
+  private def nextEnvIndex(): Int = {
+    val res = envCounter
+    envCounter += 1
+    res
   }
 
-  private def removeBlankLines(s: String): String = s.split("\n").filter(_.nonEmpty).mkString("\n")
+  override def convert(node: OuterNode): Output = {
+    val startingEnvIndex = node match {
+      case n: ExprNodeParent => if n.getEnv(mode).isEmpty then -1 else 0
+      case _ => -1
+    }
+    envCounter = startingEnvIndex
+
+    val latexTree = outerNodeToLaTeX(node, startingEnvIndex)
+    asProofTree(removeBlankLines(latexTree))
+  }
+
+  private def removeBlankLines(s: String): String = s.split("\n").filter(_.trim.nonEmpty).mkString("\n")
 
   private def asProofTree(s: String): String = s"\\begin{prooftree}\n$s\n\\end{prooftree}"
 
-  private def outerNodeToLaTeX(node: OuterNode): LaTeX = node match {
-    case node: ExprNodeParent => exprNodeToLaTeX(node)
-    case node: TypeNodeParent => typeNodeToLaTeX(node)
+  private def outerNodeToLaTeX(node: OuterNode, envIndex: Int): LaTeX =
+    node match {
+      case e: ExprNodeParent => exprNodeToLaTeX(e, envIndex)
+      case t: TypeNodeParent => typeNodeToLaTeX(t, envIndex)
+    }
+
+  // expressions
+
+  private def exprNodeToLaTeX(node: ExprNodeParent, envIndex: Int): LaTeX = {
+    val newEnvIndex =
+      if node.hasUpdatedEnv(mode) then nextEnvIndex()
+      else envIndex
+
+    val childLatex = node
+      .getVisibleChildren(mode)
+      .map(ch => outerNodeToLaTeX(ch, newEnvIndex))
+
+    val below = fullExprBottomDiv(node, newEnvIndex)
+
+    createTree(below, node.exprName, childLatex)
   }
 
-  private def exprNodeToLaTeX(node: ExprNodeParent): LaTeX = {
-    createTree(fullExprBottomDiv(node), node.exprName, node.getVisibleChildren(mode).map(outerNodeToLaTeX))
+  private def fullExprBottomDiv(node: ExprNodeParent, envIndex: Int): LaTeX = {
+    val envPart   = envDiv(node, envIndex, isTypeMode = false)
+    val exprPart  = exprDiv(node)
+    val resultPart= resultDiv(node)
+    s"$envPart $exprPart $resultPart".trim
   }
 
-  private def typeNodeToLaTeX(node: TypeNodeParent): LaTeX = {
-    createTree(fullTypeBottomDiv(node), node.getTypeName, node.getVisibleChildren(mode).map(outerNodeToLaTeX))
+  private def exprDiv(node: ExprNodeParent): LaTeX = node.getExpr.toText.asLaTeX
+
+  private def resultDiv(node: ExprNodeParent): LaTeX =
+    mode match {
+      case DisplayMode.Edit =>
+        val typeCheckResult = node.getType
+        if (typeCheckResult.isError) s"$typeCheckColon ${typeCheckResultDiv(node)}"
+        else {
+          val evalResult = node.getEditValueResult
+          if (!evalResult.isError && !evalResult.isPlaceholder)
+            s"$evalArrowSpan ${editEvalResultDiv(node)}"
+          else s"$typeCheckColon ${typeCheckResultDiv(node)}"
+        }
+      case DisplayMode.TypeCheck =>
+        s"$typeCheckColon ${typeCheckResultDiv(node)}"
+      case DisplayMode.Evaluation =>
+        s"$evalArrowSpan ${evalResultDiv(node)}"
+    }
+
+  private def typeCheckResultDiv(node: ExprNodeParent): LaTeX =
+    node.getType.toText.asLaTeX
+
+  private def editEvalResultDiv(node: ExprNodeParent): LaTeX =
+    node.getEditValueResult.toText.asLaTeX
+
+  private def evalResultDiv(node: ExprNodeParent): LaTeX =
+    node.getValue.toText.asLaTeX
+
+  // types
+
+  private def typeNodeToLaTeX(node: TypeNodeParent, envIndex: Int): LaTeX = {
+    val childLatex = node
+      .getVisibleChildren(mode)
+      .map(ch => outerNodeToLaTeX(ch, envIndex))
+
+    val below = fullTypeBottomDiv(node, envIndex)
+    createTree(below, node.getTypeName, childLatex)
   }
 
-//  private def createTree(below: LaTeX, ruleLabel: LaTeX, children: List[LaTeX]): LaTeX = {
-//    s"""\\prftree[r]{\\scriptsize $ruleLabel}
-//       |{${children.mkString("\n")}}
-//       |{$below}""".stripMargin
-//  }
+  private def fullTypeBottomDiv(node: TypeNodeParent, envIndex: Int): LaTeX = {
+    val envPart  = envDiv(node, envIndex, isTypeMode = true)
+    val typePart = node.getType.toText.asLaTeX
+    val resPart  = s"$typeCheckColon ${node.getTypeCheckResult(mode).toText.asLaTeX}"
+    s"$envPart, $typePart $resPart".trim
+  }
+
+  // environments
+
+  private def envDiv(node: OuterNode, envIndex: Int, isTypeMode: Boolean): LaTeX = {
+    if (envIndex < 0) {
+      ""
+    } else {
+      if (isTypeMode || mode == DisplayMode.TypeCheck)
+        s"\\Gamma_{$envIndex} $typeCheckTurnstileSpan"
+      else
+        s"\\sigma_{$envIndex}, "
+    }
+  }
 
   private def createTree(below: LaTeX, ruleLabel: LaTeX, children: List[LaTeX]): LaTeX = {
     val ruleKind = children.size match {
@@ -46,62 +128,11 @@ class LaTeXConvertor(lang: ClickDeduceLanguage, mode: DisplayMode) extends IConv
       case n => throw new IllegalArgumentException(s"Too many children ($n) for LaTeX tree")
     }
     val dollar = "$"
-    s"""${children.mkString("\n")}\n\\$ruleKind{$dollar$below$dollar}""".stripMargin
+    s"""${children.mkString("\n")}
+       |\\$ruleKind{$dollar$below$dollar}""".stripMargin
   }
-
-  private def fullExprBottomDiv(node: ExprNodeParent): LaTeX =
-    s"${envDiv(node.getEnv(mode))} ${exprDiv(node)} ${resultDiv(node)}".strip()
-
-  private def envDiv(env: ValueEnv | TypeEnv): LaTeX = {
-    val variables: Option[LaTeX] =
-      if (env.isEmpty) None
-      else
-        Some(
-          env
-            .map((k, v) =>
-              MultiElement(ItalicsElement(TextElement(k)), SurroundSpaces(Symbols.singleRightArrow), v.toText).asLaTeX
-            )
-            .mkString("[", ", ", "]")
-        )
-    val delimiter =
-      if (mode == DisplayMode.TypeCheck) Some(typeCheckTurnstileSpan) else if (env.nonEmpty) Some(",") else None
-
-    var result: String = ""
-    if (variables.isDefined) result += variables.get
-    if (delimiter.isDefined) result += delimiter.get
-    result
-  }
-
-  private def exprDiv(node: ExprNodeParent): LaTeX = node.getExpr.toText.asLaTeX
-
-  private def resultDiv(node: ExprNodeParent): LaTeX = mode match {
-    case DisplayMode.Edit =>
-      val typeCheckResult = node.getType
-      if (typeCheckResult.isError) s"$typeCheckColon ${typeCheckResultDiv(node)}"
-      else {
-        val evalResult = node.getEditValueResult
-        if (!evalResult.isError && !evalResult.isPlaceholder) s"$evalArrowSpan ${editEvalResultDiv(node)}"
-        else s"$typeCheckColon ${typeCheckResultDiv(node)}"
-      }
-    case DisplayMode.TypeCheck  => s"$typeCheckColon ${typeCheckResultDiv(node)}"
-    case DisplayMode.Evaluation => s"$evalArrowSpan ${evalResultDiv(node)}"
-  }
-
-  private def fullTypeBottomDiv(node: TypeNodeParent): LaTeX = s"${envDiv(node.getEnv(mode))} ${typeDiv(node)} ${typeResultDiv(node)}"
-
-  private def typeDiv(node: TypeNodeParent): LaTeX = node.getType.toText.asLaTeX
-
-  private def typeResultDiv(node: TypeNodeParent): LaTeX = s"$typeCheckColon ${node.getTypeCheckResult(mode).toText.asLaTeX}"
 
   private val typeCheckTurnstileSpan: LaTeX = "\\vdash"
-
-  private val typeCheckColon: LaTeX = ":"
-
-  private def typeCheckResultDiv(node: ExprNodeParent): LaTeX = node.getType.toText.asLaTeX
-
-  private val evalArrowSpan: LaTeX = "\\Downarrow"
-
-  private def evalResultDiv(node: ExprNodeParent): LaTeX = node.getValue.toText.asLaTeX
-
-  private def editEvalResultDiv(node: ExprNodeParent): LaTeX = node.getEditValueResult.toText.asLaTeX
+  private val typeCheckColon: LaTeX        = ":"
+  private val evalArrowSpan: LaTeX         = "\\Downarrow"
 }
