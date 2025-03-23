@@ -35,7 +35,7 @@ class LIf extends LArith {
       case _                => None
     }
 
-    override val aliases: List[String] = List("Boolean", "True", "False")
+    override val aliases: List[String] = List("Boolean")
 
     override lazy val rulePreview: Option[RulePreview] = RulePreviewBuilder()
       .addTypeCheckRule(
