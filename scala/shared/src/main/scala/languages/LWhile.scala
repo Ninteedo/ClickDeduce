@@ -207,7 +207,10 @@ class LWhile extends LList {
     }
 
     override def newTEnv(tEnv: TypeEnv): TypeEnv | TypeError = cond.typeCheck(tEnv) match {
-      case BoolType() => stmtOnlyT(stmt, _.newTEnv(tEnv))
+      case BoolType() => stmtOnlyT(stmt, _.newTEnv(tEnv)) match {
+        case tEnvAfter: TypeEnv => if tEnvAfter == tEnv then tEnv else WhileStmtTypeEnvChangeError()
+        case error: TypeError => error
+      }
       case typ => TypeMismatchType(typ, BoolType())
     }
 
@@ -321,6 +324,10 @@ class LWhile extends LList {
 
   case class NoStmtTypeError() extends TypeError {
     override val message: String = "Cannot type-check a statement"
+  }
+
+  case class WhileStmtTypeEnvChangeError() extends TypeError {
+    override val message: String = "Type environment changed during while loop"
   }
 
   setTasks()
