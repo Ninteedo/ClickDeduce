@@ -3,6 +3,7 @@ package languages
 import convertors.*
 import convertors.text.*
 import languages.env.*
+import languages.env.Env.Variable
 import languages.terms.*
 import languages.terms.builders.*
 import languages.terms.errors.*
@@ -39,6 +40,13 @@ class LWhile extends LList {
       case env: TypeEnv => EnvType(env)
       case error: TypeError => error
     }
+
+    def assignments: Set[Variable]
+  }
+
+  private def safeAssignments(stmt: Expr): Set[Variable] = stmt match {
+    case stmt: Stmt => stmt.assignments
+    case _ => Set.empty
   }
 
   /**
@@ -87,6 +95,8 @@ class LWhile extends LList {
 
     override def newTEnv(tEnv: TypeEnv): TypeEnv | TypeError = tEnv
 
+    override def assignments: Set[Variable] = Set.empty
+
     override def toText: ConvertableText = TextElement("skip")
 
     override val needsBrackets: Boolean = false
@@ -112,6 +122,8 @@ class LWhile extends LList {
         )
       )
     )
+
+    override def assignments: Set[Variable] = safeAssignments(stmtA) ++ safeAssignments(stmtB)
 
     private def defaultChildren(env: ValueEnv): List[(Term, ValueEnv)] = {
       List((stmtA, env), (stmtB, stmtOnly(stmtA, stmtA =>
@@ -164,6 +176,8 @@ class LWhile extends LList {
       case typ => TypeMismatchType(typ, BoolType())
     }
 
+    override def assignments: Set[Variable] = safeAssignments(stmtT) ++ safeAssignments(stmtF)
+
     override def toText: ConvertableText = MultiElement(
       TextElement("if "),
       cond.toTextBracketed,
@@ -195,6 +209,20 @@ class LWhile extends LList {
     override def newTEnv(tEnv: TypeEnv): TypeEnv | TypeError = cond.typeCheck(tEnv) match {
       case BoolType() => stmtOnlyT(stmt, _.newTEnv(tEnv))
       case typ => TypeMismatchType(typ, BoolType())
+    }
+
+    override def assignments: Set[Variable] = safeAssignments(stmt)
+
+    override def getChildrenBase(env: ValueEnv): List[(Term, ValueEnv)] = {
+      // variables assigned in the while loop body are hidden in the edit environment for the body
+      val bodyAssignments = safeAssignments(stmt)
+      val bodyEnv = env.mapToEnv((v, value) =>
+        v -> (
+          if bodyAssignments.contains(v)
+          then HiddenValue(value.typ)
+          else value
+        ))
+      List((cond, env), (stmt, bodyEnv))
     }
 
     override def getChildrenEval(env: ValueEnv): List[(Term, ValueEnv)] = {
@@ -232,6 +260,8 @@ class LWhile extends LList {
 
     override def newTEnv(tEnv: TypeEnv): TypeEnv | TypeError = tEnv + (v -> e.typeCheck(tEnv))
 
+    override def assignments: Set[Variable] = Set(v.getValue)
+
     override def toText: ConvertableText = MultiElement(
       v.toText,
       TextElement(" := "),
@@ -262,6 +292,8 @@ class LWhile extends LList {
       MultiElement(TextElement(p._1), TextElement(" = "), p._2.toText)))
 
     override def valueTextShowType: Boolean = false
+
+    override val isError: Boolean = env.toMap.exists(p => p._2.isError)
   }
 
   /**
